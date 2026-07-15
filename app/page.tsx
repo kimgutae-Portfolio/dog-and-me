@@ -152,7 +152,7 @@ export default function Home() {
               <div className="film-meta">
                 <div>
                   <p>はじめての春</p>
-                  <span>Anniversary short</span>
+                  <span>Anniversary film</span>
                 </div>
                 <span>トイプードル・1歳</span>
               </div>
@@ -187,7 +187,7 @@ export default function Home() {
               ["01", "思い出を聞かせてください", "写真と、その子らしいエピソードをお預かりします。"],
               ["02", "ストーリーを確認", "担当者がまとめた構成を、制作前にご確認いただけます。"],
               ["03", "シーンを確認", "仕上げ前の場面ごとに、雰囲気や表情をご確認ください。"],
-              ["04", "映画を受け取る", "完成した映像をダウンロードし、ご家族へ共有できます。"],
+              ["04", "映画と専用サイトを受け取る", "完成映像と、その子だけのウェブページをご家族へ共有できます。"],
             ].map(([number, title, copy]) => (
               <li key={number}>
                 <span className="process-number">{number}</span>
@@ -209,19 +209,21 @@ export default function Home() {
               <p className="eyebrow">PLANS</p>
               <h2>残したい時間に合わせて。</h2>
             </div>
-            <p>1次受付では、決済前に内容とお見積りを確認します。</p>
+            <p>どちらのプランにも、愛犬専用のウェブサイトが含まれます。</p>
           </div>
+          <aside className="included-memory-site" aria-label="全プラン共通の専用ウェブサイト">
+            <p className="included-label">INCLUDED IN EVERY PLAN</p>
+            <div>
+              <h3>一頭ごとの、専用メモリーウェブサイト。</h3>
+              <p>完成した映画、タイトル、メッセージ、写真をまとめた専用ページを、WAN MEMORYのドメイン内にお客様ごとに制作します。</p>
+            </div>
+            <ul>
+              <li>家族専用URL</li>
+              <li>パスワード設定</li>
+              <li>スマートフォン対応</li>
+            </ul>
+          </aside>
           <div className="pricing-grid">
-            <article className="price-card">
-              <p className="plan-en">MEMORY SHORT</p>
-              <h3>メモリーショート</h3>
-              <p className="price"><span>¥</span>12,800<small>〜</small></p>
-              <p className="price-caption">ひとつの思い出を、約45〜60秒に。</p>
-              <ul>
-                <li>写真5枚〜</li><li>日本語字幕</li><li>修正1回</li><li>Full HD</li>
-              </ul>
-              <Link className="button button-outline" href="/story?plan=short">このプランで相談する</Link>
-            </article>
             <article className="price-card price-card-featured">
               <span className="recommended">おすすめ</span>
               <p className="plan-en">MEMORY FILM</p>
@@ -229,7 +231,7 @@ export default function Home() {
               <p className="price"><span>¥</span>29,800<small>〜</small></p>
               <p className="price-caption">出会いから今までを、約2〜3分に。</p>
               <ul>
-                <li>ストーリー構成</li><li>実写風シーン制作</li><li>ナレーション</li><li>修正2回</li>
+                <li>ストーリー構成</li><li>実写風シーン制作</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト</li>
               </ul>
               <Link className="button button-primary" href="/story?plan=film">このプランで相談する</Link>
             </article>
@@ -239,7 +241,7 @@ export default function Home() {
               <p className="price"><span>¥</span>49,800<small>〜</small></p>
               <p className="price-caption">ありがとうを伝える、約3〜5分の作品。</p>
               <ul>
-                <li>構成2案</li><li>専門ナレーション</li><li>修正3回</li><li>家族共有ページ</li>
+                <li>構成2案</li><li>専門ナレーション</li><li>修正3回</li><li>Full HD・4K相談</li><li>専用メモリーサイト</li>
               </ul>
               <Link className="button button-outline" href="/story?plan=memorial">このプランで相談する</Link>
             </article>
@@ -260,6 +262,7 @@ export default function Home() {
               ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
               ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
               ["写真や動画はAIの学習に使われますか？", "お客様の明示的な同意なく、自社モデルの学習や第三者への公開には使用しません。"],
+              ["専用ウェブサイトとは何ですか？", "完成した映画、写真、メッセージをまとめたお客様専用ページです。WAN MEMORYのドメイン内に一組ずつ制作し、ご家族向けURLやパスワードを設定できます。"],
               ["完成までどのくらいかかりますか？", "素材が揃ってから通常3〜5週間を目安にしています。内容と修正回数により前後するため、受付時に予定日をご案内します。"],
             ].map(([question, answer]) => (
               <details key={question}>

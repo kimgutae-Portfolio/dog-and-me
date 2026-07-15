@@ -28,6 +28,10 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /写真は、残っている/);
   assert.match(html, /A MEMORY BECOMES A FILM/);
   assert.match(html, /完成まで、迷わない4つのステップ/);
+  assert.match(html, /一頭ごとの、専用メモリーウェブサイト/);
+  assert.match(html, /メモリーフィルム/);
+  assert.match(html, /メモリアル/);
+  assert.doesNotMatch(html, /メモリーショート/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
 });
 

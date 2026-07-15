@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const chapters = [
   {
@@ -49,22 +49,49 @@ const chapters = [
 export function ScrollMemoryStory() {
   const sectionRef = useRef<HTMLElement>(null);
   const frameRef = useRef<number | null>(null);
+  const activeRef = useRef(0);
+  const snapTargetRef = useRef<number | null>(null);
+  const wheelLockRef = useRef(false);
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
 
+  const moveToChapter = useCallback((index: number) => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const safeIndex = Math.min(chapters.length - 1, Math.max(0, index));
+    const sectionTop = window.scrollY + section.getBoundingClientRect().top;
+    const scrollable = Math.max(section.offsetHeight - window.innerHeight, 1);
+    const target = sectionTop + scrollable * (safeIndex / (chapters.length - 1));
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    snapTargetRef.current = safeIndex;
+    activeRef.current = safeIndex;
+    setActive(safeIndex);
+    window.scrollTo({ top: target, behavior: reducedMotion ? "auto" : "smooth" });
+
+    window.setTimeout(() => {
+      if (snapTargetRef.current === safeIndex) snapTargetRef.current = null;
+    }, reducedMotion ? 50 : 700);
+  }, []);
+
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    let wheelUnlockTimer: number | undefined;
+
     const update = () => {
       frameRef.current = null;
-      const section = sectionRef.current;
-      if (!section) return;
-
       const rect = section.getBoundingClientRect();
       const scrollable = Math.max(section.offsetHeight - window.innerHeight, 1);
       const nextProgress = Math.min(1, Math.max(0, -rect.top / scrollable));
       const nextActive = Math.min(chapters.length - 1, Math.floor(nextProgress * chapters.length));
 
       setProgress(nextProgress);
-      setActive(nextActive);
+      if (snapTargetRef.current === null) {
+        activeRef.current = nextActive;
+        setActive(nextActive);
+      }
     };
 
     const requestUpdate = () => {
@@ -72,28 +99,51 @@ export function ScrollMemoryStory() {
       frameRef.current = window.requestAnimationFrame(update);
     };
 
+    const scheduleWheelUnlock = () => {
+      window.clearTimeout(wheelUnlockTimer);
+      wheelUnlockTimer = window.setTimeout(() => {
+        wheelLockRef.current = false;
+      }, 700);
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || Math.abs(event.deltaY) < 10) return;
+
+      const rect = section.getBoundingClientRect();
+      const isPinned = rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
+      if (!isPinned) return;
+
+      const direction = event.deltaY > 0 ? 1 : -1;
+      const next = activeRef.current + direction;
+      const canMove = next >= 0 && next < chapters.length;
+      if (!canMove) return;
+
+      event.preventDefault();
+      if (wheelLockRef.current) {
+        scheduleWheelUnlock();
+        return;
+      }
+
+      wheelLockRef.current = true;
+      moveToChapter(next);
+      scheduleWheelUnlock();
+    };
+
     update();
     window.addEventListener("scroll", requestUpdate, { passive: true });
     window.addEventListener("resize", requestUpdate);
+    section.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
       window.removeEventListener("scroll", requestUpdate);
       window.removeEventListener("resize", requestUpdate);
+      section.removeEventListener("wheel", handleWheel);
+      window.clearTimeout(wheelUnlockTimer);
       if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
     };
-  }, []);
+  }, [moveToChapter]);
 
   const chapter = chapters[active];
-
-  const moveToChapter = (index: number) => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const sectionTop = window.scrollY + section.getBoundingClientRect().top;
-    const scrollable = Math.max(section.offsetHeight - window.innerHeight, 1);
-    const target = sectionTop + scrollable * ((index + 0.08) / chapters.length);
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({ top: target, behavior: reducedMotion ? "auto" : "smooth" });
-  };
 
   return (
     <section className="scroll-story" id="memory-story" ref={sectionRef} aria-labelledby="scroll-story-title">

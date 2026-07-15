@@ -70,7 +70,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .trust-row span::before { content: "○"; margin-right: 8px; color: var(--rust); }
 
 /* Scroll-led memory story */
-.scroll-story { height: 430vh; height: 430svh; position: relative; background: #1d251f; }
+.scroll-story { height: 280vh; height: 280svh; position: relative; background: #1d251f; }
 .scroll-story-sticky { height: 100vh; height: 100svh; min-height: 680px; position: sticky; top: 0; overflow: hidden; color: white; background: #202922; }
 .story-backdrop { position: absolute; inset: -5%; opacity: .22; background-image: url('/hero-dog.webp'); background-size: cover; background-position: 66% center; filter: saturate(.72) contrast(1.08); transform: scale(1.08); transition: transform 1.2s ease, opacity 1.2s ease, filter 1.2s ease; }
 .scroll-story-sticky[data-step="2"] .story-backdrop { opacity: .16; filter: saturate(.45) contrast(1.12); transform: scale(1.12) translateX(-1.5%); }
@@ -162,7 +162,14 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .process-list h3 { margin: 0 0 8px; font-family: var(--font-serif); font-size: 22px; font-weight: 400; }
 .process-list p { margin: 0; color: var(--muted); font-size: 12px; }
 
-.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); align-items: stretch; }
+.included-memory-site { margin: 0 0 62px; padding: 34px 38px; display: grid; grid-template-columns: 160px minmax(0, 1fr) auto; align-items: center; gap: 38px; border: 1px solid var(--line); background: #ece4d6; }
+.included-label { margin: 0; color: var(--rust); font-size: 8px; font-weight: 700; line-height: 1.7; letter-spacing: .19em; }
+.included-memory-site h3 { margin: 0 0 9px; font-family: var(--font-serif); font-size: 23px; font-weight: 400; letter-spacing: .04em; }
+.included-memory-site div > p { max-width: 610px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.9; }
+.included-memory-site ul { margin: 0; padding: 0; display: grid; gap: 8px; list-style: none; }
+.included-memory-site li { color: #5f6157; font-size: 9px; white-space: nowrap; }
+.included-memory-site li::before { content: "○"; margin-right: 8px; color: var(--rust); }
+.pricing-grid { max-width: 920px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
 .price-card { padding: 42px 34px 36px; border: 1px solid var(--line); background: rgba(255,255,255,.2); }
 .price-card + .price-card { border-left: 0; }
 .price-card-featured { position: relative; color: white; background: var(--forest); transform: translateY(-14px); box-shadow: 0 18px 44px rgba(37,37,31,.15); }
@@ -375,7 +382,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .mobile-nav nav a { padding: 13px 5px; border-bottom: 1px solid var(--line); font-size: 12px; }
   .intro-grid, .faq-grid { grid-template-columns: 1fr; gap: 24px; }
   .intro-copy { padding: 10px 0 0; }
-  .scroll-story { height: 420vh; height: 420svh; }
+  .scroll-story { height: 280vh; height: 280svh; }
   .scroll-story-sticky { min-height: 640px; }
   .story-screen { grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); gap: 36px; }
   .story-copy > .eyebrow { margin-bottom: 25px; }
@@ -385,6 +392,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .story-scroll-progress { right: 0; }
   .story-scroll-label { display: none; }
   .purpose-grid, .pricing-grid { grid-template-columns: 1fr; }
+  .included-memory-site { padding: 30px; grid-template-columns: 1fr; gap: 18px; }
+  .included-memory-site ul { grid-template-columns: repeat(3, auto); justify-content: start; gap: 12px 24px; }
   .purpose-card { min-height: 350px; }
   .film-grid { grid-template-columns: 1fr; }
   .film-card-main { grid-row: auto; }
@@ -418,7 +427,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .hero-actions { margin-top: 28px; align-items: flex-start; flex-direction: column; gap: 16px; }
   .hero-actions .button { width: 100%; }
   .hero-caption, .scroll-note { display: none; }
-  .scroll-story { height: 420vh; height: 420svh; }
+  .scroll-story { height: 280vh; height: 280svh; }
   .scroll-story-sticky { min-height: 600px; }
   .story-backdrop { opacity: .14; background-position: 62% center; }
   .story-vignette { background: linear-gradient(180deg, rgba(15,21,17,.92) 0%, rgba(20,27,22,.8) 60%, rgba(20,27,22,.55) 100%); }
@@ -449,6 +458,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .film-still { min-height: 220px; }
   .process-list li { min-height: 150px; grid-template-columns: 46px 22px 1fr; }
   .process-list p { line-height: 1.7; }
+  .included-memory-site { margin-bottom: 45px; padding: 25px 22px; }
+  .included-memory-site h3 { font-size: 20px; line-height: 1.55; }
+  .included-memory-site ul { grid-template-columns: 1fr; gap: 8px; }
   .price-card { padding: 34px 26px; }
   .faq-grid { gap: 42px; }
   .final-cta { padding: 86px 0; }
