@@ -39,9 +39,9 @@ export default function MomoDemoPage() {
 
       <section className="memory-demo-film" data-memory-reveal>
         <div className="memory-demo-shell">
-          <div className="memory-demo-section-head"><div><p>01 / THE FILM</p><h2>何度でも、会いにいける映画。</h2></div><span>約1分 · 日本語字幕 · Full HD</span></div>
+          <div className="memory-demo-section-head"><div><p>01 / THE FILM</p><h2>何度でも、会いにいける映画。</h2></div><span>閲覧専用 · ダウンロード非対応</span></div>
           <DemoFilmPlayer />
-          <p className="demo-film-note">※ デモ用に画面遷移を再現しています。実際のお客様ページでは完成した動画を再生できます。</p>
+          <p className="demo-film-note">※ デモ用に画面遷移を再現しています。実際のお客様ページでは完成した動画を再生できますが、ダウンロード機能は提供しません。画面録画などを完全に防止するものではありません。</p>
         </div>
       </section>
 

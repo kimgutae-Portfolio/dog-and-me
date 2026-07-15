@@ -29,6 +29,9 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /A MEMORY BECOMES A FILM/);
   assert.match(html, /完成まで、迷わない4つのステップ/);
   assert.match(html, /一頭ごとの、専用メモリーウェブサイト/);
+  assert.match(html, /ログイン・パスワード不要/);
+  assert.match(html, /動画ダウンロード非対応/);
+  assert.match(html, /画面録画などを技術的に完全に防ぐことはできません/);
   assert.match(html, /メモリーフィルム/);
   assert.match(html, /映像コンセプト2案/);
   assert.match(html, /いまを残す思い出フィルム/);
@@ -55,6 +58,7 @@ test("renders the customer memory site demo", async () => {
   assert.match(html, /WHEN A MEMORY RETURNS/);
   assert.match(html, /あの日の光まで戻ってくる/);
   assert.match(html, /お客様専用メモリーサイトの完成イメージ/);
+  assert.match(html, /閲覧専用 · ダウンロード非対応/);
 });
 
 test("starter preview was removed", async () => {
