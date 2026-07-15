@@ -69,6 +69,57 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .trust-row { margin-top: 42px; padding-top: 22px; border-top: 1px solid var(--line); display: flex; gap: 30px; color: #69695e; font-size: 11px; }
 .trust-row span::before { content: "○"; margin-right: 8px; color: var(--rust); }
 
+/* Scroll-led memory story */
+.scroll-story { height: 430vh; height: 430svh; position: relative; background: #1d251f; }
+.scroll-story-sticky { height: 100vh; height: 100svh; min-height: 680px; position: sticky; top: 0; overflow: hidden; color: white; background: #202922; }
+.story-backdrop { position: absolute; inset: -5%; opacity: .22; background-image: url('/hero-dog.webp'); background-size: cover; background-position: 66% center; filter: saturate(.72) contrast(1.08); transform: scale(1.08); transition: transform 1.2s ease, opacity 1.2s ease, filter 1.2s ease; }
+.scroll-story-sticky[data-step="2"] .story-backdrop { opacity: .16; filter: saturate(.45) contrast(1.12); transform: scale(1.12) translateX(-1.5%); }
+.scroll-story-sticky[data-step="3"] .story-backdrop { opacity: .25; filter: sepia(.1) saturate(.8); transform: scale(1.1) translateX(1.5%); }
+.scroll-story-sticky[data-step="4"] .story-backdrop { opacity: .3; filter: sepia(.18) saturate(.82); transform: scale(1.06); }
+.story-vignette { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(15,21,17,.94) 0%, rgba(20,27,22,.78) 45%, rgba(20,27,22,.38) 100%), linear-gradient(180deg, rgba(8,12,9,.2), rgba(8,12,9,.5)); }
+.story-vignette::after { content: ""; position: absolute; inset: 0; opacity: .07; background-image: repeating-radial-gradient(circle at 0 0, transparent 0, rgba(255,255,255,.8) 1px, transparent 2px); background-size: 6px 6px; mix-blend-mode: soft-light; }
+.story-screen { height: 100%; position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, .95fr) minmax(350px, .72fr); align-items: center; gap: clamp(58px, 8vw, 132px); }
+.story-copy { max-width: 610px; animation: story-copy-in .72s cubic-bezier(.2,.8,.2,1) both; }
+.story-copy > .eyebrow { margin-bottom: 38px; }
+.story-kicker { margin: 0 0 20px; display: flex; align-items: center; gap: 14px; color: rgba(255,255,255,.48); font-size: 9px; font-weight: 700; letter-spacing: .19em; }
+.story-kicker span { width: 31px; height: 31px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.3); border-radius: 50%; color: #e1c6ac; font-family: var(--font-serif); font-size: 10px; letter-spacing: 0; }
+.story-copy h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(38px, 4.2vw, 62px); font-weight: 400; line-height: 1.48; letter-spacing: .055em; }
+.story-copy h2 strong { display: block; color: #e8d6bf; font-weight: 400; }
+.story-body { max-width: 540px; margin: 27px 0 0; color: rgba(255,255,255,.67); font-size: 13px; line-height: 2.15; letter-spacing: .035em; }
+.story-cta { margin-top: 29px; }
+.story-visual { width: 100%; max-width: 440px; height: min(640px, 71vh); justify-self: end; display: grid; grid-template-rows: 48px 1fr auto; border: 1px solid rgba(255,255,255,.22); background: rgba(15,19,16,.6); box-shadow: 0 30px 80px rgba(0,0,0,.28); animation: story-frame-in .8s cubic-bezier(.2,.8,.2,1) both; }
+.story-film-meta { padding: 0 15px; display: flex; align-items: center; justify-content: space-between; color: rgba(255,255,255,.42); border-bottom: 1px solid rgba(255,255,255,.15); font-size: 7px; letter-spacing: .14em; }
+.story-film-image { min-height: 0; position: relative; overflow: hidden; background-image: linear-gradient(180deg, transparent 48%, rgba(14,18,15,.54)), url('/hero-dog.webp'); background-size: cover; background-position: 68% center; transition: background-position .8s ease, filter .8s ease; }
+.scroll-story-sticky[data-step="2"] .story-film-image { background-position: 58% center; filter: saturate(.75); }
+.scroll-story-sticky[data-step="3"] .story-film-image { background-position: 73% center; filter: sepia(.08) saturate(.9); }
+.scroll-story-sticky[data-step="4"] .story-film-image { background-position: 65% center; filter: sepia(.14) saturate(.85) brightness(1.04); }
+.story-focus-ring { width: 72px; height: 72px; position: absolute; left: 50%; top: 50%; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; transform: translate(-50%,-50%); }
+.story-focus-ring::before, .story-focus-ring::after { content: ""; position: absolute; background: rgba(255,255,255,.45); }
+.story-focus-ring::before { width: 108px; height: 1px; left: -18px; top: 35px; }
+.story-focus-ring::after { width: 1px; height: 108px; left: 35px; top: -18px; }
+.story-timecode { position: absolute; right: 14px; bottom: 13px; color: rgba(255,255,255,.62); font-size: 8px; letter-spacing: .16em; }
+.story-film-caption { min-height: 114px; padding: 21px 22px 18px; }
+.story-film-caption p { margin: 0 0 9px; font-family: var(--font-serif); font-size: 18px; line-height: 1.45; letter-spacing: .05em; }
+.story-film-caption span { color: rgba(255,255,255,.45); font-size: 8px; line-height: 1.7; letter-spacing: .06em; }
+.story-chapter-nav { position: absolute; left: 0; bottom: 34px; display: flex; gap: 10px; }
+.story-chapter-nav button { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.24); border-radius: 50%; color: rgba(255,255,255,.45); background: transparent; cursor: pointer; transition: color .25s ease, border-color .25s ease, background .25s ease; }
+.story-chapter-nav button:hover { color: white; border-color: rgba(255,255,255,.6); }
+.story-chapter-nav button.active { color: #263128; border-color: #eadcc8; background: #eadcc8; }
+.story-chapter-nav button span { font-family: var(--font-serif); font-size: 9px; }
+.story-scroll-progress { width: 2px; height: 128px; position: absolute; right: -24px; top: 50%; background: rgba(255,255,255,.16); transform: translateY(-50%); }
+.story-scroll-progress span { width: 100%; display: block; background: #e5c9ae; transition: height .1s linear; }
+.story-scroll-label { margin: 0; position: absolute; right: -83px; bottom: 47px; color: rgba(255,255,255,.36); font-size: 7px; letter-spacing: .22em; transform: rotate(-90deg); }
+
+@keyframes story-copy-in {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes story-frame-in {
+  from { opacity: .35; transform: translateY(14px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .section-heading-row, .pricing-heading, .film-heading, .process-head { margin-bottom: 48px; display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; }
 .section-heading-row h2, .pricing-heading h2, .film-heading h2, .process-head h2, .faq-section h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(34px, 3.5vw, 50px); font-weight: 400; letter-spacing: .06em; }
 .section-heading-row > p, .pricing-heading > p, .process-head > p { margin: 0; color: var(--muted); font-size: 13px; }
@@ -324,6 +375,15 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .mobile-nav nav a { padding: 13px 5px; border-bottom: 1px solid var(--line); font-size: 12px; }
   .intro-grid, .faq-grid { grid-template-columns: 1fr; gap: 24px; }
   .intro-copy { padding: 10px 0 0; }
+  .scroll-story { height: 420vh; height: 420svh; }
+  .scroll-story-sticky { min-height: 640px; }
+  .story-screen { grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); gap: 36px; }
+  .story-copy > .eyebrow { margin-bottom: 25px; }
+  .story-copy h2 { font-size: clamp(34px, 5vw, 45px); }
+  .story-body { font-size: 12px; line-height: 1.95; }
+  .story-visual { max-width: 340px; height: min(560px, 68vh); }
+  .story-scroll-progress { right: 0; }
+  .story-scroll-label { display: none; }
   .purpose-grid, .pricing-grid { grid-template-columns: 1fr; }
   .purpose-card { min-height: 350px; }
   .film-grid { grid-template-columns: 1fr; }
@@ -358,6 +418,30 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .hero-actions { margin-top: 28px; align-items: flex-start; flex-direction: column; gap: 16px; }
   .hero-actions .button { width: 100%; }
   .hero-caption, .scroll-note { display: none; }
+  .scroll-story { height: 420vh; height: 420svh; }
+  .scroll-story-sticky { min-height: 600px; }
+  .story-backdrop { opacity: .14; background-position: 62% center; }
+  .story-vignette { background: linear-gradient(180deg, rgba(15,21,17,.92) 0%, rgba(20,27,22,.8) 60%, rgba(20,27,22,.55) 100%); }
+  .story-screen { padding: 34px 0 62px; grid-template-columns: 1fr; grid-template-rows: auto minmax(200px, 34vh); align-content: center; gap: 22px; }
+  .story-copy { max-width: none; }
+  .story-copy > .eyebrow { display: none; }
+  .story-kicker { margin-bottom: 12px; font-size: 7px; }
+  .story-kicker span { width: 26px; height: 26px; font-size: 8px; }
+  .story-copy h2 { font-size: clamp(28px, 8.4vw, 36px); line-height: 1.42; }
+  .story-body { margin-top: 14px; font-size: 10.5px; line-height: 1.82; }
+  .story-cta { width: 100%; min-height: 46px; margin-top: 17px; }
+  .story-visual { max-width: none; height: 100%; min-height: 200px; grid-template-rows: 30px 1fr 68px; }
+  .story-film-meta { padding: 0 10px; font-size: 5.5px; }
+  .story-film-caption { min-height: auto; padding: 10px 14px; }
+  .story-film-caption p { margin-bottom: 4px; font-size: 13px; }
+  .story-film-caption span { font-size: 6.5px; }
+  .story-focus-ring { width: 48px; height: 48px; }
+  .story-focus-ring::before { width: 76px; left: -14px; top: 23px; }
+  .story-focus-ring::after { height: 76px; left: 23px; top: -14px; }
+  .story-timecode { right: 9px; bottom: 8px; font-size: 6px; }
+  .story-chapter-nav { left: 0; bottom: 16px; }
+  .story-chapter-nav button { width: 30px; height: 30px; }
+  .story-scroll-progress { width: 1px; height: 86px; right: 0; }
   .display-title { font-size: 39px; }
   .section-heading-row, .pricing-heading, .film-heading, .process-head { align-items: flex-start; flex-direction: column; gap: 16px; }
   .purpose-card { min-height: 320px; }

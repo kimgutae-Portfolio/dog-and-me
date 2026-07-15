@@ -25,6 +25,8 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /一緒に過ごした時間を/);
   assert.match(html, /WAN MEMORY/);
   assert.match(html, /思い出をつくる/);
+  assert.match(html, /写真は、残っている/);
+  assert.match(html, /A MEMORY BECOMES A FILM/);
   assert.match(html, /完成まで、迷わない4つのステップ/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
 });

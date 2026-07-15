@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ScrollMemoryStory } from "./components/ScrollMemoryStory";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 
@@ -72,6 +73,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <ScrollMemoryStory />
 
       <section className="purpose-section section-tight">
         <div className="shell">
