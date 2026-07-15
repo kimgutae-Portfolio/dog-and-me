@@ -10,7 +10,7 @@ export function SiteHeader() {
         </Link>
         <nav className="desktop-nav" aria-label="メインナビゲーション">
           <a href="/#memory-story">物語体験</a>
-          <a href="/#films">作品</a>
+          <Link href="/film/momo-demo">完成デモ</Link>
           <a href="/#flow">制作の流れ</a>
           <a href="/#plans">プラン</a>
           <a href="/#faq">よくある質問</a>
@@ -20,7 +20,7 @@ export function SiteHeader() {
         <details className="mobile-nav">
           <summary aria-label="メニューを開く"><span /><span /></summary>
           <nav aria-label="モバイルナビゲーション">
-            <a href="/#memory-story">物語体験</a><a href="/#films">作品</a><a href="/#flow">制作の流れ</a><a href="/#plans">プラン</a><a href="/#faq">よくある質問</a><Link href="/studio">制作室</Link><Link href="/story">思い出をつくる</Link>
+            <a href="/#memory-story">物語体験</a><Link href="/film/momo-demo">完成デモ</Link><a href="/#flow">制作の流れ</a><a href="/#plans">プラン</a><a href="/#faq">よくある質問</a><Link href="/studio">制作室</Link><Link href="/story">思い出をつくる</Link>
           </nav>
         </details>
       </div>

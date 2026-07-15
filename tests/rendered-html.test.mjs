@@ -30,16 +30,26 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /完成まで、迷わない4つのステップ/);
   assert.match(html, /一頭ごとの、専用メモリーウェブサイト/);
   assert.match(html, /メモリーフィルム/);
-  assert.match(html, /メモリアル/);
+  assert.match(html, /映像コンセプト2案/);
+  assert.match(html, /CUSTOMER SITE DEMO/);
   assert.doesNotMatch(html, /メモリーショート/);
+  assert.doesNotMatch(html, /MEMORIAL SIGNATURE|49,800/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
 });
 
 test("server-renders the first-MVP routes", async () => {
-  for (const path of ["/story", "/studio"]) {
+  for (const path of ["/story", "/studio", "/film/momo-demo"]) {
     const response = await render(path);
     assert.equal(response.status, 200, `${path} should render`);
   }
+});
+
+test("renders the customer memory site demo", async () => {
+  const response = await render("/film/momo-demo");
+  const html = await response.text();
+  assert.match(html, /モモと歩いた季節/);
+  assert.match(html, /CUSTOMER DEMO/);
+  assert.match(html, /お客様専用メモリーサイトの完成イメージ/);
 });
 
 test("starter preview was removed", async () => {

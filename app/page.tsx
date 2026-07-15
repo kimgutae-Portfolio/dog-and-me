@@ -37,9 +37,9 @@ export default function Home() {
             <Link className="button button-primary" href="/story">
               思い出をつくる <span aria-hidden="true">→</span>
             </Link>
-            <a className="text-link light-link" href="#films">
-              作品の雰囲気を見る <span aria-hidden="true">↘</span>
-            </a>
+            <Link className="text-link light-link" href="/film/momo-demo">
+              完成ページを体験する <span aria-hidden="true">↗</span>
+            </Link>
           </div>
         </div>
         <div className="scroll-note" aria-hidden="true">
@@ -134,7 +134,7 @@ export default function Home() {
             <article className="film-card film-card-main">
               <div className="film-still still-warm" aria-hidden="true">
                 <span className="play-mark">▶</span>
-                <span className="film-time">02:18</span>
+                <span className="film-time">01:02</span>
               </div>
               <div className="film-meta">
                 <div>
@@ -160,7 +160,7 @@ export default function Home() {
             <article className="film-card">
               <div className="film-still still-sunset" aria-hidden="true">
                 <span className="play-mark">▶</span>
-                <span className="film-time">03:42</span>
+                <span className="film-time">01:00</span>
               </div>
               <div className="film-meta">
                 <div>
@@ -175,6 +175,22 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="demo-teaser section" id="demo">
+        <div className="shell demo-teaser-grid">
+          <div className="demo-teaser-copy">
+            <p className="eyebrow">CUSTOMER SITE DEMO</p>
+            <h2>完成後のページを、<br />そのまま体験。</h2>
+            <p>映画が完成したら、WAN MEMORYのドメイン内にその子だけのページを制作します。映像、写真、物語、ご家族からの言葉が実際にどう見えるか、モモのデモサイトでご覧ください。</p>
+            <Link className="button button-primary" href="/film/momo-demo">モモの完成デモを見る <span aria-hidden="true">→</span></Link>
+          </div>
+          <div className="demo-browser-preview" aria-hidden="true">
+            <div className="demo-browser-bar"><span /><span /><span /><p>WAN MEMORY / FILM / MOMO</p></div>
+            <div className="demo-browser-image"><span>PLAY SAMPLE</span></div>
+            <div className="demo-browser-copy"><small>MEMORY FILM · SHIBA INU</small><strong>モモと歩いた季節</strong><p>家族になった春から、いつもの帰り道まで。</p></div>
+          </div>
+        </div>
+      </section>
+
       <section className="process-section section" id="flow">
         <div className="shell">
           <p className="eyebrow">HOW IT WORKS</p>
@@ -185,9 +201,9 @@ export default function Home() {
           <ol className="process-list">
             {[
               ["01", "思い出を聞かせてください", "写真と、その子らしいエピソードをお預かりします。"],
-              ["02", "ストーリーを確認", "担当者がまとめた構成を、制作前にご確認いただけます。"],
-              ["03", "シーンを確認", "仕上げ前の場面ごとに、雰囲気や表情をご確認ください。"],
-              ["04", "映画と専用サイトを受け取る", "完成映像と、その子だけのウェブページをご家族へ共有できます。"],
+              ["02", "映像コンセプト2案を受け取る", "お預かりした内容から、方向性の異なる2つの物語をご提案します。"],
+              ["03", "1案を選び、詳細を確認", "選んだコンセプトを約1分の構成に整え、制作前にご確認いただきます。"],
+              ["04", "映画と専用サイトを受け取る", "約1分の完成映像と、その子だけのウェブページをご家族へ共有できます。"],
             ].map(([number, title, copy]) => (
               <li key={number}>
                 <span className="process-number">{number}</span>
@@ -207,12 +223,12 @@ export default function Home() {
           <div className="pricing-heading">
             <div>
               <p className="eyebrow">PLANS</p>
-              <h2>残したい時間に合わせて。</h2>
+              <h2>迷わない、ひとつのプラン。</h2>
             </div>
-            <p>どちらのプランにも、愛犬専用のウェブサイトが含まれます。</p>
+            <p>コンセプト提案から、約1分の映画と専用サイトまで。</p>
           </div>
-          <aside className="included-memory-site" aria-label="全プラン共通の専用ウェブサイト">
-            <p className="included-label">INCLUDED IN EVERY PLAN</p>
+          <aside className="included-memory-site" aria-label="メモリーフィルムに含まれる専用ウェブサイト">
+            <p className="included-label">INCLUDED IN MEMORY FILM</p>
             <div>
               <h3>一頭ごとの、専用メモリーウェブサイト。</h3>
               <p>完成した映画、タイトル、メッセージ、写真をまとめた専用ページを、WAN MEMORYのドメイン内にお客様ごとに制作します。</p>
@@ -224,26 +240,15 @@ export default function Home() {
             </ul>
           </aside>
           <div className="pricing-grid">
-            <article className="price-card price-card-featured">
-              <span className="recommended">おすすめ</span>
+            <article className="price-card price-card-featured price-card-single">
               <p className="plan-en">MEMORY FILM</p>
               <h3>メモリーフィルム</h3>
               <p className="price"><span>¥</span>29,800<small>〜</small></p>
-              <p className="price-caption">出会いから今までを、約2〜3分に。</p>
+              <p className="price-caption">選んだコンセプトを、約1分の映画に。</p>
               <ul>
-                <li>ストーリー構成</li><li>実写風シーン制作</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト</li>
+                <li>映像コンセプト2案</li><li>選んだ1案の詳細構成</li><li>約1分の実写風映像</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト</li>
               </ul>
-              <Link className="button button-primary" href="/story?plan=film">このプランで相談する</Link>
-            </article>
-            <article className="price-card">
-              <p className="plan-en">MEMORIAL SIGNATURE</p>
-              <h3>メモリアル</h3>
-              <p className="price"><span>¥</span>49,800<small>〜</small></p>
-              <p className="price-caption">ありがとうを伝える、約3〜5分の作品。</p>
-              <ul>
-                <li>構成2案</li><li>専門ナレーション</li><li>修正3回</li><li>Full HD・4K相談</li><li>専用メモリーサイト</li>
-              </ul>
-              <Link className="button button-outline" href="/story?plan=memorial">このプランで相談する</Link>
+              <Link className="button button-primary" href="/story">このプランで相談する</Link>
             </article>
           </div>
         </div>
@@ -260,6 +265,7 @@ export default function Home() {
             {[
               ["写真は何枚必要ですか？", "最低5枚から受付できます。顔の正面・横顔・全身など、15〜30枚あるとその子らしさをより丁寧に確認できます。"],
               ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
+              ["映像コンセプト2案とは何ですか？", "同じ写真とエピソードから、物語の切り口や場面構成が異なる2案をご提案します。お好きな1案を選んでいただき、約1分の映像として詳しく仕上げます。"],
               ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
               ["写真や動画はAIの学習に使われますか？", "お客様の明示的な同意なく、自社モデルの学習や第三者への公開には使用しません。"],
               ["専用ウェブサイトとは何ですか？", "完成した映画、写真、メッセージをまとめたお客様専用ページです。WAN MEMORYのドメイン内に一組ずつ制作し、ご家族向けURLやパスワードを設定できます。"],
