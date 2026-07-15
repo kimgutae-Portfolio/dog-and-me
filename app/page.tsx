@@ -80,38 +80,29 @@ export default function Home() {
         <div className="shell">
           <div className="section-heading-row">
             <div>
-              <p className="eyebrow">THREE STORIES</p>
-              <h2>いまも、記念日も、ありがとうも。</h2>
+              <p className="eyebrow">TWO FILM TYPES</p>
+              <h2>ふたつの始まり、ふたつの結び。</h2>
             </div>
-            <p>その子との今に合うかたちから、選べます。</p>
+            <p>最初に、その子との今に合う映画を選びます。</p>
           </div>
           <div className="purpose-grid">
             <article className="purpose-card purpose-now">
               <span className="purpose-number">01</span>
-              <div>
-                <p className="card-kicker">いまを残す</p>
+              <div className="purpose-card-content">
+                <p className="card-kicker">いまを残す思い出フィルム</p>
                 <h3>いつもの日々を、未来の宝物に。</h3>
-                <p>散歩やお昼寝、家族を待つ後ろ姿。今だけの表情を映画にします。</p>
+                <p className="purpose-description">散歩やお昼寝、家族を待つ後ろ姿。今を一緒に過ごしているその子の表情を映画にします。</p>
+                <div className="purpose-ending"><span>COMMON ENDING</span><strong>また明日も、いつもの道を。</strong><p>家族を振り返り、並んで歩き続けるエンディング。</p></div>
               </div>
-              <span className="card-arrow" aria-hidden="true">↗</span>
-            </article>
-            <article className="purpose-card purpose-day">
-              <span className="purpose-number">02</span>
-              <div>
-                <p className="card-kicker">記念日を祝う</p>
-                <h3>家族になった日を、何度でも。</h3>
-                <p>誕生日やうちの子記念日、大切な節目を一緒に振り返ります。</p>
-              </div>
-              <span className="card-arrow" aria-hidden="true">↗</span>
             </article>
             <article className="purpose-card purpose-thanks">
-              <span className="purpose-number">03</span>
-              <div>
-                <p className="card-kicker">ありがとうを伝える</p>
+              <span className="purpose-number">02</span>
+              <div className="purpose-card-content">
+                <p className="card-kicker">虹の橋メモリアル</p>
                 <h3>さよならよりも、ありがとうを。</h3>
-                <p>悲しみだけでなく、一緒に過ごせた喜びを静かに映像へ残します。</p>
+                <p className="purpose-description">先に旅立ったその子へ、悲しみだけではなく、一緒に過ごせた喜びと感謝を伝えます。</p>
+                <div className="purpose-ending"><span>COMMON ENDING</span><strong>少し先で、待っているね。</strong><p>空へ続く光の道を歩き、家族を振り返って旅立つエンディング。</p></div>
               </div>
-              <span className="card-arrow" aria-hidden="true">↗</span>
             </article>
           </div>
         </div>
@@ -200,7 +191,7 @@ export default function Home() {
           </div>
           <ol className="process-list">
             {[
-              ["01", "思い出を聞かせてください", "写真と、その子らしいエピソードをお預かりします。"],
+              ["01", "映画の種類を選び、思い出を聞かせる", "『いまを残す』か『虹の橋メモリアル』を選び、写真とエピソードをお預けください。"],
               ["02", "映像コンセプト2案を受け取る", "お預かりした内容から、方向性の異なる2つの物語をご提案します。"],
               ["03", "1案を選び、詳細を確認", "選んだコンセプトを約1分の構成に整え、制作前にご確認いただきます。"],
               ["04", "映画と専用サイトを受け取る", "約1分の完成映像と、その子だけのウェブページをご家族へ共有できます。"],
@@ -246,7 +237,7 @@ export default function Home() {
               <p className="price"><span>¥</span>29,800<small>〜</small></p>
               <p className="price-caption">選んだコンセプトを、約1分の映画に。</p>
               <ul>
-                <li>映像コンセプト2案</li><li>選んだ1案の詳細構成</li><li>約1分の実写風映像</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト</li>
+                <li>映像コンセプト2案</li><li>映画タイプ別の共通エンディング</li><li>選んだ1案の詳細構成</li><li>約1分の実写風映像</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト</li>
               </ul>
               <Link className="button button-primary" href="/story">このプランで相談する</Link>
             </article>
@@ -266,6 +257,7 @@ export default function Home() {
               ["写真は何枚必要ですか？", "最低5枚から受付できます。顔の正面・横顔・全身など、15〜30枚あるとその子らしさをより丁寧に確認できます。"],
               ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
               ["映像コンセプト2案とは何ですか？", "同じ写真とエピソードから、物語の切り口や場面構成が異なる2案をご提案します。お好きな1案を選んでいただき、約1分の映像として詳しく仕上げます。"],
+              ["2案の最後もそれぞれ違いますか？", "途中の物語と場面構成は異なりますが、最後は映画の種類に合わせた共通エンディングです。『いまを残す』は家族と歩き続ける場面、『虹の橋メモリアル』は空へ続く光の道を進み、少し先で待っている気持ちを表します。"],
               ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
               ["写真や動画はAIの学習に使われますか？", "お客様の明示的な同意なく、自社モデルの学習や第三者への公開には使用しません。"],
               ["専用ウェブサイトとは何ですか？", "完成した映画、写真、メッセージをまとめたお客様専用ページです。WAN MEMORYのドメイン内に一組ずつ制作し、ご家族向けURLやパスワードを設定できます。"],

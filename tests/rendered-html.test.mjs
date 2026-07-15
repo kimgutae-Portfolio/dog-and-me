@@ -31,6 +31,9 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /一頭ごとの、専用メモリーウェブサイト/);
   assert.match(html, /メモリーフィルム/);
   assert.match(html, /映像コンセプト2案/);
+  assert.match(html, /いまを残す思い出フィルム/);
+  assert.match(html, /虹の橋メモリアル/);
+  assert.match(html, /少し先で、待っているね/);
   assert.match(html, /CUSTOMER SITE DEMO/);
   assert.doesNotMatch(html, /メモリーショート/);
   assert.doesNotMatch(html, /MEMORIAL SIGNATURE|49,800/);

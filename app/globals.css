@@ -123,8 +123,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .section-heading-row, .pricing-heading, .film-heading, .process-head { margin-bottom: 48px; display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; }
 .section-heading-row h2, .pricing-heading h2, .film-heading h2, .process-head h2, .faq-section h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(34px, 3.5vw, 50px); font-weight: 400; letter-spacing: .06em; }
 .section-heading-row > p, .pricing-heading > p, .process-head > p { margin: 0; color: var(--muted); font-size: 13px; }
-.purpose-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.purpose-card { min-height: 430px; padding: 28px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; color: white; background: #65715f; }
+.purpose-grid { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.purpose-card { min-height: 510px; padding: 30px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; color: white; background: #65715f; }
 .purpose-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 76% 20%, rgba(255,255,255,.14), transparent 24%), linear-gradient(155deg, transparent 36%, rgba(14,20,16,.58)); }
 .purpose-card > * { position: relative; z-index: 1; }
 .purpose-now { background: linear-gradient(155deg, #7f8d79, #485547); }
@@ -133,7 +133,12 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .purpose-number { align-self: flex-end; font-size: 11px; letter-spacing: .15em; opacity: .68; }
 .card-kicker { margin: 0 0 16px; font-size: 11px; font-weight: 700; letter-spacing: .15em; }
 .purpose-card h3 { max-width: 280px; margin: 0 0 18px; font-family: var(--font-serif); font-size: 25px; font-weight: 400; line-height: 1.55; }
-.purpose-card p:last-child { max-width: 292px; margin: 0; color: rgba(255,255,255,.69); font-size: 12px; line-height: 1.9; }
+.purpose-description { max-width: 360px; margin: 0; color: rgba(255,255,255,.69); font-size: 12px; line-height: 1.9; }
+.purpose-ending { margin-top: 38px; padding: 20px 0 0; border-top: 1px solid rgba(255,255,255,.25); }
+.purpose-ending span, .purpose-ending strong { display: block; }
+.purpose-ending span { margin-bottom: 10px; color: rgba(255,255,255,.48); font-size: 7px; font-weight: 700; letter-spacing: .18em; }
+.purpose-ending strong { font-family: var(--font-serif); font-size: 17px; font-weight: 400; }
+.purpose-ending p { margin: 8px 0 0; color: rgba(255,255,255,.58); font-size: 9px; line-height: 1.75; }
 .card-arrow { position: absolute; right: 27px; bottom: 27px; width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.5); border-radius: 50%; }
 
 .film-section { color: white; background: #2c332d; }
@@ -371,12 +376,28 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .step-lead { margin: 16px 0 36px; color: var(--muted); font-size: 12px; line-height: 1.8; }
 .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .choice-card { min-height: 116px; padding: 22px; position: relative; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--line); cursor: pointer; background: rgba(255,255,255,.45); transition: border .2s ease, background .2s ease; }
-.choice-card input, .style-card input, .upload-box input { position: absolute; opacity: 0; pointer-events: none; }
+.choice-card input, .film-type-card input, .style-card input, .upload-box input { position: absolute; opacity: 0; pointer-events: none; }
 .choice-card strong { font-family: var(--font-serif); font-size: 17px; font-weight: 400; }
 .choice-card small { margin-top: 8px; color: var(--muted); font-size: 9px; }
 .choice-check { position: absolute; right: 16px; top: 16px; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid #bbb7ad; border-radius: 50%; color: transparent; font-size: 9px; }
 .choice-card.selected { border-color: var(--rust); background: #f2e8dc; }
 .choice-card.selected .choice-check { color: white; background: var(--rust); border-color: var(--rust); }
+.film-type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.film-type-card { min-height: 440px; padding: 26px; position: relative; display: flex; flex-direction: column; border: 1px solid var(--line); background: rgba(255,255,255,.48); cursor: pointer; transition: border-color .25s ease, background .25s ease, transform .25s ease; }
+.film-type-card:hover { transform: translateY(-2px); border-color: rgba(157,92,62,.55); }
+.film-type-card.memorial { background: #eeebe5; }
+.film-type-card.selected { border-color: var(--rust); background: #f2e8dc; box-shadow: inset 0 0 0 1px var(--rust); }
+.film-type-card.selected .choice-check { color: white; border-color: var(--rust); background: var(--rust); }
+.film-type-number { margin-bottom: 31px; color: var(--rust); font-family: var(--font-serif); font-size: 14px; }
+.film-type-card > strong { padding-right: 30px; font-family: var(--font-serif); font-size: 20px; font-weight: 400; line-height: 1.55; }
+.film-type-card > p { margin: 14px 0 24px; color: var(--muted); font-size: 10px; line-height: 1.8; }
+.film-type-ending { margin-top: auto; padding: 20px; color: white; background: var(--forest); }
+.film-type-card.memorial .film-type-ending { background: #5a5049; }
+.film-type-ending small, .film-type-ending b, .film-type-ending span, .film-type-ending em { display: block; }
+.film-type-ending small { color: rgba(255,255,255,.43); font-size: 6px; font-weight: 700; letter-spacing: .16em; }
+.film-type-ending b { margin-top: 10px; font-family: var(--font-serif); font-size: 15px; font-weight: 400; }
+.film-type-ending span { margin-top: 8px; color: rgba(255,255,255,.57); font-size: 8px; line-height: 1.75; }
+.film-type-ending em { margin-top: 12px; color: #e5cab4; font-family: var(--font-serif); font-size: 9px; font-style: normal; }
 .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px 18px; }
 .form-grid label, .stacked-fields label { display: flex; flex-direction: column; gap: 10px; }
 .form-grid label > span, .stacked-fields label > span, .chip-field legend { font-size: 11px; font-weight: 700; }
@@ -492,6 +513,14 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .concept-option li span { color: #a57a60; font-family: var(--font-serif); }
 .concept-option > i { width: 28px; height: 28px; position: absolute; right: 20px; top: 20px; display: grid; place-items: center; border: 1px solid #b9b4a9; border-radius: 50%; color: transparent; font-size: 9px; font-style: normal; }
 .concept-option.selected > i { color: white; border-color: var(--rust); background: var(--rust); }
+.common-ending-card { margin-top: 16px; padding: 24px 26px; display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 28px; border: 1px solid #c9b9a8; background: #eee6da; }
+.common-ending-card.memorial { border-color: #c8b8ae; background: linear-gradient(135deg, #ece4df, #e2d7cf); }
+.common-ending-card > span { color: var(--rust); font-size: 7px; font-weight: 700; letter-spacing: .18em; }
+.common-ending-card small, .common-ending-card strong { display: block; }
+.common-ending-card small { color: #8b8278; font-size: 7px; letter-spacing: .12em; }
+.common-ending-card strong { margin-top: 7px; font-family: var(--font-serif); font-size: 18px; font-weight: 400; }
+.common-ending-card p { margin: 9px 0 0; color: var(--muted); font-size: 9px; line-height: 1.8; }
+.common-ending-card blockquote, .studio-card .common-ending-card blockquote { margin: 10px 0 0; padding: 0; color: var(--rust); background: transparent; font-family: var(--font-serif); font-size: 10px; }
 .concept-confirm { margin-top: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px; color: white; background: var(--forest); }
 .concept-confirm p { margin: 0; }
 .concept-confirm p span, .concept-confirm p strong { display: block; }
@@ -639,8 +668,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .wizard-side li { font-size: 0; }
   .wizard-main { width: calc(100% - 32px); padding: 34px 0 54px; }
   .wizard-panel h1 { font-size: 32px; line-height: 1.55; }
-  .choice-grid, .form-grid, .style-list, .form-grid.compact { grid-template-columns: 1fr; }
+  .choice-grid, .film-type-grid, .form-grid, .style-list, .form-grid.compact { grid-template-columns: 1fr; }
   .choice-card { min-height: 100px; }
+  .film-type-card { min-height: auto; padding: 22px; }
   .style-card { grid-template-columns: 66px 1fr 18px; }
   .style-swatch { width: 66px; height: 76px; }
   .wizard-actions .button { min-width: 128px; padding: 0 16px; }
@@ -661,6 +691,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .studio-timeline li div { margin: 0; }
   .concept-option { padding: 22px; }
   .concept-option > strong { padding-right: 38px; font-size: 21px; }
+  .common-ending-card { padding: 21px; grid-template-columns: 1fr; gap: 12px; }
   .concept-confirm { align-items: stretch; flex-direction: column; }
   .concept-confirm .button { width: 100%; min-width: 0; }
   .pet-summary { grid-template-columns: 80px 1fr; }
