@@ -40,8 +40,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .site-header { height: 88px; position: absolute; inset: 0 0 auto; z-index: 20; color: white; border-bottom: 1px solid rgba(255,255,255,.16); }
 .header-inner { height: 100%; display: flex; align-items: center; }
 .brand { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; }
-.brand-mark { width: 39px; height: 39px; display: inline-grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-family: var(--font-serif); font-size: 19px; }
-.brand-type { display: flex; flex-direction: column; font-family: var(--font-serif); font-size: 17px; letter-spacing: .11em; line-height: 1.1; }
+.brand-mark { width: 39px; height: 39px; display: inline-grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-family: var(--font-sans); font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.brand-type { display: flex; flex-direction: column; font-family: var(--font-serif); font-size: 17px; letter-spacing: .12em; line-height: 1.1; }
 .brand-type small { margin-top: 4px; font-family: var(--font-sans); font-size: 7px; letter-spacing: .19em; opacity: .65; }
 .desktop-nav { margin-left: auto; display: flex; align-items: center; gap: 34px; }
 .desktop-nav a { padding: 12px 0; font-size: 12px; font-weight: 600; letter-spacing: .05em; opacity: .78; transition: opacity .2s ease; }

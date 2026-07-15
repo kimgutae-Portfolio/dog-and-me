@@ -23,6 +23,7 @@ test("server-renders the Japanese landing page", async () => {
   const html = await response.text();
   assert.match(html, /<html lang="ja">/i);
   assert.match(html, /一緒に過ごした時間を/);
+  assert.match(html, /WAN MEMORY/);
   assert.match(html, /思い出をつくる/);
   assert.match(html, /完成まで、迷わない4つのステップ/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);

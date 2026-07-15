@@ -21,7 +21,7 @@ export default function Home() {
           </div>
         </div>
         <div className="shell hero-content">
-          <p className="eyebrow light">A FILM ABOUT YOU &amp; YOUR DOG</p>
+          <p className="eyebrow light">YOUR DOG. YOUR DAYS. YOUR MEMORY.</p>
           <h1 id="hero-title">
             一緒に過ごした時間を、
             <br />

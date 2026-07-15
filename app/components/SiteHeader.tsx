@@ -4,9 +4,9 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="shell header-inner">
-        <Link className="brand" href="/" aria-label="きみとの映画 トップへ">
-          <span className="brand-mark" aria-hidden="true">き</span>
-          <span className="brand-type">きみとの映画<small>OUR PAW FILM</small></span>
+        <Link className="brand" href="/" aria-label="WAN MEMORY トップへ">
+          <span className="brand-mark" aria-hidden="true">WM</span>
+          <span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span>
         </Link>
         <nav className="desktop-nav" aria-label="メインナビゲーション">
           <a href="/#films">作品</a>

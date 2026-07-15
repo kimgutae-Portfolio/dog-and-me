@@ -6,8 +6,8 @@ export function SiteFooter() {
       <div className="shell footer-grid">
         <div>
           <Link className="brand footer-brand" href="/">
-            <span className="brand-mark" aria-hidden="true">き</span>
-            <span className="brand-type">きみとの映画<small>OUR PAW FILM</small></span>
+            <span className="brand-mark" aria-hidden="true">WM</span>
+            <span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span>
           </Link>
           <p>愛犬との時間を、一本の実写映画に。</p>
         </div>
@@ -17,7 +17,7 @@ export function SiteFooter() {
           <div><p>LEGAL</p><span>利用規約</span><span>プライバシーポリシー</span><span>特定商取引法に基づく表記</span></div>
         </div>
       </div>
-      <div className="shell footer-bottom"><span>© 2026 KIMI TO NO EIGA</span><span>Made for every small, precious moment.</span></div>
+      <div className="shell footer-bottom"><span>© 2026 WAN MEMORY</span><span>Made for every small, precious moment.</span></div>
     </footer>
   );
 }
