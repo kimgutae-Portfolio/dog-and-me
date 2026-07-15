@@ -1,0 +1,283 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { SiteFooter } from "./components/SiteFooter";
+import { SiteHeader } from "./components/SiteHeader";
+
+export const metadata: Metadata = {
+  title: "愛犬との時間を一本の映画に",
+};
+
+export default function Home() {
+  return (
+    <main>
+      <SiteHeader />
+
+      <section className="hero" aria-labelledby="hero-title">
+        <div className="hero-media" aria-hidden="true">
+          <div className="hero-film-grain" />
+          <div className="hero-caption">
+            <span>SCENE 07</span>
+            <span>いつもの帰り道</span>
+          </div>
+        </div>
+        <div className="shell hero-content">
+          <p className="eyebrow light">A FILM ABOUT YOU &amp; YOUR DOG</p>
+          <h1 id="hero-title">
+            一緒に過ごした時間を、
+            <br />
+            一本の映画に。
+          </h1>
+          <p className="hero-copy">
+            写真とエピソードをもとに、愛犬との記憶を
+            <br className="desktop-only" />
+            実写映画のような映像へ仕立てます。
+          </p>
+          <div className="hero-actions">
+            <Link className="button button-primary" href="/story">
+              思い出をつくる <span aria-hidden="true">→</span>
+            </Link>
+            <a className="text-link light-link" href="#films">
+              作品の雰囲気を見る <span aria-hidden="true">↘</span>
+            </a>
+          </div>
+        </div>
+        <div className="scroll-note" aria-hidden="true">
+          SCROLL <span />
+        </div>
+      </section>
+
+      <section className="intro section" id="about">
+        <div className="shell intro-grid">
+          <div>
+            <p className="eyebrow">OUR APPROACH</p>
+            <h2 className="display-title">
+              記録ではなく、
+              <br />
+              記憶を残す。
+            </h2>
+          </div>
+          <div className="intro-copy">
+            <p>
+              何気ない寝顔、いつもの散歩道、家族になった日のこと。
+              大切なのは、きれいな写真の枚数ではなく、その子らしい時間です。
+            </p>
+            <p>
+              お話を伺いながら、一頭一頭に合わせた構成をつくり、実写素材と丁寧な映像表現で一本の作品にします。
+            </p>
+            <div className="trust-row" aria-label="サービスの特徴">
+              <span>実写中心</span>
+              <span>人の手で監修</span>
+              <span>写真5枚から</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="purpose-section section-tight">
+        <div className="shell">
+          <div className="section-heading-row">
+            <div>
+              <p className="eyebrow">THREE STORIES</p>
+              <h2>いまも、記念日も、ありがとうも。</h2>
+            </div>
+            <p>その子との今に合うかたちから、選べます。</p>
+          </div>
+          <div className="purpose-grid">
+            <article className="purpose-card purpose-now">
+              <span className="purpose-number">01</span>
+              <div>
+                <p className="card-kicker">いまを残す</p>
+                <h3>いつもの日々を、未来の宝物に。</h3>
+                <p>散歩やお昼寝、家族を待つ後ろ姿。今だけの表情を映画にします。</p>
+              </div>
+              <span className="card-arrow" aria-hidden="true">↗</span>
+            </article>
+            <article className="purpose-card purpose-day">
+              <span className="purpose-number">02</span>
+              <div>
+                <p className="card-kicker">記念日を祝う</p>
+                <h3>家族になった日を、何度でも。</h3>
+                <p>誕生日やうちの子記念日、大切な節目を一緒に振り返ります。</p>
+              </div>
+              <span className="card-arrow" aria-hidden="true">↗</span>
+            </article>
+            <article className="purpose-card purpose-thanks">
+              <span className="purpose-number">03</span>
+              <div>
+                <p className="card-kicker">ありがとうを伝える</p>
+                <h3>さよならよりも、ありがとうを。</h3>
+                <p>悲しみだけでなく、一緒に過ごせた喜びを静かに映像へ残します。</p>
+              </div>
+              <span className="card-arrow" aria-hidden="true">↗</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="film-section section" id="films">
+        <div className="shell">
+          <div className="film-heading">
+            <div>
+              <p className="eyebrow light">FILM MOOD</p>
+              <h2>一頭ごとに、違う映画。</h2>
+            </div>
+            <p>
+              派手な演出よりも、その子らしいしぐさと空気を大切に。
+              <br />
+              ご希望に合わせて、映像の温度を整えます。
+            </p>
+          </div>
+          <div className="film-grid">
+            <article className="film-card film-card-main">
+              <div className="film-still still-warm" aria-hidden="true">
+                <span className="play-mark">▶</span>
+                <span className="film-time">02:18</span>
+              </div>
+              <div className="film-meta">
+                <div>
+                  <p>モモと歩いた季節</p>
+                  <span>Warm daily film</span>
+                </div>
+                <span>柴犬・12歳</span>
+              </div>
+            </article>
+            <article className="film-card">
+              <div className="film-still still-spring" aria-hidden="true">
+                <span className="play-mark">▶</span>
+                <span className="film-time">00:58</span>
+              </div>
+              <div className="film-meta">
+                <div>
+                  <p>はじめての春</p>
+                  <span>Anniversary short</span>
+                </div>
+                <span>トイプードル・1歳</span>
+              </div>
+            </article>
+            <article className="film-card">
+              <div className="film-still still-sunset" aria-hidden="true">
+                <span className="play-mark">▶</span>
+                <span className="film-time">03:42</span>
+              </div>
+              <div className="film-meta">
+                <div>
+                  <p>またね、ルーク</p>
+                  <span>Gentle memorial</span>
+                </div>
+                <span>ラブラドール・14歳</span>
+              </div>
+            </article>
+          </div>
+          <p className="portfolio-note">※ 掲載作品は1次開発用の表現サンプルです。</p>
+        </div>
+      </section>
+
+      <section className="process-section section" id="flow">
+        <div className="shell">
+          <p className="eyebrow">HOW IT WORKS</p>
+          <div className="process-head">
+            <h2>完成まで、迷わない4つのステップ。</h2>
+            <p>途中保存できるので、思い出はゆっくり聞かせてください。</p>
+          </div>
+          <ol className="process-list">
+            {[
+              ["01", "思い出を聞かせてください", "写真と、その子らしいエピソードをお預かりします。"],
+              ["02", "ストーリーを確認", "担当者がまとめた構成を、制作前にご確認いただけます。"],
+              ["03", "シーンを確認", "仕上げ前の場面ごとに、雰囲気や表情をご確認ください。"],
+              ["04", "映画を受け取る", "完成した映像をダウンロードし、ご家族へ共有できます。"],
+            ].map(([number, title, copy]) => (
+              <li key={number}>
+                <span className="process-number">{number}</span>
+                <div className="process-rule" aria-hidden="true" />
+                <div>
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="pricing-section section" id="plans">
+        <div className="shell">
+          <div className="pricing-heading">
+            <div>
+              <p className="eyebrow">PLANS</p>
+              <h2>残したい時間に合わせて。</h2>
+            </div>
+            <p>1次受付では、決済前に内容とお見積りを確認します。</p>
+          </div>
+          <div className="pricing-grid">
+            <article className="price-card">
+              <p className="plan-en">MEMORY SHORT</p>
+              <h3>メモリーショート</h3>
+              <p className="price"><span>¥</span>12,800<small>〜</small></p>
+              <p className="price-caption">ひとつの思い出を、約45〜60秒に。</p>
+              <ul>
+                <li>写真5枚〜</li><li>日本語字幕</li><li>修正1回</li><li>Full HD</li>
+              </ul>
+              <Link className="button button-outline" href="/story?plan=short">このプランで相談する</Link>
+            </article>
+            <article className="price-card price-card-featured">
+              <span className="recommended">おすすめ</span>
+              <p className="plan-en">MEMORY FILM</p>
+              <h3>メモリーフィルム</h3>
+              <p className="price"><span>¥</span>29,800<small>〜</small></p>
+              <p className="price-caption">出会いから今までを、約2〜3分に。</p>
+              <ul>
+                <li>ストーリー構成</li><li>実写風シーン制作</li><li>ナレーション</li><li>修正2回</li>
+              </ul>
+              <Link className="button button-primary" href="/story?plan=film">このプランで相談する</Link>
+            </article>
+            <article className="price-card">
+              <p className="plan-en">MEMORIAL SIGNATURE</p>
+              <h3>メモリアル</h3>
+              <p className="price"><span>¥</span>49,800<small>〜</small></p>
+              <p className="price-caption">ありがとうを伝える、約3〜5分の作品。</p>
+              <ul>
+                <li>構成2案</li><li>専門ナレーション</li><li>修正3回</li><li>家族共有ページ</li>
+              </ul>
+              <Link className="button button-outline" href="/story?plan=memorial">このプランで相談する</Link>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="faq-section section" id="faq">
+        <div className="shell faq-grid">
+          <div>
+            <p className="eyebrow">FAQ</p>
+            <h2>よくあるご質問</h2>
+            <p className="faq-lead">まだ決めきれないことがあっても大丈夫です。受付後に担当者と一緒に整理できます。</p>
+          </div>
+          <div className="faq-list">
+            {[
+              ["写真は何枚必要ですか？", "最低5枚から受付できます。顔の正面・横顔・全身など、15〜30枚あるとその子らしさをより丁寧に確認できます。"],
+              ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
+              ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
+              ["写真や動画はAIの学習に使われますか？", "お客様の明示的な同意なく、自社モデルの学習や第三者への公開には使用しません。"],
+              ["完成までどのくらいかかりますか？", "素材が揃ってから通常3〜5週間を目安にしています。内容と修正回数により前後するため、受付時に予定日をご案内します。"],
+            ].map(([question, answer]) => (
+              <details key={question}>
+                <summary>{question}<span aria-hidden="true">＋</span></summary>
+                <p>{answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="final-cta">
+        <div className="shell final-cta-inner">
+          <p className="eyebrow light">YOUR STORY STARTS HERE</p>
+          <h2>その子のことを、<br />ゆっくり聞かせてください。</h2>
+          <p>すべての質問に答えなくても大丈夫です。入力内容はこの端末に自動で保存されます。</p>
+          <Link className="button button-cream" href="/story">思い出づくりを始める <span aria-hidden="true">→</span></Link>
+        </div>
+      </section>
+
+      <SiteFooter />
+    </main>
+  );
+}
