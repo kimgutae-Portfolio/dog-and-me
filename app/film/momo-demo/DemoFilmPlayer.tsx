@@ -33,9 +33,11 @@ export function DemoFilmPlayer() {
     <div className="demo-film-player" data-scene={scene + 1}>
       <div className="demo-film-scene" aria-hidden="true" />
       <div className="demo-film-shade" aria-hidden="true" />
+      <div className="demo-film-memory-wash" key={`wash-${scene}`} aria-hidden="true" />
+      <div className="demo-film-floating-dust" aria-hidden="true"><i /><i /><i /><i /></div>
       <div className="demo-film-top"><span>WAN MEMORY · SAMPLE FILM</span><span>{current.time} / 01:02</span></div>
       <div className="demo-film-caption" key={current.label} aria-live="polite"><small>{current.label}</small><p>{current.title}</p></div>
-      <button type="button" className="demo-film-control" onClick={togglePlayback} aria-label={playing ? "デモ映像を一時停止" : "デモ映像を再生"}>{playing ? "Ⅱ" : "▶"}</button>
+      <button type="button" className={playing ? "demo-film-control playing" : "demo-film-control"} onClick={togglePlayback} aria-label={playing ? "デモ映像を一時停止" : "デモ映像を再生"}>{playing ? "Ⅱ" : "▶"}</button>
       <div className="demo-film-progress" aria-hidden="true"><span style={{ width: `${((scene + 1) / scenes.length) * 100}%` }} /></div>
     </div>
   );

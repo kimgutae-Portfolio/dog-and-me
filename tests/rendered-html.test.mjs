@@ -49,6 +49,8 @@ test("renders the customer memory site demo", async () => {
   const html = await response.text();
   assert.match(html, /モモと歩いた季節/);
   assert.match(html, /CUSTOMER DEMO/);
+  assert.match(html, /WHEN A MEMORY RETURNS/);
+  assert.match(html, /あの日の光まで戻ってくる/);
   assert.match(html, /お客様専用メモリーサイトの完成イメージ/);
 });
 
