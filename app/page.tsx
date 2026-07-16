@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ScrollMemoryStory } from "./components/ScrollMemoryStory";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
+import { LivePriceCard } from "./components/LivePriceCard";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 
 export const metadata: Metadata = {
@@ -187,15 +188,18 @@ export default function Home() {
         <div className="shell">
           <p className="eyebrow">HOW IT WORKS</p>
           <div className="process-head">
-            <h2>完成まで、迷わない4つのステップ。</h2>
-            <p>途中保存できるので、思い出はゆっくり聞かせてください。</p>
+            <h2>ご登録からお届けまで、7つのステップ。</h2>
+            <p>ログイン後の制作室で、写真の追加から納品まで確認できます。</p>
           </div>
           <ol className="process-list">
             {[
-              ["01", "映画の種類を選び、思い出を聞かせる", "『いまを残す』か『虹の橋メモリアル』を選び、写真とエピソードをお預けください。"],
-              ["02", "映像コンセプト2案を受け取る", "お預かりした内容から、方向性の異なる2つの物語をご提案します。"],
-              ["03", "1案を選び、詳細を確認", "選んだコンセプトを約1分の構成に整え、制作前にご確認いただきます。"],
-              ["04", "映画と専用サイトを受け取る", "約1分の完成映像と、その子だけのウェブページをご家族へ共有できます。"],
+              ["01", "会員登録して、映画の種類を選ぶ", "メールアドレスで専用制作室をつくり、『いまを残す』か『虹の橋メモリアル』を選びます。"],
+              ["02", "思い出と写真を預ける", "エピソードと写真を非公開領域へ送信します。HEIC写真は自動でJPGへ変換します。"],
+              ["03", "素材確認を待つ", "担当者がその子らしさとご希望を確認します。写真は制作中も追加できます。"],
+              ["04", "映像コンセプト2案を受け取る", "方向性の異なる2つの物語を制作室へお届けします。"],
+              ["05", "1案を選び、料金と納期を確認する", "選んだ方向性、確定料金、予定納期をご確認いただいた後に制作を始めます。"],
+              ["06", "映像を制作・確認し、修正を依頼する", "約1分の映像をご確認いただき、外見や動き、リード、字幕など気になる点をお知らせください。"],
+              ["07", "映画と専用サイトを受け取る", "完成映像と、その子だけのメモリーサイトをログイン後にいつでもご覧いただけます。"],
             ].map(([number, title, copy]) => (
               <li key={number}>
                 <span className="process-number">{number}</span>
@@ -226,27 +230,13 @@ export default function Home() {
               <p>完成した映画、タイトル、メッセージ、写真をまとめた専用ページを、WAN MEMORYのドメイン内にお客様ごとに制作します。</p>
             </div>
             <ul>
-              <li>URLを開くだけで閲覧</li>
-              <li>ログイン・パスワード不要</li>
+              <li>お客様専用の非公開ページ</li>
+              <li>ログイン後にいつでも閲覧</li>
               <li>動画ダウンロード非対応</li>
             </ul>
           </aside>
           <div className="pricing-grid">
-            <article className="price-card price-card-featured price-card-single">
-              <div className="monitor-offer-head">
-                <p className="plan-en">MEMORY FILM</p>
-                <span>先着{MEMORY_FILM_PRICING.launchLimit}組限定</span>
-              </div>
-              <h3>メモリーフィルム</h3>
-              <p className="regular-price">通常価格 <del>¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</del></p>
-              <p className="price"><span>¥</span>{formatYen(MEMORY_FILM_PRICING.launchPrice)}<small>税込</small></p>
-              <p className="price-caption">モニター価格で、選んだコンセプトを約1分の映画に。</p>
-              <p className="monitor-price-note">初期{MEMORY_FILM_PRICING.launchLimit}組の受付終了後は、通常価格 ¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。</p>
-              <ul>
-                <li>映像コンセプト2案</li><li>映画タイプ別の共通エンディング</li><li>選んだ1案の詳細構成</li><li>約1分の実写風映像</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト</li>
-              </ul>
-              <Link className="button button-primary" href="/story">モニター価格で相談する</Link>
-            </article>
+            <LivePriceCard />
           </div>
         </div>
       </section>

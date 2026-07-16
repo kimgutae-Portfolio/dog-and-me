@@ -1,0 +1,15 @@
+project_id = "wan-memory"
+
+[api]
+enabled = true
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://kimi-to-no-eiga.ggutae0.chatgpt.site/**"]
+
+[storage]
+enabled = true
+file_size_limit = "200MiB"

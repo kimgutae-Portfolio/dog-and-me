@@ -27,13 +27,13 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /思い出をつくる/);
   assert.match(html, /写真は、残っている/);
   assert.match(html, /A MEMORY BECOMES A FILM/);
-  assert.match(html, /完成まで、迷わない4つのステップ/);
+  assert.match(html, /ご登録からお届けまで、7つのステップ/);
   assert.match(html, /一頭ごとの、専用メモリーウェブサイト/);
-  assert.match(html, /ログイン・パスワード不要/);
+  assert.match(html, /ログイン後にいつでも閲覧/);
   assert.match(html, /動画ダウンロード非対応/);
   assert.match(html, /画面録画などを技術的に完全に防ぐことはできません/);
   assert.match(html, /メモリーフィルム/);
-  assert.match(html, /先着(?:<!-- -->)?10(?:<!-- -->)?組限定/);
+  assert.match(html, /先着(?:<!-- -->)?10(?:<!-- -->)?組/);
   assert.match(html, /24,800/);
   assert.match(html, /通常価格/);
   assert.match(html, /29,800/);
@@ -48,8 +48,8 @@ test("server-renders the Japanese landing page", async () => {
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
 });
 
-test("server-renders the first-MVP routes", async () => {
-  for (const path of ["/story", "/studio", "/film/momo-demo"]) {
+test("server-renders the connected MVP routes", async () => {
+  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo", "/film/momo-demo"]) {
     const response = await render(path);
     assert.equal(response.status, 200, `${path} should render`);
   }
