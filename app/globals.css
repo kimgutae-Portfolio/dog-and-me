@@ -194,15 +194,21 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .price-card + .price-card { border-left: 0; }
 .price-card-featured { position: relative; color: white; background: var(--forest); transform: translateY(-14px); box-shadow: 0 18px 44px rgba(37,37,31,.15); }
 .price-card-single { transform: none; }
+.monitor-offer-head { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.monitor-offer-head .plan-en { margin: 0; }
+.monitor-offer-head > span { padding: 7px 10px; border: 1px solid rgba(255,255,255,.4); color: #f0dfca; font-size: 8px; font-weight: 700; letter-spacing: .12em; white-space: nowrap; }
 .recommended { position: absolute; right: 20px; top: 18px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.4); font-size: 9px; }
 .plan-en { margin: 0 0 10px; color: var(--rust); font-size: 9px; font-weight: 700; letter-spacing: .18em; }
 .price-card-featured .plan-en { color: #d8b59b; }
 .price-card h3 { margin: 0; font-family: var(--font-serif); font-size: 23px; font-weight: 400; }
+.regular-price { margin: 29px 0 -25px; color: rgba(255,255,255,.52); font-size: 10px; letter-spacing: .05em; }
+.regular-price del { margin-left: 5px; text-decoration-thickness: 1px; }
 .price { margin: 34px 0 8px; font-family: var(--font-serif); font-size: 41px; letter-spacing: .02em; }
 .price span { margin-right: 4px; font-size: 17px; }
 .price small { margin-left: 5px; font-size: 12px; }
 .price-caption { margin: 0 0 28px; color: var(--muted); font-size: 11px; }
 .price-card-featured .price-caption { color: rgba(255,255,255,.58); }
+.monitor-price-note { margin: -14px 0 26px; padding: 13px 15px; color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05); font-size: 9px; line-height: 1.75; }
 .price-card ul { min-height: 154px; margin: 0 0 28px; padding: 26px 0 0; border-top: 1px solid currentColor; list-style: none; }
 .price-card-single ul { min-height: auto; }
 .price-card li { margin-bottom: 12px; font-size: 11px; }
@@ -210,6 +216,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .price-card-featured li::before { color: #d8b59b; }
 .price-card .button { width: 100%; }
 .price-card-featured .button-primary { background: #e7d8c4; color: var(--ink); }
+.review-monitor-price strong, .review-monitor-price small { display: block; }
+.review-monitor-price strong { color: var(--rust); font-family: var(--font-serif); font-size: 16px; font-weight: 400; }
+.review-monitor-price small { margin-top: 3px; color: var(--muted); font-size: 8px; }
 
 .faq-grid { display: grid; grid-template-columns: .7fr 1.3fr; gap: 100px; }
 .faq-lead { max-width: 360px; margin: 26px 0 0; color: var(--muted); font-size: 12px; line-height: 2; }

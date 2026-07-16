@@ -33,6 +33,11 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /動画ダウンロード非対応/);
   assert.match(html, /画面録画などを技術的に完全に防ぐことはできません/);
   assert.match(html, /メモリーフィルム/);
+  assert.match(html, /先着(?:<!-- -->)?10(?:<!-- -->)?組限定/);
+  assert.match(html, /24,800/);
+  assert.match(html, /通常価格/);
+  assert.match(html, /29,800/);
+  assert.match(html, /モニター価格とは何ですか/);
   assert.match(html, /映像コンセプト2案/);
   assert.match(html, /いまを残す思い出フィルム/);
   assert.match(html, /虹の橋メモリアル/);

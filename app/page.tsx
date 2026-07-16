@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ScrollMemoryStory } from "./components/ScrollMemoryStory";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
+import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 
 export const metadata: Metadata = {
   title: "愛犬との時間を一本の映画に",
@@ -232,14 +233,19 @@ export default function Home() {
           </aside>
           <div className="pricing-grid">
             <article className="price-card price-card-featured price-card-single">
-              <p className="plan-en">MEMORY FILM</p>
+              <div className="monitor-offer-head">
+                <p className="plan-en">MEMORY FILM</p>
+                <span>先着{MEMORY_FILM_PRICING.launchLimit}組限定</span>
+              </div>
               <h3>メモリーフィルム</h3>
-              <p className="price"><span>¥</span>29,800<small>〜</small></p>
-              <p className="price-caption">選んだコンセプトを、約1分の映画に。</p>
+              <p className="regular-price">通常価格 <del>¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</del></p>
+              <p className="price"><span>¥</span>{formatYen(MEMORY_FILM_PRICING.launchPrice)}<small>税込</small></p>
+              <p className="price-caption">モニター価格で、選んだコンセプトを約1分の映画に。</p>
+              <p className="monitor-price-note">初期{MEMORY_FILM_PRICING.launchLimit}組の受付終了後は、通常価格 ¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。</p>
               <ul>
                 <li>映像コンセプト2案</li><li>映画タイプ別の共通エンディング</li><li>選んだ1案の詳細構成</li><li>約1分の実写風映像</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト</li>
               </ul>
-              <Link className="button button-primary" href="/story">このプランで相談する</Link>
+              <Link className="button button-primary" href="/story">モニター価格で相談する</Link>
             </article>
           </div>
         </div>
@@ -255,6 +261,7 @@ export default function Home() {
           <div className="faq-list">
             {[
               ["写真は何枚必要ですか？", "最低5枚から受付できます。顔の正面・横顔・全身など、15〜30枚あるとその子らしさをより丁寧に確認できます。"],
+              ["モニター価格とは何ですか？", `サービス品質の確認と改善のため、初期${MEMORY_FILM_PRICING.launchLimit}組限定で ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）にて制作します。受付終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`],
               ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
               ["映像コンセプト2案とは何ですか？", "同じ写真とエピソードから、物語の切り口や場面構成が異なる2案をご提案します。お好きな1案を選んでいただき、約1分の映像として詳しく仕上げます。"],
               ["2案の最後もそれぞれ違いますか？", "途中の物語と場面構成は異なりますが、最後は映画の種類に合わせた共通エンディングです。『いまを残す』は家族と歩き続ける場面、『虹の橋メモリアル』は空へ続く光の道を進み、少し先で待っている気持ちを表します。"],
@@ -277,7 +284,7 @@ export default function Home() {
         <div className="shell final-cta-inner">
           <p className="eyebrow light">YOUR STORY STARTS HERE</p>
           <h2>その子のことを、<br />ゆっくり聞かせてください。</h2>
-          <p>すべての質問に答えなくても大丈夫です。入力内容はこの端末に自動で保存されます。</p>
+          <p>先着{MEMORY_FILM_PRICING.launchLimit}組は ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。入力内容はこの端末に自動で保存されます。</p>
           <Link className="button button-cream" href="/story">思い出づくりを始める <span aria-hidden="true">→</span></Link>
         </div>
       </section>

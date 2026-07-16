@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 
 type FilmPurpose = "いまを残す" | "虹の橋メモリアル";
 
@@ -86,7 +87,19 @@ export function StoryWizard() {
 
   const submit = () => {
     if (!draft.consent) { setError("内容と写真の利用確認に同意してください。"); return; }
-    const order = { ...draft, orderNumber: `KF-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`, submittedAt: new Date().toISOString() };
+    const order = {
+      ...draft,
+      orderNumber: `KF-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      submittedAt: new Date().toISOString(),
+      pricing: {
+        planId: MEMORY_FILM_PRICING.planId,
+        campaignId: MEMORY_FILM_PRICING.campaignId,
+        quotedPrice: MEMORY_FILM_PRICING.launchPrice,
+        regularPrice: MEMORY_FILM_PRICING.regularPrice,
+        currency: MEMORY_FILM_PRICING.currency,
+        taxIncluded: MEMORY_FILM_PRICING.taxIncluded,
+      },
+    };
     window.localStorage.setItem("kimi-film-order", JSON.stringify(order));
     window.localStorage.removeItem("kimi-film-draft");
     router.push("/studio?received=1");
@@ -122,7 +135,7 @@ export function StoryWizard() {
 
           {step === 3 && <div className="wizard-panel"><p className="eyebrow">FILM DIRECTION</p><h1 id="step-title">どんな空気の映画にしますか？</h1><p className="step-lead">迷ったら「日常映画」がおすすめです。担当者からもご提案します。</p><div className="style-list">{styles.map(([title, copy], index) => <label className={draft.style === title ? "style-card selected" : "style-card"} key={title}><input type="radio" name="style" checked={draft.style === title} onChange={() => update("style", title)} /><span className={`style-swatch swatch-${index + 1}`} aria-hidden="true" /><span><strong>{title}</strong><small>{copy}</small></span><span className="radio-dot" /></label>)}</div><div className="form-grid compact"><label><span>映像比率</span><select value={draft.ratio} onChange={(e) => update("ratio", e.target.value)}><option>16:9 横型</option><option>9:16 縦型</option><option>1:1 正方形</option></select></label><label><span>ナレーション</span><select value={draft.narration} onChange={(e) => update("narration", e.target.value)}><option>ナレーションなし</option><option>女性・日本語</option><option>男性・日本語</option><option>家族の声を使う</option></select></label><label><span>BGM</span><select value={draft.bgm} onChange={(e) => update("bgm", e.target.value)}><option>おまかせ</option><option>静かなピアノ</option><option>アコースティックギター</option><option>映画音楽のように</option></select></label></div></div>}
 
-          {step === 4 && <div className="wizard-panel"><p className="eyebrow">REVIEW</p><h1 id="step-title">ありがとうございます。</h1><p className="step-lead">まずは相談受付としてお預かりします。決済は内容と納期をご確認いただいた後です。</p><div className="review-card"><div className="review-title"><span className="brand-mark" aria-hidden="true">WM</span><div><strong>{draft.petName || "愛犬"}ちゃんの映画</strong><small>{draft.purpose}・{draft.style}</small></div></div><dl><div><dt>お名前</dt><dd>{draft.petName || "未入力"}</dd></div><div><dt>犬種・年齢</dt><dd>{[draft.breed, draft.age].filter(Boolean).join(" / ") || "未入力"}</dd></div><div><dt>性格</dt><dd>{draft.personality.join("、") || "未入力"}</dd></div><div><dt>希望</dt><dd>{draft.ratio}・{draft.narration}</dd></div><div><dt>写真</dt><dd>{draft.photoNames.length ? `${draft.photoNames.length}枚を選択` : "後から追加"}</dd></div><div><dt>プラン</dt><dd>メモリーフィルム</dd></div><div><dt>映画の種類</dt><dd>{selectedPurpose.title}</dd></div><div><dt>コンセプト</dt><dd>2案から1案を選択</dd></div><div><dt>共通エンディング</dt><dd>{selectedPurpose.endingTitle}</dd></div><div><dt>専用サイト</dt><dd>プランに含まれます</dd></div></dl><button type="button" className="review-edit" onClick={() => setStep(0)}>最初から内容を見直す</button></div><label className="consent-box"><input type="checkbox" checked={draft.consent} onChange={(e) => update("consent", e.target.checked)} /><span><strong>内容と写真の取り扱いについて確認しました</strong><small>自分が使用権限を持つ写真のみを提出し、制作目的で取り扱われることに同意します。1次版では外部送信されません。</small></span></label></div>}
+          {step === 4 && <div className="wizard-panel"><p className="eyebrow">REVIEW</p><h1 id="step-title">ありがとうございます。</h1><p className="step-lead">まずは相談受付としてお預かりします。決済は内容と納期をご確認いただいた後です。</p><div className="review-card"><div className="review-title"><span className="brand-mark" aria-hidden="true">WM</span><div><strong>{draft.petName || "愛犬"}ちゃんの映画</strong><small>{draft.purpose}・{draft.style}</small></div></div><dl><div><dt>お名前</dt><dd>{draft.petName || "未入力"}</dd></div><div><dt>犬種・年齢</dt><dd>{[draft.breed, draft.age].filter(Boolean).join(" / ") || "未入力"}</dd></div><div><dt>性格</dt><dd>{draft.personality.join("、") || "未入力"}</dd></div><div><dt>希望</dt><dd>{draft.ratio}・{draft.narration}</dd></div><div><dt>写真</dt><dd>{draft.photoNames.length ? `${draft.photoNames.length}枚を選択` : "後から追加"}</dd></div><div><dt>プラン</dt><dd>メモリーフィルム</dd></div><div><dt>料金</dt><dd className="review-monitor-price"><strong>¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）</strong><small>先着{MEMORY_FILM_PRICING.launchLimit}組限定・通常 ¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</small></dd></div><div><dt>映画の種類</dt><dd>{selectedPurpose.title}</dd></div><div><dt>コンセプト</dt><dd>2案から1案を選択</dd></div><div><dt>共通エンディング</dt><dd>{selectedPurpose.endingTitle}</dd></div><div><dt>専用サイト</dt><dd>プランに含まれます</dd></div></dl><button type="button" className="review-edit" onClick={() => setStep(0)}>最初から内容を見直す</button></div><label className="consent-box"><input type="checkbox" checked={draft.consent} onChange={(e) => update("consent", e.target.checked)} /><span><strong>内容と写真の取り扱いについて確認しました</strong><small>自分が使用権限を持つ写真のみを提出し、制作目的で取り扱われることに同意します。1次版では外部送信されません。</small></span></label></div>}
 
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="wizard-actions">{step > 0 ? <button className="button button-ghost" type="button" onClick={() => { setError(""); setStep((current) => current - 1); }}>← 戻る</button> : <span />}{step < steps.length - 1 ? <button className="button button-primary" type="button" onClick={goNext}>次へ進む →</button> : <button className="button button-primary" type="button" onClick={submit}>相談を受け付ける →</button>}</div>
