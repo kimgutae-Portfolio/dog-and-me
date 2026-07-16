@@ -4,6 +4,7 @@ export type Profile = {
   id: string;
   email: string | null;
   full_name: string | null;
+  primary_pet_name: string | null;
   role: ProfileRole;
 };
 

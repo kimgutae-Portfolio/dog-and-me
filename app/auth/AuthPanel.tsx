@@ -24,7 +24,9 @@ export function AuthPanel() {
   const searchParams = useSearchParams();
   const { user, loading, profile } = useAuth();
   const nextPath = useMemo(() => safeNext(searchParams.get("next")), [searchParams]);
+  const signupNextPath = nextPath === "/studio" ? "/story" : nextPath;
   const [mode, setMode] = useState<AuthMode>("login");
+  const [petName, setPetName] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,16 +56,20 @@ export function AuthPanel() {
       }
 
       if (mode === "signup") {
+        if (!petName.trim()) {
+          setError("愛犬のお名前を入力してください。");
+          return;
+        }
         const { data, error: signupError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { full_name: fullName },
-            emailRedirectTo: `${window.location.origin}/auth?confirmed=1&next=${encodeURIComponent(nextPath)}`,
+            data: { full_name: fullName.trim() || null, pet_name: petName.trim() },
+            emailRedirectTo: `${window.location.origin}/auth?confirmed=1&next=${encodeURIComponent(signupNextPath)}`,
           },
         });
         if (signupError) throw signupError;
-        if (data.session) router.replace(nextPath);
+        if (data.session) router.replace(signupNextPath);
         else setMessage("確認メールをお送りしました。メール内のリンクを開いて登録を完了してください。");
         return;
       }
@@ -81,12 +87,13 @@ export function AuthPanel() {
   if (loading) return <div className="wizard-loading">制作室への入口を準備しています…</div>;
 
   if (user && searchParams.get("confirmed")) {
+    const registeredPetName = profile?.primary_pet_name || user.user_metadata?.pet_name;
     return (
       <main className="auth-page"><section className="auth-card auth-complete">
         <span className="auth-success-mark">✓</span>
         <p className="eyebrow">WELCOME TO WAN MEMORY</p>
         <h1>ログインできました。</h1>
-        <p>{profile?.full_name || user.email}さまの制作室をご用意しています。</p>
+        <p>{registeredPetName ? `${registeredPetName}ちゃんの映画づくりを始めましょう。` : `${profile?.full_name || user.email}さまの制作室をご用意しています。`}</p>
         <Link className="button button-primary" href={nextPath}>制作室へ進む →</Link>
       </section></main>
     );
@@ -102,7 +109,11 @@ export function AuthPanel() {
         <p className="auth-lead">{mode === "signup" ? "制作状況と完成した映画を、ひとつの制作室で大切にお預かりします。" : mode === "reset" ? "登録したメールアドレスへ再設定リンクをお送りします。" : "写真の追加から映画のお届けまで、こちらでご確認いただけます。"}</p>
         {mode !== "reset" && <div className="auth-tabs"><button className={mode === "login" ? "active" : ""} type="button" onClick={() => setMode("login")}>ログイン</button><button className={mode === "signup" ? "active" : ""} type="button" onClick={() => setMode("signup")}>会員登録</button></div>}
         <form className="auth-form" onSubmit={submit}>
-          {mode === "signup" && <label><span>お名前</span><input required value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="山田 花子" /></label>}
+          {mode === "signup" && <>
+            <label><span>愛犬のお名前 <em>必須</em></span><input required value={petName} onChange={(event) => setPetName(event.target.value)} autoComplete="off" placeholder="例：モモ" /></label>
+            <label><span>飼い主さまのお名前 <small>任意</small></span><input value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="例：山田 花子" /></label>
+            <p className="auth-prefill-note">愛犬のお名前は、次の申込フォームへ自動で引き継がれます。</p>
+          </>}
           <label><span>メールアドレス</span><input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="you@example.com" /></label>
           {mode !== "reset" && <label><span>パスワード</span><input required minLength={8} type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} placeholder="8文字以上" /></label>}
           {error && <p className="form-error" role="alert">{error}</p>}

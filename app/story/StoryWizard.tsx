@@ -48,7 +48,7 @@ const styles = [
 
 export function StoryWizard() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
@@ -62,20 +62,23 @@ export function StoryWizard() {
     if (!authLoading && !user) router.replace("/auth?next=/story");
   }, [authLoading, router, user]);
 
+  const preferredPetName = (profile?.primary_pet_name || user?.user_metadata?.pet_name || "").trim();
+
   useEffect(() => {
+    if (authLoading || hydrated) return;
     const timer = window.setTimeout(() => {
       const stored = window.localStorage.getItem("kimi-film-draft");
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           const purpose: FilmPurpose = parsed.purpose === "虹の橋メモリアル" || parsed.purpose === "お別れ・メモリアル" ? "虹の橋メモリアル" : "いまを残す";
-          setDraft({ ...emptyDraft, ...parsed, photoNames: [], purpose });
-        } catch { setDraft(emptyDraft); }
-      } else setDraft(emptyDraft);
+          setDraft({ ...emptyDraft, ...parsed, petName: parsed.petName?.trim() || preferredPetName, photoNames: [], purpose });
+        } catch { setDraft({ ...emptyDraft, petName: preferredPetName }); }
+      } else setDraft({ ...emptyDraft, petName: preferredPetName });
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [authLoading, hydrated, preferredPetName]);
 
   useEffect(() => {
     if (!hydrated) return;

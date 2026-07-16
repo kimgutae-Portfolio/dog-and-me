@@ -371,8 +371,11 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .auth-form { display: grid; gap: 19px; }
 .auth-form label { display: grid; gap: 9px; }
 .auth-form label span { font-size: 10px; font-weight: 700; }
+.auth-form label span em { margin-left: 6px; color: var(--rust); font-size: 8px; font-style: normal; }
+.auth-form label span small { margin-left: 6px; color: #969187; font-size: 8px; font-weight: 400; }
 .auth-form input { width: 100%; min-height: 54px; padding: 0 15px; border: 1px solid var(--line); outline: 0; background: white; }
 .auth-form input:focus { border-color: var(--rust); }
+.auth-prefill-note { margin: -6px 0 0; padding: 12px 14px; color: var(--muted); background: rgba(135,145,123,.1); font-size: 9px; line-height: 1.7; }
 .auth-submit { width: 100%; margin-top: 5px; }
 .auth-text-button { margin: 22px auto 0; padding: 5px; display: block; border: 0; border-bottom: 1px solid currentColor; color: var(--muted); background: transparent; cursor: pointer; font-size: 10px; }
 .auth-privacy { margin: 34px 0 0; padding-top: 20px; border-top: 1px solid var(--line); color: #969187; font-size: 9px; line-height: 1.8; text-align: center; }

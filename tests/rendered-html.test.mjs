@@ -78,3 +78,17 @@ test("starter preview was removed", async () => {
   assert.doesNotMatch(layout, /Starter Project|next\/font\/google/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });
+
+test("signup stores the dog name and the story form reuses it", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [authPanel, storyWizard, migration] = await Promise.all([
+    readFile(new URL("app/auth/AuthPanel.tsx", root), "utf8"),
+    readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
+    readFile(new URL("supabase/migrations/202607160002_profile_pet_name.sql", root), "utf8"),
+  ]);
+  assert.match(authPanel, /愛犬のお名前/);
+  assert.match(authPanel, /pet_name: petName\.trim\(\)/);
+  assert.match(storyWizard, /profile\?\.primary_pet_name/);
+  assert.match(storyWizard, /petName: parsed\.petName\?\.trim\(\) \|\| preferredPetName/);
+  assert.match(migration, /add column if not exists primary_pet_name text/);
+});

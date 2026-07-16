@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       return;
     }
-    const { data } = await supabase.from("profiles").select("id,email,full_name,role").eq("id", currentUser.id).maybeSingle();
+    const { data } = await supabase.from("profiles").select("id,email,full_name,primary_pet_name,role").eq("id", currentUser.id).maybeSingle();
     setProfile((data as Profile | null) ?? null);
   }, []);
 
