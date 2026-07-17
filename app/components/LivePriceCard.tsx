@@ -45,7 +45,7 @@ export function LivePriceCard() {
       <p className="price"><span>¥</span>{formatYen(pricing.current_price)}<small>税込</small></p>
       <p className="price-caption">選んだコンセプトを、約1分の映画に。</p>
       <p className="monitor-price-note">{pricing.campaign_active ? `初期${pricing.launch_limit}組の受付終了後は、通常価格 ¥${formatYen(pricing.regular_price)}（税込）になります。` : "受付時に内容と納期をご確認いただき、制作を開始します。"}</p>
-      <ul><li>映像コンセプト2案</li><li>映画タイプ別の共通エンディング</li><li>選んだ1案の詳細構成</li><li>約1分の実写風映像</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト</li></ul>
+      <ul><li>映像コンセプト2案</li><li>映画タイプ別の共通エンディング</li><li>選んだ1案の詳細構成</li><li>約1分の実写風映像</li><li>ナレーション・字幕</li><li>修正2回</li><li>専用メモリーサイト（ログイン閲覧）</li></ul>
       <Link className="button button-primary" href="/story">{pricing.campaign_active ? "モニター価格で相談する" : "このプランで相談する"}</Link>
     </article>
   );

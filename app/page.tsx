@@ -287,17 +287,24 @@ export default async function Home() {
             </div>
             <p>コンセプト提案から、約1分の映画と専用サイトまで。</p>
           </div>
-          <aside className="included-memory-site" aria-label="メモリーフィルムに含まれる専用ウェブサイト">
-            <p className="included-label">INCLUDED IN MEMORY FILM</p>
-            <div>
-              <h3>一頭ごとの、専用メモリーウェブサイト。</h3>
-              <p>完成した映画、タイトル、メッセージ、写真をまとめた専用ページを、WAN MEMORYのドメイン内にお客様ごとに制作します。</p>
+          <aside className="included-memory-site" aria-label="メモリーフィルムに含まれる専用メモリーサイト">
+            <div className="included-memory-site-intro">
+              <p className="included-label">INCLUDED IN MEMORY FILM</p>
+              <div>
+                <h3>映画を受け取ったあとも、思い出へ帰れる場所。</h3>
+                <p>完成した映画だけでなく、愛犬へのメッセージ、選んだ物語、思い出の写真をひとつにまとめた専用ページを、WAN MEMORYのドメイン内にお客様ごとに制作します。追加料金はかかりません。</p>
+              </div>
             </div>
-            <ul>
-              <li>お客様専用の非公開ページ</li>
-              <li>ログイン後にいつでも閲覧</li>
-              <li>動画ダウンロード非対応</li>
-            </ul>
+            <div className="memory-site-usage">
+              <p className="memory-site-usage-title">専用メモリーサイトの使い方</p>
+              <ol>
+                <li><span>01</span><div><strong>納品のお知らせを受け取る</strong><p>映画が完成すると、ログイン後の制作室に「専用メモリーサイトを見る」ボタンが表示されます。</p></div></li>
+                <li><span>02</span><div><strong>スマートフォンやパソコンで開く</strong><p>ご登録のアカウントでログインし、完成映像・メッセージ・物語・写真をひとつのページでご覧いただけます。</p></div></li>
+                <li><span>03</span><div><strong>見たいときに、何度でも振り返る</strong><p>WAN MEMORYのサイト内に保管されるため、制作室からいつでもアクセスできます。映像は閲覧専用で、ダウンロードボタンは表示されません。</p></div></li>
+              </ol>
+              <div className="memory-site-note"><span>PRIVATE</span><p>ページは検索結果に表示されず、ご本人のログイン後に閲覧できます。画面録画などを技術的に完全に防ぐことはできません。</p></div>
+              <Link className="memory-site-demo-link" href="/film/momo-demo">実際の完成イメージを見る →</Link>
+            </div>
           </aside>
           <div className="pricing-grid">
             <LivePriceCard />

@@ -182,13 +182,22 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .process-list h3 { margin: 0 0 8px; font-family: var(--font-serif); font-size: 22px; font-weight: 400; }
 .process-list p { margin: 0; color: var(--muted); font-size: 12px; }
 
-.included-memory-site { margin: 0 0 62px; padding: 34px 38px; display: grid; grid-template-columns: 160px minmax(0, 1fr) auto; align-items: center; gap: 38px; border: 1px solid var(--line); background: #ece4d6; }
+.included-memory-site { margin: 0 0 62px; padding: 38px; border: 1px solid var(--line); background: #ece4d6; }
+.included-memory-site-intro { display: grid; grid-template-columns: 190px minmax(0, 1fr); align-items: start; gap: 38px; }
 .included-label { margin: 0; color: var(--rust); font-size: 8px; font-weight: 700; line-height: 1.7; letter-spacing: .19em; }
 .included-memory-site h3 { margin: 0 0 9px; font-family: var(--font-serif); font-size: 23px; font-weight: 400; letter-spacing: .04em; }
-.included-memory-site div > p { max-width: 610px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.9; }
-.included-memory-site ul { margin: 0; padding: 0; display: grid; gap: 8px; list-style: none; }
-.included-memory-site li { color: #5f6157; font-size: 9px; white-space: nowrap; }
-.included-memory-site li::before { content: "○"; margin-right: 8px; color: var(--rust); }
+.included-memory-site-intro div > p { max-width: 760px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.9; }
+.memory-site-usage { margin-top: 32px; padding-top: 29px; border-top: 1px solid rgba(37,37,31,.18); }
+.memory-site-usage-title { margin: 0 0 19px; color: var(--ink); font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+.memory-site-usage ol { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; list-style: none; }
+.memory-site-usage li { min-width: 0; padding: 18px; display: grid; grid-template-columns: 29px 1fr; gap: 11px; background: rgba(255,255,255,.34); }
+.memory-site-usage li > span { color: var(--rust); font-family: var(--font-serif); font-size: 11px; }
+.memory-site-usage li strong { display: block; margin-bottom: 7px; font-family: var(--font-serif); font-size: 14px; font-weight: 400; line-height: 1.55; }
+.memory-site-usage li p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.8; }
+.memory-site-note { margin-top: 16px; padding: 13px 15px; display: flex; align-items: start; gap: 13px; border: 1px solid rgba(37,37,31,.12); }
+.memory-site-note span { color: var(--rust); font-size: 7px; font-weight: 700; letter-spacing: .15em; }
+.memory-site-note p { margin: 0; color: var(--muted); font-size: 8px; line-height: 1.7; }
+.memory-site-demo-link { margin-top: 20px; display: inline-block; color: var(--ink); border-bottom: 1px solid var(--ink); font-size: 9px; font-weight: 700; letter-spacing: .06em; }
 .pricing-grid { max-width: 580px; margin: 0 auto; display: grid; grid-template-columns: 1fr; align-items: stretch; }
 .price-card { padding: 42px 34px 36px; border: 1px solid var(--line); background: rgba(255,255,255,.2); }
 .price-card + .price-card { border-left: 0; }
@@ -785,8 +794,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .story-scroll-progress { right: 0; }
   .story-scroll-label { display: none; }
   .purpose-grid, .pricing-grid { grid-template-columns: 1fr; }
-  .included-memory-site { padding: 30px; grid-template-columns: 1fr; gap: 18px; }
-  .included-memory-site ul { grid-template-columns: repeat(3, auto); justify-content: start; gap: 12px 24px; }
+  .included-memory-site { padding: 30px; }
+  .included-memory-site-intro { grid-template-columns: 1fr; gap: 14px; }
+  .memory-site-usage ol { grid-template-columns: 1fr; }
   .purpose-card { min-height: 350px; }
   .film-grid { grid-template-columns: 1fr; }
   .film-card-main { grid-row: auto; }
@@ -863,7 +873,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .process-list p { line-height: 1.7; }
   .included-memory-site { margin-bottom: 45px; padding: 25px 22px; }
   .included-memory-site h3 { font-size: 20px; line-height: 1.55; }
-  .included-memory-site ul { grid-template-columns: 1fr; gap: 8px; }
+  .memory-site-usage { margin-top: 24px; padding-top: 23px; }
+  .memory-site-usage li { padding: 16px 14px; }
+  .memory-site-note { flex-direction: column; gap: 6px; }
   .price-card { padding: 34px 26px; }
   .faq-grid { gap: 42px; }
   .final-cta { padding: 86px 0; }
