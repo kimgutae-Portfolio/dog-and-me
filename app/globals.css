@@ -553,6 +553,17 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .admin-video-upload { min-height: 110px; padding: 28px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 9px; border: 1px dashed #a49d91; cursor: pointer; background: #eee9df; }
 .admin-video-upload strong { color: var(--rust); font-size: 11px; }
 .admin-video-upload small { color: var(--muted); font-size: 8px; }
+.admin-mobile-order-picker, .admin-mobile-sections { display: none; }
+.admin-delivery-review { margin-top: 14px; padding: 22px; border: 1px solid #bfa184; background: #fff9ef; }
+.admin-delivery-review h4 { margin: -7px 0 18px; font-family: var(--font-serif); font-size: 20px; font-weight: 400; }
+.admin-delivery-review dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.admin-delivery-review dl div { padding: 11px 12px; background: #eee8dc; }
+.admin-delivery-review dt { margin-bottom: 5px; color: var(--muted); font-size: 7px; }
+.admin-delivery-review dd { margin: 0; overflow-wrap: anywhere; font-size: 9px; line-height: 1.6; }
+.admin-delivery-check { min-height: 50px; margin: 16px 0; padding: 10px 12px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: white; cursor: pointer; }
+.admin-delivery-check input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--rust); }
+.admin-delivery-check span { font-size: 10px; font-weight: 700; }
+.admin-delivery-review > div:last-child { display: flex; justify-content: flex-end; gap: 9px; }
 .admin-message-form { display: grid; gap: 12px; }
 .admin-message-form button { justify-self: start; }
 .admin-empty { padding: 100px 0; }
@@ -597,9 +608,37 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .private-film-footer { padding-inline: 18px; }
   .admin-header { padding-inline: 16px; }
   .admin-header nav a, .admin-header nav span { display: none; }
+  .admin-header nav button { min-width: 44px; min-height: 44px; }
+  .admin-sidebar { padding: 26px 16px; }
+  .admin-sidebar h1 { margin-bottom: 18px; font-size: 27px; }
+  .admin-sidebar > select { height: 48px; font-size: 16px; }
+  .admin-mobile-order-picker { margin-top: 12px; display: grid; gap: 7px; }
+  .admin-mobile-order-picker span { color: var(--muted); font-size: 10px; font-weight: 700; }
+  .admin-mobile-order-picker select { width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid var(--line); background: white; font-size: 16px; }
+  .admin-order-list { display: none; }
+  .admin-main { width: calc(100% - 32px); padding: 24px 0 70px; }
   .admin-title { align-items: flex-start; flex-direction: column; }
+  .admin-title h2 { font-size: 28px; line-height: 1.45; }
+  .admin-title .button { width: 100%; }
+  .admin-mobile-sections { margin: 0 -16px 16px; padding: 7px 10px; position: sticky; z-index: 20; top: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: rgba(37,48,39,.96); box-shadow: 0 8px 20px rgba(30,35,31,.15); backdrop-filter: blur(12px); }
+  .admin-mobile-sections a { min-height: 44px; display: grid; place-items: center; color: rgba(255,255,255,.75); border-right: 1px solid rgba(255,255,255,.09); font-size: 9px; }
+  .admin-mobile-sections a:last-child { border-right: 0; }
+  .admin-card { padding: 24px 18px; scroll-margin-top: 64px; }
+  .admin-card .card-head { align-items: flex-start; flex-direction: column; gap: 8px; }
   .admin-form-grid, .admin-story, .admin-concepts { grid-template-columns: 1fr; }
   .admin-form-grid label.wide { grid-column: auto; }
+  .admin-form-grid input, .admin-form-grid select, .admin-form-grid textarea, .admin-concepts input, .admin-concepts textarea, .admin-message-form textarea { min-height: 50px; font-size: 16px; }
+  .admin-card > .button, .admin-message-form .button { width: 100%; }
+  .admin-concepts > div { padding: 17px; }
+  .admin-video-upload { min-height: 126px; padding: 24px 18px; text-align: center; }
+  .admin-video-upload strong { font-size: 14px; }
+  .admin-video-upload small { font-size: 10px; line-height: 1.7; }
+  .admin-delivery-review { padding: 20px 16px; }
+  .admin-delivery-review dl { grid-template-columns: 1fr; }
+  .admin-delivery-review dd { font-size: 12px; }
+  .admin-delivery-check span { font-size: 12px; line-height: 1.6; }
+  .admin-delivery-review > div:last-child { align-items: stretch; flex-direction: column-reverse; }
+  .admin-delivery-review > div:last-child .button { width: 100%; }
 }
 
 /* Story wizard */
@@ -740,6 +779,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .studio-top { margin-bottom: 36px; display: flex; justify-content: space-between; align-items: flex-end; }
 .studio-top h1 { margin: 0; font-family: var(--font-serif); font-size: 38px; font-weight: 400; }
 .studio-top > div:first-child > p:last-child { margin: 12px 0 0; color: var(--muted); font-size: 11px; }
+.studio-next-action { display: none; }
 .order-meta { display: grid; grid-template-columns: auto auto; gap: 3px 14px; }
 .order-meta span { grid-column: 1; grid-row: 1 / span 2; align-self: center; color: #99978d; font-size: 8px; letter-spacing: .16em; }
 .order-meta strong { font-size: 10px; }
@@ -757,6 +797,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .status-visual i { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.25); }
 .status-visual i:nth-of-type(1) { transform: translate(-35px,-34px); }.status-visual i:nth-of-type(2) { transform: translate(38px,-24px); }.status-visual i:nth-of-type(3) { transform: translate(5px,44px); }
 .timeline-card, .studio-card { margin-top: 20px; padding: 30px 34px; background: #f8f6f0; }
+.mobile-studio-timeline, .mobile-concept-submit { display: none; }
 .card-head { display: flex; justify-content: space-between; align-items: flex-start; }
 .card-head h2, .studio-card > h2 { margin: -10px 0 0; font-family: var(--font-serif); font-size: 22px; font-weight: 400; }
 .card-head > span, .card-head a { color: var(--muted); font-size: 9px; }
@@ -949,6 +990,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .hero-copy { font-size: 13px; line-height: 1.95; }
   .hero-actions { margin-top: 28px; align-items: flex-start; flex-direction: column; gap: 16px; }
   .hero-actions .button { width: 100%; }
+  .hero-actions .text-link { min-height: 44px; }
   .hero-caption, .scroll-note { display: none; }
   .scroll-story { height: 280vh; height: 280svh; }
   .scroll-story-sticky { min-height: 600px; }
@@ -972,7 +1014,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .story-focus-ring::after { height: 76px; left: 23px; top: -14px; }
   .story-timecode { right: 9px; bottom: 8px; font-size: 6px; }
   .story-chapter-nav { left: 0; bottom: 16px; }
-  .story-chapter-nav button { width: 30px; height: 30px; }
+  .story-chapter-nav button { width: 44px; height: 44px; }
   .story-scroll-progress { width: 1px; height: 86px; right: 0; }
   .display-title { font-size: 39px; }
   .section-heading-row, .pricing-heading, .film-heading, .process-head { align-items: flex-start; flex-direction: column; gap: 16px; }
@@ -1004,7 +1046,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .final-cta h2 { font-size: 37px; }
   .footer-grid { grid-template-columns: 1fr; gap: 50px; }
   .footer-links { grid-template-columns: 1fr 1fr; }
-  .footer-links a, .footer-links span { min-height: 36px; display: flex; align-items: center; font-size: 11px; line-height: 1.5; }
+  .footer-links a, .footer-links span { min-height: 44px; display: flex; align-items: center; font-size: 11px; line-height: 1.5; }
   .footer-bottom { align-items: flex-start; flex-direction: column; gap: 8px; }
   .wizard-header { height: 68px; padding: 0 16px; }
   .wizard-header .brand-type { display: none; }
@@ -1016,6 +1058,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .wizard-panel h1 { font-size: 32px; line-height: 1.55; }
   .step-lead { margin-bottom: 32px; font-size: 13px; line-height: 1.9; }
   .choice-grid, .film-type-grid, .form-grid, .style-list, .form-grid.compact { grid-template-columns: 1fr; }
+  .form-grid input, .form-grid select, .stacked-fields textarea { font-size: 16px; }
+  .chip { min-height: 44px; }
   .choice-card { min-height: 100px; }
   .film-type-card { min-height: auto; padding: 22px; }
   .style-card { grid-template-columns: 66px 1fr 18px; }
@@ -1027,18 +1071,48 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .missing-fields-panel button span { grid-column: 1 / -1; }
   .studio-header { height: 68px; padding: 0 16px; }
   .studio-header .brand-type, .studio-header nav a { display: none; }
+  .studio-header nav { gap: 10px; }
+  .studio-header nav button { min-width: 44px; min-height: 44px; }
   .studio-shell { width: calc(100% - 40px); padding-top: 42px; }
   .received-banner { margin: 12px 20px 0; padding: 18px; }
   .studio-top { align-items: flex-start; flex-direction: column; gap: 20px; }
   .studio-top h1 { font-size: 31px; }
-  .studio-status { grid-template-columns: 1fr; }
-  .status-copy { padding: 30px 24px; }
-  .status-visual { min-height: 190px; }
+  .studio-next-action { margin: 0 0 16px; padding: 22px 20px; display: grid; gap: 18px; border: 1px solid #b9c3b4; background: #edf1e9; }
+  .studio-next-action h2 { margin: -4px 0 8px; font-family: var(--font-serif); font-size: 23px; font-weight: 400; line-height: 1.5; }
+  .studio-next-action span { color: var(--muted); font-size: 12px; line-height: 1.8; }
+  .studio-next-action .button { width: 100%; }
+  .studio-status { min-height: 0; grid-template-columns: 1fr; }
+  .status-copy { padding: 28px 24px; }
+  .status-copy h2 + p { font-size: 12px; }
+  .status-visual { display: none; }
   .timeline-card, .studio-card { padding: 30px 24px; }
+  .desktop-studio-timeline { display: none; }
+  .mobile-studio-timeline { display: block; }
+  .mobile-studio-timeline summary { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: pointer; list-style: none; }
+  .mobile-studio-timeline summary::-webkit-details-marker { display: none; }
+  .mobile-studio-timeline summary span small, .mobile-studio-timeline summary span strong { display: block; }
+  .mobile-studio-timeline summary span small { color: var(--rust); font-size: 7px; letter-spacing: .15em; }
+  .mobile-studio-timeline summary span strong { margin-top: 6px; font-family: var(--font-serif); font-size: 18px; font-weight: 400; }
+  .mobile-studio-timeline summary i { min-height: 44px; display: flex; align-items: center; color: var(--muted); font-size: 9px; font-style: normal; }
+  .mobile-studio-timeline[open] summary i::after { content: " −"; }
+  .mobile-studio-timeline:not([open]) summary i::after { content: " ＋"; }
+  #concepts, #delivery, #materials, #messages, #revision { scroll-margin-top: 18px; }
+  .mobile-concept-submit { min-height: 80px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); position: fixed; z-index: 150; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: white; background: rgba(38,48,40,.97); border-top: 1px solid rgba(255,255,255,.15); box-shadow: 0 -12px 30px rgba(21,28,23,.2); backdrop-filter: blur(12px); }
+  .mobile-concept-submit div { min-width: 0; }
+  .mobile-concept-submit small, .mobile-concept-submit strong { display: block; }
+  .mobile-concept-submit small { color: rgba(255,255,255,.52); font-size: 7px; letter-spacing: .1em; }
+  .mobile-concept-submit strong { max-width: 45vw; margin-top: 4px; overflow: hidden; font-family: var(--font-serif); font-size: 14px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-concept-submit .button { min-height: 50px; padding-inline: 16px; white-space: nowrap; }
   .album-manager-grid { grid-template-columns: 1fr; }
+  .album-manager-image button { min-height: 44px; min-width: 76px; font-size: 10px; }
+  .album-manager-item > input { height: 50px; font-size: 16px; }
+  .album-manager-actions { gap: 7px; }
+  .album-manager-actions button { min-height: 44px; font-size: 10px; }
   .family-share-panel { margin: 34px -24px -30px; padding: 30px 24px; }
   .family-share-controls > div:nth-child(2) { display: grid; }
-  .family-share-controls .button { width: 100%; }
+  .family-share-controls .button { width: 100%; min-height: 48px; font-size: 10px; }
+  .share-rotate { min-height: 44px; display: inline-flex; align-items: center; font-size: 10px; }
+  .studio-account-bar select, .message-form textarea, .revision-form textarea, .revision-form select { font-size: 16px; }
   .studio-timeline { grid-template-columns: 1fr; gap: 14px; }
   .studio-timeline li { display: flex; gap: 12px; align-items: center; }
   .studio-timeline li::after { left: 13px; right: auto; top: 26px; bottom: -15px; width: 1px; height: auto; }

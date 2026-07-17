@@ -230,3 +230,27 @@ test("includes mobile breathing room, sticky conversion action, and touch story 
   assert.match(story, /touchstart/);
   assert.match(story, /moveToChapter\(next\)/);
 });
+
+test("keeps customer and admin work practical and safe on mobile", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [css, studio, admin] = await Promise.all([
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+  ]);
+  assert.match(css, /\.studio-next-action/);
+  assert.match(css, /\.mobile-concept-submit/);
+  assert.match(css, /\.mobile-studio-timeline/);
+  assert.match(css, /\.form-grid input, \.form-grid select, \.stacked-fields textarea \{ font-size: 16px; \}/);
+  assert.match(css, /\.album-manager-actions button \{ min-height: 44px;/);
+  assert.match(css, /\.admin-mobile-sections/);
+  assert.match(studio, /NEXT ACTION · 今やること/);
+  assert.match(studio, /hasPendingConceptChange/);
+  assert.match(studio, /id="materials"/);
+  assert.match(studio, /id="delivery"/);
+  assert.match(admin, /まだ納品されていません/);
+  assert.match(admin, /お客様名・ファイル名・タイトルを確認しました/);
+  assert.match(admin, /disabled=\{saving \|\| !deliveryChecked\}/);
+  assert.match(admin, /onChange=\{selectFinalVideo\}/);
+  assert.doesNotMatch(admin, /onChange=\{uploadFinalVideo\}/);
+});
