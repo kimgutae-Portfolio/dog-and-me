@@ -4,9 +4,19 @@ import { DemoFilmPlayer } from "./DemoFilmPlayer";
 import { MemoryMotion } from "./MemoryMotion";
 
 export const metadata: Metadata = {
-  title: "モモと歩いた季節｜完成デモ",
-  description: "WAN MEMORYで制作する、お客様専用メモリーサイトの完成イメージです。",
-  robots: { index: false, follow: false },
+  title: "愛犬メモリアルムービー完成例｜モモと歩いた季節",
+  description: "愛犬の写真とエピソードから制作する約1分の思い出動画と、家族専用メモリーサイトの完成イメージをご覧いただけます。",
+  alternates: { canonical: "/film/momo-demo" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "愛犬メモリアルムービー完成例｜モモと歩いた季節",
+    description: "写真の向こうにある時間まで、実写映画のような映像へ。WAN MEMORYの完成デモです。",
+    url: "/film/momo-demo",
+    siteName: "WAN MEMORY",
+    locale: "ja_JP",
+    type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "愛犬との時間を、いつまでも動く記憶に。" }],
+  },
 };
 
 const memories = [

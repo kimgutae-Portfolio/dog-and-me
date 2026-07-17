@@ -5,14 +5,78 @@ import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
+import { getRequestOrigin, SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
 
 export const metadata: Metadata = {
-  title: "愛犬との時間を一本の映画に",
+  title: "愛犬の思い出動画・メモリアルムービー制作",
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
 };
 
-export default function Home() {
+const homeFaqs = [
+  ["写真は何枚必要ですか？", "最低5枚から受付できます。顔の正面・横顔・全身など、15〜30枚あるとその子らしさをより丁寧に確認できます。"],
+  ["モニター価格とは何ですか？", `サービス品質の確認と改善のため、初期${MEMORY_FILM_PRICING.launchLimit}組限定で ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）にて制作します。受付終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`],
+  ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
+  ["映像コンセプト2案とは何ですか？", "同じ写真とエピソードから、物語の切り口や場面構成が異なる2案をご提案します。お好きな1案を選んでいただき、約1分の映像として詳しく仕上げます。"],
+  ["2案の最後もそれぞれ違いますか？", "途中の物語と場面構成は異なりますが、最後は映画の種類に合わせた共通エンディングです。『いまを残す』は家族と歩き続ける場面、『虹の橋メモリアル』は空へ続く光の道を進み、少し先で待っている気持ちを表します。"],
+  ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
+  ["写真や動画はAIの学習に使われますか？", "お客様の明示的な同意なく、自社モデルの学習や第三者への公開には使用しません。"],
+  ["専用ウェブサイトとは何ですか？", "完成した映画、写真、メッセージをまとめたお客様専用ページです。WAN MEMORYのドメイン内に一組ずつ制作し、検索結果には掲載しません。"],
+  ["ページの動画は保存できますか？", "動画はページ内での鑑賞専用で、ダウンロードボタンは設けず、元の動画ファイルも直接表示しません。ただし、端末の画面録画などを技術的に完全に防ぐことはできません。"],
+  ["完成までどのくらいかかりますか？", "素材が揃ってから通常3〜5週間を目安にしています。内容と修正回数により前後するため、受付時に予定日をご案内します。"],
+] as const;
+
+export default async function Home() {
+  const origin = await getRequestOrigin();
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": `${origin}/#website`,
+      url: origin,
+      name: SITE_NAME,
+      alternateName: "ワンメモリー",
+      description: SITE_DESCRIPTION,
+      inLanguage: "ja-JP",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": `${origin}/#organization`,
+      name: SITE_NAME,
+      url: origin,
+      description: SITE_DESCRIPTION,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "@id": `${origin}/#memory-film-service`,
+      name: "愛犬メモリーフィルム制作",
+      serviceType: "愛犬の思い出動画・メモリアルムービー制作",
+      description: SITE_DESCRIPTION,
+      url: `${origin}/#plans`,
+      provider: { "@id": `${origin}/#organization` },
+      areaServed: { "@type": "Country", name: "日本" },
+      availableLanguage: "日本語",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": `${origin}/#faq`,
+      mainEntity: homeFaqs.map(([question, answer]) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer },
+      })),
+    },
+  ];
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+      />
       <SiteHeader />
 
       <section className="hero" aria-labelledby="hero-title">
@@ -249,18 +313,7 @@ export default function Home() {
             <p className="faq-lead">まだ決めきれないことがあっても大丈夫です。受付後に担当者と一緒に整理できます。</p>
           </div>
           <div className="faq-list">
-            {[
-              ["写真は何枚必要ですか？", "最低5枚から受付できます。顔の正面・横顔・全身など、15〜30枚あるとその子らしさをより丁寧に確認できます。"],
-              ["モニター価格とは何ですか？", `サービス品質の確認と改善のため、初期${MEMORY_FILM_PRICING.launchLimit}組限定で ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）にて制作します。受付終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`],
-              ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
-              ["映像コンセプト2案とは何ですか？", "同じ写真とエピソードから、物語の切り口や場面構成が異なる2案をご提案します。お好きな1案を選んでいただき、約1分の映像として詳しく仕上げます。"],
-              ["2案の最後もそれぞれ違いますか？", "途中の物語と場面構成は異なりますが、最後は映画の種類に合わせた共通エンディングです。『いまを残す』は家族と歩き続ける場面、『虹の橋メモリアル』は空へ続く光の道を進み、少し先で待っている気持ちを表します。"],
-              ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
-              ["写真や動画はAIの学習に使われますか？", "お客様の明示的な同意なく、自社モデルの学習や第三者への公開には使用しません。"],
-              ["専用ウェブサイトとは何ですか？", "完成した映画、写真、メッセージをまとめたお客様専用ページです。WAN MEMORYのドメイン内に一組ずつ制作し、共有されたURLを開くだけでログインやパスワードなしでご覧いただけます。検索結果には掲載しません。"],
-              ["ページの動画は保存できますか？", "動画はページ内での鑑賞専用で、ダウンロードボタンは設けず、元の動画ファイルも直接表示しません。ただし、端末の画面録画などを技術的に完全に防ぐことはできません。"],
-              ["完成までどのくらいかかりますか？", "素材が揃ってから通常3〜5週間を目安にしています。内容と修正回数により前後するため、受付時に予定日をご案内します。"],
-            ].map(([question, answer]) => (
+            {homeFaqs.map(([question, answer]) => (
               <details key={question}>
                 <summary>{question}<span aria-hidden="true">＋</span></summary>
                 <p>{answer}</p>

@@ -24,6 +24,17 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /<html lang="ja">/i);
   assert.match(html, /一緒に過ごした時間を/);
   assert.match(html, /WAN MEMORY/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/kimi-to-no-eiga\.ggutae0\.chatgpt\.site\/"/);
+  assert.match(html, /愛犬の思い出動画・メモリアルムービー制作/);
+  assert.match(html, /application\/ld\+json/);
+  assert.match(html, /"@type":"Service"/);
+  assert.match(html, /"@type":"FAQPage"/);
+  assert.match(html, /<link rel="icon" href="https:\/\/kimi-to-no-eiga\.ggutae0\.chatgpt\.site\/icon/);
+  const jsonLdMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+  assert.ok(jsonLdMatch, "JSON-LD should be present");
+  const structuredData = JSON.parse(jsonLdMatch[1]);
+  assert.deepEqual(structuredData.map((entry) => entry["@type"]), ["WebSite", "Organization", "Service", "FAQPage"]);
+  assert.equal(structuredData.at(-1).mainEntity.length, 10);
   assert.match(html, /思い出をつくる/);
   assert.match(html, /写真は、残っている/);
   assert.match(html, /A MEMORY BECOMES A FILM/);
@@ -48,6 +59,40 @@ test("server-renders the Japanese landing page", async () => {
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
 });
 
+test("serves crawl controls and an absolute public sitemap", async () => {
+  const [robotsResponse, sitemapResponse] = await Promise.all([
+    render("/robots.txt"),
+    render("/sitemap.xml"),
+  ]);
+  assert.equal(robotsResponse.status, 200);
+  assert.match(robotsResponse.headers.get("content-type") ?? "", /^text\/plain\b/i);
+  const robots = await robotsResponse.text();
+  assert.match(robots, /Allow: \//);
+  assert.match(robots, /Disallow: \/api\//);
+  assert.match(robots, /Sitemap: http:\/\/localhost\/sitemap\.xml/);
+
+  assert.equal(sitemapResponse.status, 200);
+  assert.match(sitemapResponse.headers.get("content-type") ?? "", /^application\/xml\b/i);
+  const sitemap = await sitemapResponse.text();
+  assert.match(sitemap, /<loc>http:\/\/localhost<\/loc>/);
+  assert.match(sitemap, /<loc>http:\/\/localhost\/film\/momo-demo<\/loc>/);
+  assert.doesNotMatch(sitemap, /\/auth|\/story|\/studio|\/admin/);
+});
+
+test("keeps private product routes out of search results", async () => {
+  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo"]) {
+    const response = await render(path);
+    const html = await response.text();
+    assert.match(html, /<meta name="robots" content="noindex, nofollow"\s*\/?\s*>/i, `${path} should be noindex`);
+    assert.doesNotMatch(html, /<link rel="canonical"/i, `${path} should not advertise a public canonical URL`);
+  }
+  const demoResponse = await render("/film/momo-demo");
+  const demoHtml = await demoResponse.text();
+  assert.doesNotMatch(demoHtml, /<meta name="robots" content="noindex/i);
+  assert.match(demoHtml, /<link rel="canonical" href="https:\/\/kimi-to-no-eiga\.ggutae0\.chatgpt\.site\/film\/momo-demo"/);
+  assert.match(demoHtml, /<meta property="og:image" content="https:\/\/kimi-to-no-eiga\.ggutae0\.chatgpt\.site\/og\.png"/);
+});
+
 test("server-renders the connected MVP routes", async () => {
   for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo", "/film/momo-demo"]) {
     const response = await render(path);
@@ -62,7 +107,7 @@ test("renders the customer memory site demo", async () => {
   assert.match(html, /CUSTOMER DEMO/);
   assert.match(html, /WHEN A MEMORY RETURNS/);
   assert.match(html, /あの日の光まで戻ってくる/);
-  assert.match(html, /お客様専用メモリーサイトの完成イメージ/);
+  assert.match(html, /家族専用メモリーサイトの完成イメージ/);
   assert.match(html, /閲覧専用 · ダウンロード非対応/);
 });
 
