@@ -54,7 +54,9 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /映像コンセプト2案/);
   assert.match(html, /いまを残す思い出フィルム/);
   assert.match(html, /虹の橋メモリアル/);
-  assert.match(html, /少し先で、待っているね/);
+  assert.match(html, /ありがとう。これからも、思い出の中で一緒に/);
+  assert.match(html, /BGM・短い字幕/);
+  assert.doesNotMatch(html, /少し先で、待っているね|ナレーション・字幕/);
   assert.match(html, /CUSTOMER SITE DEMO/);
   assert.doesNotMatch(html, /メモリーショート/);
   assert.doesNotMatch(html, /MEMORIAL SIGNATURE|49,800/);
@@ -187,6 +189,8 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(storyWizard, /profile\?\.primary_pet_name/);
   assert.match(storyWizard, /petName: parsed\.petName\?\.trim\(\) \|\| preferredPetName/);
   assert.match(storyWizard, /\/auth\?mode=signup&next=\/story/);
+  assert.match(storyWizard, /映像はBGMと短い字幕を中心に/);
+  assert.doesNotMatch(storyWizard, /<span>ナレーション<\/span>/);
   assert.match(migration, /add column if not exists primary_pet_name text/);
 });
 

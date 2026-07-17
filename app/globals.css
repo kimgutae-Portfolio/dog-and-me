@@ -689,7 +689,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .radio-dot { width: 17px; height: 17px; border: 1px solid #aaa79e; border-radius: 50%; }
 .style-card.selected { border-color: var(--rust); background: #f2e8dc; }
 .style-card.selected .radio-dot { border: 5px solid var(--rust); }
-.form-grid.compact { margin-top: 22px; grid-template-columns: repeat(3, 1fr); }
+.form-grid.compact { margin-top: 22px; grid-template-columns: repeat(2, 1fr); }
 .review-card { padding: 28px; border: 1px solid var(--line); background: rgba(255,255,255,.5); }
 .review-title { padding-bottom: 22px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); }
 .review-title strong, .review-title small { display: block; }
