@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AuthPanel } from "./AuthPanel";
 
 export const metadata: Metadata = {
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function AuthPage() {
-  return <AuthPanel />;
+  return <Suspense fallback={<div className="wizard-loading">ログイン画面を準備しています…</div>}><AuthPanel /></Suspense>;
 }

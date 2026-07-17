@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "./components/AuthProvider";
-import { getRequestOrigin, SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
+import { SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
+import { getRequestOrigin } from "./lib/site-server";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {

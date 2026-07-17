@@ -254,3 +254,19 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /onChange=\{selectFinalVideo\}/);
   assert.doesNotMatch(admin, /onChange=\{uploadFinalVideo\}/);
 });
+
+test("keeps Vercel and Sites build outputs separate", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [packageSource, vercelSource] = await Promise.all([
+    readFile(new URL("package.json", root), "utf8"),
+    readFile(new URL("vercel.json", root), "utf8"),
+  ]);
+  const packageJson = JSON.parse(packageSource);
+  const vercel = JSON.parse(vercelSource);
+  assert.equal(packageJson.engines.node, "22.x");
+  assert.equal(packageJson.scripts["build:sites"], "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build");
+  assert.equal(packageJson.scripts["build:vercel"], "next build");
+  assert.equal(vercel.framework, "nextjs");
+  assert.equal(vercel.buildCommand, "npm run build:vercel");
+  assert.equal(vercel.outputDirectory, ".next");
+});

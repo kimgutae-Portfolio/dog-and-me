@@ -6,7 +6,8 @@ import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
 import { MobileStickyCta } from "./components/MobileStickyCta";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
-import { getRequestOrigin, SITE_DESCRIPTION, SITE_NAME, START_STORY_HREF } from "./lib/site";
+import { SITE_DESCRIPTION, SITE_NAME, START_STORY_HREF } from "./lib/site";
+import { getRequestOrigin } from "./lib/site-server";
 
 export const metadata: Metadata = {
   title: "愛犬の思い出動画・メモリアルムービー制作",
