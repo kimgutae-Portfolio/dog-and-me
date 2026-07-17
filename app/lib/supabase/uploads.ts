@@ -28,6 +28,24 @@ export async function uploadOrderImages(
   onProgress?: (completed: number, total: number) => void,
 ): Promise<OrderAsset[]> {
   const uploaded: OrderAsset[] = [];
+  const [{ count: visibleCount }, { data: lastAsset }] = await Promise.all([
+    supabase
+      .from("assets")
+      .select("id", { count: "exact", head: true })
+      .eq("order_id", orderId)
+      .eq("category", "source_image")
+      .eq("album_visible", true),
+    supabase
+      .from("assets")
+      .select("album_sort_order")
+      .eq("order_id", orderId)
+      .eq("category", "source_image")
+      .order("album_sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  let nextVisibleIndex = visibleCount ?? 0;
+  let nextSortOrder = ((lastAsset as { album_sort_order?: number } | null)?.album_sort_order ?? -1) + 1;
 
   for (let index = 0; index < files.length; index += 1) {
     const file = await normalizeImage(files[index]);
@@ -47,6 +65,8 @@ export async function uploadOrderImages(
         original_filename: file.name,
         mime_type: file.type,
         file_size: file.size,
+        album_visible: nextVisibleIndex < 30,
+        album_sort_order: nextSortOrder,
       })
       .select("*")
       .single();
@@ -57,6 +77,8 @@ export async function uploadOrderImages(
     }
 
     uploaded.push(data as OrderAsset);
+    if (nextVisibleIndex < 30) nextVisibleIndex += 1;
+    nextSortOrder += 1;
     onProgress?.(index + 1, files.length);
   }
 

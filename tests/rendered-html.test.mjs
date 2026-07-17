@@ -39,9 +39,9 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /写真は、残っている/);
   assert.match(html, /A MEMORY BECOMES A FILM/);
   assert.match(html, /ご登録からお届けまで、7つのステップ/);
-  assert.match(html, /一頭ごとの、専用メモリーウェブサイト/);
-  assert.match(html, /ログイン後にいつでも閲覧/);
-  assert.match(html, /動画ダウンロード非対応/);
+  assert.match(html, /映画を受け取ったあとも、思い出へ帰れる場所/);
+  assert.match(html, /専用メモリーサイトの使い方/);
+  assert.match(html, /実際の完成イメージを見る/);
   assert.match(html, /画面録画などを技術的に完全に防ぐことはできません/);
   assert.match(html, /メモリーフィルム/);
   assert.match(html, /先着(?:<!-- -->)?10(?:<!-- -->)?組/);
@@ -80,7 +80,7 @@ test("serves crawl controls and an absolute public sitemap", async () => {
 });
 
 test("keeps private product routes out of search results", async () => {
-  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo"]) {
+  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo", "/memory/share-demo"]) {
     const response = await render(path);
     const html = await response.text();
     assert.match(html, /<meta name="robots" content="noindex, nofollow"\s*\/?\s*>/i, `${path} should be noindex`);
@@ -94,10 +94,27 @@ test("keeps private product routes out of search results", async () => {
 });
 
 test("server-renders the connected MVP routes", async () => {
-  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo", "/film/momo-demo"]) {
+  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo", "/film/momo-demo", "/memory/share-demo"]) {
     const response = await render(path);
     assert.equal(response.status, 200, `${path} should render`);
   }
+});
+
+test("memory sharing keeps family links private and album access scoped", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [manager, sharedPage, migration] = await Promise.all([
+    readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
+    readFile(new URL("app/memory/[token]/SharedMemorySite.tsx", root), "utf8"),
+    readFile(new URL("supabase/migrations/202607170001_memory_sharing.sql", root), "utf8"),
+  ]);
+  assert.match(manager, /家族はログインせずに閲覧できます/);
+  assert.match(manager, /LINEなどで共有/);
+  assert.match(manager, /30枚まで/);
+  assert.match(sharedPage, /get_shared_memory/);
+  assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
+  assert.match(migration, /manage_memory_share/);
+  assert.match(migration, /order_assets_public_shared_select/);
+  assert.match(migration, /where share_links\.token = p_token/);
 });
 
 test("renders the customer memory site demo", async () => {

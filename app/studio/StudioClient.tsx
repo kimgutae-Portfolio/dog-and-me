@@ -8,6 +8,7 @@ import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { Delivery, FilmConcept, MemoryOrder, OrderAsset, OrderMessage, RevisionRequest } from "../lib/supabase/types";
 import { ORDER_STATUS_LABELS } from "../lib/supabase/types";
 import { uploadOrderImages } from "../lib/supabase/uploads";
+import { MemoryShareManager } from "./MemoryShareManager";
 
 const journeySteps = [
   ["受付", "写真とお話をお預かり"],
@@ -199,6 +200,8 @@ export function StudioClient() {
 
             <aside className="studio-card message-card"><p className="eyebrow">MESSAGE</p><h2>担当者とのメッセージ</h2><div className="message-thread">{messages.length ? messages.slice(-5).map((message) => <article className={message.sender_id === user.id ? "mine" : ""} key={message.id}><small>{message.sender_id === user.id ? "あなた" : "担当ディレクター"} · {formatDate(message.created_at)}</small><p>{message.body}</p></article>) : <p className="message-empty">追加したい思い出やご質問をこちらから送れます。</p>}</div><form className="message-form" onSubmit={sendMessage}><textarea value={messageBody} onChange={(event) => setMessageBody(event.target.value)} rows={3} maxLength={3000} placeholder="担当者へ伝えたいこと" /><button className="button button-outline" type="submit" disabled={!messageBody.trim()}>メッセージを送る</button></form></aside>
           </div>
+
+          <MemoryShareManager key={order.id} order={order} delivery={delivery} assets={assets} onChanged={() => loadDetails(order.id)} />
 
           {(order.status === "customer_review" || order.status === "delivered" || revisions.length > 0) && <section className="studio-card revision-card"><div className="card-head"><div><p className="eyebrow">REVISION REQUEST</p><h2>映像の修正について</h2></div><span>修正2回までプラン内</span></div>{revisions.length > 0 && <div className="revision-history">{revisions.map((revision) => <article key={revision.id}><span>{revision.status === "open" ? "対応中" : "反映済み"}</span><strong>{revision.category}</strong><p>{revision.body}</p></article>)}</div>}{(order.status === "customer_review" || order.status === "delivered") && <form className="revision-form" onSubmit={requestRevision}><select value={revisionCategory} onChange={(event) => setRevisionCategory(event.target.value)}><option>映像の動き</option><option>愛犬の外見</option><option>リード・服・小物</option><option>ナレーション・字幕</option><option>その他</option></select><textarea required rows={4} value={revisionBody} onChange={(event) => setRevisionBody(event.target.value)} placeholder="例：リードが2本に見える場面を、1本だけ自然に首輪へつながるよう修正してください。" /><button className="button button-primary" type="submit">修正を依頼する →</button></form>}</section>}
         </>}

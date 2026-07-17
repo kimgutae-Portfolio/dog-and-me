@@ -60,7 +60,15 @@ export type OrderAsset = {
   original_filename: string;
   mime_type: string;
   file_size: number;
+  album_visible: boolean;
+  album_caption: string | null;
+  album_sort_order: number;
   created_at: string;
+};
+
+export type MemoryShare = {
+  token: string;
+  active: boolean;
 };
 
 export type FilmConcept = {

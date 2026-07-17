@@ -9,7 +9,7 @@ import { useAuth } from "../../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../../lib/supabase/client";
 import type { Delivery, FilmConcept, MemoryOrder, OrderAsset } from "../../lib/supabase/types";
 
-type SignedImage = { id: string; url: string; name: string };
+type SignedImage = { id: string; url: string; caption: string | null };
 
 export function CustomerFilmSite() {
   const params = useParams<{ orderId: string }>();
@@ -55,12 +55,12 @@ export function CustomerFilmSite() {
         const { data } = await supabase.storage.from("order-assets").createSignedUrl(finalAsset.storage_path, 3600);
         setVideoUrl(data?.signedUrl ?? "");
       }
-      const sourceImages = loadedAssets.filter((asset) => asset.category === "source_image").slice(0, 6);
-      const signedImages = await Promise.all(sourceImages.map(async (asset) => {
-        const { data } = await supabase.storage.from("order-assets").createSignedUrl(asset.storage_path, 3600);
-        return data?.signedUrl ? { id: asset.id, url: data.signedUrl, name: asset.original_filename } : null;
-      }));
-      setImages(signedImages.filter((item): item is SignedImage => item !== null));
+      const sourceImages = loadedAssets
+        .filter((asset) => asset.category === "source_image" && asset.album_visible)
+        .sort((a, b) => a.album_sort_order - b.album_sort_order || a.created_at.localeCompare(b.created_at))
+        .slice(0, 30);
+      const { data: signedImages } = await supabase.storage.from("order-assets").createSignedUrls(sourceImages.map((asset) => asset.storage_path), 3600);
+      setImages(sourceImages.map((asset, index) => ({ id: asset.id, url: signedImages?.[index]?.signedUrl ?? "", caption: asset.album_caption })).filter((item) => item.url));
       setLoading(false);
     };
     load();
@@ -80,7 +80,7 @@ export function CustomerFilmSite() {
 
       {concept && <section className="private-film-section private-film-story"><div className="private-film-heading"><div><p>THE STORY</p><h2>{concept.title}</h2></div><span>{concept.tone}</span></div><p className="private-film-summary">{concept.summary}</p><ol>{concept.scenes.map((scene, index) => <li key={`${concept.id}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><strong>{scene}</strong></li>)}</ol></section>}
 
-      {images.length > 0 && <section className="private-film-section private-film-gallery"><div className="private-film-heading"><div><p>PHOTO MEMORIES</p><h2>映画になる前の、<br />大切な一枚一枚。</h2></div></div><div>{images.map((image) => <figure key={image.id}><img src={image.url} alt={`${order.pet_name}の思い出写真`} draggable={false} onContextMenu={(event) => event.preventDefault()} /><figcaption>{image.name}</figcaption></figure>)}</div></section>}
+      {images.length > 0 && <section className="private-film-section private-film-gallery"><div className="private-film-heading"><div><p>PHOTO MEMORIES</p><h2>映画になる前の、<br />大切な一枚一枚。</h2></div><span>{images.length} PHOTOS</span></div><div>{images.map((image) => <figure key={image.id}><img src={image.url} alt={`${order.pet_name}の思い出写真`} draggable={false} onContextMenu={(event) => event.preventDefault()} /><figcaption>{image.caption || `${order.pet_name}との思い出`}</figcaption></figure>)}</div></section>}
 
       <footer className="private-film-footer"><div><span className="brand-mark">WM</span><p>WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></p></div><span>{order.pet_name} · {new Date(order.created_at).getFullYear()}</span></footer>
     </main>
