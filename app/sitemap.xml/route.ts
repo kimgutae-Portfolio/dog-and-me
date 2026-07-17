@@ -9,7 +9,7 @@ function escapeXml(value: string) {
 
 export function GET(request: Request) {
   const origin = new URL(request.url).origin;
-  const publicUrls = [origin, `${origin}/film/momo-demo`];
+  const publicUrls = [origin, `${origin}/film/momo-demo`, `${origin}/contact`, `${origin}/terms`, `${origin}/privacy`, `${origin}/legal`];
   const entries = publicUrls
     .map((url) => `<url><loc>${escapeXml(url)}</loc></url>`)
     .join("");

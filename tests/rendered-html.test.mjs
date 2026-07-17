@@ -41,6 +41,8 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /ご登録からお届けまで、7つのステップ/);
   assert.match(html, /映画を受け取ったあとも、思い出へ帰れる場所/);
   assert.match(html, /専用メモリーサイトの使い方/);
+  assert.match(html, /家族共有URL/);
+  assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
   assert.match(html, /実際の完成イメージを見る/);
   assert.match(html, /画面録画などを技術的に完全に防ぐことはできません/);
   assert.match(html, /メモリーフィルム/);
@@ -76,7 +78,26 @@ test("serves crawl controls and an absolute public sitemap", async () => {
   const sitemap = await sitemapResponse.text();
   assert.match(sitemap, /<loc>http:\/\/localhost<\/loc>/);
   assert.match(sitemap, /<loc>http:\/\/localhost\/film\/momo-demo<\/loc>/);
+  for (const path of ["contact", "terms", "privacy", "legal"]) {
+    assert.match(sitemap, new RegExp(`<loc>http:\\/\\/localhost\\/${path}<\\/loc>`));
+  }
   assert.doesNotMatch(sitemap, /\/auth|\/story|\/studio|\/admin/);
+});
+
+test("server-renders public support and legal pages", async () => {
+  const expected = new Map([
+    ["/contact", "お問い合わせ"],
+    ["/terms", "利用規約"],
+    ["/privacy", "プライバシーポリシー"],
+    ["/legal", "特定商取引法に基づく表記"],
+  ]);
+  for (const [path, title] of expected) {
+    const response = await render(path);
+    assert.equal(response.status, 200, `${path} should render`);
+    const html = await response.text();
+    assert.match(html, new RegExp(title));
+    assert.match(html, new RegExp(`<link rel="canonical" href="https:\\/\\/kimi-to-no-eiga\\.ggutae0\\.chatgpt\\.site${path}`));
+  }
 });
 
 test("keeps private product routes out of search results", async () => {
@@ -150,7 +171,24 @@ test("signup stores the dog name and the story form reuses it", async () => {
   ]);
   assert.match(authPanel, /愛犬のお名前/);
   assert.match(authPanel, /pet_name: petName\.trim\(\)/);
+  assert.match(authPanel, /requestedMode\(searchParams\.get\("mode"\)\)/);
   assert.match(storyWizard, /profile\?\.primary_pet_name/);
   assert.match(storyWizard, /petName: parsed\.petName\?\.trim\(\) \|\| preferredPetName/);
+  assert.match(storyWizard, /\/auth\?mode=signup&next=\/story/);
   assert.match(migration, /add column if not exists primary_pet_name text/);
+});
+
+test("includes mobile breathing room, sticky conversion action, and touch story snapping", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [css, page, story] = await Promise.all([
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/components/ScrollMemoryStory.tsx", root), "utf8"),
+  ]);
+  assert.match(css, /\.shell \{ width: calc\(100% - 40px\); \}/);
+  assert.match(css, /\.mobile-sticky-cta\.visible/);
+  assert.match(css, /focus-visible/);
+  assert.match(page, /MobileStickyCta/);
+  assert.match(story, /touchstart/);
+  assert.match(story, /moveToChapter\(next\)/);
 });

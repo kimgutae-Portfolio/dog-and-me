@@ -4,8 +4,9 @@ import { ScrollMemoryStory } from "./components/ScrollMemoryStory";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
+import { MobileStickyCta } from "./components/MobileStickyCta";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
-import { getRequestOrigin, SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
+import { getRequestOrigin, SITE_DESCRIPTION, SITE_NAME, START_STORY_HREF } from "./lib/site";
 
 export const metadata: Metadata = {
   title: "愛犬の思い出動画・メモリアルムービー制作",
@@ -21,7 +22,7 @@ const homeFaqs = [
   ["2案の最後もそれぞれ違いますか？", "途中の物語と場面構成は異なりますが、最後は映画の種類に合わせた共通エンディングです。『いまを残す』は家族と歩き続ける場面、『虹の橋メモリアル』は空へ続く光の道を進み、少し先で待っている気持ちを表します。"],
   ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
   ["写真や動画はAIの学習に使われますか？", "お客様の明示的な同意なく、自社モデルの学習や第三者への公開には使用しません。"],
-  ["専用ウェブサイトとは何ですか？", "完成した映画、写真、メッセージをまとめたお客様専用ページです。WAN MEMORYのドメイン内に一組ずつ制作し、検索結果には掲載しません。"],
+  ["専用ウェブサイトとは何ですか？", "完成した映画、写真、メッセージをまとめたお客様専用ページです。ご本人は制作室から管理でき、ご家族にはログイン不要の専用URLで共有できます。検索結果には掲載しません。"],
   ["ページの動画は保存できますか？", "動画はページ内での鑑賞専用で、ダウンロードボタンは設けず、元の動画ファイルも直接表示しません。ただし、端末の画面録画などを技術的に完全に防ぐことはできません。"],
   ["完成までどのくらいかかりますか？", "素材が揃ってから通常3〜5週間を目安にしています。内容と修正回数により前後するため、受付時に予定日をご案内します。"],
 ] as const;
@@ -78,6 +79,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
       />
       <SiteHeader />
+      <MobileStickyCta />
 
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-media" aria-hidden="true">
@@ -100,7 +102,7 @@ export default async function Home() {
             実写映画のような映像へ仕立てます。
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" href="/story">
+            <Link className="button button-primary" href={START_STORY_HREF}>
               思い出をつくる <span aria-hidden="true">→</span>
             </Link>
             <Link className="text-link light-link" href="/film/momo-demo">
@@ -263,7 +265,7 @@ export default async function Home() {
               ["04", "映像コンセプト2案を受け取る", "方向性の異なる2つの物語を制作室へお届けします。"],
               ["05", "1案を選び、料金と納期を確認する", "選んだ方向性、確定料金、予定納期をご確認いただいた後に制作を始めます。"],
               ["06", "映像を制作・確認し、修正を依頼する", "約1分の映像をご確認いただき、外見や動き、リード、字幕など気になる点をお知らせください。"],
-              ["07", "映画と専用サイトを受け取る", "完成映像と、その子だけのメモリーサイトをログイン後にいつでもご覧いただけます。"],
+              ["07", "映画と専用サイトを受け取る", "完成映像と、その子だけのメモリーサイトを受け取り、ご家族にはログイン不要の専用URLで共有できます。"],
             ].map(([number, title, copy]) => (
               <li key={number}>
                 <span className="process-number">{number}</span>
@@ -299,10 +301,10 @@ export default async function Home() {
               <p className="memory-site-usage-title">専用メモリーサイトの使い方</p>
               <ol>
                 <li><span>01</span><div><strong>納品のお知らせを受け取る</strong><p>映画が完成すると、ログイン後の制作室に「専用メモリーサイトを見る」ボタンが表示されます。</p></div></li>
-                <li><span>02</span><div><strong>スマートフォンやパソコンで開く</strong><p>ご登録のアカウントでログインし、完成映像・メッセージ・物語・写真をひとつのページでご覧いただけます。</p></div></li>
-                <li><span>03</span><div><strong>見たいときに、何度でも振り返る</strong><p>WAN MEMORYのサイト内に保管されるため、制作室からいつでもアクセスできます。映像は閲覧専用で、ダウンロードボタンは表示されません。</p></div></li>
+                <li><span>02</span><div><strong>写真を選び、家族へ共有する</strong><p>ご本人は制作室でアルバムを整え、ご家族にはログイン不要の専用URLをLINEなどで共有できます。</p></div></li>
+                <li><span>03</span><div><strong>見たいときに、何度でも振り返る</strong><p>共有URLから完成映像・メッセージ・物語・写真をひとつのページでご覧いただけます。映像は閲覧専用です。</p></div></li>
               </ol>
-              <div className="memory-site-note"><span>PRIVATE</span><p>ページは検索結果に表示されず、ご本人のログイン後に閲覧できます。画面録画などを技術的に完全に防ぐことはできません。</p></div>
+              <div className="memory-site-note"><span>PRIVATE</span><p>ページは検索結果に表示されません。共有URLを知っているご家族だけがログインせずに閲覧でき、URLはいつでも停止・再発行できます。画面録画などを技術的に完全に防ぐことはできません。</p></div>
               <Link className="memory-site-demo-link" href="/film/momo-demo">実際の完成イメージを見る →</Link>
             </div>
           </aside>
@@ -335,7 +337,7 @@ export default async function Home() {
           <p className="eyebrow light">YOUR STORY STARTS HERE</p>
           <h2>その子のことを、<br />ゆっくり聞かせてください。</h2>
           <p>先着{MEMORY_FILM_PRICING.launchLimit}組は ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。入力内容はこの端末に自動で保存されます。</p>
-          <Link className="button button-cream" href="/story">思い出づくりを始める <span aria-hidden="true">→</span></Link>
+          <Link className="button button-cream" href={START_STORY_HREF}>思い出づくりを始める <span aria-hidden="true">→</span></Link>
         </div>
       </section>
 

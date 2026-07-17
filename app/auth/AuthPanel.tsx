@@ -8,6 +8,10 @@ import { getSupabaseBrowserClient } from "../lib/supabase/client";
 
 type AuthMode = "login" | "signup" | "reset";
 
+function requestedMode(value: string | null): AuthMode {
+  return value === "signup" || value === "reset" ? value : "login";
+}
+
 function safeNext(value: string | null) {
   return value?.startsWith("/") && !value.startsWith("//") ? value : "/studio";
 }
@@ -25,7 +29,7 @@ export function AuthPanel() {
   const { user, loading, profile } = useAuth();
   const nextPath = useMemo(() => safeNext(searchParams.get("next")), [searchParams]);
   const signupNextPath = nextPath === "/studio" ? "/story" : nextPath;
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<AuthMode>(() => requestedMode(searchParams.get("mode")));
   const [petName, setPetName] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");

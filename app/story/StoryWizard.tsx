@@ -59,7 +59,7 @@ export function StoryWizard() {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
-    if (!authLoading && !user) router.replace("/auth?next=/story");
+    if (!authLoading && !user) router.replace("/auth?mode=signup&next=/story");
   }, [authLoading, router, user]);
 
   const preferredPetName = (profile?.primary_pet_name || user?.user_metadata?.pet_name || "").trim();
@@ -110,7 +110,7 @@ export function StoryWizard() {
 
   const submit = async () => {
     if (!draft.consent) { setError("内容と写真の利用確認に同意してください。"); return; }
-    if (!user) { router.push("/auth?next=/story"); return; }
+    if (!user) { router.push("/auth?mode=signup&next=/story"); return; }
 
     setSubmitting(true);
     setUploadProgress(0);

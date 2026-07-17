@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { START_STORY_HREF } from "../lib/site";
 
 export function SiteFooter() {
   return (
@@ -12,9 +13,9 @@ export function SiteFooter() {
           <p>愛犬との時間を、一本の実写映画に。</p>
         </div>
         <div className="footer-links">
-          <div><p>SERVICE</p><Link href="/film/momo-demo">完成デモ</Link><Link href="/#flow">制作の流れ</Link><Link href="/#plans">プラン</Link><Link href="/story">お申し込み</Link></div>
-          <div><p>SUPPORT</p><Link href="/#faq">よくある質問</Link><Link href="/studio">制作室</Link><span>お問い合わせ</span></div>
-          <div><p>LEGAL</p><span>利用規約</span><span>プライバシーポリシー</span><span>特定商取引法に基づく表記</span></div>
+          <div><p>SERVICE</p><Link href="/film/momo-demo">完成デモ</Link><Link href="/#flow">制作の流れ</Link><Link href="/#plans">プラン</Link><Link href={START_STORY_HREF}>お申し込み</Link></div>
+          <div><p>SUPPORT</p><Link href="/#faq">よくある質問</Link><Link href="/studio">制作室</Link><Link href="/contact">お問い合わせ</Link></div>
+          <div><p>LEGAL</p><Link href="/terms">利用規約</Link><Link href="/privacy">プライバシーポリシー</Link><Link href="/legal">特定商取引法に基づく表記</Link></div>
         </div>
       </div>
       <div className="shell footer-bottom"><span>© 2026 WAN MEMORY</span><span>Made for every small, precious moment.</span></div>

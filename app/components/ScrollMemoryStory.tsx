@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { START_STORY_HREF } from "../lib/site";
 
 const chapters = [
   {
@@ -52,6 +53,9 @@ export function ScrollMemoryStory() {
   const activeRef = useRef(0);
   const snapTargetRef = useRef<number | null>(null);
   const wheelLockRef = useRef(false);
+  const touchStartYRef = useRef<number | null>(null);
+  const touchStartChapterRef = useRef(0);
+  const touchPinnedRef = useRef(false);
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
 
@@ -129,15 +133,41 @@ export function ScrollMemoryStory() {
       scheduleWheelUnlock();
     };
 
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      const rect = section.getBoundingClientRect();
+      touchPinnedRef.current = rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
+      touchStartYRef.current = touch.clientY;
+      touchStartChapterRef.current = activeRef.current;
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      const startY = touchStartYRef.current;
+      const touch = event.changedTouches[0];
+      touchStartYRef.current = null;
+      if (!touchPinnedRef.current || startY === null || !touch) return;
+      const delta = startY - touch.clientY;
+      if (Math.abs(delta) < 36) return;
+      const direction = delta > 0 ? 1 : -1;
+      const next = touchStartChapterRef.current + direction;
+      if (next < 0 || next >= chapters.length) return;
+      window.setTimeout(() => moveToChapter(next), 40);
+    };
+
     update();
     window.addEventListener("scroll", requestUpdate, { passive: true });
     window.addEventListener("resize", requestUpdate);
     section.addEventListener("wheel", handleWheel, { passive: false });
+    section.addEventListener("touchstart", handleTouchStart, { passive: true });
+    section.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", requestUpdate);
       window.removeEventListener("resize", requestUpdate);
       section.removeEventListener("wheel", handleWheel);
+      section.removeEventListener("touchstart", handleTouchStart);
+      section.removeEventListener("touchend", handleTouchEnd);
       window.clearTimeout(wheelUnlockTimer);
       if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
     };
@@ -164,7 +194,7 @@ export function ScrollMemoryStory() {
             </h2>
             <p className="story-body">{chapter.copy}</p>
             {active === chapters.length - 1 && (
-              <Link className="button button-cream story-cta" href="/story">
+              <Link className="button button-cream story-cta" href={START_STORY_HREF}>
                 うちの子の物語をつくる <span aria-hidden="true">→</span>
               </Link>
             )}
