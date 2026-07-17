@@ -53,6 +53,9 @@ export function StudioClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [pendingConceptSlot, setPendingConceptSlot] = useState<"A" | "B" | null>(null);
+  const [confirmingConcept, setConfirmingConcept] = useState(false);
+  const [conceptReceipt, setConceptReceipt] = useState<{ slot: "A" | "B"; title: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [messageBody, setMessageBody] = useState("");
@@ -118,16 +121,36 @@ export function StudioClient() {
   }, [finalAsset]);
 
   const currentStep = order ? statusStep[order.status] : 0;
-  const selectedConcept = order?.selected_concept_slot ? concepts.find((concept) => concept.slot === order.selected_concept_slot) : null;
+  const effectiveConceptSlot = pendingConceptSlot ?? order?.selected_concept_slot ?? null;
+  const pendingConcept = effectiveConceptSlot ? concepts.find((concept) => concept.slot === effectiveConceptSlot) ?? null : null;
+  const canEditConcept = order?.status === "concepts_ready" || order?.status === "concept_selected";
   const sourceAssets = assets.filter((asset) => asset.category === "source_image");
 
-  const selectConcept = async (slot: "A" | "B") => {
-    if (!order) return;
+  useEffect(() => {
+    if (!conceptReceipt) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setConceptReceipt(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [conceptReceipt]);
+
+  const confirmConcept = async () => {
+    if (!order || !pendingConceptSlot || !pendingConcept || !canEditConcept) return;
+    const slot = pendingConceptSlot;
+    const conceptTitle = pendingConcept.title;
     setError("");
+    setNotice("");
+    setConfirmingConcept(true);
     const { error: selectError } = await getSupabaseBrowserClient().rpc("select_memory_concept", { p_order_id: order.id, p_slot: slot });
-    if (selectError) { setError("コンセプトを選択できませんでした。"); return; }
-    setNotice(`コンセプト${slot}で制作を進めます。`);
-    await loadOrders();
+    if (selectError) {
+      setError("コンセプトを送信できませんでした。もう一度お試しください。");
+      setConfirmingConcept(false);
+      return;
+    }
+    setOrders((current) => current.map((item) => item.id === order.id ? { ...item, selected_concept_slot: slot, status: "concept_selected", stage_updated_at: new Date().toISOString() } : item));
+    setConceptReceipt({ slot, title: conceptTitle });
+    setConfirmingConcept(false);
   };
 
   const addPhotos = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -178,8 +201,9 @@ export function StudioClient() {
         <nav><Link href="/">ホーム</Link><Link href="/story">新しい相談</Link>{profile?.role === "admin" && <Link href="/admin">運営管理</Link>}<button type="button" onClick={async () => { await signOut(); router.push("/"); }}>ログアウト</button><span className="avatar">{(profile?.full_name || user.email || "U").slice(0, 1).toUpperCase()}</span></nav>
       </header>
       {received && <div className="received-banner"><span aria-hidden="true">✓</span><div><strong>ご相談と写真を受け付けました。</strong><p>ここから追加写真、コンセプト選択、映像確認、お届けまで進められます。</p></div></div>}
+      {conceptReceipt && <div className="concept-receipt-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setConceptReceipt(null); }}><section className="concept-receipt-dialog" role="alertdialog" aria-modal="true" aria-labelledby="concept-receipt-title" aria-describedby="concept-receipt-copy"><div className="concept-receipt-film" aria-hidden="true"><i /><i /><span>WM</span><i /><i /></div><p className="eyebrow">SELECTION RECEIVED · CONCEPT {conceptReceipt.slot}</p><h2 id="concept-receipt-title">コンセプトをお預かりしました。</h2><p id="concept-receipt-copy">「{conceptReceipt.title}」で制作希望を送信しました。担当者が内容を確認し、次の準備を進めますので、少しお待ちください。</p><aside><strong>制作が始まる前なら変更できます</strong><span>制作室が「映像制作」へ進む前は、もう一方の案を選んで再送信できます。</span></aside><button autoFocus className="button button-primary" type="button" onClick={() => setConceptReceipt(null)}>制作室に戻る →</button></section></div>}
       <div className="studio-shell">
-        <div className="studio-account-bar"><div><small>ACCOUNT</small><strong>{profile?.full_name || user.email}</strong></div>{orders.length > 1 && <label><span>制作中の映画</span><select value={selectedOrderId} onChange={(event) => setSelectedOrderId(event.target.value)}>{orders.map((item) => <option value={item.id} key={item.id}>{item.pet_name} · {item.order_number}</option>)}</select></label>}</div>
+        <div className="studio-account-bar"><div><small>ACCOUNT</small><strong>{profile?.full_name || user.email}</strong></div>{orders.length > 1 && <label><span>制作中の映画</span><select value={selectedOrderId} onChange={(event) => { setSelectedOrderId(event.target.value); setPendingConceptSlot(null); setConceptReceipt(null); }}>{orders.map((item) => <option value={item.id} key={item.id}>{item.pet_name} · {item.order_number}</option>)}</select></label>}</div>
 
         {error && <p className="studio-alert error" role="alert">{error}</p>}
         {notice && <p className="studio-alert" role="status">{notice}<button type="button" onClick={() => setNotice("")}>×</button></p>}
@@ -191,7 +215,11 @@ export function StudioClient() {
 
           <section className="timeline-card"><div className="card-head"><div><p className="eyebrow">PRODUCTION JOURNEY</p><h2>受付からお届けまで</h2></div><span>{ORDER_STATUS_LABELS[order.status]}</span></div><ol className="studio-timeline studio-timeline-seven">{journeySteps.map(([title, copy], index) => <li className={index <= currentStep ? "active" : ""} key={title}><span>{index < currentStep ? "✓" : String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{copy}</small></div></li>)}</ol></section>
 
-          {concepts.length > 0 && currentStep >= 2 && <section className="concept-section studio-card"><div className="card-head"><div><p className="eyebrow">CHOOSE YOUR FILM CONCEPT</p><h2>2つの物語から、1つを選ぶ</h2></div><span>選択後、約1分の詳しい構成へ進みます</span></div><div className="concept-grid">{concepts.map((concept) => <button type="button" disabled={order.status !== "concepts_ready" && order.status !== "concept_selected"} className={order.selected_concept_slot === concept.slot ? "concept-option selected" : "concept-option"} onClick={() => selectConcept(concept.slot)} key={concept.id}><span className="concept-label">CONCEPT {concept.slot}</span><strong>{concept.title}</strong><small>{concept.tone}</small><p>{concept.summary}</p><ol>{concept.scenes.map((scene, index) => <li key={`${concept.id}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span>{scene}</li>)}</ol><i aria-hidden="true">{order.selected_concept_slot === concept.slot ? "✓" : ""}</i></button>)}</div>{selectedConcept && <div className="concept-confirm"><p><span>選択した物語</span><strong>{selectedConcept.title}</strong></p><span className="status-badge">選択済み</span></div>}</section>}
+          {concepts.length > 0 && currentStep >= 2 && <section className="concept-section studio-card">
+            <div className="card-head"><div><p className="eyebrow">CHOOSE YOUR FILM CONCEPT</p><h2>2つの物語から、1つを選ぶ</h2></div><span>{canEditConcept ? "案を選んだあと、下のボタンで送信します" : "制作が始まったため選択は確定しています"}</span></div>
+            <div className="concept-grid">{concepts.map((concept) => <button type="button" disabled={!canEditConcept} aria-pressed={effectiveConceptSlot === concept.slot} className={effectiveConceptSlot === concept.slot ? "concept-option selected" : "concept-option"} onClick={() => { setPendingConceptSlot(concept.slot); setError(""); }} key={concept.id}><span className="concept-card-top"><span className="concept-label">CONCEPT {concept.slot}</span>{order.selected_concept_slot === concept.slot && <span className="concept-sent-tag">送信済み</span>}</span><strong>{concept.title}</strong><small>{concept.tone}</small><p>{concept.summary}</p><ol>{concept.scenes.map((scene, index) => <li key={`${concept.id}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span>{scene}</li>)}</ol><i aria-hidden="true">{effectiveConceptSlot === concept.slot ? "✓" : ""}</i></button>)}</div>
+            <div className="concept-confirm"><p><span>{pendingConcept ? order.selected_concept_slot === pendingConcept.slot ? "送信済みの物語" : order.selected_concept_slot ? "変更する物語" : "選択中の物語" : "コンセプトを選択してください"}</span><strong>{pendingConcept?.title ?? "A・Bどちらかの案を選んでください"}</strong><small>{canEditConcept ? order.selected_concept_slot ? "映像制作へ進む前なら、何度でも変更できます。" : "カードを選んだだけでは送信されません。" : "映像制作へ進んだため、現在の案から変更できません。"}</small></p><button className="button button-cream" type="button" disabled={!canEditConcept || !pendingConcept || confirmingConcept || effectiveConceptSlot === order.selected_concept_slot} onClick={confirmConcept}>{confirmingConcept ? "送信中…" : !canEditConcept ? "選択は確定しています" : !pendingConcept ? "案を選んでください" : effectiveConceptSlot === order.selected_concept_slot ? "この案は送信済みです" : order.selected_concept_slot ? "この案に変更して送る →" : "この案で制作希望を送る →"}</button></div>
+          </section>}
 
           {delivery && <section className="delivery-card"><div><p className="eyebrow light">YOUR FILM IS READY</p><h2>{delivery.title}</h2><p>{delivery.customer_message || `${order.pet_name}ちゃんとの時間を、一本の映画に仕上げました。`}</p><Link className="button button-cream" href={`/film/${order.id}`}>専用メモリーサイトを見る →</Link></div><div className="delivery-player">{videoUrl ? <video src={videoUrl} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline onContextMenu={(event) => event.preventDefault()} /> : <span>映像を準備しています…</span>}<small>閲覧専用 · ダウンロードボタンは表示されません</small></div></section>}
 

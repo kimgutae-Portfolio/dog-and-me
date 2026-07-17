@@ -199,6 +199,23 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(migration, /add column if not exists primary_pet_name text/);
 });
 
+test("concept selection requires an explicit send and stays editable before production", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [studio, css, migration] = await Promise.all([
+    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("supabase/migrations/202607160001_mvp.sql", root), "utf8"),
+  ]);
+  assert.match(studio, /setPendingConceptSlot\(concept\.slot\)/);
+  assert.match(studio, /この案で制作希望を送る/);
+  assert.match(studio, /concept-receipt-dialog/);
+  assert.match(studio, /コンセプトをお預かりしました/);
+  assert.match(studio, /映像制作へ進む前なら、何度でも変更できます/);
+  assert.doesNotMatch(studio, /onClick=\{\(\) => selectConcept\(concept\.slot\)\}/);
+  assert.match(css, /\.concept-receipt-backdrop/);
+  assert.match(migration, /status in \('concepts_ready', 'concept_selected'\)/);
+});
+
 test("includes mobile breathing room, sticky conversion action, and touch story snapping", async () => {
   const { readFile } = await import("node:fs/promises");
   const [css, page, story] = await Promise.all([

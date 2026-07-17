@@ -774,8 +774,13 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .concept-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .concept-option { min-height: 380px; padding: 28px; position: relative; border: 1px solid var(--line); color: var(--ink); text-align: left; background: #f3f0e9; cursor: pointer; transition: border-color .25s ease, background .25s ease, transform .25s ease; }
 .concept-option:hover { transform: translateY(-2px); border-color: rgba(157,92,62,.6); }
+.concept-option:disabled { cursor: default; opacity: .72; }
+.concept-option:disabled:hover { transform: none; border-color: var(--line); }
 .concept-option.selected { border-color: var(--rust); background: #eee3d6; box-shadow: inset 0 0 0 1px var(--rust); }
+.concept-option.selected:disabled { border-color: var(--rust); }
+.concept-card-top { min-height: 19px; padding-right: 40px; display: flex; align-items: center; gap: 8px; }
 .concept-label { color: var(--rust); font-size: 8px; font-weight: 700; letter-spacing: .18em; }
+.concept-sent-tag { padding: 4px 6px; color: #53624f; border: 1px solid #a9b4a3; background: #e2e9df; font-size: 7px; }
 .concept-option > strong { margin: 18px 0 7px; display: block; font-family: var(--font-serif); font-size: 24px; font-weight: 400; }
 .concept-option > small { color: #8b6b58; font-size: 9px; }
 .concept-option > p { min-height: 70px; margin: 20px 0; color: var(--muted); font-size: 10px; line-height: 1.9; }
@@ -794,10 +799,27 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .common-ending-card blockquote, .studio-card .common-ending-card blockquote { margin: 10px 0 0; padding: 0; color: var(--rust); background: transparent; font-family: var(--font-serif); font-size: 10px; }
 .concept-confirm { margin-top: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px; color: white; background: var(--forest); }
 .concept-confirm p { margin: 0; }
-.concept-confirm p span, .concept-confirm p strong { display: block; }
+.concept-confirm p span, .concept-confirm p strong, .concept-confirm p small { display: block; }
 .concept-confirm p span { margin-bottom: 5px; color: rgba(255,255,255,.46); font-size: 7px; letter-spacing: .16em; }
 .concept-confirm p strong { font-family: var(--font-serif); font-size: 16px; font-weight: 400; }
+.concept-confirm p small { margin-top: 6px; color: rgba(255,255,255,.56); font-size: 8px; }
 .concept-confirm .button { min-width: 245px; }
+.concept-confirm .button:disabled { color: rgba(255,255,255,.5); border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.07); cursor: default; }
+.concept-receipt-backdrop { position: fixed; z-index: 200; inset: 0; padding: 24px; display: grid; place-items: center; background: rgba(25,31,26,.72); backdrop-filter: blur(8px); animation: concept-receipt-fade .25s ease both; }
+.concept-receipt-dialog { width: min(540px, 100%); max-height: calc(100svh - 48px); padding: 42px 46px 38px; overflow-y: auto; position: relative; color: var(--ink); border: 1px solid #cfc6b8; background: #f7f3eb; box-shadow: 0 30px 80px rgba(12,18,14,.34); text-align: center; animation: concept-receipt-rise .35s ease both; }
+.concept-receipt-film { height: 44px; margin: -10px auto 28px; display: flex; align-items: center; justify-content: center; gap: 9px; color: white; background: var(--forest); }
+.concept-receipt-film i { width: 8px; height: 8px; border: 1px solid rgba(255,255,255,.5); border-radius: 50%; }
+.concept-receipt-film span { width: 58px; height: 30px; display: grid; place-items: center; border-right: 1px solid rgba(255,255,255,.25); border-left: 1px solid rgba(255,255,255,.25); font-family: var(--font-serif); font-size: 14px; letter-spacing: .12em; }
+.concept-receipt-dialog > .eyebrow { margin: 0 0 13px; color: var(--rust); }
+.concept-receipt-dialog h2 { margin: 0; font-family: var(--font-serif); font-size: 28px; font-weight: 400; line-height: 1.55; }
+.concept-receipt-dialog > p:not(.eyebrow) { margin: 18px auto 0; color: var(--muted); font-size: 11px; line-height: 2; }
+.concept-receipt-dialog aside { margin: 24px 0; padding: 17px 18px; border: 1px solid #c7d0c3; background: #e7ece3; text-align: left; }
+.concept-receipt-dialog aside strong, .concept-receipt-dialog aside span { display: block; }
+.concept-receipt-dialog aside strong { color: #4f5f4c; font-size: 10px; }
+.concept-receipt-dialog aside span { margin-top: 6px; color: #687064; font-size: 9px; line-height: 1.75; }
+.concept-receipt-dialog .button { width: 100%; }
+@keyframes concept-receipt-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes concept-receipt-rise { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .concept-waiting { min-height: 190px; display: flex; flex-direction: column; justify-content: center; }
 .concept-waiting > h2 { margin: 0; }
 .concept-waiting > p:last-child { max-width: 680px; color: var(--muted); font-size: 10px; line-height: 1.9; }
@@ -1026,6 +1048,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .common-ending-card { padding: 21px; grid-template-columns: 1fr; gap: 12px; }
   .concept-confirm { align-items: stretch; flex-direction: column; }
   .concept-confirm .button { width: 100%; min-width: 0; }
+  .concept-receipt-backdrop { padding: 18px; }
+  .concept-receipt-dialog { padding: 30px 24px 26px; }
+  .concept-receipt-dialog h2 { font-size: 24px; }
   .pet-summary { grid-template-columns: 80px 1fr; }
   .pet-photo { width: 80px; height: 104px; }
   .memory-demo-shell, .memory-demo-hero-copy { width: calc(100% - 40px); }
