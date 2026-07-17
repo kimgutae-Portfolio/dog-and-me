@@ -656,7 +656,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px 18px; }
 .form-grid label, .stacked-fields label { display: flex; flex-direction: column; gap: 10px; }
 .form-grid label > span, .stacked-fields label > span, .chip-field legend { font-size: 11px; font-weight: 700; }
-.form-grid em { margin-left: 6px; color: var(--rust); font-size: 8px; font-style: normal; }
+.form-grid em, .stacked-fields em, .upload-box em, .consent-box em { margin-left: 6px; color: var(--rust); font-size: 8px; font-style: normal; }
+.form-grid label > span small, .stacked-fields label > span small { margin-left: 6px; color: var(--muted); font-size: 8px; font-weight: 400; }
 .form-grid input, .form-grid select, .stacked-fields textarea { width: 100%; min-height: 54px; padding: 14px 15px; border: 1px solid var(--line); outline: none; color: var(--ink); background: rgba(255,255,255,.6); font-size: 13px; transition: border .2s ease; }
 .stacked-fields textarea { min-height: auto; resize: vertical; line-height: 1.7; }
 .form-grid input:focus, .form-grid select:focus, .stacked-fields textarea:focus { border-color: var(--rust); }
@@ -705,6 +706,21 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .consent-box strong, .consent-box small { display: block; }
 .consent-box strong { font-size: 11px; }
 .consent-box small { margin-top: 5px; color: var(--muted); font-size: 9px; line-height: 1.6; }
+.missing-fields-panel { margin-top: 18px; padding: 24px; border: 1px solid #d8b8a8; background: #f5e9e1; }
+.missing-fields-panel .eyebrow { margin: 0 0 10px; color: var(--rust); }
+.missing-fields-panel h2 { margin: 0; font-family: var(--font-serif); font-size: 20px; font-weight: 400; letter-spacing: .04em; }
+.missing-fields-panel > p:not(.eyebrow) { margin: 9px 0 18px; color: var(--muted); font-size: 10px; line-height: 1.7; }
+.missing-fields-panel ul { margin: 0; padding: 0; display: grid; gap: 7px; list-style: none; }
+.missing-fields-panel button { width: 100%; min-height: 48px; padding: 10px 13px; display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; align-items: center; gap: 12px; border: 1px solid rgba(157,92,62,.2); color: var(--ink); background: rgba(255,255,255,.58); cursor: pointer; text-align: left; }
+.missing-fields-panel button:hover, .missing-fields-panel button:focus-visible { border-color: var(--rust); outline: none; background: white; }
+.missing-fields-panel button span { color: var(--muted); font-size: 8px; }
+.missing-fields-panel button strong { font-size: 10px; }
+.missing-fields-panel button em { color: var(--rust); font-size: 9px; font-style: normal; white-space: nowrap; }
+.ready-to-submit { margin-top: 18px; padding: 18px; display: flex; align-items: center; gap: 13px; border: 1px solid #b9c7b5; background: #e7ede4; }
+.ready-to-submit > span { width: 28px; height: 28px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; color: white; background: #6f7d6a; font-size: 10px; }
+.ready-to-submit strong, .ready-to-submit small { display: block; }
+.ready-to-submit strong { font-size: 11px; }
+.ready-to-submit small { margin-top: 4px; color: var(--muted); font-size: 9px; }
 .form-error { margin: 16px 0 0; padding: 12px 15px; color: #8a3f2b; background: #f4e3dc; font-size: 11px; }
 .wizard-actions { margin-top: 34px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; }
 .wizard-loading { min-height: 100vh; display: grid; place-items: center; color: var(--muted); background: var(--paper); font-family: var(--font-serif); }
@@ -984,6 +1000,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .style-swatch { width: 66px; height: 76px; }
   .wizard-actions .button { min-width: 128px; padding: 0 16px; }
   .review-card dl div { grid-template-columns: 90px 1fr; }
+  .missing-fields-panel { padding: 21px 18px; }
+  .missing-fields-panel button { grid-template-columns: 1fr auto; gap: 5px 12px; }
+  .missing-fields-panel button span { grid-column: 1 / -1; }
   .studio-header { height: 68px; padding: 0 16px; }
   .studio-header .brand-type, .studio-header nav a { display: none; }
   .studio-shell { width: calc(100% - 40px); padding-top: 42px; }

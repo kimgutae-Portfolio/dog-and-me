@@ -191,6 +191,11 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(storyWizard, /\/auth\?mode=signup&next=\/story/);
   assert.match(storyWizard, /映像はBGMと短い字幕を中心に/);
   assert.doesNotMatch(storyWizard, /<span>ナレーション<\/span>/);
+  assert.match(storyWizard, /const missingFields = useMemo<MissingField\[\]>/);
+  assert.match(storyWizard, /photoFiles\.length === 0/);
+  assert.match(storyWizard, /未入力\$\{missingFields\.length\}項目を確認する/);
+  assert.match(storyWizard, /onClick=\{\(\) => goToStep\(item\.step\)\}/);
+  assert.doesNotMatch(storyWizard, /if \(step === 1 &&/);
   assert.match(migration, /add column if not exists primary_pet_name text/);
 });
 
