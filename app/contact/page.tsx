@@ -27,7 +27,7 @@ export default function ContactPage() {
         <p>サービス内容、納品、キャンセルについてのお問い合わせを受け付けています。</p>
         <a className="contact-phone" href="tel:08085307568">080-8530-7568</a>
       </section>
-      <aside className="info-note"><strong>運営者情報</strong><p>販売事業者・運営責任者：金具泰<br />所在地：大阪府堺市中区327-47</p></aside>
+      <aside className="info-note"><strong>運営者情報</strong><p>販売事業者・運営責任者：金具泰<br />所在地：〒599-8272 大阪府堺市中区深井中町327-47</p></aside>
     </InfoPage>
   );
 }

@@ -102,7 +102,7 @@ test("server-renders public support and legal pages", async () => {
   const legalResponse = await render("/legal");
   const legalHtml = await legalResponse.text();
   assert.match(legalHtml, /金具泰/);
-  assert.match(legalHtml, /大阪府堺市中区327-47/);
+  assert.match(legalHtml, /〒599-8272 大阪府堺市中区深井中町327-47/);
   assert.match(legalHtml, /080-8530-7568/);
   assert.match(legalHtml, /クレジットカード決済（Stripe）/);
   assert.doesNotMatch(legalHtml, /正式な個人事業者情報.*掲載/);
