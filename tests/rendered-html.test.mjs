@@ -98,6 +98,18 @@ test("server-renders public support and legal pages", async () => {
     assert.match(html, new RegExp(title));
     assert.match(html, new RegExp(`<link rel="canonical" href="https:\\/\\/kimi-to-no-eiga\\.ggutae0\\.chatgpt\\.site${path}`));
   }
+
+  const legalResponse = await render("/legal");
+  const legalHtml = await legalResponse.text();
+  assert.match(legalHtml, /金具泰/);
+  assert.match(legalHtml, /大阪府堺市中区327-47/);
+  assert.match(legalHtml, /080-8530-7568/);
+  assert.match(legalHtml, /クレジットカード決済（Stripe）/);
+  assert.doesNotMatch(legalHtml, /正式な個人事業者情報.*掲載/);
+
+  const contactResponse = await render("/contact");
+  const contactHtml = await contactResponse.text();
+  assert.match(contactHtml, /href="tel:08085307568"/);
 });
 
 test("keeps private product routes out of search results", async () => {

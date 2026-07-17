@@ -22,7 +22,12 @@ export default function ContactPage() {
         <p>制作中の追加写真、ご質問、映像の修正依頼は、ログイン後の制作室から担当者へお送りください。注文ごとの履歴として安全に保管されます。</p>
         <Link className="button button-outline" href="/studio">制作室を開く →</Link>
       </section>
-      <aside className="info-note"><strong>現在の受付について</strong><p>現在はモニター相談受付中です。サイト上での決済開始前に、公開お問い合わせ窓口と事業者情報を本ページおよび「特定商取引法に基づく表記」へ掲載します。</p></aside>
+      <section>
+        <h2>お電話でのお問い合わせ</h2>
+        <p>サービス内容、納品、キャンセルについてのお問い合わせを受け付けています。</p>
+        <a className="contact-phone" href="tel:08085307568">080-8530-7568</a>
+      </section>
+      <aside className="info-note"><strong>運営者情報</strong><p>販売事業者・運営責任者：金具泰<br />所在地：大阪府堺市中区327-47</p></aside>
     </InfoPage>
   );
 }
