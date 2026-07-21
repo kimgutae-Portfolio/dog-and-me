@@ -28,7 +28,7 @@ export async function uploadOrderImages(
   onProgress?: (completed: number, total: number) => void,
 ): Promise<OrderAsset[]> {
   const uploaded: OrderAsset[] = [];
-  const [{ count: visibleCount }, { data: lastAsset }] = await Promise.all([
+  const [{ count: visibleCount }, { data: lastAsset }, { data: existingAssets }] = await Promise.all([
     supabase
       .from("assets")
       .select("id", { count: "exact", head: true })
@@ -43,12 +43,23 @@ export async function uploadOrderImages(
       .order("album_sort_order", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("assets")
+      .select("original_filename,file_size")
+      .eq("order_id", orderId)
+      .eq("category", "source_image"),
   ]);
+  const existingKeys = new Set((existingAssets ?? []).map((asset) => `${asset.original_filename}:${asset.file_size}`));
   let nextVisibleIndex = visibleCount ?? 0;
   let nextSortOrder = ((lastAsset as { album_sort_order?: number } | null)?.album_sort_order ?? -1) + 1;
 
   for (let index = 0; index < files.length; index += 1) {
     const file = await normalizeImage(files[index]);
+    const fileKey = `${file.name}:${file.size}`;
+    if (existingKeys.has(fileKey)) {
+      onProgress?.(index + 1, files.length);
+      continue;
+    }
     const path = `${userId}/${orderId}/source/${crypto.randomUUID()}.${safeExtension(file)}`;
     const { error: uploadError } = await supabase.storage
       .from("order-assets")
@@ -77,6 +88,7 @@ export async function uploadOrderImages(
     }
 
     uploaded.push(data as OrderAsset);
+    existingKeys.add(fileKey);
     if (nextVisibleIndex < 30) nextVisibleIndex += 1;
     nextSortOrder += 1;
     onProgress?.(index + 1, files.length);

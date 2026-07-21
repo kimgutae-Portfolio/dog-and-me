@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "../components/InfoPage";
+import { SUPPORT_EMAIL } from "../lib/site";
 
 export const metadata: Metadata = {
   title: "お問い合わせ",
@@ -22,9 +23,14 @@ export default function ContactPage() {
         <Link className="button button-outline" href="/studio">制作室を開く →</Link>
       </section>
       <section>
+        <h2>メールでのお問い合わせ</h2>
+        <p>サービス内容、制作のご相談、納品やキャンセルについては、下記のメールアドレスへご連絡ください。</p>
+        <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL} →</a>
+      </section>
+      <section>
         <h2>電話番号の開示をご希望の方</h2>
         <p>特定商取引法に基づく電話番号は、ご請求に応じて、お申し込みの意思決定に先立って遅滞なく開示します。下のメールから「電話番号の開示希望」とお送りください。</p>
-        <a className="button button-outline" href="mailto:ggutae0@gmail.com?subject=WAN%20MEMORY%20%E9%9B%BB%E8%A9%B1%E7%95%AA%E5%8F%B7%E3%81%AE%E9%96%8B%E7%A4%BA%E5%B8%8C%E6%9C%9B">メールで開示を請求する →</a>
+        <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}?subject=WAN%20MEMORY%20%E9%9B%BB%E8%A9%B1%E7%95%AA%E5%8F%B7%E3%81%AE%E9%96%8B%E7%A4%BA%E5%B8%8C%E6%9C%9B`}>メールで開示を請求する →</a>
       </section>
       <aside className="info-note"><strong>運営者情報</strong><p>販売事業者・運営責任者：金具泰<br />所在地：〒599-8272 大阪府堺市中区深井中町327-47</p></aside>
     </InfoPage>

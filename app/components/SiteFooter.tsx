@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { APPLICATIONS_OPEN, START_STORY_HREF } from "../lib/site";
+import { APPLICATIONS_OPEN, START_STORY_HREF, SUPPORT_EMAIL } from "../lib/site";
 
 export function SiteFooter() {
   return (
@@ -14,7 +14,7 @@ export function SiteFooter() {
         </div>
         <div className="footer-links">
           <div><p>SERVICE</p><Link href="/film/momo-demo">完成デモ</Link><Link href="/#flow">制作の流れ</Link><Link href="/#plans">プラン</Link>{APPLICATIONS_OPEN ? <Link href={START_STORY_HREF}>お申し込み</Link> : <span>お申し込み受付は準備中</span>}</div>
-          <div><p>SUPPORT</p><Link href="/#faq">よくある質問</Link><Link href="/studio">制作室</Link><Link href="/contact">お問い合わせ</Link></div>
+          <div><p>SUPPORT</p><Link href="/#faq">よくある質問</Link><Link href="/studio">制作室</Link><Link href="/contact">お問い合わせ</Link><a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></div>
           <div><p>LEGAL</p><Link href="/terms">利用規約</Link><Link href="/privacy">プライバシーポリシー</Link><Link href="/legal">特定商取引法に基づく表記</Link></div>
         </div>
       </div>

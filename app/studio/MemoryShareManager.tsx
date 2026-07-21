@@ -142,7 +142,11 @@ export function MemoryShareManager({ order, delivery, assets, onChanged }: Props
   const openShareSheet = async () => {
     if (!shareUrl) return;
     if (navigator.share) {
-      await navigator.share({ title: `${order.pet_name}ちゃんのメモリーサイト`, text: `${order.pet_name}ちゃんとの思い出をお届けします。`, url: shareUrl });
+      await navigator.share({
+        title: `${order.pet_name}との思い出｜WAN MEMORY`,
+        text: `${order.pet_name}との大切な時間をまとめた専用メモリーサイトです。`,
+        url: shareUrl,
+      });
     } else {
       await copyShareUrl();
     }

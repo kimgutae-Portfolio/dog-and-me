@@ -21,6 +21,13 @@ export type OrderStatus =
   | "delivered"
   | "cancelled";
 
+export type PeopleHandling =
+  | "not_applicable"
+  | "dog_only_crop"
+  | "anonymous_person"
+  | "original_still"
+  | "consult";
+
 export type MemoryOrder = {
   id: string;
   user_id: string;
@@ -47,6 +54,28 @@ export type MemoryOrder = {
   selected_concept_slot: "A" | "B" | null;
   due_date: string | null;
   admin_notes: string | null;
+  revision_limit: number;
+  revision_used: number;
+  consented_at: string | null;
+  terms_version: string | null;
+  privacy_version: string | null;
+  external_ai_consent_at: string | null;
+  ai_notice_version: string | null;
+  contains_people: boolean | null;
+  people_handling: PeopleHandling | null;
+  contains_minors: boolean | null;
+  photo_rights_consented_at: string | null;
+  photo_rights_consent_version: string | null;
+  depicted_people_consented_at: string | null;
+  depicted_people_consent_version: string | null;
+  minor_guardian_consented_at: string | null;
+  minor_guardian_consent_version: string | null;
+  people_policy_version: string | null;
+  customer_approved_at: string | null;
+  customer_approved_by: string | null;
+  customer_approved_review_asset_id: string | null;
+  draft_expires_at: string | null;
+  stage_updated_at: string;
   created_at: string;
   updated_at: string;
 };
@@ -55,7 +84,7 @@ export type OrderAsset = {
   id: string;
   order_id: string;
   user_id: string;
-  category: "source_image" | "source_video" | "final_video" | "thumbnail";
+  category: "source_image" | "source_video" | "review_video" | "final_video" | "thumbnail";
   storage_path: string;
   original_filename: string;
   mime_type: string;
@@ -98,6 +127,9 @@ export type OrderMessage = {
   order_id: string;
   sender_id: string;
   body: string;
+  status: "open" | "resolved";
+  resolved_at: string | null;
+  resolved_by: string | null;
   created_at: string;
 };
 
@@ -109,6 +141,8 @@ export type RevisionRequest = {
   body: string;
   status: "open" | "resolved";
   created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
 };
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
