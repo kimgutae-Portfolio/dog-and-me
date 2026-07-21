@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { AuthProvider } from "./components/AuthProvider";
 import { SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
 import { getRequestOrigin } from "./lib/site-server";
@@ -67,7 +68,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body><AuthProvider>{children}</AuthProvider></body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+        <Analytics />
+      </body>
     </html>
   );
 }

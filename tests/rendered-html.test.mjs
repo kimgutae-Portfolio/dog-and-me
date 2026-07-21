@@ -270,3 +270,14 @@ test("keeps Vercel and Sites build outputs separate", async () => {
   assert.equal(vercel.buildCommand, "npm run build:vercel");
   assert.equal(vercel.outputDirectory, ".next");
 });
+
+test("loads Vercel Web Analytics from the root layout", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [layout, packageSource] = await Promise.all([
+    readFile(new URL("app/layout.tsx", root), "utf8"),
+    readFile(new URL("package.json", root), "utf8"),
+  ]);
+  assert.match(layout, /from "@vercel\/analytics\/next"/);
+  assert.match(layout, /<Analytics \/>/);
+  assert.ok(JSON.parse(packageSource).dependencies["@vercel/analytics"]);
+});
