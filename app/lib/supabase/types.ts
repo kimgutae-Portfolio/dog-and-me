@@ -84,6 +84,7 @@ export type OrderAsset = {
   id: string;
   order_id: string;
   user_id: string;
+  memory_id: string | null;
   category: "source_image" | "source_video" | "review_video" | "final_video" | "thumbnail";
   storage_path: string;
   original_filename: string;
@@ -93,6 +94,21 @@ export type OrderAsset = {
   album_caption: string | null;
   album_sort_order: number;
   created_at: string;
+};
+
+export type OrderMemory = {
+  id: string;
+  order_id: string;
+  user_id: string;
+  client_key: string;
+  sort_order: number;
+  title: string;
+  when_text: string | null;
+  location: string | null;
+  description: string;
+  dog_behavior: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type MemoryShare = {

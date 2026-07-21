@@ -59,7 +59,7 @@ awaiting_materials
 
 管理画面はテーブルを直接更新しません。`admin_update_order`、`admin_publish_concepts`、`admin_register_video_asset`、`admin_deliver_order`などのSecurity Definer RPCだけを使用します。RPCは管理者権限と許可された状態遷移を検証し、変更を`order_events`へ記録します。`concept_selected`はお客様の選択、`customer_review`は確認動画の公開、`quality_check`はお客様本人の`customer_approve_review`だけで進みます。制作以降は`paid`、現在版の同意記録、未対応修正0件をDBで確認します。
 
-相談受付は写真5枚以上をDBでも確認した後に確定します。先着10組の料金枠は`materials_submitted`になった注文だけが使用するため、アップロード途中の下書き注文は枠を消費しません。
+相談受付は思い出2〜6項目、各項目の写真1〜3枚、合計写真5枚以上をDBでも確認した後に確定します。思い出本文と写真は同じIDで紐付き、管理者が場面ごとに確認できます。先着10組の料金枠は`materials_submitted`になった注文だけが使用するため、アップロード途中の下書き注文は枠を消費しません。
 
 ## 運用強化版の反映順序
 

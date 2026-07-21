@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 const homeFaqs = [
-  ["写真は何枚必要ですか？", "最低5枚から受付できます。顔の正面・横顔・全身など、15〜30枚あるとその子らしさをより丁寧に確認できます。"],
+  ["写真は何枚必要ですか？", "思い出を2〜6項目追加し、それぞれに同じ場面の写真を1〜3枚添えてください。写真は合計5枚以上、最大18枚までお送りいただけます。"],
   ["モニター価格とは何ですか？", `サービス品質の確認と改善のため、初期${MEMORY_FILM_PRICING.launchLimit}組限定で ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）にて制作します。受付終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`],
   ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
   ["映像コンセプト2案とは何ですか？", "同じ写真とエピソードから、物語の切り口や場面構成が異なる2案をご提案します。お好きな1案を選んでいただき、約1分の映像として詳しく仕上げます。"],
@@ -161,7 +161,7 @@ export default async function Home() {
             <div className="trust-row" aria-label="サービスの特徴">
               <span>実写中心</span>
               <span>人の手で監修</span>
-              <span>写真5枚から</span>
+              <span>思い出2つ・写真5枚から</span>
             </div>
           </div>
         </div>

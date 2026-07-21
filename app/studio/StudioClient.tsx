@@ -6,7 +6,7 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } fro
 import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS, hasCurrentConsent } from "../lib/consent";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
-import type { Delivery, FilmConcept, MemoryOrder, OrderAsset, OrderMessage, PeopleHandling, RevisionRequest } from "../lib/supabase/types";
+import type { Delivery, FilmConcept, MemoryOrder, OrderAsset, OrderMemory, OrderMessage, PeopleHandling, RevisionRequest } from "../lib/supabase/types";
 import { ORDER_STATUS_LABELS } from "../lib/supabase/types";
 import { uploadOrderImages } from "../lib/supabase/uploads";
 import { MemoryShareManager } from "./MemoryShareManager";
@@ -50,6 +50,7 @@ export function StudioClient() {
   const [orders, setOrders] = useState<MemoryOrder[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [assets, setAssets] = useState<OrderAsset[]>([]);
+  const [memories, setMemories] = useState<OrderMemory[]>([]);
   const [concepts, setConcepts] = useState<FilmConcept[]>([]);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [messages, setMessages] = useState<OrderMessage[]>([]);
@@ -64,7 +65,6 @@ export function StudioClient() {
   const [conceptReceipt, setConceptReceipt] = useState<{ slot: "A" | "B"; title: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [submittingMaterials, setSubmittingMaterials] = useState(false);
   const [messageBody, setMessageBody] = useState("");
   const [revisionCategory, setRevisionCategory] = useState("映像の動き");
   const [revisionBody, setRevisionBody] = useState("");
@@ -106,14 +106,16 @@ export function StudioClient() {
   const loadDetails = useCallback(async (orderId: string) => {
     if (!orderId) return;
     const supabase = getSupabaseBrowserClient();
-    const [assetResult, conceptResult, deliveryResult, messageResult, revisionResult] = await Promise.all([
+    const [assetResult, memoryResult, conceptResult, deliveryResult, messageResult, revisionResult] = await Promise.all([
       supabase.from("assets").select("*").eq("order_id", orderId).order("created_at"),
+      supabase.from("order_memories").select("*").eq("order_id", orderId).order("sort_order"),
       supabase.from("concepts").select("*").eq("order_id", orderId).eq("status", "published").order("slot"),
       supabase.from("deliveries").select("*").eq("order_id", orderId).maybeSingle(),
       supabase.from("messages").select("*").eq("order_id", orderId).order("created_at"),
       supabase.from("revision_requests").select("*").eq("order_id", orderId).order("created_at", { ascending: false }),
     ]);
     setAssets((assetResult.data ?? []) as OrderAsset[]);
+    setMemories((memoryResult.data ?? []) as OrderMemory[]);
     setConcepts((conceptResult.data ?? []) as FilmConcept[]);
     setDelivery((deliveryResult.data as Delivery | null) ?? null);
     setMessages((messageResult.data ?? []) as OrderMessage[]);
@@ -243,25 +245,6 @@ export function StudioClient() {
     await loadDetails(order.id);
   };
 
-  const submitPendingOrder = async () => {
-    if (!order || !canOperateOrder || order.status !== "awaiting_materials") return;
-    if (sourceAssets.length < 5) {
-      setError(`受付には写真が5枚必要です。あと${5 - sourceAssets.length}枚追加してください。`);
-      return;
-    }
-    setSubmittingMaterials(true);
-    setError("");
-    const { error: submitError } = await getSupabaseBrowserClient().rpc("submit_memory_order", { p_order_id: order.id });
-    if (submitError) setError("ご相談の受付を完了できませんでした。もう一度お試しください。");
-    else {
-      window.localStorage.removeItem("wan-memory-pending-order-id");
-      window.localStorage.removeItem("wan-memory-had-selected-photos");
-      setNotice("ご相談と写真を正式に受け付けました。");
-      await Promise.all([loadOrders(), loadDetails(order.id)]);
-    }
-    setSubmittingMaterials(false);
-  };
-
   const requestRevision = async (event: FormEvent) => {
     event.preventDefault();
     if (!order || !canOperateOrder || !revisionBody.trim()) return;
@@ -381,7 +364,13 @@ export function StudioClient() {
           {delivery && <section className="delivery-card" id="delivery"><div><p className="eyebrow light">YOUR FILM IS READY</p><h2>{delivery.title}</h2><p>{delivery.customer_message || `${order.pet_name}ちゃんとの時間を、一本の映画に仕上げました。`}</p><Link className="button button-cream" href={`/film/${order.id}`}>専用メモリーサイトを見る →</Link></div><div className="delivery-player">{videoUrl ? <video src={videoUrl} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline onContextMenu={(event) => event.preventDefault()} /> : <span>映像を準備しています…</span>}<small>閲覧専用 · ダウンロードボタンは表示されません</small></div></section>}
 
           <div className="studio-grid">
-            <section className="studio-card" id="materials"><div className="card-head"><div><p className="eyebrow">YOUR DOG &amp; MATERIALS</p><h2>お預かりした内容</h2></div><span>{sourceAssets.length}枚</span></div><div className="pet-summary"><div className="pet-photo"><span>{order.pet_name.slice(0, 1)}</span></div><div><h3>{order.pet_name} <small>{order.breed}・{order.age_text}</small></h3><p>{order.purpose}</p><dl><div><dt>映像の雰囲気</dt><dd>{order.style}</dd></div><div><dt>写真</dt><dd>{sourceAssets.length}枚</dd></div></dl></div></div>{order.message_to_pet && <blockquote>「{order.message_to_pet}」</blockquote>}{canAddPhotos ? <><label className={uploading ? "studio-upload-button disabled" : "studio-upload-button"}><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple disabled={uploading} onChange={addPhotos} /><span>＋ 写真を追加する</span><small>{uploading ? `送信中 ${uploadProgress}%` : "HEICは自動でJPGに変換 · 最大20枚ずつ"}</small></label>{order.status === "awaiting_materials" && <aside className="pending-order-submit"><div><strong>{sourceAssets.length >= 5 ? "必要な写真が揃いました。" : `受付まであと${5 - sourceAssets.length}枚です。`}</strong><span>アップロード途中で止まった場合も、同じご相談の続きから再開できます。</span></div><button className="button button-primary" type="button" disabled={submittingMaterials || sourceAssets.length < 5} onClick={submitPendingOrder}>{submittingMaterials ? "受付中…" : "この内容で受付を完了する →"}</button></aside>}</> : <p className="readonly-preview-note">{readOnlyPreview ? "閲覧専用プレビューでは写真を追加できません。" : "停止中のご相談には写真を追加できません。"}</p>}</section>
+            <section className="studio-card" id="materials">
+              <div className="card-head"><div><p className="eyebrow">YOUR DOG &amp; MATERIALS</p><h2>お預かりした内容</h2></div><span>{memories.length}件 · {sourceAssets.length}枚</span></div>
+              <div className="pet-summary"><div className="pet-photo"><span>{order.pet_name.slice(0, 1)}</span></div><div><h3>{order.pet_name} <small>{order.breed}・{order.age_text}</small></h3><p>{order.purpose}</p><dl><div><dt>映像の雰囲気</dt><dd>{order.style}</dd></div><div><dt>思い出・写真</dt><dd>{memories.length}件 · {sourceAssets.length}枚</dd></div></dl></div></div>
+              {memories.length > 0 && <div className="studio-memory-list">{memories.map((memory) => <article key={memory.id}><span>{String(memory.sort_order).padStart(2, "0")}</span><div><strong>{memory.title}</strong><p>{memory.description}</p><small>{memory.when_text || "時期指定なし"} · {memory.location || "場所指定なし"} · 写真{sourceAssets.filter((asset) => asset.memory_id === memory.id).length}枚</small></div></article>)}</div>}
+              {order.message_to_pet && <blockquote>「{order.message_to_pet}」</blockquote>}
+              {order.status === "awaiting_materials" && canOperateOrder ? <aside className="pending-order-submit"><div><strong>思い出と写真の入力が途中です。</strong><span>項目ごとの写真が分かるように、申込フォームから続きを入力してください。</span></div><Link className="button button-primary" href="/story">入力の続きを開く →</Link></aside> : canAddPhotos ? <label className={uploading ? "studio-upload-button disabled" : "studio-upload-button"}><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple disabled={uploading} onChange={addPhotos} /><span>＋ 補足写真を追加する</span><small>{uploading ? `送信中 ${uploadProgress}%` : "思い出に紐付かない追加資料としてお預かりします · 最大20枚"}</small></label> : <p className="readonly-preview-note">{readOnlyPreview ? "閲覧専用プレビューでは写真を追加できません。" : "停止中のご相談には写真を追加できません。"}</p>}
+            </section>
 
             <aside className="studio-card message-card" id="messages"><p className="eyebrow">MESSAGE</p><h2>担当者とのメッセージ</h2><div className="message-thread">{messages.length ? messages.slice(-5).map((message) => { const fromCustomer = message.sender_id === order.user_id; return <article className={fromCustomer ? "mine" : ""} key={message.id}><small>{fromCustomer ? "あなた" : "担当ディレクター"} · {formatDate(message.created_at)}</small><p>{message.body}</p></article>; }) : <p className="message-empty">追加したい思い出やご質問をこちらから送れます。</p>}</div>{canOperateOrder ? <form className="message-form" onSubmit={sendMessage}><textarea value={messageBody} onChange={(event) => setMessageBody(event.target.value)} rows={3} maxLength={3000} placeholder="担当者へ伝えたいこと" /><button className="button button-outline" type="submit" disabled={!messageBody.trim()}>メッセージを送る</button></form> : <p className="readonly-preview-note">閲覧専用プレビューではメッセージを送信できません。</p>}</aside>
           </div>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { hasCurrentConsent } from "../lib/consent";
-import type { FilmConcept, MemoryOrder, OrderAsset, OrderMessage, Profile, RevisionRequest } from "../lib/supabase/types";
+import type { FilmConcept, MemoryOrder, OrderAsset, OrderMemory, OrderMessage, Profile, RevisionRequest } from "../lib/supabase/types";
 import { ORDER_STATUS_LABELS, type OrderStatus } from "../lib/supabase/types";
 
 type ConceptDraft = { title: string; tone: string; summary: string; scenes: string };
@@ -60,6 +60,7 @@ export function AdminStudio() {
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [concepts, setConcepts] = useState<FilmConcept[]>([]);
   const [assets, setAssets] = useState<OrderAsset[]>([]);
+  const [memories, setMemories] = useState<OrderMemory[]>([]);
   const [assetUrls, setAssetUrls] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<OrderMessage[]>([]);
   const [revisions, setRevisions] = useState<RevisionRequest[]>([]);
@@ -112,9 +113,10 @@ export function AdminStudio() {
   const loadDetails = useCallback(async (orderId: string) => {
     if (!orderId) return;
     const supabase = getSupabaseBrowserClient();
-    const [conceptResult, assetResult, messageResult, revisionResult] = await Promise.all([
+    const [conceptResult, assetResult, memoryResult, messageResult, revisionResult] = await Promise.all([
       supabase.from("concepts").select("*").eq("order_id", orderId).order("slot"),
       supabase.from("assets").select("*").eq("order_id", orderId).order("created_at", { ascending: false }),
+      supabase.from("order_memories").select("*").eq("order_id", orderId).order("sort_order"),
       supabase.from("messages").select("*").eq("order_id", orderId).order("created_at"),
       supabase.from("revision_requests").select("*").eq("order_id", orderId).order("created_at", { ascending: false }),
     ]);
@@ -122,6 +124,7 @@ export function AdminStudio() {
     const loadedAssets = (assetResult.data ?? []) as OrderAsset[];
     setConcepts(loadedConcepts);
     setAssets(loadedAssets);
+    setMemories((memoryResult.data ?? []) as OrderMemory[]);
     setMessages((messageResult.data ?? []) as OrderMessage[]);
     setRevisions((revisionResult.data ?? []) as RevisionRequest[]);
     const toDraft = (concept?: FilmConcept): ConceptDraft => concept
@@ -231,6 +234,60 @@ export function AdminStudio() {
       await Promise.all([loadOrders(), loadDetails(order.id)]);
     }
     setSaving(false);
+  };
+
+  const copyProductionJson = async () => {
+    if (!order) return;
+    const selectedConcept = concepts.find((concept) => concept.slot === order.selected_concept_slot) ?? null;
+    const productionData = {
+      production_ref: order.order_number,
+      film: {
+        purpose: order.purpose,
+        duration_seconds: 60,
+        aspect_ratio: order.aspect_ratio,
+        style: order.style,
+        bgm: order.bgm,
+        narration: order.narration,
+      },
+      pet: {
+        name: order.pet_name,
+        name_kana: order.name_kana,
+        breed: order.breed,
+        age: order.age_text,
+        personality: order.personality,
+      },
+      selected_concept: selectedConcept ? {
+        slot: selectedConcept.slot,
+        title: selectedConcept.title,
+        tone: selectedConcept.tone,
+        summary: selectedConcept.summary,
+        scenes: selectedConcept.scenes,
+      } : null,
+      memories: memories.map((memory) => ({
+        number: memory.sort_order,
+        title: memory.title,
+        when: memory.when_text,
+        location: memory.location,
+        description: memory.description,
+        dog_behavior: memory.dog_behavior,
+        photos: sourceAssets.filter((asset) => asset.memory_id === memory.id).map((asset) => asset.original_filename),
+      })),
+      message_to_pet: order.message_to_pet,
+      avoid_notes: order.avoid_notes,
+      people_policy: {
+        contains_people: order.contains_people,
+        people_handling: order.people_handling,
+        contains_minors: order.contains_minors,
+        external_ai_processing_allowed: Boolean(order.external_ai_consent_at),
+      },
+      additional_customer_requests: messages.filter((message) => message.sender_id === order.user_id).map((message) => message.body),
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(productionData, null, 2));
+      setNotice("個人連絡先を含まない制作用JSONをコピーしました。写真と一緒に制作相談へお使いください。");
+    } catch {
+      setError("制作用JSONをコピーできませんでした。ブラウザのクリップボード権限をご確認ください。");
+    }
   };
 
   const selectVideo = (event: ChangeEvent<HTMLInputElement>) => {
@@ -375,9 +432,9 @@ export function AdminStudio() {
 
             <section className="admin-card" id="admin-progress"><div className="card-head"><div><p className="eyebrow">PRODUCTION STATUS</p><h3>進行状況・入金・納期</h3></div><span>許可された次の工程だけを表示</span></div>{order.payment_status !== "paid" && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>入金確認前です。</strong><span>「入金確認済み」を一度保存するまで、映像制作・確認映像公開・納品には進めません。</span></aside>}{!consentCurrent && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>写真・人物の取り扱いに必要な同意記録が揃っていません。</strong><span>お客様が制作室で人物・未成年者の有無、写真使用権限、写っている人物の同意、外部制作サービスでの処理を確認するまで制作を開始できません。</span></aside>}{order.customer_approved_at && <aside className="admin-operation-note strong"><strong>お客様が確認映像を確定済みです。</strong><span>{formatDateTime(order.customer_approved_at)} · 承認した確認映像ID {order.customer_approved_review_asset_id}</span></aside>}<div className="admin-form-grid"><label><span>現在の状態</span><select value={status} onChange={(event) => setStatus(event.target.value as OrderStatus)}>{selectableStatuses.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label><span>入金状態</span><select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as MemoryOrder["payment_status"])}><option value="pending">ご案内前</option><option value="invoice_sent">お支払い待ち</option><option value="paid">入金確認済み</option><option value="refunded">返金済み</option></select></label><label><span>予定完成日</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label><label className="wide"><span>運営メモ（顧客には非表示）</span><textarea rows={3} value={adminNotes} onChange={(event) => setAdminNotes(event.target.value)} /></label></div><button className="button button-primary" type="button" disabled={saving} onClick={saveOrder}>進行状況を保存</button></section>
 
-            <section className="admin-card" id="admin-story"><div className="card-head"><div><p className="eyebrow">CUSTOMER STORY</p><h3>お預かりした内容</h3></div><span>{order.purpose}</span></div><dl className="admin-story"><div><dt>犬種・年齢</dt><dd>{order.breed} · {order.age_text || "未入力"}</dd></div><div><dt>性格</dt><dd>{order.personality.join("、") || "未入力"}</dd></div><div><dt>はじめて会った日</dt><dd>{order.first_meeting || "未入力"}</dd></div><div><dt>いちばんの思い出</dt><dd>{order.favorite_memory || "未入力"}</dd></div><div><dt>伝えたい言葉</dt><dd>{order.message_to_pet || "未入力"}</dd></div><div><dt>入れたくないこと</dt><dd>{order.avoid_notes || "なし"}</dd></div><div><dt>人物の有無</dt><dd>{order.contains_people === true ? "あり" : order.contains_people === false ? "なし" : "未確認（制作不可）"}</dd></div><div><dt>人物の取り扱い</dt><dd>{peopleHandlingLabel(order.people_handling)}</dd></div><div><dt>未成年者</dt><dd>{order.contains_minors === true ? "あり" : order.contains_minors === false ? "なし" : "未確認（制作不可）"}</dd></div><div><dt>規約・Privacy同意</dt><dd>{order.consented_at ? `${formatDateTime(order.consented_at)} · 規約 ${order.terms_version} / Privacy ${order.privacy_version}` : "同意記録なし"}</dd></div><div><dt>写真使用権限</dt><dd>{order.photo_rights_consented_at ? `${formatDateTime(order.photo_rights_consented_at)} · ${order.photo_rights_consent_version}` : "同意記録なし"}</dd></div><div><dt>写っている人物の同意</dt><dd>{order.contains_people === false ? "対象外" : order.depicted_people_consented_at ? `${formatDateTime(order.depicted_people_consented_at)} · ${order.depicted_people_consent_version}` : "同意記録なし"}</dd></div><div><dt>未成年者の保護者同意</dt><dd>{order.contains_minors === false ? "対象外" : order.minor_guardian_consented_at ? `${formatDateTime(order.minor_guardian_consented_at)} · ${order.minor_guardian_consent_version}` : "同意記録なし"}</dd></div><div><dt>外部AI処理同意</dt><dd>{order.external_ai_consent_at ? `${formatDateTime(order.external_ai_consent_at)} · Notice ${order.ai_notice_version}` : "同意記録なし"}</dd></div></dl></section>
+            <section className="admin-card" id="admin-story"><div className="card-head"><div><p className="eyebrow">CUSTOMER STORY</p><h3>思い出と写真の組み合わせ</h3></div><button className="button button-outline admin-json-copy" type="button" onClick={copyProductionJson}>制作用JSONをコピー</button></div><dl className="admin-story"><div><dt>映画の種類</dt><dd>{order.purpose}</dd></div><div><dt>犬種・年齢</dt><dd>{order.breed} · {order.age_text || "未入力"}</dd></div><div><dt>性格</dt><dd>{order.personality.join("、") || "未入力"}</dd></div><div><dt>思い出の項目</dt><dd>{memories.length ? `${memories.length}件` : "旧形式の受付"}</dd></div>{memories.length === 0 && <><div><dt>はじめて会った日</dt><dd>{order.first_meeting || "未入力"}</dd></div><div><dt>いちばんの思い出</dt><dd>{order.favorite_memory || "未入力"}</dd></div></>}<div><dt>伝えたい言葉</dt><dd>{order.message_to_pet || "未入力"}</dd></div><div><dt>入れたくないこと</dt><dd>{order.avoid_notes || "なし"}</dd></div><div><dt>人物の有無</dt><dd>{order.contains_people === true ? "あり" : order.contains_people === false ? "なし" : "未確認（制作不可）"}</dd></div><div><dt>人物の取り扱い</dt><dd>{peopleHandlingLabel(order.people_handling)}</dd></div><div><dt>未成年者</dt><dd>{order.contains_minors === true ? "あり" : order.contains_minors === false ? "なし" : "未確認（制作不可）"}</dd></div><div><dt>規約・Privacy同意</dt><dd>{order.consented_at ? `${formatDateTime(order.consented_at)} · 規約 ${order.terms_version} / Privacy ${order.privacy_version}` : "同意記録なし"}</dd></div><div><dt>写真使用権限</dt><dd>{order.photo_rights_consented_at ? `${formatDateTime(order.photo_rights_consented_at)} · ${order.photo_rights_consent_version}` : "同意記録なし"}</dd></div><div><dt>写っている人物の同意</dt><dd>{order.contains_people === false ? "対象外" : order.depicted_people_consented_at ? `${formatDateTime(order.depicted_people_consented_at)} · ${order.depicted_people_consent_version}` : "同意記録なし"}</dd></div><div><dt>未成年者の保護者同意</dt><dd>{order.contains_minors === false ? "対象外" : order.minor_guardian_consented_at ? `${formatDateTime(order.minor_guardian_consented_at)} · ${order.minor_guardian_consent_version}` : "同意記録なし"}</dd></div><div><dt>外部AI処理同意</dt><dd>{order.external_ai_consent_at ? `${formatDateTime(order.external_ai_consent_at)} · Notice ${order.ai_notice_version}` : "同意記録なし"}</dd></div></dl>{memories.length > 0 && <div className="admin-memory-list">{memories.map((memory) => { const memoryPhotos = sourceAssets.filter((asset) => asset.memory_id === memory.id); return <article key={memory.id}><header><span>MEMORY {String(memory.sort_order).padStart(2, "0")}</span><strong>{memory.title}</strong><small>{memoryPhotos.length}枚</small></header><dl><div><dt>時期</dt><dd>{memory.when_text || "指定なし"}</dd></div><div><dt>場所</dt><dd>{memory.location || "指定なし"}</dd></div><div><dt>詳しい内容</dt><dd>{memory.description}</dd></div><div><dt>表情・動き</dt><dd>{memory.dog_behavior}</dd></div></dl><div className="admin-memory-photos">{memoryPhotos.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${memory.title}の写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}</small></a>)}</div><p className="admin-memory-check">内容と写真が同じ場面か、服・場所・季節が一致するか確認してください。</p></article>; })}</div>}</section>
 
-            <section className="admin-card" id="admin-photos"><div className="card-head"><div><p className="eyebrow">CUSTOMER PHOTOS</p><h3>お預かりした写真</h3></div><span>{sourceAssets.length}枚</span></div>{sourceAssets.length ? <div className="admin-photo-grid">{sourceAssets.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" aria-label={`${asset.original_filename}を大きく表示`} key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${order.pet_name}ちゃんの提出写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}</small></a>)}</div> : <p className="admin-empty-copy">写真はまだ登録されていません。最低5枚の提出が完了するまで注文は受付済みになりません。</p>}</section>
+            <section className="admin-card" id="admin-photos"><div className="card-head"><div><p className="eyebrow">CUSTOMER PHOTOS</p><h3>写真一覧</h3></div><span>{sourceAssets.length}枚</span></div>{sourceAssets.length ? <><div className="admin-photo-grid">{sourceAssets.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" aria-label={`${asset.original_filename}を大きく表示`} key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${order.pet_name}ちゃんの提出写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}{asset.memory_id ? " · 思い出に紐付け済み" : " · 追加写真"}</small></a>)}</div><p className="admin-operation-note">思い出ごとの対応関係は、上の「思い出と写真の組み合わせ」で確認できます。</p></> : <p className="admin-empty-copy">写真はまだ登録されていません。思い出ごとに1〜3枚、合計5枚以上の提出が必要です。</p>}</section>
 
             <section className="admin-card" id="admin-concepts"><div className="card-head"><div><p className="eyebrow">CONCEPT DELIVERY</p><h3>映像コンセプト2案</h3></div><span>{concepts.length}/2 保存済み</span></div><div className="admin-concepts">{([['A', conceptA, setConceptA], ['B', conceptB, setConceptB]] as const).map(([slot, value, setter]) => <div key={slot}><strong>CONCEPT {slot}</strong><label><span>タイトル</span><input value={value.title} onChange={(event) => setter({ ...value, title: event.target.value })} placeholder={`${order.pet_name}と歩いた季節`} /></label><label><span>トーン</span><input value={value.tone} onChange={(event) => setter({ ...value, tone: event.target.value })} placeholder="やさしく、映画のように" /></label><label><span>概要</span><textarea rows={4} value={value.summary} onChange={(event) => setter({ ...value, summary: event.target.value })} /></label><label><span>シーン（1行に1つ）</span><textarea rows={5} value={value.scenes} onChange={(event) => setter({ ...value, scenes: event.target.value })} placeholder={"はじめて会った日\nいつもの散歩道\n家族を待つ時間"} /></label></div>)}</div><button className="button button-primary" type="button" disabled={saving} onClick={saveConcepts}>2案を顧客へ公開する →</button></section>
 
