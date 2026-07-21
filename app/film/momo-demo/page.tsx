@@ -37,6 +37,7 @@ export default function MomoDemoPage() {
         <Link className="memory-demo-close" href="/">サービスサイトへ戻る ↗</Link>
       </header>
 
+      <div className="memory-demo-book" data-memory-book role="region" aria-label="モモのメモリーストーリー" tabIndex={0}>
       <section className="memory-demo-hero" data-memory-page>
         <div className="memory-demo-hero-image" aria-hidden="true" />
         <div className="memory-demo-hero-shade" aria-hidden="true" />
@@ -45,7 +46,7 @@ export default function MomoDemoPage() {
           <h1>モモと歩いた季節</h1>
           <span>柴犬 · 12歳　／　家族になった日 2014.04.12</span>
         </div>
-        <p className="memory-demo-scroll" aria-hidden="true">OUR STORY　↓</p>
+        <p className="memory-demo-scroll" aria-hidden="true">SWIPE　→</p>
       </section>
 
       <section className="memory-demo-film" data-memory-page data-memory-reveal>
@@ -80,7 +81,8 @@ export default function MomoDemoPage() {
         </div>
       </section>
 
-      <section className="memory-demo-message" data-memory-page data-memory-reveal>
+      <div className="memory-demo-final-page" data-memory-page>
+      <section className="memory-demo-message" data-memory-reveal>
         <div className="memory-demo-shell">
           <p>04 / A LETTER FOR MOMO</p>
           <blockquote>モモへ。<br />いつも私たちの真ん中にいてくれて、ありがとう。<br />これからも一緒に、ゆっくり歩こうね。</blockquote>
@@ -92,6 +94,8 @@ export default function MomoDemoPage() {
         <div><span className="brand-mark" aria-hidden="true">WM</span><p>THIS MEMORY PAGE WAS MADE FOR MOMO<br /><small>© WAN MEMORY</small></p></div>
         {APPLICATIONS_OPEN ? <Link className="button button-cream" href={START_STORY_HREF}>うちの子の映画を相談する →</Link> : <span className="button button-prelaunch button-prelaunch-light" aria-disabled="true">{PRELAUNCH_CTA}</span>}
       </footer>
+      </div>
+      </div>
     </main>
   );
 }
