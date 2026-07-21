@@ -68,14 +68,7 @@ export function MemoryMotion() {
       if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY) || Math.abs(event.deltaY) < 8) return;
       const pageWidth = Math.max(book.clientWidth, 1);
       const currentIndex = Math.min(pages.length - 1, Math.max(0, Math.round(book.scrollLeft / pageWidth)));
-      const currentPage = pages[currentIndex];
-      if (!currentPage) return;
-
       const direction = event.deltaY > 0 ? 1 : -1;
-      const canScrollDown = currentPage.scrollTop + currentPage.clientHeight < currentPage.scrollHeight - 2;
-      const canScrollUp = currentPage.scrollTop > 2;
-      if ((direction > 0 && canScrollDown) || (direction < 0 && canScrollUp)) return;
-
       const nextIndex = currentIndex + direction;
       if (nextIndex < 0 || nextIndex >= pages.length) return;
       event.preventDefault();
