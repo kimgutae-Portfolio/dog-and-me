@@ -48,9 +48,6 @@ export async function generateMetadata(): Promise<Metadata> {
       description: SITE_DESCRIPTION,
       images: [`${origin}/og.png`],
     },
-    verification: {
-      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
-    },
   };
 }
 
