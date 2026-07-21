@@ -289,7 +289,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .mobile-sticky-cta { display: none; }
 
 /* Customer memory site demo */
-.memory-demo-page { position: relative; overflow: clip; color: #2d2b25; background: #f4f0e8; }
+.memory-demo-page { position: relative; overflow: clip; color: #2d2b25; background: #f4f0e8; perspective: 1800px; perspective-origin: 50% 50vh; }
+.memory-demo-page [data-memory-page] { --memory-page-rotate: 0deg; --memory-page-shift: 0px; --memory-page-scale: 1; --memory-page-fold: 0; position: relative; isolation: isolate; backface-visibility: hidden; transform: translate3d(0, var(--memory-page-shift), 0) rotateX(var(--memory-page-rotate)) scale(var(--memory-page-scale)); will-change: transform; }
+.memory-demo-page [data-memory-page]::after { content: ""; position: absolute; z-index: 12; inset: 0; opacity: var(--memory-page-fold); pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.22), transparent 18%, transparent 72%, rgba(36,31,24,.24)); box-shadow: inset 0 16px 24px rgba(255,255,255,.12), inset 0 -20px 34px rgba(27,24,19,.16); mix-blend-mode: soft-light; }
 .memory-atmosphere { position: fixed; inset: 0; z-index: 40; overflow: hidden; pointer-events: none; }
 .memory-light-leak { width: 48vw; height: 70vh; position: absolute; left: -18vw; top: -18vh; opacity: .12; border-radius: 50%; background: radial-gradient(circle, rgba(255,224,173,.9), rgba(214,132,87,.32) 36%, transparent 70%); filter: blur(22px); mix-blend-mode: screen; animation: memory-light-drift 17s ease-in-out infinite alternate; }
 .memory-film-grain { position: absolute; inset: -60%; opacity: .045; background-image: repeating-radial-gradient(circle at 0 0, transparent 0, #fff 1px, transparent 2px); background-size: 5px 5px; mix-blend-mode: soft-light; animation: memory-grain-shift .24s steps(2) infinite; }
@@ -1325,6 +1327,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .memory-atmosphere { display: none; }
   .memory-demo-hero-image, .memory-recollection-image { animation: none !important; transform: scale(1.04) !important; }
   .memory-motion-ready [data-memory-reveal] *, .memory-motion-ready .memory-demo-hero-copy { opacity: 1 !important; filter: none !important; transform: none !important; }
+  .memory-demo-page [data-memory-page] { transform: none !important; will-change: auto; }
+  .memory-demo-page [data-memory-page]::after { display: none; }
 }
 
 /* Connected production journey overrides */

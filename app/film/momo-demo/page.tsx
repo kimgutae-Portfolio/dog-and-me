@@ -37,7 +37,7 @@ export default function MomoDemoPage() {
         <Link className="memory-demo-close" href="/">サービスサイトへ戻る ↗</Link>
       </header>
 
-      <section className="memory-demo-hero">
+      <section className="memory-demo-hero" data-memory-page>
         <div className="memory-demo-hero-image" aria-hidden="true" />
         <div className="memory-demo-hero-shade" aria-hidden="true" />
         <div className="memory-demo-hero-copy">
@@ -48,7 +48,7 @@ export default function MomoDemoPage() {
         <p className="memory-demo-scroll" aria-hidden="true">OUR STORY　↓</p>
       </section>
 
-      <section className="memory-demo-film" data-memory-reveal>
+      <section className="memory-demo-film" data-memory-page data-memory-reveal>
         <div className="memory-demo-shell">
           <div className="memory-demo-section-head"><div><p>01 / THE FILM</p><h2>何度でも、会いにいける映画。</h2></div><span>閲覧専用 · ダウンロード非対応</span></div>
           <DemoFilmPlayer />
@@ -56,7 +56,7 @@ export default function MomoDemoPage() {
         </div>
       </section>
 
-      <section className="memory-recollection" data-memory-reveal>
+      <section className="memory-recollection" data-memory-page data-memory-reveal>
         <div className="memory-recollection-image" aria-hidden="true" />
         <div className="memory-recollection-shade" aria-hidden="true" />
         <div className="memory-recollection-copy">
@@ -66,21 +66,21 @@ export default function MomoDemoPage() {
         </div>
       </section>
 
-      <section className="memory-demo-story" data-memory-reveal>
+      <section className="memory-demo-story" data-memory-page data-memory-reveal>
         <div className="memory-demo-shell">
           <div className="memory-demo-section-head"><div><p>02 / OUR STORY</p><h2>モモと過ごした、<br />小さくて大切な日々。</h2></div><blockquote>「特別な日ではなくても、モモがいる毎日が私たちの物語でした。」</blockquote></div>
           <ol className="memory-chapter-list">{memories.map(([number, title, copy]) => <li key={number}><span>{number}</span><div><h3>{title}</h3><p>{copy}</p></div></li>)}</ol>
         </div>
       </section>
 
-      <section className="memory-demo-gallery" data-memory-reveal>
+      <section className="memory-demo-gallery" data-memory-page data-memory-reveal>
         <div className="memory-demo-shell">
           <div className="memory-demo-section-head"><div><p>03 / MOMENTS</p><h2>忘れたくない表情。</h2></div><span>家族が選んだ4枚</span></div>
           <div className="memory-gallery-grid" aria-label="モモの写真ギャラリー"><div /><div /><div /><div /></div>
         </div>
       </section>
 
-      <section className="memory-demo-message" data-memory-reveal>
+      <section className="memory-demo-message" data-memory-page data-memory-reveal>
         <div className="memory-demo-shell">
           <p>04 / A LETTER FOR MOMO</p>
           <blockquote>モモへ。<br />いつも私たちの真ん中にいてくれて、ありがとう。<br />これからも一緒に、ゆっくり歩こうね。</blockquote>
