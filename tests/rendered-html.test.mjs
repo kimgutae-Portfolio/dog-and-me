@@ -35,8 +35,8 @@ test("server-renders the Japanese landing page", async () => {
   const structuredData = JSON.parse(jsonLdMatch[1]);
   assert.deepEqual(structuredData.map((entry) => entry["@type"]), ["WebSite", "Organization", "Service", "FAQPage"]);
   assert.equal(structuredData.at(-1).mainEntity.length, 13);
-  assert.match(html, /現在、正式公開に向けて準備中です/);
-  assert.match(html, /お申し込み受付は準備中/);
+  assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
+  assert.doesNotMatch(html, /お申し込み受付は準備中/);
   assert.match(html, /写真は、残っている/);
   assert.match(html, /A MEMORY BECOMES A FILM/);
   assert.match(html, /ご登録からお届けまで、7つのステップ/);
@@ -44,7 +44,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /専用メモリーサイトの使い方/);
   assert.match(html, /専用メモリーサイト/);
   assert.doesNotMatch(html, /家族共有URL|家族へ共有する|ご家族にはログイン不要/);
-  assert.doesNotMatch(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
+  assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
   assert.match(html, /実際の完成イメージを見る/);
   assert.match(html, /画面録画などを技術的に完全に防ぐことはできません/);
   assert.match(html, /メモリーフィルム/);

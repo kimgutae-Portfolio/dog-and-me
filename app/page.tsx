@@ -359,7 +359,7 @@ export default async function Home() {
 
       <section className="final-cta">
         <div className="shell final-cta-inner">
-          <p className="eyebrow light">PREPARING FOR LAUNCH</p>
+          <p className="eyebrow light">BEGIN YOUR MEMORY</p>
           <h2>{APPLICATIONS_OPEN ? <>その子のことを、<br />ゆっくり聞かせてください。</> : <>ただいま、正式公開の<br />準備を進めています。</>}</h2>
           <p>{APPLICATIONS_OPEN ? `先着${MEMORY_FILM_PRICING.launchLimit}組は ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。入力内容はこの端末に自動で保存されます。` : PRELAUNCH_COPY}</p>
           {APPLICATIONS_OPEN ? (

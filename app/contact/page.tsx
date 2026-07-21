@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "../components/InfoPage";
-import { SUPPORT_EMAIL } from "../lib/site";
+import { START_STORY_HREF, SUPPORT_EMAIL } from "../lib/site";
 
 export const metadata: Metadata = {
   title: "お問い合わせ",
@@ -11,11 +11,11 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <InfoPage eyebrow="CONTACT" title="お問い合わせ" lead="現在、正式公開に向けて準備を進めています。サービス内容と完成デモは公開中です。">
+    <InfoPage eyebrow="CONTACT" title="お問い合わせ" lead="サービス内容のご質問から、制作中のご相談までお気軽にお問い合わせください。">
       <section>
-        <h2>お申し込み受付について</h2>
-        <p>ただいま受付開始に向けて、制作と納品の流れを最終確認しています。受付開始日はトップページでお知らせします。それまでは完成デモで、映画と専用メモリーサイトのイメージをご覧いただけます。</p>
-        <Link className="button button-primary" href="/film/momo-demo">完成デモを見る →</Link>
+        <h2>メモリーフィルムのお申し込み</h2>
+        <p>現在、初期10組限定のモニター価格でご相談を受け付けています。愛犬のことや残したい思い出をフォームからゆっくりお聞かせください。</p>
+        <Link className="button button-primary" href={START_STORY_HREF}>思い出づくりを始める →</Link>
       </section>
       <section>
         <h2>すでにご登録済みの方</h2>

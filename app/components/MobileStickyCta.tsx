@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { START_STORY_HREF } from "../lib/site";
 
 export function MobileStickyCta() {
   const [visible, setVisible] = useState(false);
@@ -25,9 +26,9 @@ export function MobileStickyCta() {
   }, []);
 
   return (
-    <aside className={visible ? "mobile-sticky-cta visible" : "mobile-sticky-cta"} aria-label="サービス公開状況">
-      <div><p>PREPARING FOR LAUNCH</p><strong>現在、正式公開準備中</strong></div>
-      <Link className="button button-cream" href="/film/momo-demo">完成デモ <span aria-hidden="true">→</span></Link>
+    <aside className={visible ? "mobile-sticky-cta visible" : "mobile-sticky-cta"} aria-label="お申し込み">
+      <div><p>MEMORY FILM</p><strong>先着10組 モニター受付中</strong></div>
+      <Link className="button button-cream" href={START_STORY_HREF}>思い出をつくる <span aria-hidden="true">→</span></Link>
     </aside>
   );
 }
