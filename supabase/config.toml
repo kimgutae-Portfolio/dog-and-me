@@ -7,8 +7,8 @@ extra_search_path = ["public", "extensions"]
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://kimi-to-no-eiga.ggutae0.chatgpt.site/**"]
+site_url = "https://www.wanmemory.com"
+additional_redirect_urls = ["https://www.wanmemory.com/**", "https://wanmemory.com/**", "http://localhost:3000/**"]
 
 [storage]
 enabled = true

@@ -24,29 +24,30 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /<html lang="ja">/i);
   assert.match(html, /一緒に過ごした時間を/);
   assert.match(html, /WAN MEMORY/);
-  assert.match(html, /<link rel="canonical" href="https:\/\/kimi-to-no-eiga\.ggutae0\.chatgpt\.site\/"/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/"/);
   assert.match(html, /愛犬の思い出動画・メモリアルムービー制作/);
   assert.match(html, /application\/ld\+json/);
   assert.match(html, /"@type":"Service"/);
   assert.match(html, /"@type":"FAQPage"/);
-  assert.match(html, /<link rel="icon" href="https:\/\/kimi-to-no-eiga\.ggutae0\.chatgpt\.site\/icon/);
+  assert.match(html, /<link rel="icon" href="https:\/\/www\.wanmemory\.com\/icon/);
   const jsonLdMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
   assert.ok(jsonLdMatch, "JSON-LD should be present");
   const structuredData = JSON.parse(jsonLdMatch[1]);
   assert.deepEqual(structuredData.map((entry) => entry["@type"]), ["WebSite", "Organization", "Service", "FAQPage"]);
   assert.equal(structuredData.at(-1).mainEntity.length, 10);
-  assert.match(html, /思い出をつくる/);
+  assert.match(html, /現在、正式公開に向けて準備中です/);
+  assert.match(html, /お申し込み受付は準備中/);
   assert.match(html, /写真は、残っている/);
   assert.match(html, /A MEMORY BECOMES A FILM/);
   assert.match(html, /ご登録からお届けまで、7つのステップ/);
   assert.match(html, /映画を受け取ったあとも、思い出へ帰れる場所/);
   assert.match(html, /専用メモリーサイトの使い方/);
   assert.match(html, /家族共有URL/);
-  assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
+  assert.doesNotMatch(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
   assert.match(html, /実際の完成イメージを見る/);
   assert.match(html, /画面録画などを技術的に完全に防ぐことはできません/);
   assert.match(html, /メモリーフィルム/);
-  assert.match(html, /先着(?:<!-- -->)?10(?:<!-- -->)?組/);
+  assert.match(html, /初期(?:<!-- -->)?10(?:<!-- -->)?組/);
   assert.match(html, /24,800/);
   assert.match(html, /通常価格/);
   assert.match(html, /29,800/);
@@ -98,20 +99,23 @@ test("server-renders public support and legal pages", async () => {
     assert.equal(response.status, 200, `${path} should render`);
     const html = await response.text();
     assert.match(html, new RegExp(title));
-    assert.match(html, new RegExp(`<link rel="canonical" href="https:\\/\\/kimi-to-no-eiga\\.ggutae0\\.chatgpt\\.site${path}`));
+    assert.match(html, new RegExp(`<link rel="canonical" href="https:\\/\\/www\\.wanmemory\\.com${path}`));
   }
 
   const legalResponse = await render("/legal");
   const legalHtml = await legalResponse.text();
   assert.match(legalHtml, /金具泰/);
   assert.match(legalHtml, /〒599-8272 大阪府堺市中区深井中町327-47/);
-  assert.match(legalHtml, /080-8530-7568/);
+  assert.match(legalHtml, /お申し込みの意思決定に先立って遅滞なく開示/);
+  assert.doesNotMatch(legalHtml, /href="tel:/);
   assert.match(legalHtml, /クレジットカード決済（Stripe）/);
   assert.doesNotMatch(legalHtml, /正式な個人事業者情報.*掲載/);
 
   const contactResponse = await render("/contact");
   const contactHtml = await contactResponse.text();
-  assert.match(contactHtml, /href="tel:08085307568"/);
+  assert.match(contactHtml, /電話番号の開示をご希望の方/);
+  assert.match(contactHtml, /メールで開示を請求する/);
+  assert.doesNotMatch(contactHtml, /href="tel:/);
 });
 
 test("keeps private product routes out of search results", async () => {
@@ -124,8 +128,8 @@ test("keeps private product routes out of search results", async () => {
   const demoResponse = await render("/film/momo-demo");
   const demoHtml = await demoResponse.text();
   assert.doesNotMatch(demoHtml, /<meta name="robots" content="noindex/i);
-  assert.match(demoHtml, /<link rel="canonical" href="https:\/\/kimi-to-no-eiga\.ggutae0\.chatgpt\.site\/film\/momo-demo"/);
-  assert.match(demoHtml, /<meta property="og:image" content="https:\/\/kimi-to-no-eiga\.ggutae0\.chatgpt\.site\/og\.png"/);
+  assert.match(demoHtml, /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/film\/momo-demo"/);
+  assert.match(demoHtml, /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/og\.png"/);
 });
 
 test("server-renders the connected MVP routes", async () => {

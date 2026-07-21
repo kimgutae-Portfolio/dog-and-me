@@ -6,7 +6,15 @@ import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
 import { MobileStickyCta } from "./components/MobileStickyCta";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
-import { SITE_DESCRIPTION, SITE_NAME, START_STORY_HREF } from "./lib/site";
+import {
+  APPLICATIONS_OPEN,
+  PRELAUNCH_COPY,
+  PRELAUNCH_CTA,
+  PRELAUNCH_TITLE,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  START_STORY_HREF,
+} from "./lib/site";
 import { getRequestOrigin } from "./lib/site-server";
 
 export const metadata: Metadata = {
@@ -91,6 +99,13 @@ export default async function Home() {
           </div>
         </div>
         <div className="shell hero-content">
+          {!APPLICATIONS_OPEN && (
+            <aside className="prelaunch-status" role="status" aria-label="サービス公開状況">
+              <span>PREPARING FOR LAUNCH</span>
+              <strong>{PRELAUNCH_TITLE}</strong>
+              <p>{PRELAUNCH_COPY}</p>
+            </aside>
+          )}
           <p className="eyebrow light">YOUR DOG. YOUR DAYS. YOUR MEMORY.</p>
           <h1 id="hero-title">
             一緒に過ごした時間を、
@@ -103,9 +118,13 @@ export default async function Home() {
             実写映画のような映像へ仕立てます。
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" href={START_STORY_HREF}>
-              思い出をつくる <span aria-hidden="true">→</span>
-            </Link>
+            {APPLICATIONS_OPEN ? (
+              <Link className="button button-primary" href={START_STORY_HREF}>
+                思い出をつくる <span aria-hidden="true">→</span>
+              </Link>
+            ) : (
+              <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
+            )}
             <Link className="text-link light-link" href="/film/momo-demo">
               完成ページを体験する <span aria-hidden="true">↗</span>
             </Link>
@@ -335,10 +354,14 @@ export default async function Home() {
 
       <section className="final-cta">
         <div className="shell final-cta-inner">
-          <p className="eyebrow light">YOUR STORY STARTS HERE</p>
-          <h2>その子のことを、<br />ゆっくり聞かせてください。</h2>
-          <p>先着{MEMORY_FILM_PRICING.launchLimit}組は ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。入力内容はこの端末に自動で保存されます。</p>
-          <Link className="button button-cream" href={START_STORY_HREF}>思い出づくりを始める <span aria-hidden="true">→</span></Link>
+          <p className="eyebrow light">PREPARING FOR LAUNCH</p>
+          <h2>{APPLICATIONS_OPEN ? <>その子のことを、<br />ゆっくり聞かせてください。</> : <>ただいま、正式公開の<br />準備を進めています。</>}</h2>
+          <p>{APPLICATIONS_OPEN ? `先着${MEMORY_FILM_PRICING.launchLimit}組は ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。入力内容はこの端末に自動で保存されます。` : PRELAUNCH_COPY}</p>
+          {APPLICATIONS_OPEN ? (
+            <Link className="button button-cream" href={START_STORY_HREF}>思い出づくりを始める <span aria-hidden="true">→</span></Link>
+          ) : (
+            <span className="button button-prelaunch button-prelaunch-light" aria-disabled="true">{PRELAUNCH_CTA}</span>
+          )}
         </div>
       </section>
 

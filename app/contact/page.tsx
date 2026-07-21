@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "../components/InfoPage";
-import { START_STORY_HREF } from "../lib/site";
 
 export const metadata: Metadata = {
   title: "お問い合わせ",
@@ -11,11 +10,11 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <InfoPage eyebrow="CONTACT" title="お問い合わせ" lead="ご検討中のことも、制作中のことも、分からないままで大丈夫です。">
+    <InfoPage eyebrow="CONTACT" title="お問い合わせ" lead="現在、正式公開に向けて準備を進めています。サービス内容と完成デモは公開中です。">
       <section>
-        <h2>制作前のご相談</h2>
-        <p>愛犬のお名前とメールアドレスを登録すると、映画の種類や写真についてゆっくり入力できます。送信までは料金は発生せず、内容と納期をご確認いただいてから制作へ進みます。</p>
-        <Link className="button button-primary" href={START_STORY_HREF}>無料相談を始める →</Link>
+        <h2>お申し込み受付について</h2>
+        <p>ただいま受付開始に向けて、制作と納品の流れを最終確認しています。受付開始日はトップページでお知らせします。それまでは完成デモで、映画と専用メモリーサイトのイメージをご覧いただけます。</p>
+        <Link className="button button-primary" href="/film/momo-demo">完成デモを見る →</Link>
       </section>
       <section>
         <h2>すでにご登録済みの方</h2>
@@ -23,9 +22,9 @@ export default function ContactPage() {
         <Link className="button button-outline" href="/studio">制作室を開く →</Link>
       </section>
       <section>
-        <h2>お電話でのお問い合わせ</h2>
-        <p>サービス内容、納品、キャンセルについてのお問い合わせを受け付けています。</p>
-        <a className="contact-phone" href="tel:08085307568">080-8530-7568</a>
+        <h2>電話番号の開示をご希望の方</h2>
+        <p>特定商取引法に基づく電話番号は、ご請求に応じて、お申し込みの意思決定に先立って遅滞なく開示します。下のメールから「電話番号の開示希望」とお送りください。</p>
+        <a className="button button-outline" href="mailto:ggutae0@gmail.com?subject=WAN%20MEMORY%20%E9%9B%BB%E8%A9%B1%E7%95%AA%E5%8F%B7%E3%81%AE%E9%96%8B%E7%A4%BA%E5%B8%8C%E6%9C%9B">メールで開示を請求する →</a>
       </section>
       <aside className="info-note"><strong>運営者情報</strong><p>販売事業者・運営責任者：金具泰<br />所在地：〒599-8272 大阪府堺市中区深井中町327-47</p></aside>
     </InfoPage>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DemoFilmPlayer } from "./DemoFilmPlayer";
 import { MemoryMotion } from "./MemoryMotion";
-import { START_STORY_HREF } from "../../lib/site";
+import { APPLICATIONS_OPEN, PRELAUNCH_CTA, START_STORY_HREF } from "../../lib/site";
 
 export const metadata: Metadata = {
   title: "愛犬メモリアルムービー完成例｜モモと歩いた季節",
@@ -90,7 +90,7 @@ export default function MomoDemoPage() {
 
       <footer className="memory-demo-footer" data-memory-reveal>
         <div><span className="brand-mark" aria-hidden="true">WM</span><p>THIS MEMORY PAGE WAS MADE FOR MOMO<br /><small>© WAN MEMORY</small></p></div>
-        <Link className="button button-cream" href={START_STORY_HREF}>うちの子の映画を相談する →</Link>
+        {APPLICATIONS_OPEN ? <Link className="button button-cream" href={START_STORY_HREF}>うちの子の映画を相談する →</Link> : <span className="button button-prelaunch button-prelaunch-light" aria-disabled="true">{PRELAUNCH_CTA}</span>}
       </footer>
     </main>
   );

@@ -11,7 +11,7 @@ const rows = [
   ["販売事業者", "金具泰"],
   ["運営責任者", "金具泰"],
   ["所在地", "〒599-8272 大阪府堺市中区深井中町327-47"],
-  ["電話番号", "080-8530-7568"],
+  ["電話番号", "ご請求に応じて、お申し込みの意思決定に先立って遅滞なく開示します。お問い合わせページからご請求ください。"],
   ["サービス名", "WAN MEMORY メモリーフィルム"],
   ["販売価格", "初期10組 ¥24,800（税込）／受付終了後 ¥29,800（税込）。追加オプションがある場合は契約前に個別見積りで表示します。"],
   ["商品代金以外の費用", "インターネット接続・通信に必要な費用はお客様のご負担です。追加費用が発生する場合は契約前に明示します。"],
@@ -25,8 +25,8 @@ export default function LegalPage() {
   return (
     <InfoPage eyebrow="LEGAL NOTICE" title="特定商取引法に基づく表記" lead="WAN MEMORYの販売事業者、料金、お支払い、納品およびキャンセル条件をご案内します。">
       <dl className="legal-table">{rows.map(([term, description]) => <div key={term}><dt>{term}</dt><dd>{description}</dd></div>)}</dl>
-      <aside className="info-note"><strong>お問い合わせ</strong><p>サービス内容、納品、キャンセルについては、お問い合わせページまたは電話番号 080-8530-7568 までご連絡ください。</p></aside>
-      <p className="info-updated">最終更新日：2026年7月17日</p>
+      <aside className="info-note"><strong>お問い合わせ</strong><p>サービス内容、納品、キャンセル、電話番号の開示請求については、お問い合わせページからご連絡ください。</p></aside>
+      <p className="info-updated">最終更新日：2026年7月21日</p>
     </InfoPage>
   );
 }

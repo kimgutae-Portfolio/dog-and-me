@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { START_STORY_HREF } from "../lib/site";
+import { APPLICATIONS_OPEN, PRELAUNCH_CTA, START_STORY_HREF } from "../lib/site";
 
 const chapters = [
   {
@@ -194,9 +194,13 @@ export function ScrollMemoryStory() {
             </h2>
             <p className="story-body">{chapter.copy}</p>
             {active === chapters.length - 1 && (
-              <Link className="button button-cream story-cta" href={START_STORY_HREF}>
-                うちの子の物語をつくる <span aria-hidden="true">→</span>
-              </Link>
+              APPLICATIONS_OPEN ? (
+                <Link className="button button-cream story-cta" href={START_STORY_HREF}>
+                  うちの子の物語をつくる <span aria-hidden="true">→</span>
+                </Link>
+              ) : (
+                <span className="button button-prelaunch button-prelaunch-light story-cta" aria-disabled="true">{PRELAUNCH_CTA}</span>
+              )
             )}
           </div>
 
