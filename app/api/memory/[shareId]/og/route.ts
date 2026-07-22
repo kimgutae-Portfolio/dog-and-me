@@ -1,14 +1,14 @@
 import { getPublicMemoryHeroUrl, getPublicSharedMemory } from "../../../../lib/supabase/public-memory";
 
-type RouteContext = { params: Promise<{ token: string }> };
+type RouteContext = { params: Promise<{ shareId: string }> };
 
 function fallbackImage(request: Request) {
   return Response.redirect(new URL("/og.png", request.url), 307);
 }
 
 export async function GET(request: Request, { params }: RouteContext) {
-  const { token } = await params;
-  const memory = await getPublicSharedMemory(token).catch(() => null);
+  const { shareId } = await params;
+  const memory = await getPublicSharedMemory(shareId).catch(() => null);
   if (!memory) return fallbackImage(request);
 
   const signedUrl = await getPublicMemoryHeroUrl(memory).catch(() => null);

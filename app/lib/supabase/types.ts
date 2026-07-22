@@ -28,6 +28,32 @@ export type PeopleHandling =
   | "original_still"
   | "consult";
 
+export type AppearancePolicy =
+  | "photo_era_by_scene"
+  | "current_appearance"
+  | "selected_period";
+
+export type PhotoAnalysisStatus =
+  | "not_started"
+  | "ai_analysis_complete"
+  | "pending_operator_review"
+  | "approved"
+  | "needs_customer_input";
+
+export type WanMemoryProductionFields = {
+  primaryFacePhotoId: string | null;
+  primaryBodyPhotoId: string | null;
+  sideTailPhotoId: string | null;
+  appearancePolicy: AppearancePolicy | null;
+  selectedAppearanceDescription: string | null;
+  selectedAppearancePhotoIds: string[];
+  ownerLockedTraits: string[];
+  aiReconstructionAcknowledged: boolean;
+  photoAnalysisStatus: PhotoAnalysisStatus;
+  photoAnalysisApprovedAt: string | null;
+  photoAnalysisApprovedBy: string | null;
+};
+
 export type MemoryOrder = {
   id: string;
   user_id: string;
@@ -71,6 +97,17 @@ export type MemoryOrder = {
   minor_guardian_consented_at: string | null;
   minor_guardian_consent_version: string | null;
   people_policy_version: string | null;
+  primary_face_photo_id: string | null;
+  primary_body_photo_id: string | null;
+  side_tail_photo_id: string | null;
+  appearance_policy: AppearancePolicy | null;
+  selected_appearance_description: string | null;
+  selected_appearance_photo_ids: string[] | null;
+  owner_locked_traits: string[] | null;
+  ai_reconstruction_acknowledged: boolean | null;
+  photo_analysis_status: PhotoAnalysisStatus | null;
+  photo_analysis_approved_at: string | null;
+  photo_analysis_approved_by: string | null;
   customer_approved_at: string | null;
   customer_approved_by: string | null;
   customer_approved_review_asset_id: string | null;
@@ -79,6 +116,22 @@ export type MemoryOrder = {
   created_at: string;
   updated_at: string;
 };
+
+export function getProductionFields(order: Partial<MemoryOrder>): WanMemoryProductionFields {
+  return {
+    primaryFacePhotoId: order.primary_face_photo_id ?? null,
+    primaryBodyPhotoId: order.primary_body_photo_id ?? null,
+    sideTailPhotoId: order.side_tail_photo_id ?? null,
+    appearancePolicy: order.appearance_policy ?? null,
+    selectedAppearanceDescription: order.selected_appearance_description ?? null,
+    selectedAppearancePhotoIds: Array.isArray(order.selected_appearance_photo_ids) ? order.selected_appearance_photo_ids : [],
+    ownerLockedTraits: Array.isArray(order.owner_locked_traits) ? order.owner_locked_traits : [],
+    aiReconstructionAcknowledged: order.ai_reconstruction_acknowledged === true,
+    photoAnalysisStatus: order.photo_analysis_status ?? "needs_customer_input",
+    photoAnalysisApprovedAt: order.photo_analysis_approved_at ?? null,
+    photoAnalysisApprovedBy: order.photo_analysis_approved_by ?? null,
+  };
+}
 
 export type OrderAsset = {
   id: string;
@@ -112,7 +165,7 @@ export type OrderMemory = {
 };
 
 export type MemoryShare = {
-  token: string;
+  code: string;
   active: boolean;
 };
 

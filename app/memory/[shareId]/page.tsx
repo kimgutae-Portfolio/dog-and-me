@@ -3,13 +3,13 @@ import { getRequestOrigin } from "../../lib/site-server";
 import { getPublicSharedMemory } from "../../lib/supabase/public-memory";
 import { SharedMemorySite } from "./SharedMemorySite";
 
-type PageProps = { params: Promise<{ token: string }> };
+type PageProps = { params: Promise<{ shareId: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { token } = await params;
+  const { shareId } = await params;
   const [origin, memory] = await Promise.all([
     getRequestOrigin(),
-    getPublicSharedMemory(token).catch(() => null),
+    getPublicSharedMemory(shareId).catch(() => null),
   ]);
   const title = memory
     ? `${memory.order.pet_name}との思い出「${memory.delivery.title}」`
@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = memory
     ? `${memory.order.pet_name}との大切な時間をまとめた、WAN MEMORYの専用メモリーサイトです。`
     : "大切な時間を、映像と写真でいつでも見返せるWAN MEMORYの専用ページです。";
-  const pageUrl = `${origin}/memory/${encodeURIComponent(token)}`;
-  const imageUrl = `${origin}/api/memory/${encodeURIComponent(token)}/og`;
+  const pageUrl = `${origin}/memory/${encodeURIComponent(shareId)}`;
+  const imageUrl = `${origin}/api/memory/${encodeURIComponent(shareId)}/og`;
 
   return {
     title,

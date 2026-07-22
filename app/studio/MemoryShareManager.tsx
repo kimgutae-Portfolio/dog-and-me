@@ -17,8 +17,8 @@ function shareRow(data: unknown): MemoryShare | null {
   const row = Array.isArray(data) ? data[0] : data;
   if (!row || typeof row !== "object") return null;
   const candidate = row as Partial<MemoryShare>;
-  return typeof candidate.token === "string" && typeof candidate.active === "boolean"
-    ? { token: candidate.token, active: candidate.active }
+  return typeof candidate.code === "string" && typeof candidate.active === "boolean"
+    ? { code: candidate.code, active: candidate.active }
     : null;
 }
 
@@ -34,7 +34,7 @@ export function MemoryShareManager({ order, delivery, assets, onChanged }: Props
     .filter((asset) => asset.category === "source_image")
     .sort((a, b) => a.album_sort_order - b.album_sort_order || a.created_at.localeCompare(b.created_at)), [assets]);
   const visiblePhotos = photos.filter((asset) => asset.album_visible);
-  const shareUrl = share?.token && origin ? `${origin}/memory/${share.token}` : "";
+  const shareUrl = share?.code && origin ? `${origin}/memory/${share.code}` : "";
 
   useEffect(() => {
     if (!photos.length) return;
@@ -50,7 +50,7 @@ export function MemoryShareManager({ order, delivery, assets, onChanged }: Props
   }, [photos]);
 
   const manageShare = useCallback(async (action: "get" | "enable" | "disable" | "rotate") => {
-    const { data, error: shareError } = await getSupabaseBrowserClient().rpc("manage_memory_share", {
+    const { data, error: shareError } = await getSupabaseBrowserClient().rpc("manage_memory_site", {
       p_order_id: order.id,
       p_action: action,
     });

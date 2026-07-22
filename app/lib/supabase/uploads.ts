@@ -20,6 +20,16 @@ function safeExtension(file: File) {
   return candidate || (file.type === "image/jpeg" ? "jpg" : "bin");
 }
 
+export class OrderImageUploadError extends Error {
+  fileName: string;
+
+  constructor(fileName: string, cause?: unknown) {
+    super(`${fileName} の送信に失敗しました。この写真だけ、もう一度送信できます。`, { cause });
+    this.name = "OrderImageUploadError";
+    this.fileName = fileName;
+  }
+}
+
 export async function uploadOrderImages(
   supabase: SupabaseClient,
   userId: string,
@@ -46,54 +56,64 @@ export async function uploadOrderImages(
       .maybeSingle(),
     supabase
       .from("assets")
-      .select("original_filename,file_size,memory_id")
+      .select("*")
       .eq("order_id", orderId)
       .eq("category", "source_image"),
   ]);
-  const existingKeys = new Set((existingAssets ?? []).map((asset) => `${asset.original_filename}:${asset.file_size}:${asset.memory_id ?? "none"}`));
+  const existingByKey = new Map(
+    ((existingAssets ?? []) as OrderAsset[]).map((asset) => [`${asset.original_filename}:${asset.file_size}`, asset]),
+  );
   let nextVisibleIndex = visibleCount ?? 0;
   let nextSortOrder = ((lastAsset as { album_sort_order?: number } | null)?.album_sort_order ?? -1) + 1;
 
   for (let index = 0; index < files.length; index += 1) {
-    const file = await normalizeImage(files[index]);
-    const fileKey = `${file.name}:${file.size}:${memoryId ?? "none"}`;
-    if (existingKeys.has(fileKey)) {
+    const originalFile = files[index];
+    try {
+      const file = await normalizeImage(originalFile);
+      const fileKey = `${file.name}:${file.size}`;
+      const existingAsset = existingByKey.get(fileKey);
+      if (existingAsset) {
+        uploaded.push(existingAsset);
+        onProgress?.(index + 1, files.length);
+        continue;
+      }
+      const path = `${userId}/${orderId}/source/${crypto.randomUUID()}.${safeExtension(file)}`;
+      const { error: uploadError } = await supabase.storage
+        .from("order-assets")
+        .upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data, error: metadataError } = await supabase
+        .from("assets")
+        .insert({
+          order_id: orderId,
+          user_id: userId,
+          category: "source_image",
+          memory_id: memoryId,
+          storage_path: path,
+          original_filename: file.name,
+          mime_type: file.type,
+          file_size: file.size,
+          album_visible: nextVisibleIndex < 30,
+          album_sort_order: nextSortOrder,
+        })
+        .select("*")
+        .single();
+
+      if (metadataError) {
+        await supabase.storage.from("order-assets").remove([path]);
+        throw metadataError;
+      }
+
+      uploaded.push(data as OrderAsset);
+      existingByKey.set(fileKey, data as OrderAsset);
+      if (nextVisibleIndex < 30) nextVisibleIndex += 1;
+      nextSortOrder += 1;
       onProgress?.(index + 1, files.length);
-      continue;
+    } catch (error) {
+      if (error instanceof OrderImageUploadError) throw error;
+      throw new OrderImageUploadError(originalFile.name, error);
     }
-    const path = `${userId}/${orderId}/source/${crypto.randomUUID()}.${safeExtension(file)}`;
-    const { error: uploadError } = await supabase.storage
-      .from("order-assets")
-      .upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
-    if (uploadError) throw uploadError;
-
-    const { data, error: metadataError } = await supabase
-      .from("assets")
-      .insert({
-        order_id: orderId,
-        user_id: userId,
-        category: "source_image",
-        memory_id: memoryId,
-        storage_path: path,
-        original_filename: file.name,
-        mime_type: file.type,
-        file_size: file.size,
-        album_visible: nextVisibleIndex < 30,
-        album_sort_order: nextSortOrder,
-      })
-      .select("*")
-      .single();
-
-    if (metadataError) {
-      await supabase.storage.from("order-assets").remove([path]);
-      throw metadataError;
-    }
-
-    uploaded.push(data as OrderAsset);
-    existingKeys.add(fileKey);
-    if (nextVisibleIndex < 30) nextVisibleIndex += 1;
-    nextSortOrder += 1;
-    onProgress?.(index + 1, files.length);
   }
 
   return uploaded;

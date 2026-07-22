@@ -11,7 +11,7 @@ import type { SharedMemoryPayload } from "../../lib/supabase/public-memory";
 type SharedImage = SharedMemoryPayload["images"][number] & { url: string };
 
 export function SharedMemorySite() {
-  const params = useParams<{ token: string }>();
+  const params = useParams<{ shareId: string }>();
   const [memory, setMemory] = useState<SharedMemoryPayload | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [images, setImages] = useState<SharedImage[]>([]);
@@ -19,10 +19,10 @@ export function SharedMemorySite() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!params.token) return;
+    if (!params.shareId) return;
     const supabase = getSupabaseBrowserClient();
     const load = async () => {
-      const { data, error: memoryError } = await supabase.rpc("get_shared_memory", { p_token: params.token });
+      const { data, error: memoryError } = await supabase.rpc("get_shared_memory_by_code", { p_share_code: params.shareId });
       if (memoryError || !data) {
         setError("このメモリーサイトは現在公開されていません。");
         setLoading(false);
@@ -45,7 +45,7 @@ export function SharedMemorySite() {
       setLoading(false);
     };
     load();
-  }, [params.token]);
+  }, [params.shareId]);
 
   if (loading) return <div className="wizard-loading">大切な思い出を準備しています…</div>;
   if (error || !memory) return <main className="film-private-error shared-memory-error"><p className="eyebrow">PRIVATE MEMORY</p><h1>ページを表示できません。</h1><p>{error}</p><Link className="button button-primary" href="/">WAN MEMORYへ戻る</Link></main>;

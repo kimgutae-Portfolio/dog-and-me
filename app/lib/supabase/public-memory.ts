@@ -29,7 +29,7 @@ export type SharedMemoryPayload = {
   }>;
 };
 
-const shareTokenPattern = /^[a-f0-9]{64}$/i;
+const shareCodePattern = /^[a-f0-9]{64}$/i;
 
 function getPublicMemoryClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,16 +37,16 @@ function getPublicMemoryClient() {
   if (!url || !publishableKey) return null;
 
   return createClient(url, publishableKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    auth: { persistSession: false, detectSessionInUrl: false },
   });
 }
 
-export async function getPublicSharedMemory(token: string): Promise<SharedMemoryPayload | null> {
-  if (!shareTokenPattern.test(token)) return null;
+export async function getPublicSharedMemory(shareCode: string): Promise<SharedMemoryPayload | null> {
+  if (!shareCodePattern.test(shareCode)) return null;
   const supabase = getPublicMemoryClient();
   if (!supabase) return null;
 
-  const { data, error } = await supabase.rpc("get_shared_memory", { p_token: token });
+  const { data, error } = await supabase.rpc("get_shared_memory_by_code", { p_share_code: shareCode });
   if (error || !data || typeof data !== "object") return null;
   return data as SharedMemoryPayload;
 }

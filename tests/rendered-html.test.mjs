@@ -156,10 +156,10 @@ test("memory sharing keeps family links private and album access scoped", async 
   const { readFile } = await import("node:fs/promises");
   const [manager, sharedPage, metadataPage, publicMemory, socialImage, migration] = await Promise.all([
     readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
-    readFile(new URL("app/memory/[token]/SharedMemorySite.tsx", root), "utf8"),
-    readFile(new URL("app/memory/[token]/page.tsx", root), "utf8"),
+    readFile(new URL("app/memory/[shareId]/SharedMemorySite.tsx", root), "utf8"),
+    readFile(new URL("app/memory/[shareId]/page.tsx", root), "utf8"),
     readFile(new URL("app/lib/supabase/public-memory.ts", root), "utf8"),
-    readFile(new URL("app/api/memory/[token]/og/route.ts", root), "utf8"),
+    readFile(new URL("app/api/memory/[shareId]/og/route.ts", root), "utf8"),
     readFile(new URL("supabase/migrations/202607170001_memory_sharing.sql", root), "utf8"),
   ]);
   assert.match(manager, /家族はログインせずに閲覧できます/);
@@ -173,7 +173,7 @@ test("memory sharing keeps family links private and album access scoped", async 
   assert.match(metadataPage, /generateMetadata/);
   assert.match(metadataPage, /follow: true/);
   assert.match(metadataPage, /\$\{memory\.order\.pet_name\}との思い出/);
-  assert.match(metadataPage, /\/api\/memory\/\$\{encodeURIComponent\(token\)\}\/og/);
+  assert.match(metadataPage, /\/api\/memory\/\$\{encodeURIComponent\(shareId\)\}\/og/);
   assert.match(publicMemory, /get_shared_memory/);
   assert.match(publicMemory, /createSignedUrl\(path, 90\)/);
   assert.match(socialImage, /Content-Type/);
@@ -230,7 +230,8 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.doesNotMatch(storyWizard, /<span>ナレーション<\/span>/);
   assert.match(storyWizard, /const missingFields = useMemo<MissingField\[\]>/);
   assert.match(storyWizard, /totalPhotoCount < MIN_TOTAL_PHOTOS/);
-  assert.match(storyWizard, /memoryPhotoFiles\[memory\.clientKey\]/);
+  assert.match(storyWizard, /const \[photoFiles, setPhotoFiles\] = useState<PhotoDraft\[\]>/);
+  assert.match(storyWizard, /primaryFacePhotoKey/);
   assert.match(storyWizard, /未入力\$\{missingFields\.length\}項目を確認する/);
   assert.match(storyWizard, /onClick=\{\(\) => goToStep\(item\.step\)\}/);
   assert.doesNotMatch(storyWizard, /if \(step === 1 &&/);
@@ -376,8 +377,9 @@ test("records and enforces people, minor, photo-rights and external-service cons
   assert.match(peopleConsent, /minor_guardian_consented_at/);
   assert.match(peopleConsent, /enforce_current_order_consents_trigger/);
   assert.match(peopleConsent, /current photo, people, minor and external service consent records are required before video processing/);
-  assert.match(story, /その思い出と同じ場面の、見やすい写真を選んでください/);
-  assert.match(story, /現在のWAN MEMORYでは、人物のお顔をAIで生成・再現する制作は行っていません/);
+  assert.match(story, /人物のお顔を新しく生成・再現する制作は行っていません/);
+  assert.match(story, /外部AIサービス/);
+  assert.doesNotMatch(story, /Runway|ChatGPT|OpenAI|GPT/);
   assert.match(story, /photo_rights_consent_accepted/);
   assert.match(studio, /p_people_policy_version/);
   assert.match(admin, /人物の取り扱い/);
@@ -410,7 +412,7 @@ test("stores guided memory entries with one to five matching photos", async () =
   assert.match(story, /写真に写っている場面と結びつくように/);
   assert.match(story, /save_order_memory_entry/);
   assert.match(story, /MAX_PHOTOS_PER_MEMORY = 5/);
-  assert.match(story, /slice\(0, MAX_PHOTOS_PER_MEMORY\)/);
+  assert.match(story, /memory\.photoKeys\.length < MAX_PHOTOS_PER_MEMORY/);
   assert.match(story, /memories: \[createMemoryDraft\("memory-1"\), createMemoryDraft\("memory-2"\)\]/);
   assert.match(story, /while \(parsedMemories\.length < MIN_MEMORY_COUNT\)/);
   assert.match(story, /className="memory-entry-toggle"/);
@@ -419,13 +421,65 @@ test("stores guided memory entries with one to five matching photos", async () =
   assert.match(story, /setActiveMemoryKey\(\(current\) => current === memory\.clientKey \? draft\.memories\[index \+ 1\]\.clientKey : current\)/);
   assert.match(story, /if \(currentStepMissingFields\.length > 0\)/);
   assert.match(story, /このステップの必須項目をすべて入力してください/);
-  assert.match(uploads, /memory_id: memoryId/);
+  assert.match(story, /assign_memory_photos/);
+  assert.match(story, /save_order_production_fields/);
+  assert.match(uploads, /const fileKey = `\$\{file\.name\}:\$\{file\.size\}`/);
   assert.match(admin, /制作用JSONをコピー/);
   assert.match(admin, /内容と写真が同じ場面か/);
   assert.match(studio, /studio-memory-list/);
   assert.match(css, /\.memory-entry-card/);
   assert.match(css, /\.memory-entry-toggle/);
   assert.match(css, /\.step-required-panel/);
+});
+
+test("stores appearance references and requires operator photo approval", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [migration, story, admin, types, css] = await Promise.all([
+    readFile(new URL("supabase/migrations/202607220001_appearance_photo_review.sql", root), "utf8"),
+    readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
+    readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+    readFile(new URL("app/lib/supabase/types.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+
+  assert.match(types, /type AppearancePolicy/);
+  assert.match(types, /photoAnalysisStatus: order\.photo_analysis_status \?\? "needs_customer_input"/);
+  assert.match(migration, /primary_face_photo_id uuid/);
+  assert.match(migration, /create or replace function public\.save_order_production_fields/);
+  assert.match(migration, /create or replace function public\.assign_memory_photos/);
+  assert.match(migration, /category = 'source_image'/);
+  assert.match(migration, /photo_analysis_status = 'pending_operator_review'/);
+  assert.match(migration, /photo_analysis_approved_by = case when p_status = 'approved' then auth\.uid\(\)/);
+  assert.match(migration, /enforce_photo_analysis_before_production/);
+  assert.match(migration, /create or replace function public\.admin_publish_concepts/);
+
+  assert.match(story, /お顔・全身・横向きが分かる写真をご用意ください/);
+  assert.match(story, /いちばん「この子らしい」顔の写真を1枚選んでください/);
+  assert.match(story, /実際の体型がいちばん分かる全身写真を1枚選んでください/);
+  assert.match(story, /photo_era_by_scene/);
+  assert.match(story, /selectedAppearancePhotoKeys\.length >= 3/);
+  assert.match(story, /draft\.ownerLockedTraits\.length < 3/);
+  assert.match(story, /AI技術を使用する場面は、元写真を大切にしながら映画的に再構成されるため/);
+  assert.match(story, /save_order_production_fields/);
+  assert.match(story, /assign_memory_photos/);
+  assert.doesNotMatch(story, /Runway|ChatGPT|OpenAI|GPT|prompt|credit/i);
+
+  assert.match(admin, /admin_set_photo_analysis_status/);
+  assert.match(admin, /사진 분석에 대한 운영자 승인이 필요합니다/);
+  assert.match(admin, /外見の基準と写真確認/);
+  assert.match(css, /\.uploaded-photo-grid/);
+  assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+});
+
+test("keeps successful photo uploads and offers a focused retry", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [uploads, story] = await Promise.all([
+    readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
+    readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
+  ]);
+  assert.match(uploads, /existingByKey/);
+  assert.match(uploads, /OrderImageUploadError/);
+  assert.match(story, /だけ再試行する/);
 });
 
 test("keeps Vercel and Sites build outputs separate", async () => {
