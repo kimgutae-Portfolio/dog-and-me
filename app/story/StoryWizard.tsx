@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS } from "../lib/consent";
 import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
@@ -56,6 +56,7 @@ type Draft = {
 const MIN_MEMORY_COUNT = 2;
 const MAX_MEMORY_COUNT = 6;
 const MIN_TOTAL_PHOTOS = 5;
+const MAX_PHOTOS_PER_MEMORY = 5;
 
 const createMemoryDraft = (clientKey: string): MemoryDraft => ({
   clientKey,
@@ -67,8 +68,15 @@ const createMemoryDraft = (clientKey: string): MemoryDraft => ({
   photoNames: [],
 });
 
+const isMemoryReady = (memory: MemoryDraft, photoCount: number) => (
+  Boolean(memory.title.trim())
+  && memory.description.trim().length >= 30
+  && memory.dogBehavior.trim().length >= 10
+  && photoCount >= 1
+);
+
 const emptyDraft: Draft = {
-  purpose: "いまを残す", petName: "", nameKana: "", breed: "", age: "", personality: [], memories: [createMemoryDraft("memory-1")], message: "", avoid: "", style: "あたたかな日常映画", ratio: "16:9 横型", narration: "ナレーションなし", bgm: "おまかせ", peoplePresence: "", peopleHandling: "", minorPresence: "", termsConsent: false, photoRightsConsent: false, depictedPeopleConsent: false, minorGuardianConsent: false, externalAiConsent: false,
+  purpose: "いまを残す", petName: "", nameKana: "", breed: "", age: "", personality: [], memories: [createMemoryDraft("memory-1"), createMemoryDraft("memory-2")], message: "", avoid: "", style: "あたたかな日常映画", ratio: "16:9 横型", narration: "ナレーションなし", bgm: "おまかせ", peoplePresence: "", peopleHandling: "", minorPresence: "", termsConsent: false, photoRightsConsent: false, depictedPeopleConsent: false, minorGuardianConsent: false, externalAiConsent: false,
 };
 
 const steps = ["目的", "愛犬のこと", "思い出と写真", "映画の雰囲気", "確認"];
@@ -107,6 +115,9 @@ export function StoryWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [photoRestoreNotice, setPhotoRestoreNotice] = useState(false);
+  const [activeMemoryKey, setActiveMemoryKey] = useState("memory-1");
+  const [stepValidationAttempted, setStepValidationAttempted] = useState(false);
+  const autoAdvancedMemories = useRef(new Set<string>());
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?mode=signup&next=/story");
@@ -133,7 +144,9 @@ export function StoryWizard() {
                 title: parsed.firstMeeting ? "はじめて会った日" : "大切な思い出",
                 description: parsed.favoriteMemory || parsed.firstMeeting || "",
               }];
+          while (parsedMemories.length < MIN_MEMORY_COUNT) parsedMemories.push(createMemoryDraft(`memory-${parsedMemories.length + 1}`));
           setPhotoRestoreNotice(window.localStorage.getItem("wan-memory-had-selected-photos") === "1" || (Array.isArray(parsed.memories) && parsed.memories.some((memory: MemoryDraft) => memory.photoNames?.length)) || (Array.isArray(parsed.photoNames) && parsed.photoNames.length > 0));
+          setActiveMemoryKey(parsedMemories[0].clientKey);
           setDraft({
             ...emptyDraft,
             ...parsed,
@@ -181,21 +194,26 @@ export function StoryWizard() {
     memories: current.memories.map((memory) => memory.clientKey === clientKey ? { ...memory, [key]: value } : memory),
   }));
   const addMemory = () => {
-    if (draft.memories.length >= MAX_MEMORY_COUNT) return;
+    const allCurrentMemoriesComplete = draft.memories.every((memory) => isMemoryReady(memory, memoryPhotoFiles[memory.clientKey]?.length ?? 0));
+    if (draft.memories.length >= MAX_MEMORY_COUNT || !allCurrentMemoriesComplete) return;
     const clientKey = `memory-${crypto.randomUUID()}`;
     update("memories", [...draft.memories, createMemoryDraft(clientKey)]);
+    setActiveMemoryKey(clientKey);
   };
   const removeMemory = (clientKey: string) => {
-    if (draft.memories.length <= 1) return;
+    if (draft.memories.length <= MIN_MEMORY_COUNT) return;
+    const removedIndex = draft.memories.findIndex((memory) => memory.clientKey === clientKey);
+    const remainingMemories = draft.memories.filter((memory) => memory.clientKey !== clientKey);
     setMemoryPhotoFiles((current) => {
       const next = { ...current };
       delete next[clientKey];
       return next;
     });
-    update("memories", draft.memories.filter((memory) => memory.clientKey !== clientKey));
+    update("memories", remainingMemories);
+    if (activeMemoryKey === clientKey) setActiveMemoryKey(remainingMemories[Math.max(0, removedIndex - 1)]?.clientKey ?? remainingMemories[0]?.clientKey ?? "");
   };
   const handleMemoryPhotos = (clientKey: string, event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? []).slice(0, 3);
+    const files = Array.from(event.target.files ?? []).slice(0, MAX_PHOTOS_PER_MEMORY);
     setMemoryPhotoFiles((current) => ({ ...current, [clientKey]: files }));
     setPhotoRestoreNotice(false);
     if (files.length || Object.values(memoryPhotoFiles).some((selected) => selected.length)) window.localStorage.setItem("wan-memory-had-selected-photos", "1");
@@ -212,6 +230,22 @@ export function StoryWizard() {
     [draft.memories, memoryPhotoFiles],
   );
 
+  const allMemoryEntriesComplete = useMemo(
+    () => draft.memories.every((memory) => isMemoryReady(memory, memoryPhotoFiles[memory.clientKey]?.length ?? 0)),
+    [draft.memories, memoryPhotoFiles],
+  );
+
+  useEffect(() => {
+    if (!hydrated) return;
+    for (let index = 0; index < draft.memories.length - 1; index += 1) {
+      const memory = draft.memories[index];
+      if (!isMemoryReady(memory, memoryPhotoFiles[memory.clientKey]?.length ?? 0) || autoAdvancedMemories.current.has(memory.clientKey)) continue;
+      autoAdvancedMemories.current.add(memory.clientKey);
+      setActiveMemoryKey((current) => current === memory.clientKey ? draft.memories[index + 1].clientKey : current);
+      break;
+    }
+  }, [draft.memories, hydrated, memoryPhotoFiles]);
+
   const missingFields = useMemo<MissingField[]>(() => {
     const missing: MissingField[] = [];
     if (!draft.petName.trim()) missing.push({ key: "petName", label: "愛犬のお名前", step: 1 });
@@ -225,7 +259,7 @@ export function StoryWizard() {
       if (memory.description.trim().length < 30) missing.push({ key: `memory-${memory.clientKey}-description`, label: `思い出${number}の詳しい内容（30文字以上）`, step: 2 });
       if (memory.dogBehavior.trim().length < 10) missing.push({ key: `memory-${memory.clientKey}-behavior`, label: `思い出${number}の表情・動き（10文字以上）`, step: 2 });
       const memoryPhotoCount = memoryPhotoFiles[memory.clientKey]?.length ?? 0;
-      if (memoryPhotoCount < 1) missing.push({ key: `memory-${memory.clientKey}-photos`, label: `思い出${number}の写真（1〜3枚）`, step: 2 });
+      if (memoryPhotoCount < 1) missing.push({ key: `memory-${memory.clientKey}-photos`, label: `思い出${number}の写真（1〜${MAX_PHOTOS_PER_MEMORY}枚）`, step: 2 });
     });
     if (totalPhotoCount < MIN_TOTAL_PHOTOS) missing.push({ key: "totalPhotos", label: `写真合計${MIN_TOTAL_PHOTOS}枚以上（現在${totalPhotoCount}枚）`, step: 2 });
     if (!draft.message.trim()) missing.push({ key: "message", label: "その子へ伝えたいこと", step: 2 });
@@ -240,13 +274,28 @@ export function StoryWizard() {
     return missing;
   }, [draft, memoryPhotoFiles, totalPhotoCount]);
 
+  const currentStepMissingFields = useMemo(
+    () => missingFields.filter((item) => item.step === step),
+    [missingFields, step],
+  );
+
   const goToStep = (targetStep: number) => {
     setError("");
+    setStepValidationAttempted(false);
     setStep(targetStep);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const goNext = () => {
+    if (currentStepMissingFields.length > 0) {
+      setStepValidationAttempted(true);
+      setError("このステップの必須項目をすべて入力してください。未入力の内容を下に表示しています。");
+      if (step === 2) {
+        const firstIncompleteMemory = draft.memories.find((memory) => !isMemoryReady(memory, memoryPhotoFiles[memory.clientKey]?.length ?? 0));
+        if (firstIncompleteMemory) setActiveMemoryKey(firstIncompleteMemory.clientKey);
+      }
+      return;
+    }
     goToStep(Math.min(step + 1, steps.length - 1));
   };
 
@@ -359,18 +408,18 @@ export function StoryWizard() {
         <section className="wizard-main" aria-labelledby="step-title">
           <div className="step-count">STEP {String(step + 1).padStart(2, "0")} / {String(steps.length).padStart(2, "0")}</div>
           {step === 0 && <div className="wizard-panel"><p className="eyebrow">CHOOSE YOUR FILM</p><h1 id="step-title">最初に、どちらの映画か教えてください。</h1><p className="step-lead">2つのコンセプト案は異なる物語でご提案しますが、最後は選んだ種類に合う共通エンディングで結びます。</p><div className="film-type-grid">{filmPurposes.map((purpose) => <label className={draft.purpose === purpose.value ? `film-type-card selected ${purpose.value === "虹の橋メモリアル" ? "memorial" : ""}` : `film-type-card ${purpose.value === "虹の橋メモリアル" ? "memorial" : ""}`} key={purpose.value}><input type="radio" name="purpose" checked={draft.purpose === purpose.value} onChange={() => selectFilmPurpose(purpose.value)} /><span className="choice-check" aria-hidden="true">✓</span><span className="film-type-number">{purpose.number}</span><strong>{purpose.title}</strong><p>{purpose.copy}</p><div className="film-type-ending"><small>COMMON ENDING · 2案共通</small><b>{purpose.endingTitle}</b><span>{purpose.endingCopy}</span><em>「{purpose.endingLine}」</em></div></label>)}</div></div>}
-          {step === 1 && <div className="wizard-panel"><p className="eyebrow">ABOUT YOUR DOG</p><h1 id="step-title">その子のことを教えてください。</h1><p className="step-lead">未入力のまま次へ進めます。最後の確認画面で、必要な項目をまとめてご案内します。</p><div className="form-grid"><label><span>お名前 <em>必須</em></span><input required value={draft.petName} onChange={(event) => update("petName", event.target.value)} placeholder="例：モモ" /></label><label><span>お名前の読み方 <small>任意</small></span><input value={draft.nameKana} onChange={(event) => update("nameKana", event.target.value)} placeholder="例：もも" /></label><label><span>犬種 <em>必須</em></span><input required value={draft.breed} onChange={(event) => update("breed", event.target.value)} placeholder="例：柴犬" /></label><label><span>年齢 <em>必須</em></span><input required value={draft.age} onChange={(event) => update("age", event.target.value)} placeholder="例：12歳 / 推定3歳" /></label></div><fieldset className="chip-field"><legend>どんな性格ですか？ <small>1つ以上・必須</small></legend><div>{personalities.map((personality) => <button type="button" className={draft.personality.includes(personality) ? "chip selected" : "chip"} onClick={() => togglePersonality(personality)} key={personality}>{personality}<span aria-hidden="true">＋</span></button>)}</div></fieldset></div>}
+          {step === 1 && <div className="wizard-panel"><p className="eyebrow">ABOUT YOUR DOG</p><h1 id="step-title">その子のことを教えてください。</h1><p className="step-lead">「必須」と表示された項目をすべて入力すると、次のステップへ進めます。</p><div className="form-grid"><label><span>お名前 <em>必須</em></span><input required value={draft.petName} onChange={(event) => update("petName", event.target.value)} placeholder="例：モモ" /></label><label><span>お名前の読み方 <small>任意</small></span><input value={draft.nameKana} onChange={(event) => update("nameKana", event.target.value)} placeholder="例：もも" /></label><label><span>犬種 <em>必須</em></span><input required value={draft.breed} onChange={(event) => update("breed", event.target.value)} placeholder="例：柴犬" /></label><label><span>年齢 <em>必須</em></span><input required value={draft.age} onChange={(event) => update("age", event.target.value)} placeholder="例：12歳 / 推定3歳" /></label></div><fieldset className="chip-field"><legend>どんな性格ですか？ <small>1つ以上・必須</small></legend><div>{personalities.map((personality) => <button type="button" className={draft.personality.includes(personality) ? "chip selected" : "chip"} onClick={() => togglePersonality(personality)} key={personality}>{personality}<span aria-hidden="true">＋</span></button>)}</div></fieldset></div>}
           {step === 2 && <div className="wizard-panel">
             <p className="eyebrow">MEMORIES &amp; PHOTOS</p>
             <h1 id="step-title">覚えていることを、少しずつ。</h1>
-            <p className="step-lead">思い出をひとつずつ追加し、その場面が分かる写真を結びつけてください。{draft.purpose === "虹の橋メモリアル" ? "最後の時期や病院のことは、望まない限り書かなくて大丈夫です。" : "うまく文章にしようとせず、覚えている順に書いて大丈夫です。"}</p>
+            <p className="step-lead">思い出は最低{MIN_MEMORY_COUNT}つ必要です。まず1つ目を完成させると、2つ目が自動で開きます。{draft.purpose === "虹の橋メモリアル" ? "最後の時期や病院のことは、望まない限り書かなくて大丈夫です。" : "うまく文章にしようとせず、覚えている順に書いて大丈夫です。"}</p>
 
             <section className="memory-writing-guide" aria-labelledby="memory-writing-guide-title">
               <div><p className="eyebrow">WRITING GUIDE</p><h2 id="memory-writing-guide-title">映像にしやすい伝え方</h2></div>
               <ol>
                 <li><span>01</span><div><strong>ひとつの出来事に絞る</strong><p>「旅行」だけではなく「海辺で初めて波を見た日」のように、ひとつの場面にします。</p></div></li>
                 <li><span>02</span><div><strong>その子の動きや表情を書く</strong><p>走った、振り返った、首をかしげたなど、実際に見た様子を教えてください。</p></div></li>
-                <li><span>03</span><div><strong>内容と同じ場面の写真を選ぶ</strong><p>その場所・服・季節が分かる写真を1〜3枚選ぶと、確認と映像制作がしやすくなります。</p></div></li>
+                <li><span>03</span><div><strong>内容と同じ場面の写真を選ぶ</strong><p>その場所・服・季節が分かる写真を1〜{MAX_PHOTOS_PER_MEMORY}枚選ぶと、確認と映像制作がしやすくなります。</p></div></li>
               </ol>
               <p>例：「去年の春、いつもの公園で桜を見ました。モモは花びらを追いかけたあと、こちらを見て首をかしげました。」</p>
             </section>
@@ -388,25 +437,42 @@ export function StoryWizard() {
             <div className="memory-entry-list">
               {draft.memories.map((memory, index) => {
                 const files = memoryPhotoFiles[memory.clientKey] ?? [];
-                return <article className="memory-entry-card" key={memory.clientKey}>
-                  <header><div><span>MEMORY {String(index + 1).padStart(2, "0")}</span><strong>{memory.title.trim() || "新しい思い出"}</strong></div>{draft.memories.length > 1 && <button type="button" onClick={() => removeMemory(memory.clientKey)}>この項目を削除</button>}</header>
-                  <div className="memory-entry-fields">
-                    <label className="wide"><span>思い出のタイトル <em>必須</em></span><input value={memory.title} maxLength={80} onChange={(event) => updateMemory(memory.clientKey, "title", event.target.value)} placeholder="例：はじめて海を見た日" /></label>
-                    <label><span>いつ頃ですか？ <small>任意</small></span><input value={memory.whenText} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "whenText", event.target.value)} placeholder="例：2025年の春 / 3歳の頃" /></label>
-                    <label><span>どこでの思い出ですか？ <small>任意</small></span><input value={memory.location} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "location", event.target.value)} placeholder="例：いつもの公園、家のリビング" /></label>
-                    <label className="wide"><span>そのときのことを詳しく教えてください <em>必須・30文字以上</em></span><textarea rows={5} maxLength={2000} value={memory.description} onChange={(event) => updateMemory(memory.clientKey, "description", event.target.value)} placeholder="誰と、どんな時間を過ごし、何が心に残っていますか？ 写真に写っている場面と結びつくように書いてください。" /><small className={memory.description.trim().length >= 30 ? "field-count complete" : "field-count"}>{memory.description.trim().length} / 30文字以上</small></label>
-                    <label className="wide"><span>その子の表情や動き <em>必須・10文字以上</em></span><textarea rows={3} maxLength={1000} value={memory.dogBehavior} onChange={(event) => updateMemory(memory.clientKey, "dogBehavior", event.target.value)} placeholder="例：花びらを追いかけ、最後にこちらを見て首をかしげました。" /><small className={memory.dogBehavior.trim().length >= 10 ? "field-count complete" : "field-count"}>{memory.dogBehavior.trim().length} / 10文字以上</small></label>
-                  </div>
-                  <div className="memory-photo-upload">
-                    <input id={`memory-photos-${memory.clientKey}`} type="file" required accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={(event) => handleMemoryPhotos(memory.clientKey, event)} />
-                    <label htmlFor={`memory-photos-${memory.clientKey}`}><span className="upload-mark" aria-hidden="true">＋</span><strong>この思い出の写真を選ぶ <em>必須</em></strong><small>1〜3枚 · JPG・PNG・HEIC・WebP</small></label>
-                    {files.length > 0 && <div className="memory-photo-files"><strong>{files.length}枚を選択しました</strong>{files.map((file) => <span key={`${file.name}-${file.size}`}>{file.name}</span>)}<button type="button" onClick={() => { setMemoryPhotoFiles((current) => ({ ...current, [memory.clientKey]: [] })); updateMemory(memory.clientKey, "photoNames", []); }}>選び直す</button></div>}
-                  </div>
+                const complete = isMemoryReady(memory, files.length);
+                const unlocked = index === 0 || draft.memories.slice(0, index).every((previous) => isMemoryReady(previous, memoryPhotoFiles[previous.clientKey]?.length ?? 0));
+                const expanded = activeMemoryKey === memory.clientKey && unlocked;
+                return <article className={`memory-entry-card${complete ? " complete" : ""}${!unlocked ? " locked" : ""}`} data-memory-key={memory.clientKey} key={memory.clientKey}>
+                  <button
+                    type="button"
+                    className="memory-entry-toggle"
+                    aria-expanded={expanded}
+                    aria-controls={`memory-entry-content-${memory.clientKey}`}
+                    disabled={!unlocked}
+                    onClick={() => setActiveMemoryKey((current) => current === memory.clientKey ? "" : memory.clientKey)}
+                  >
+                    <span className="memory-entry-toggle-copy"><span>MEMORY {String(index + 1).padStart(2, "0")}</span><strong>{memory.title.trim() || `思い出 ${index + 1}`}</strong></span>
+                    <span className="memory-entry-status">{complete ? "入力完了 ✓" : !unlocked ? "前の思い出を完成すると開きます" : expanded ? "入力中" : "続きを入力"}</span>
+                    <span className={expanded ? "memory-entry-chevron open" : "memory-entry-chevron"} aria-hidden="true">⌄</span>
+                  </button>
+                  {expanded && <div className="memory-entry-content" id={`memory-entry-content-${memory.clientKey}`}>
+                    {index >= MIN_MEMORY_COUNT && <div className="memory-entry-tools"><button type="button" onClick={() => removeMemory(memory.clientKey)}>この項目を削除</button></div>}
+                    <div className="memory-entry-fields">
+                      <label className="wide"><span>思い出のタイトル <em>必須</em></span><input required value={memory.title} maxLength={80} onChange={(event) => updateMemory(memory.clientKey, "title", event.target.value)} placeholder="例：はじめて海を見た日" /></label>
+                      <label><span>いつ頃ですか？ <small>任意</small></span><input value={memory.whenText} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "whenText", event.target.value)} placeholder="例：2025年の春 / 3歳の頃" /></label>
+                      <label><span>どこでの思い出ですか？ <small>任意</small></span><input value={memory.location} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "location", event.target.value)} placeholder="例：いつもの公園、家のリビング" /></label>
+                      <label className="wide"><span>そのときのことを詳しく教えてください <em>必須・30文字以上</em></span><textarea required rows={5} maxLength={2000} value={memory.description} onChange={(event) => updateMemory(memory.clientKey, "description", event.target.value)} placeholder="誰と、どんな時間を過ごし、何が心に残っていますか？ 写真に写っている場面と結びつくように書いてください。" /><small className={memory.description.trim().length >= 30 ? "field-count complete" : "field-count"}>{memory.description.trim().length} / 30文字以上</small></label>
+                      <label className="wide"><span>その子の表情や動き <em>必須・10文字以上</em></span><textarea required rows={3} maxLength={1000} value={memory.dogBehavior} onChange={(event) => updateMemory(memory.clientKey, "dogBehavior", event.target.value)} placeholder="例：花びらを追いかけ、最後にこちらを見て首をかしげました。" /><small className={memory.dogBehavior.trim().length >= 10 ? "field-count complete" : "field-count"}>{memory.dogBehavior.trim().length} / 10文字以上</small></label>
+                    </div>
+                    <div className="memory-photo-upload">
+                      <input id={`memory-photos-${memory.clientKey}`} type="file" required accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={(event) => handleMemoryPhotos(memory.clientKey, event)} />
+                      <label htmlFor={`memory-photos-${memory.clientKey}`}><span className="upload-mark" aria-hidden="true">＋</span><strong>この思い出の写真を選ぶ <em>必須</em></strong><small>1〜{MAX_PHOTOS_PER_MEMORY}枚 · JPG・PNG・HEIC・WebP</small></label>
+                      {files.length > 0 && <div className="memory-photo-files"><strong>{files.length}枚を選択しました</strong>{files.map((file) => <span key={`${file.name}-${file.size}`}>{file.name}</span>)}<button type="button" onClick={() => { setMemoryPhotoFiles((current) => ({ ...current, [memory.clientKey]: [] })); updateMemory(memory.clientKey, "photoNames", []); }}>選び直す</button></div>}
+                    </div>
+                  </div>}
                 </article>;
               })}
             </div>
 
-            <div className="memory-entry-add"><button type="button" disabled={draft.memories.length >= MAX_MEMORY_COUNT} onClick={addMemory}>＋ 別の思い出を追加する</button><p>{MIN_MEMORY_COUNT}〜{MAX_MEMORY_COUNT}項目・各1〜3枚、写真は合計{MIN_TOTAL_PHOTOS}枚以上必要です。現在：{draft.memories.length}項目 / {totalPhotoCount}枚</p></div>
+            <div className="memory-entry-add"><button type="button" disabled={draft.memories.length >= MAX_MEMORY_COUNT || !allMemoryEntriesComplete} onClick={addMemory}>＋ 別の思い出を追加する</button><p>{!allMemoryEntriesComplete && draft.memories.length < MAX_MEMORY_COUNT ? "表示中の思い出をすべて完成すると、次の項目を追加できます。" : `${MIN_MEMORY_COUNT}〜${MAX_MEMORY_COUNT}項目・各1〜${MAX_PHOTOS_PER_MEMORY}枚、写真は合計${MIN_TOTAL_PHOTOS}枚以上必要です。`}<br />現在：{draft.memories.length}項目 / {totalPhotoCount}枚</p></div>
 
             <div className="stacked-fields memory-ending-fields">
               <label><span>その子へ伝えたいこと <em>必須</em></span><textarea required rows={3} value={draft.message} onChange={(event) => update("message", event.target.value)} placeholder="映画の最後に残したい言葉があれば" /></label>
@@ -471,9 +537,16 @@ export function StoryWizard() {
             {missingFields.length > 0 ? <aside className="missing-fields-panel" role="status" aria-labelledby="missing-fields-title"><p className="eyebrow">REQUIRED ITEMS</p><h2 id="missing-fields-title">あと{missingFields.length}項目の入力が必要です。</h2><p>項目を選ぶと入力する画面へ戻れます。すべて入力すると、ご相談を送信できます。</p><ul>{missingFields.map((item) => <li key={item.key}><button type="button" onClick={() => goToStep(item.step)}><span>{steps[item.step]}</span><strong>{item.label}</strong><em>入力する →</em></button></li>)}</ul></aside> : <aside className="ready-to-submit" role="status"><span aria-hidden="true">✓</span><div><strong>必要な項目がすべて揃いました。</strong><small>下のボタンからご相談を送信できます。</small></div></aside>}
           </div>}
 
-          {error && <p className="form-error" role="alert">{error}</p>}
+          {(step === 1 || step === 2) && (currentStepMissingFields.length > 0
+            ? <aside className={stepValidationAttempted ? "step-required-panel attempted" : "step-required-panel"} id="step-required-status" role="status" aria-live="polite">
+                <strong>このステップは、あと{currentStepMissingFields.length}項目の入力が必要です。</strong>
+                <span>「必須」の内容をすべて入力すると、次へ進めます。</span>
+                <ul>{currentStepMissingFields.map((item) => <li key={item.key}>{item.label}</li>)}</ul>
+              </aside>
+            : <aside className="step-ready-panel" id="step-required-status" role="status"><span aria-hidden="true">✓</span><strong>このステップの必須項目が揃いました。次へ進めます。</strong></aside>)}
+          {error && (!stepValidationAttempted || currentStepMissingFields.length > 0) && <p className="form-error" role="alert">{error}</p>}
           {submitting && <div className="submit-progress" role="status"><span style={{ width: `${totalPhotoCount ? uploadProgress : 100}%` }} /><p>{totalPhotoCount ? `思い出と写真を安全に送信しています… ${uploadProgress}%` : "ご相談を受け付けています…"}</p></div>}
-          <div className="wizard-actions">{step > 0 ? <button className="button button-ghost" type="button" disabled={submitting} onClick={() => goToStep(step - 1)}>← 戻る</button> : <span />}{step < steps.length - 1 ? <button className="button button-primary" type="button" onClick={goNext}>次へ進む →</button> : <button className="button button-primary" type="button" disabled={submitting} onClick={submit}>{submitting ? "送信中…" : missingFields.length ? `未入力${missingFields.length}項目を確認する →` : "相談を受け付ける →"}</button>}</div>
+          <div className="wizard-actions">{step > 0 ? <button className="button button-ghost" type="button" disabled={submitting} onClick={() => goToStep(step - 1)}>← 戻る</button> : <span />}{step < steps.length - 1 ? <button className="button button-primary" type="button" aria-describedby={step === 1 || step === 2 ? "step-required-status" : undefined} onClick={goNext}>次へ進む →</button> : <button className="button button-primary" type="button" disabled={submitting} onClick={submit}>{submitting ? "送信中…" : missingFields.length ? `未入力${missingFields.length}項目を確認する →` : "相談を受け付ける →"}</button>}</div>
         </section>
       </div>
     </main>

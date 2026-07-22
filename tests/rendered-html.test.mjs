@@ -387,10 +387,11 @@ test("records and enforces people, minor, photo-rights and external-service cons
   assert.doesNotMatch(story, /広告利用や当社のAI学習には使用しません/);
 });
 
-test("stores guided memory entries with one to three matching photos", async () => {
+test("stores guided memory entries with one to five matching photos", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, story, uploads, admin, studio, css] = await Promise.all([
+  const [migration, upgrade, story, uploads, admin, studio, css] = await Promise.all([
     readFile(new URL("supabase/migrations/202607210005_memory_entries.sql", root), "utf8"),
+    readFile(new URL("supabase/migrations/202607210006_memory_photo_limit_five.sql", root), "utf8"),
     readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
     readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
@@ -399,19 +400,32 @@ test("stores guided memory entries with one to three matching photos", async () 
   ]);
   assert.match(migration, /create table if not exists public\.order_memories/);
   assert.match(migration, /add column if not exists memory_id uuid/);
-  assert.match(migration, /each memory requires 1 to 3 photos/);
+  assert.match(migration, /each memory requires 1 to 5 photos/);
+  assert.match(upgrade, /v_photo_count >= 5/);
+  assert.match(upgrade, /having count\(a\.id\) not between 1 and 5/);
   assert.match(migration, /between 2 and 6 memory entries are required/);
   assert.match(migration, /at least 5 memory photos are required/);
   assert.match(story, /別の思い出を追加する/);
   assert.match(story, /その子の表情や動き/);
   assert.match(story, /写真に写っている場面と結びつくように/);
   assert.match(story, /save_order_memory_entry/);
-  assert.match(story, /slice\(0, 3\)/);
+  assert.match(story, /MAX_PHOTOS_PER_MEMORY = 5/);
+  assert.match(story, /slice\(0, MAX_PHOTOS_PER_MEMORY\)/);
+  assert.match(story, /memories: \[createMemoryDraft\("memory-1"\), createMemoryDraft\("memory-2"\)\]/);
+  assert.match(story, /while \(parsedMemories\.length < MIN_MEMORY_COUNT\)/);
+  assert.match(story, /className="memory-entry-toggle"/);
+  assert.match(story, /aria-expanded=\{expanded\}/);
+  assert.match(story, /前の思い出を完成すると開きます/);
+  assert.match(story, /setActiveMemoryKey\(\(current\) => current === memory\.clientKey \? draft\.memories\[index \+ 1\]\.clientKey : current\)/);
+  assert.match(story, /if \(currentStepMissingFields\.length > 0\)/);
+  assert.match(story, /このステップの必須項目をすべて入力してください/);
   assert.match(uploads, /memory_id: memoryId/);
   assert.match(admin, /制作用JSONをコピー/);
   assert.match(admin, /内容と写真が同じ場面か/);
   assert.match(studio, /studio-memory-list/);
   assert.match(css, /\.memory-entry-card/);
+  assert.match(css, /\.memory-entry-toggle/);
+  assert.match(css, /\.step-required-panel/);
 });
 
 test("keeps Vercel and Sites build outputs separate", async () => {
