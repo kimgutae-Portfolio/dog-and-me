@@ -1641,3 +1641,208 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .admin-photo-analysis-actions { align-items: stretch; flex-direction: column; }
   .admin-photo-analysis-actions .button { width: 100%; }
 }
+
+/* Readable, guided application flow */
+.auth-back { min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; }
+.auth-card { width: min(560px, 100%); }
+.auth-lead { font-size: 15px; line-height: 1.9; }
+.auth-tabs button { min-height: 52px; font-size: 15px; }
+.auth-form { gap: 22px; }
+.auth-form label { gap: 10px; }
+.auth-form label span { font-size: 15px; line-height: 1.5; }
+.auth-form label span em,
+.auth-form label span small { font-size: 11px; }
+.auth-form input { min-height: 58px; font-size: 16px; }
+.auth-prefill-note { padding: 14px 16px; font-size: 13px; line-height: 1.75; }
+.auth-submit { min-height: 54px; font-size: 15px; }
+.auth-text-button { min-height: 44px; font-size: 13px; }
+.auth-privacy { font-size: 12px; line-height: 1.8; }
+.auth-complete p:not(.eyebrow) { font-size: 15px; line-height: 1.8; }
+.wizard-page .save-status { font-size: 13px; }
+.wizard-page .wizard-side li { font-size: 13px; }
+.wizard-page .step-count { display: flex; align-items: center; gap: 12px; font-size: 11px; }
+.wizard-page .step-count strong { padding-left: 12px; border-left: 1px solid var(--line); color: var(--ink); font-size: 14px; letter-spacing: .08em; }
+.wizard-page .step-lead { font-size: 16px; line-height: 1.9; }
+.wizard-page .form-grid label > span,
+.wizard-page .stacked-fields label > span,
+.wizard-page .chip-field legend { font-size: 15px; line-height: 1.6; }
+.wizard-page .form-grid em,
+.wizard-page .stacked-fields em,
+.wizard-page .consent-box em { font-size: 11px; }
+.wizard-page .form-grid label > span small,
+.wizard-page .stacked-fields label > span small { font-size: 12px; }
+.wizard-page .form-grid input,
+.wizard-page .form-grid select,
+.wizard-page .stacked-fields textarea { min-height: 58px; font-size: 16px; line-height: 1.7; }
+.wizard-page .chip { min-height: 48px; padding-inline: 18px; font-size: 14px; }
+.wizard-page .choice-card small,
+.wizard-page .film-type-card > p,
+.wizard-page .film-type-ending span,
+.wizard-page .film-type-ending em,
+.wizard-page .style-card small { font-size: 13px; line-height: 1.8; }
+.wizard-page .style-card strong { font-size: 17px; }
+.wizard-page .photo-policy-question legend { font-size: 15px; }
+.wizard-page .photo-policy-question legend em,
+.wizard-page .guardian-consent em { font-size: 11px; }
+.wizard-page .photo-policy-options label,
+.wizard-page .guardian-consent { min-height: 58px; padding: 16px; }
+.wizard-page .photo-policy-options span,
+.wizard-page .guardian-consent span { font-size: 14px; line-height: 1.7; }
+.wizard-page .photo-policy-options input,
+.wizard-page .guardian-consent input,
+.wizard-page .consent-box input { width: 22px; height: 22px; }
+.wizard-page .people-photo-policy > p { font-size: 14px; line-height: 1.85; }
+.wizard-page .locked-traits-panel > p,
+.wizard-page .representative-photo-fieldset > p,
+.wizard-page .memory-photo-linker > p { font-size: 14px; line-height: 1.8; }
+.wizard-page .locked-traits-panel h2 small { font-size: 12px; }
+.wizard-page .locked-traits-panel label > span { font-size: 13px; }
+.wizard-page .locked-traits-panel input { height: 52px; font-size: 16px; }
+.wizard-page .locked-traits-panel label small,
+.wizard-page .locked-traits-panel label button,
+.wizard-page .add-trait-button { font-size: 12px; }
+.wizard-page .memory-writing-guide li strong { font-size: 13px; }
+.wizard-page .memory-writing-guide li p,
+.wizard-page .memory-writing-guide > p { font-size: 12px; }
+.wizard-page .memory-entry-toggle-copy > strong { font-size: 18px; }
+.wizard-page .memory-entry-status { font-size: 12px; }
+.wizard-page .memory-entry-fields label > span { font-size: 14px; }
+.wizard-page .memory-entry-fields label > span em,
+.wizard-page .memory-entry-fields label > span small { font-size: 11px; }
+.wizard-page .memory-entry-fields input,
+.wizard-page .memory-entry-fields textarea { font-size: 16px; }
+.wizard-page .field-count,
+.wizard-page .memory-photo-count { font-size: 12px; }
+.wizard-page .consent-box strong { font-size: 14px; line-height: 1.6; }
+.wizard-page .consent-box small { font-size: 12px; line-height: 1.75; }
+.wizard-page .step-required-panel strong,
+.wizard-page .step-ready-panel strong { font-size: 14px; }
+.wizard-page .step-required-panel > span,
+.wizard-page .step-required-panel li { font-size: 13px; }
+.wizard-page .form-error { padding: 16px 18px; font-size: 14px; line-height: 1.7; }
+.wizard-page .wizard-actions .button { min-height: 52px; font-size: 14px; }
+
+.photo-task-guide { margin: 0 0 28px; padding: 25px; border: 2px solid #8d9a87; background: #eef2eb; }
+.photo-task-guide > header { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.photo-task-guide > header .eyebrow { margin: 0 0 7px; color: var(--sage); }
+.photo-task-guide h2 { margin: 0; font-family: var(--font-serif); font-size: 24px; font-weight: 400; }
+.photo-task-guide > header > button { min-height: 48px; padding: 0 18px; flex: 0 0 auto; border: 1px solid #657260; color: #3f4d3d; background: white; cursor: pointer; font-size: 14px; font-weight: 700; }
+.photo-task-guide-lead { margin: 18px 0; color: #4f584c; font-size: 15px; line-height: 1.8; }
+.photo-task-guide ol { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; list-style: none; }
+.photo-task-guide li { min-height: 82px; padding: 13px; display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; align-content: center; gap: 3px 9px; border: 1px solid #c8cec4; background: rgba(255,255,255,.62); }
+.photo-task-guide li > span { width: 30px; height: 30px; grid-row: 1 / span 2; display: grid; place-items: center; align-self: center; border-radius: 50%; color: white; background: #8f948a; font-size: 13px; font-weight: 700; }
+.photo-task-guide li > strong { font-size: 13px; line-height: 1.5; }
+.photo-task-guide li > small { color: #7d7f78; font-size: 11px; }
+.photo-task-guide li.complete { border-color: #aebda9; background: #e1e9de; }
+.photo-task-guide li.complete > span { background: #657660; }
+.photo-task-guide li.complete > small { color: #4c6548; font-weight: 700; }
+.photo-next-task { width: 100%; min-height: 54px; margin-top: 14px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border: 0; color: white; background: var(--rust); cursor: pointer; font-size: 15px; font-weight: 700; }
+.photo-next-task > span { font-size: 20px; }
+
+.photo-needs-card h2 { font-size: 23px; }
+.photo-needs-card ul { font-size: 15px; line-height: 2; }
+.photo-needs-card p { font-size: 13px; line-height: 1.7; }
+.shared-photo-upload { scroll-margin-top: 24px; border-width: 2px; border-color: #8c8a80; background: #fffdf8; }
+.shared-photo-upload > label { min-height: 178px; }
+.upload-step-label { margin-bottom: 11px; padding: 6px 10px; color: #6e3f32; border-radius: 999px; background: #f2dfd5; font-size: 13px; font-weight: 700; }
+.shared-photo-upload > label strong { font-size: 22px; }
+.shared-photo-upload > label strong em { font-size: 11px; }
+.shared-photo-upload > label small { font-size: 13px; line-height: 1.7; }
+.shared-photo-upload .upload-mark { width: 46px; height: 46px; font-size: 20px; }
+.upload-count { padding: 15px 18px; font-size: 14px; }
+.uploaded-photo-heading { margin: 32px 0 13px; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; font-family: var(--font-serif); font-size: 22px; font-weight: 400; }
+.uploaded-photo-heading small { color: var(--muted); font-family: var(--font-sans); font-size: 13px; font-weight: 400; }
+.uploaded-photo-preview > span { font-size: 11px; }
+.uploaded-photo-grid article small { font-size: 12px; font-weight: 700; }
+.uploaded-photo-grid article strong { font-size: 10px; }
+.uploaded-photo-grid article > div > button { min-width: 44px; min-height: 44px; font-size: 12px; text-decoration: underline; }
+.representative-photo-fieldset { padding-top: 8px; scroll-margin-top: 24px; }
+.representative-photo-fieldset legend,
+.appearance-policy-fieldset legend,
+.memory-photo-linker legend,
+.selected-period-panel legend { font-size: 22px; }
+.photo-selector-step { min-width: 34px; height: 34px; margin-right: 10px; display: inline-grid; place-items: center; border-radius: 50%; color: white; background: var(--rust); font-family: var(--font-sans); font-size: 14px; font-weight: 700; vertical-align: middle; }
+.representative-photo-fieldset legend em,
+.appearance-policy-fieldset legend em,
+.memory-photo-linker legend em,
+.selected-period-panel legend em { font-size: 11px; }
+.photo-choice-card { border-color: #d1cdc2; background: #eeeae1; }
+.photo-choice-card.selected { border-width: 3px; }
+.photo-choice-meta { padding: 9px; color: var(--ink); font-size: 12px; font-weight: 700; }
+.photo-role-badge { font-size: 10px; }
+.photo-choice-action { padding: 6px 8px; position: absolute; top: 7px; right: 7px; color: #473c34; background: rgba(255,255,255,.94); box-shadow: 0 2px 10px rgba(34,31,27,.14); font-size: 11px; font-weight: 700; }
+.photo-selected-mark { padding: 9px; font-size: 12px; }
+.photo-assigned-label { font-size: 11px; }
+.appearance-policy-fieldset { scroll-margin-top: 24px; }
+.appearance-policy-fieldset label { min-height: 64px; }
+.appearance-policy-fieldset span { font-size: 15px; }
+.selected-period-panel > label > span { font-size: 14px; }
+.selected-period-panel > label > small { font-size: 12px; }
+.photo-reselect-notice strong { font-size: 14px; }
+.photo-reselect-notice span { font-size: 13px; }
+
+.photo-guide-backdrop { padding: 20px; position: fixed; z-index: 220; inset: 0; display: grid; place-items: center; background: rgba(29,31,27,.76); }
+.photo-guide-dialog { width: min(620px, 100%); max-height: calc(100dvh - 40px); overflow: auto; color: var(--ink); background: #faf8f2; box-shadow: 0 24px 80px rgba(0,0,0,.28); }
+.photo-guide-dialog > header { min-height: 64px; padding: 0 18px 0 26px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+.photo-guide-dialog > header > span { font-size: 14px; font-weight: 700; letter-spacing: .05em; }
+.photo-guide-dialog > header > button { width: 48px; height: 48px; border: 0; color: var(--ink); background: transparent; cursor: pointer; font-size: 28px; }
+.photo-guide-progress { height: 5px; background: #e0ddd5; }
+.photo-guide-progress > span { height: 100%; display: block; background: var(--rust); transition: width .25s ease; }
+.photo-guide-content { min-height: 330px; padding: 38px 38px 32px; position: relative; }
+.photo-guide-number { width: 58px; height: 58px; margin-bottom: 25px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--forest); font-family: var(--font-serif); font-size: 18px; }
+.photo-guide-content .eyebrow { margin: 0 0 12px; }
+.photo-guide-content h2 { margin: 0; font-family: var(--font-serif); font-size: 30px; font-weight: 400; line-height: 1.5; }
+.photo-guide-content > p:not(.eyebrow) { margin: 20px 0 0; color: #54554e; font-size: 17px; line-height: 1.9; }
+.photo-guide-content > aside { margin-top: 20px; padding: 16px; border-left: 3px solid var(--rust); color: #654538; background: #f4e5dc; font-size: 15px; line-height: 1.8; }
+.photo-guide-dialog > footer { padding: 20px 26px 26px; display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); }
+.photo-guide-dialog > footer .button { min-height: 52px; font-size: 14px; }
+
+@media (max-width: 640px) {
+  .auth-page { padding-inline: 16px; }
+  .auth-card { padding: 36px 24px; }
+  .auth-card > .brand { margin-bottom: 42px; }
+  .auth-lead { font-size: 14px; }
+  .auth-tabs button { font-size: 14px; }
+  .auth-form label span { font-size: 14px; }
+  .auth-privacy { font-size: 12px; }
+  .wizard-page .save-status { font-size: 12px; }
+  .wizard-page .wizard-side { padding: 14px 8px; }
+  .wizard-page .wizard-side ol { align-items: flex-start; }
+  .wizard-page .wizard-side li { min-width: 0; min-height: 56px; padding: 0 2px; justify-content: flex-start; font-size: 9px; line-height: 1.35; text-align: center; }
+  .wizard-page .wizard-side li span { flex: 0 0 auto; }
+  .wizard-page .step-count { font-size: 10px; }
+  .wizard-page .step-count strong { font-size: 12px; }
+  .wizard-page .step-lead { font-size: 15px; }
+  .wizard-page .wizard-panel h1 { font-size: 31px; letter-spacing: .035em; }
+  .photo-task-guide { padding: 20px 17px; }
+  .photo-task-guide > header { align-items: flex-start; flex-direction: column; }
+  .photo-task-guide > header > button { width: 100%; }
+  .photo-task-guide h2 { font-size: 23px; }
+  .photo-task-guide-lead { font-size: 14px; }
+  .photo-task-guide ol { grid-template-columns: 1fr; }
+  .photo-task-guide li { min-height: 70px; }
+  .photo-needs-card h2 { font-size: 21px; }
+  .photo-needs-card ul { font-size: 14px; }
+  .shared-photo-upload > label { min-height: 178px; padding-inline: 16px; }
+  .shared-photo-upload > label strong { font-size: 20px; }
+  .shared-photo-upload > label small { font-size: 12px; }
+  .upload-count { font-size: 13px; }
+  .uploaded-photo-heading { align-items: flex-start; flex-direction: column; gap: 4px; font-size: 21px; }
+  .uploaded-photo-heading small { font-size: 12px; }
+  .representative-photo-fieldset legend,
+  .appearance-policy-fieldset legend,
+  .memory-photo-linker legend,
+  .selected-period-panel legend { font-size: 20px; }
+  .photo-choice-action { font-size: 10px; }
+  .photo-guide-backdrop { padding: 0; align-items: end; }
+  .photo-guide-dialog { width: 100%; max-height: 92dvh; border-radius: 18px 18px 0 0; }
+  .photo-guide-content { min-height: 0; padding: 28px 22px 26px; }
+  .photo-guide-number { width: 50px; height: 50px; margin-bottom: 20px; }
+  .photo-guide-content h2 { font-size: 25px; }
+  .photo-guide-content > p:not(.eyebrow) { font-size: 16px; }
+  .photo-guide-content > aside { font-size: 14px; }
+  .photo-guide-dialog > footer { padding: 16px 18px max(20px, env(safe-area-inset-bottom)); }
+  .photo-guide-dialog > footer .button { flex: 1; padding-inline: 12px; }
+  .wizard-page .wizard-actions { gap: 10px; }
+  .wizard-page .wizard-actions .button { flex: 1; min-width: 0; }
+}

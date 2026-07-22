@@ -232,6 +232,10 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(storyWizard, /totalPhotoCount < MIN_TOTAL_PHOTOS/);
   assert.match(storyWizard, /const \[photoFiles, setPhotoFiles\] = useState<PhotoDraft\[\]>/);
   assert.match(storyWizard, /primaryFacePhotoKey/);
+  assert.match(storyWizard, /写真選びガイドを見る/);
+  assert.match(storyWizard, /写真をアップロードしただけでは選択は完了していません/);
+  assert.match(storyWizard, /タップして選ぶ/);
+  assert.match(storyWizard, /wan-memory-photo-guide-seen-v1/);
   assert.match(storyWizard, /未入力\$\{missingFields\.length\}項目を確認する/);
   assert.match(storyWizard, /onClick=\{\(\) => goToStep\(item\.step\)\}/);
   assert.doesNotMatch(storyWizard, /if \(step === 1 &&/);
