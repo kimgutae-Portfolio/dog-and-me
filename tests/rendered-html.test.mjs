@@ -241,7 +241,11 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(storyWizard, /タップして選ぶ/);
   assert.match(storyWizard, /この3種類が入るように選ぶと安心です/);
   assert.match(storyWizard, /photo-guide-photo-types/);
+  assert.match(storyWizard, /photo-guide-upload-head/);
+  assert.match(storyWizard, /photoReferenceGuideItems\.map/);
   assert.doesNotMatch(storyWizard, /photo-needs-card|ご用意いただきたい写真/);
+  assert.match(storyWizard, /totalPhotoCount >= MIN_TOTAL_PHOTOS && <button className="photo-next-task"/);
+  assert.doesNotMatch(storyWizard, /photoRestoreNotice|wan-memory-had-selected-photos|写真をもう一度選んでください/);
   assert.match(storyWizard, /wan-memory-photo-guide-seen-v1/);
   assert.match(storyWizard, /closePhotoGuideAndShowUploader/);
   assert.match(storyWizard, /photoUploadTriggerRef/);
@@ -333,7 +337,7 @@ test("enforces operational workflow rules in the database boundary", async () =>
   assert.match(lockdown, /drop policy if exists orders_admin_update/);
   assert.match(story, /totalPhotoCount < MIN_TOTAL_PHOTOS/);
   assert.match(story, /beforeunload/);
-  assert.match(story, /写真をもう一度選んでください/);
+  assert.match(story, /photo-selection-feedback/);
   assert.match(studio, /revisionsRemaining/);
   assert.match(admin, /rpc\("admin_update_order"/);
   assert.doesNotMatch(admin, /from\("orders"\)\.update/);

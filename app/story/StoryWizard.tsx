@@ -199,7 +199,6 @@ export function StoryWizard() {
   const [failedUploadName, setFailedUploadName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [photoRestoreNotice, setPhotoRestoreNotice] = useState(false);
   const [photoSelectionNotice, setPhotoSelectionNotice] = useState("");
   const [activeMemoryKey, setActiveMemoryKey] = useState("memory-1");
   const [stepValidationAttempted, setStepValidationAttempted] = useState(false);
@@ -235,7 +234,6 @@ export function StoryWizard() {
               }))
             : [{ ...createMemoryDraft("memory-1"), title: parsed.firstMeeting ? "はじめて会った日" : "大切な思い出", description: parsed.favoriteMemory || parsed.firstMeeting || "" }];
           while (parsedMemories.length < MIN_MEMORY_COUNT) parsedMemories.push(createMemoryDraft(`memory-${parsedMemories.length + 1}`));
-          setPhotoRestoreNotice(window.localStorage.getItem("wan-memory-had-selected-photos") === "1");
           setActiveMemoryKey(parsedMemories[0].clientKey);
           setDraft({
             ...emptyDraft,
@@ -365,10 +363,6 @@ export function StoryWizard() {
       else setPhotoSelectionNotice(accepted.length ? "写真を追加しました。下の一覧から基準写真を選んでください。" : "");
       return [...current, ...accepted.map((file) => ({ clientKey: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) }))];
     });
-    if (incoming.length) {
-      setPhotoRestoreNotice(false);
-      window.localStorage.setItem("wan-memory-had-selected-photos", "1");
-    }
     event.target.value = "";
   };
 
@@ -385,7 +379,6 @@ export function StoryWizard() {
       memories: current.memories.map((memory) => ({ ...memory, photoKeys: memory.photoKeys.filter((key) => key !== photoKey) })),
     }));
     setPhotoSelectionNotice("削除した写真の基準設定と思い出とのつながりを解除しました。必要な項目を選び直してください。");
-    if (photoFiles.length === 1) window.localStorage.removeItem("wan-memory-had-selected-photos");
   };
 
   const selectFilmPurpose = (purpose: FilmPurpose) => setDraft((current) => ({ ...current, purpose, style: purpose === "虹の橋メモリアル" ? "穏やかなメモリアル" : current.style === "穏やかなメモリアル" ? "あたたかな日常映画" : current.style }));
@@ -421,11 +414,12 @@ export function StoryWizard() {
   const totalLinkedPhotoCount = useMemo(() => draft.memories.reduce((total, memory) => total + memory.photoKeys.length, 0), [draft.memories]);
   const allMemoryEntriesComplete = useMemo(() => draft.memories.every(isMemoryReady), [draft.memories]);
 
-  const photoGuideItems = [
-    { label: `写真を${MIN_TOTAL_PHOTOS}枚以上追加`, complete: totalPhotoCount >= MIN_TOTAL_PHOTOS },
+  const photoUploadComplete = totalPhotoCount >= MIN_TOTAL_PHOTOS;
+  const photoReferenceGuideItems = [
     { label: "お顔の基準を1枚選択", complete: Boolean(draft.primaryFacePhotoKey) },
     { label: "全身の基準を1枚選択", complete: Boolean(draft.primaryBodyPhotoKey) },
   ];
+  const nextIncompleteReferenceIndex = photoReferenceGuideItems.findIndex((item) => !item.complete);
   const photoGuideSlides = [
     { number: "01", title: `まず、写真を${MIN_TOTAL_PHOTOS}枚以上追加します`, copy: "スマートフォンの写真一覧から、顔・全身・思い出の場面が分かる写真をまとめて選べます。あとから追加や削除もできます。" },
     { number: "02", title: "次に、お顔の基準を1枚選びます", copy: "追加した写真がもう一度並びます。目・鼻・口元がはっきり見える写真を、カードごとタップしてください。" },
@@ -447,17 +441,11 @@ export function StoryWizard() {
   };
   const scrollToPhotoTask = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   const handleNextPhotoTask = () => {
-    if (totalPhotoCount < MIN_TOTAL_PHOTOS) {
-      document.getElementById("shared-photo-input")?.click();
-      return;
-    }
     if (!draft.primaryFacePhotoKey) { scrollToPhotoTask("primary-face-section"); return; }
     if (!draft.primaryBodyPhotoKey) { scrollToPhotoTask("primary-body-section"); return; }
     scrollToPhotoTask("appearance-policy-section");
   };
-  const nextPhotoTaskLabel = totalPhotoCount < MIN_TOTAL_PHOTOS
-    ? photoFiles.length ? `写真を追加する（あと${MIN_TOTAL_PHOTOS - totalPhotoCount}枚）` : "写真を選ぶ"
-    : !draft.primaryFacePhotoKey ? "お顔の基準写真を選ぶ"
+  const nextPhotoTaskLabel = !draft.primaryFacePhotoKey ? "お顔の基準写真を選ぶ"
     : !draft.primaryBodyPhotoKey ? "全身の基準写真を選ぶ"
     : "次の設定へ進む";
 
@@ -670,7 +658,6 @@ export function StoryWizard() {
       const { error: submitError } = await supabase.rpc("submit_memory_order", { p_order_id: orderId });
       if (submitError) throw submitError;
       window.localStorage.removeItem("kimi-film-draft");
-      window.localStorage.removeItem("wan-memory-had-selected-photos");
       window.localStorage.removeItem("wan-memory-pending-order-id");
       router.push(`/studio?received=1&order=${orderId}`);
     } catch (caught) {
@@ -710,25 +697,29 @@ export function StoryWizard() {
             <section className="photo-task-guide" aria-labelledby="photo-task-guide-title">
               <header><div><p className="eyebrow">EASY GUIDE</p><h2 id="photo-task-guide-title">この画面で行うこと</h2></div><button type="button" onClick={showPhotoGuide}>写真選びガイドを見る</button></header>
               <p className="photo-task-guide-lead">写真を追加したあと、同じ写真の中から<strong>「お顔」と「全身」の基準を1枚ずつ</strong>選びます。</p>
-              <div className="photo-guide-photo-types">
-                <strong>この3種類が入るように選ぶと安心です</strong>
+              <div className={photoUploadComplete ? "photo-guide-photo-types complete" : "photo-guide-photo-types"}>
+                <div className="photo-guide-upload-head">
+                  <span aria-hidden="true">{photoUploadComplete ? "✓" : "1"}</span>
+                  <div><strong>写真を{MIN_TOTAL_PHOTOS}枚以上追加</strong><small>まずは、映像づくりに使う写真をまとめて選びます</small></div>
+                  <em>{photoUploadComplete ? `${totalPhotoCount}枚・完了` : `${totalPhotoCount} / ${MIN_TOTAL_PHOTOS}枚`}</em>
+                </div>
+                <p className="photo-guide-type-intro">この3種類が入るように選ぶと安心です</p>
                 <ul>
                   <li><span>FACE</span><b>お顔がよく分かる</b><small>目・鼻・口元が鮮明</small></li>
                   <li><span>BODY</span><b>立っている全身</b><small>頭から足先まで見える</small></li>
                   <li><span>SIDE</span><b>横向き・しっぽ</b><small>体型が分かる・任意</small></li>
                 </ul>
-                <p>上の写真を含めて、合計{MIN_TOTAL_PHOTOS}枚以上・最大{MAX_TOTAL_PHOTOS}枚までお送りいただけます。</p>
+                <small className="photo-guide-type-note">上の写真を含めて、最大{MAX_TOTAL_PHOTOS}枚までお送りいただけます。</small>
               </div>
-              <ol>{photoGuideItems.map((item, index) => <li className={item.complete ? "complete" : ""} key={item.label}><span aria-hidden="true">{item.complete ? "✓" : index + 1}</span><strong>{item.label}</strong><small>{item.complete ? "完了" : index === photoGuideItems.findIndex((entry) => !entry.complete) ? "次に行います" : "未完了"}</small></li>)}</ol>
-              <button className="photo-next-task" type="button" onClick={handleNextPhotoTask}>{nextPhotoTaskLabel}<span aria-hidden="true">→</span></button>
+              <ol>{photoReferenceGuideItems.map((item, index) => <li className={item.complete ? "complete" : ""} key={item.label}><span aria-hidden="true">{item.complete ? "✓" : index + 2}</span><strong>{item.label}</strong><small>{item.complete ? "完了" : !photoUploadComplete ? "写真の追加後" : index === nextIncompleteReferenceIndex ? "次に行います" : "その次"}</small></li>)}</ol>
+              {totalPhotoCount >= MIN_TOTAL_PHOTOS && <button className="photo-next-task" type="button" onClick={handleNextPhotoTask}>{nextPhotoTaskLabel}<span aria-hidden="true">→</span></button>}
             </section>
             <div className="shared-photo-upload" id="photo-upload-section">
               <input id="shared-photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={handlePhotos} />
               <label htmlFor="shared-photo-input" ref={photoUploadTriggerRef} tabIndex={-1}><span className="upload-step-label">1. まずここをタップ</span><span className="upload-mark" aria-hidden="true">＋</span><strong>{photoFiles.length ? "写真を追加する" : "スマートフォンから写真を選ぶ"} <em>必須</em></strong><small>一度に複数選べます · JPG・PNG・HEIC・WebP</small></label>
             </div>
             <div className="upload-count" role="status" aria-live="polite"><strong>{photoFiles.length} / {MIN_TOTAL_PHOTOS}枚以上</strong><span>{photoFiles.length >= MIN_TOTAL_PHOTOS ? "必要な枚数が揃いました。" : `あと${MIN_TOTAL_PHOTOS - photoFiles.length}枚必要です。`}</span></div>
-            {photoSelectionNotice && <aside className="photo-reselect-notice" role="status"><strong>写真の選択を更新しました。</strong><span>{photoSelectionNotice}</span></aside>}
-            {photoRestoreNotice && <aside className="photo-reselect-notice" role="alert"><strong>写真をもう一度選んでください。</strong><span>文章の下書きは復元しましたが、ブラウザの安全上、再読み込み前に選んだ写真ファイルは復元されません。</span></aside>}
+            {photoSelectionNotice && <aside className="photo-selection-feedback" role="status"><strong>写真の選択を更新しました。</strong><span>{photoSelectionNotice}</span></aside>}
             {photoFiles.length > 0 && <><h2 className="uploaded-photo-heading">追加した写真 <small>写真を押すと大きく確認できます</small></h2><div className="uploaded-photo-grid" aria-label="選択した写真">
               {photoFiles.map((photo, index) => <article key={photo.clientKey}><button type="button" className="uploaded-photo-preview" onClick={() => setPreviewPhotoKey(photo.clientKey)}><img src={photo.previewUrl} alt={`追加した愛犬の写真 ${index + 1}`} loading="lazy" /><span>大きく見る</span></button><div><small title={photo.file.name}>写真 {index + 1}</small>{roleKeys[photo.clientKey]?.map((badge) => <strong key={badge}>{badge}</strong>)}<button type="button" onClick={() => removePhoto(photo.clientKey)}>削除</button></div></article>)}
             </div></>}

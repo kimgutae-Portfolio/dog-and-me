@@ -932,9 +932,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .file-list strong { width: 100%; margin-bottom: 4px; font-family: var(--font-sans); font-size: 10px; font-weight: 700; }
 .file-list span { padding: 5px 8px; color: var(--muted); background: #ebe7de; font-size: 9px; }
 .file-list p { width: 100%; margin: 8px 0 0; color: var(--rust); font-size: 9px; line-height: 1.6; }
-.photo-reselect-notice { margin-top: 22px; padding: 16px 18px; display: grid; gap: 6px; border: 1px solid #d8b9aa; color: #6e3f32; background: #f6e8e1; box-shadow: inset 0 0 0 4px rgba(165,93,62,.06); }
-.photo-reselect-notice strong { font-size: 11px; }
-.photo-reselect-notice span { font-size: 9px; line-height: 1.7; }
+.photo-selection-feedback { margin-top: 18px; padding: 15px 17px; display: grid; gap: 5px; border: 1px solid #bdc8ba; color: #405143; background: #e8eee5; box-shadow: inset 0 0 0 4px rgba(104,128,107,.05); }
+.photo-selection-feedback strong { font-size: 11px; }
+.photo-selection-feedback span { color: #5e685b; font-size: 9px; line-height: 1.7; }
 .style-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .style-card { min-height: 124px; padding: 16px; position: relative; display: grid; grid-template-columns: 78px 1fr 20px; align-items: center; gap: 16px; border: 1px solid var(--line); cursor: pointer; background: rgba(255,255,255,.42); }
 .style-swatch { width: 78px; height: 88px; display: block; background: #75816f; }
@@ -1725,15 +1725,24 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .photo-task-guide h2 { margin: 0; font-family: var(--font-serif); font-size: 24px; font-weight: 400; }
 .photo-task-guide > header > button { min-height: 48px; padding: 0 18px; flex: 0 0 auto; border: 1px solid #657260; color: #3f4d3d; background: white; cursor: pointer; font-size: 14px; font-weight: 700; }
 .photo-task-guide-lead { margin: 18px 0; color: #4f584c; font-size: 15px; line-height: 1.8; }
-.photo-guide-photo-types { margin: 0 0 18px; padding: 18px; border: 1px solid #c6cec3; background: rgba(255,255,255,.56); }
-.photo-guide-photo-types > strong { display: block; font-size: 14px; }
+.photo-guide-photo-types { margin: 0 0 10px; padding: 18px; border: 1px solid #c6cec3; background: rgba(255,255,255,.56); transition: border-color .2s ease, background .2s ease; }
+.photo-guide-photo-types.complete { border-color: #aebda9; background: #e1e9de; }
+.photo-guide-upload-head { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 11px; }
+.photo-guide-upload-head > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: white; background: #8f948a; font-size: 14px; font-weight: 700; }
+.photo-guide-photo-types.complete .photo-guide-upload-head > span { background: #657660; }
+.photo-guide-upload-head > div { display: grid; gap: 3px; }
+.photo-guide-upload-head strong { font-size: 15px; line-height: 1.45; }
+.photo-guide-upload-head small { color: var(--muted); font-size: 11px; line-height: 1.55; }
+.photo-guide-upload-head > em { padding: 7px 10px; color: #596256; background: #eef1eb; font-size: 11px; font-style: normal; font-weight: 700; white-space: nowrap; }
+.photo-guide-photo-types.complete .photo-guide-upload-head > em { color: #405143; background: rgba(255,255,255,.65); }
+.photo-guide-type-intro { margin: 17px 0 0; padding-top: 15px; border-top: 1px solid #d3d9d0; color: #4f584c; font-size: 13px; font-weight: 700; }
 .photo-guide-photo-types ul { margin: 13px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; list-style: none; }
 .photo-guide-photo-types li { min-width: 0; padding: 13px; display: grid; gap: 4px; background: #fffdf8; box-shadow: inset 0 0 0 1px #d9ddd5; }
 .photo-guide-photo-types li > span { color: #7d5b48; font-size: 10px; font-weight: 800; letter-spacing: .13em; }
 .photo-guide-photo-types li > b { font-size: 13px; line-height: 1.5; }
 .photo-guide-photo-types li > small { color: var(--muted); font-size: 11px; line-height: 1.5; }
-.photo-guide-photo-types > p { margin: 13px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
-.photo-task-guide ol { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; list-style: none; }
+.photo-guide-type-note { margin-top: 12px; display: block; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.photo-task-guide ol { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; list-style: none; }
 .photo-task-guide > ol > li { min-height: 82px; padding: 13px; display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; align-content: center; gap: 3px 9px; border: 1px solid #c8cec4; background: rgba(255,255,255,.62); }
 .photo-task-guide > ol > li > span { width: 30px; height: 30px; grid-row: 1 / span 2; display: grid; place-items: center; align-self: center; border-radius: 50%; color: white; background: #8f948a; font-size: 13px; font-weight: 700; }
 .photo-task-guide > ol > li > strong { font-size: 13px; line-height: 1.5; }
@@ -1780,8 +1789,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .appearance-policy-fieldset span { font-size: 15px; }
 .selected-period-panel > label > span { font-size: 14px; }
 .selected-period-panel > label > small { font-size: 12px; }
-.photo-reselect-notice strong { font-size: 14px; }
-.photo-reselect-notice span { font-size: 13px; }
+.photo-selection-feedback strong { font-size: 14px; }
+.photo-selection-feedback span { font-size: 13px; }
 
 .photo-guide-backdrop { padding: 20px; position: fixed; z-index: 220; inset: 0; display: grid; place-items: center; background: rgba(29,31,27,.76); }
 .photo-guide-dialog { width: min(620px, 100%); max-height: calc(100dvh - 40px); overflow: auto; color: var(--ink); background: #faf8f2; box-shadow: 0 24px 80px rgba(0,0,0,.28); }
@@ -1824,6 +1833,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .photo-task-guide ol { grid-template-columns: 1fr; }
   .photo-task-guide > ol > li { min-height: 70px; }
   .photo-guide-photo-types { padding: 15px; }
+  .photo-guide-upload-head { grid-template-columns: 36px minmax(0, 1fr); }
+  .photo-guide-upload-head > em { grid-column: 2; justify-self: start; }
   .photo-guide-photo-types ul { grid-template-columns: 1fr; }
   .photo-guide-photo-types li { grid-template-columns: 54px 1fr; align-items: center; gap: 2px 10px; }
   .photo-guide-photo-types li > span { grid-row: 1 / span 2; }
