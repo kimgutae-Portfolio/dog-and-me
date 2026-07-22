@@ -312,6 +312,14 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /disabled=\{saving \|\| !videoChecked/);
   assert.match(admin, /onChange=\{selectVideo\}/);
   assert.match(admin, /id="admin-photos"/);
+  assert.match(admin, /GPT制作用データをダウンロード/);
+  assert.match(admin, /storage\.from\("order-assets"\)\.download/);
+  assert.match(admin, /import\("fflate"\)/);
+  assert.match(admin, /photo-manifest\.json/);
+  assert.match(admin, /GPT_INSTRUCTIONS\.txt/);
+  assert.match(admin, /requested_gpt_output/);
+  assert.match(admin, /source_photos/);
+  assert.match(admin, /アカウントの連絡先を除いた分析・制作用JSON/);
   assert.match(admin, /admin_resolve_revision/);
   assert.match(admin, /admin_resolve_message/);
   assert.match(admin, /admin_register_video_asset/);

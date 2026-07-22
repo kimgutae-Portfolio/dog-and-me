@@ -15,6 +15,9 @@ Browser
   │    └─ Private Storage
   │
 手動制作
+  ├─ 写真分析と外見基準を運営承認
+  ├─ コンセプト選択後に外見テストを1件ずつ確認
+  ├─ 承認済みシーンだけで約1分に編集
   ├─ 管理者が完成前の確認動画をStorageへアップロード
   └─ 顧客確認後に完成動画を最終納品
 ```
@@ -58,6 +61,8 @@ awaiting_materials
 ```
 
 管理画面はテーブルを直接更新しません。`admin_update_order`、`admin_publish_concepts`、`admin_register_video_asset`、`admin_deliver_order`などのSecurity Definer RPCだけを使用します。RPCは管理者権限と許可された状態遷移を検証し、変更を`order_events`へ記録します。`concept_selected`はお客様の選択、`customer_review`は確認動画の公開、`quality_check`はお客様本人の`customer_approve_review`だけで進みます。制作以降は`paid`、現在版の同意記録、未対応修正0件をDBで確認します。
+
+手動制作の内部工程は、お客様に見せる注文状態とは分けて管理します。受付点検、写真分析、コンセプト2案、選択案の制作ガイド、4〜5秒の外見テスト、シーン別生成・検収、編集QCの順に進め、前工程が承認されるまで次工程を開きません。詳細な保存データ、画面順序、判定基準は [MANUAL_PRODUCTION_WORKFLOW.md](./MANUAL_PRODUCTION_WORKFLOW.md) を正とします。
 
 相談受付は思い出2〜6項目、各項目の写真1〜5枚、合計写真5枚以上をDBでも確認した後に確定します。思い出本文と写真は同じIDで紐付き、管理者が場面ごとに確認できます。先着10組の料金枠は`materials_submitted`になった注文だけが使用するため、アップロード途中の下書き注文は枠を消費しません。
 

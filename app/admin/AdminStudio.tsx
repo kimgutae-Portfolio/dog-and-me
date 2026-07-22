@@ -33,6 +33,23 @@ function safeExtension(file: File) {
   return file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
 }
 
+function safeArchiveSegment(value: string) {
+  return value
+    .normalize("NFKC")
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "-")
+    .replace(/\s+/g, "_")
+    .replace(/[-_]{2,}/g, "_")
+    .replace(/^[-_.]+|[-_.]+$/g, "")
+    .slice(0, 80) || "file";
+}
+
+function archivePhotoName(asset: OrderAsset, index: number, role: string) {
+  const extension = asset.original_filename.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "")
+    || (asset.mime_type === "image/jpeg" ? "jpg" : asset.mime_type.split("/").pop()?.replace(/[^a-z0-9]/g, "") || "bin");
+  const stem = asset.original_filename.replace(/\.[^.]+$/, "");
+  return `${String(index + 1).padStart(2, "0")}_${safeArchiveSegment(role)}_${safeArchiveSegment(stem)}.${extension}`;
+}
+
 function formatDate(value: string | null) {
   return value ? new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(new Date(value)) : "—";
 }
@@ -96,6 +113,8 @@ export function AdminStudio() {
   const [videoInputKey, setVideoInputKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exportingBundle, setExportingBundle] = useState(false);
+  const [exportProgress, setExportProgress] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
@@ -267,15 +286,47 @@ export function AdminStudio() {
     setSaving(false);
   };
 
-  const copyProductionJson = async () => {
-    if (!order) return;
-    if (!photoAnalysisApproved) {
-      setError("사진 분석에 대한 운영자 승인이 필요합니다. 승인 후 다음 제작 단계로 진행할 수 있습니다.");
-      return;
-    }
+  const buildProductionExport = () => {
+    if (!order) return null;
     const selectedConcept = concepts.find((concept) => concept.slot === order.selected_concept_slot) ?? null;
+    const archivePhotos = sourceAssets.map((asset, index) => {
+      const memory = memories.find((item) => item.id === asset.memory_id) ?? null;
+      const roles: string[] = [];
+      if (asset.id === productionFields.primaryFacePhotoId) roles.push("face_reference");
+      if (asset.id === productionFields.primaryBodyPhotoId) roles.push("body_reference");
+      if (asset.id === productionFields.sideTailPhotoId) roles.push("side_tail_reference");
+      if (productionFields.selectedAppearancePhotoIds.includes(asset.id)) roles.push("selected_appearance_reference");
+      if (memory) roles.push("memory_scene");
+      if (roles.length === 0) roles.push("additional_photo");
+      const archiveRole = memory ? `memory_${String(memory.sort_order).padStart(2, "0")}` : roles[0];
+      const archiveFilename = archivePhotoName(asset, index, archiveRole);
+      return {
+        asset,
+        archiveFilename,
+        archivePath: `photos/${archiveFilename}`,
+        roles,
+        memory,
+      };
+    });
+    const sourcePhotos = archivePhotos.map(({ asset, archiveFilename, archivePath, roles, memory }) => ({
+      asset_id: asset.id,
+      archive_filename: archiveFilename,
+      archive_path: archivePath,
+      original_filename: asset.original_filename,
+      mime_type: asset.mime_type,
+      file_size: asset.file_size,
+      roles,
+      memory: memory ? {
+        number: memory.sort_order,
+        title: memory.title,
+      } : null,
+    }));
     const productionData = {
+      schema_version: "wan-memory-production-export-1.0",
+      exported_at: new Date().toISOString(),
       production_ref: order.order_number,
+      privacy_notice: "Account email, phone number, postal address, and customer profile name are not included. Customer-written story text may still contain personal information and must be handled only for this order.",
+      workflow_stage: productionFields.photoAnalysisStatus === "approved" ? "photo_analysis_approved" : "photo_analysis_input",
       film: {
         purpose: order.purpose,
         duration_seconds: 60,
@@ -301,6 +352,7 @@ export function AdminStudio() {
         owner_locked_traits: productionFields.ownerLockedTraits,
         operator_approved_at: productionFields.photoAnalysisApprovedAt,
       },
+      source_photos: sourcePhotos,
       selected_concept: selectedConcept ? {
         slot: selectedConcept.slot,
         title: selectedConcept.title,
@@ -315,7 +367,9 @@ export function AdminStudio() {
         location: memory.location,
         description: memory.description,
         dog_behavior: memory.dog_behavior,
-        photos: sourceAssets.filter((asset) => asset.memory_id === memory.id).map((asset) => asset.original_filename),
+        photos: sourcePhotos
+          .filter((photo) => photo.memory?.number === memory.sort_order)
+          .map((photo) => ({ asset_id: photo.asset_id, archive_path: photo.archive_path, original_filename: photo.original_filename })),
       })),
       message_to_pet: order.message_to_pet,
       avoid_notes: order.avoid_notes,
@@ -326,12 +380,95 @@ export function AdminStudio() {
         external_ai_processing_allowed: Boolean(order.external_ai_consent_at),
       },
       additional_customer_requests: messages.filter((message) => message.sender_id === order.user_id).map((message) => message.body),
+      requested_gpt_output: {
+        current_stage: "Analyze the submitted photos and application only. Do not create concepts or Runway prompts yet.",
+        required_sections: [
+          "observed_facts",
+          "unknown_or_uncertain",
+          "photo_roles",
+          "representative_reference_photos",
+          "identity_profile",
+          "production_risks",
+          "customer_questions",
+          "can_proceed",
+          "people_photo_assessment"
+        ]
+      }
     };
+    const manifest = {
+      schema_version: "wan-memory-photo-manifest-1.0",
+      production_ref: order.order_number,
+      photo_count: sourcePhotos.length,
+      photos: sourcePhotos,
+    };
+    return { productionData, manifest, archivePhotos };
+  };
+
+  const copyProductionJson = async () => {
+    if (!order) return;
+    const exportData = buildProductionExport();
+    if (!exportData) return;
     try {
-      await navigator.clipboard.writeText(JSON.stringify(productionData, null, 2));
-      setNotice("個人連絡先を含まない制作用JSONをコピーしました。写真と一緒に制作相談へお使いください。");
+      await navigator.clipboard.writeText(JSON.stringify(exportData.productionData, null, 2));
+      setNotice("アカウントの連絡先を除いた分析・制作用JSONをコピーしました。");
     } catch {
       setError("制作用JSONをコピーできませんでした。ブラウザのクリップボード権限をご確認ください。");
+    }
+  };
+
+  const downloadProductionBundle = async () => {
+    const exportData = buildProductionExport();
+    if (!order || !exportData || sourceAssets.length === 0) return;
+    setExportingBundle(true);
+    setExportProgress(`写真を準備しています（0/${sourceAssets.length}）`);
+    setError("");
+    try {
+      const [{ strToU8, zip }, supabase] = await Promise.all([
+        import("fflate"),
+        Promise.resolve(getSupabaseBrowserClient()),
+      ]);
+      const root = safeArchiveSegment(order.order_number);
+      const files: Record<string, Uint8Array> = {
+        [`${root}/order.json`]: strToU8(JSON.stringify(exportData.productionData, null, 2)),
+        [`${root}/photo-manifest.json`]: strToU8(JSON.stringify(exportData.manifest, null, 2)),
+        [`${root}/GPT_INSTRUCTIONS.txt`]: strToU8([
+          "Attach order.json and every file in the photos folder to GPT.",
+          "Analyze only the application and photos at this stage.",
+          "Do not create concept proposals or Runway prompts yet.",
+          "Return the sections listed in requested_gpt_output inside order.json.",
+          "Use asset_id and archive_path when referring to each photo."
+        ].join("\n")),
+      };
+      for (let index = 0; index < exportData.archivePhotos.length; index += 1) {
+        const item = exportData.archivePhotos[index];
+        setExportProgress(`写真を準備しています（${index + 1}/${sourceAssets.length}）`);
+        const { data, error: downloadError } = await supabase.storage.from("order-assets").download(item.asset.storage_path);
+        if (downloadError || !data) throw new Error(`${item.asset.original_filename} download failed`, { cause: downloadError });
+        files[`${root}/${item.archivePath}`] = new Uint8Array(await data.arrayBuffer());
+      }
+      setExportProgress("ZIPファイルを作成しています…");
+      const archive = await new Promise<Uint8Array>((resolve, reject) => {
+        zip(files, { level: 0 }, (zipError, result) => {
+          if (zipError) reject(zipError);
+          else resolve(result);
+        });
+      });
+      const archiveBuffer = archive.buffer.slice(archive.byteOffset, archive.byteOffset + archive.byteLength) as ArrayBuffer;
+      const archiveUrl = URL.createObjectURL(new Blob([archiveBuffer], { type: "application/zip" }));
+      const link = document.createElement("a");
+      link.href = archiveUrl;
+      link.download = `${root}-GPT-production-data.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
+      setNotice(`制作用データをダウンロードしました。ZIPを展開し、order.jsonと写真${sourceAssets.length}枚をGPTへ添付してください。`);
+    } catch (bundleError) {
+      console.error(bundleError);
+      setError("制作用データをダウンロードできませんでした。通信状態を確認して、もう一度お試しください。");
+    } finally {
+      setExportProgress("");
+      setExportingBundle(false);
     }
   };
 
@@ -506,7 +643,7 @@ export function AdminStudio() {
 
             <section className="admin-card" id="admin-progress"><div className="card-head"><div><p className="eyebrow">PRODUCTION STATUS</p><h3>進行状況・入金・納期</h3></div><span>許可された次の工程だけを表示</span></div>{order.payment_status !== "paid" && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>入金確認前です。</strong><span>「入金確認済み」を一度保存するまで、映像制作・確認映像公開・納品には進めません。</span></aside>}{!consentCurrent && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>写真・人物の取り扱いに必要な同意記録が揃っていません。</strong><span>お客様が制作室で人物・未成年者の有無、写真使用権限、写っている人物の同意、外部制作サービスでの処理を確認するまで制作を開始できません。</span></aside>}{order.customer_approved_at && <aside className="admin-operation-note strong"><strong>お客様が確認映像を確定済みです。</strong><span>{formatDateTime(order.customer_approved_at)} · 承認した確認映像ID {order.customer_approved_review_asset_id}</span></aside>}<div className="admin-form-grid"><label><span>現在の状態</span><select value={status} onChange={(event) => setStatus(event.target.value as OrderStatus)}>{selectableStatuses.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label><span>入金状態</span><select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as MemoryOrder["payment_status"])}><option value="pending">ご案内前</option><option value="invoice_sent">お支払い待ち</option><option value="paid">入金確認済み</option><option value="refunded">返金済み</option></select></label><label><span>予定完成日</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label><label className="wide"><span>運営メモ（顧客には非表示）</span><textarea rows={3} value={adminNotes} onChange={(event) => setAdminNotes(event.target.value)} /></label></div><button className="button button-primary" type="button" disabled={saving} onClick={saveOrder}>進行状況を保存</button></section>
 
-            <section className="admin-card" id="admin-story"><div className="card-head"><div><p className="eyebrow">CUSTOMER STORY</p><h3>思い出と写真の組み合わせ</h3></div><button className="button button-outline admin-json-copy" type="button" disabled={saving || !photoAnalysisApproved} onClick={copyProductionJson}>制作用JSONをコピー</button></div><dl className="admin-story"><div><dt>映画の種類</dt><dd>{order.purpose}</dd></div><div><dt>犬種・年齢</dt><dd>{order.breed} · {order.age_text || "未入力"}</dd></div><div><dt>性格</dt><dd>{order.personality.join("、") || "未入力"}</dd></div><div><dt>思い出の項目</dt><dd>{memories.length ? `${memories.length}件` : "旧形式の受付"}</dd></div>{memories.length === 0 && <><div><dt>はじめて会った日</dt><dd>{order.first_meeting || "未入力"}</dd></div><div><dt>いちばんの思い出</dt><dd>{order.favorite_memory || "未入力"}</dd></div></>}<div><dt>伝えたい言葉</dt><dd>{order.message_to_pet || "未入力"}</dd></div><div><dt>入れたくないこと</dt><dd>{order.avoid_notes || "なし"}</dd></div><div><dt>人物の有無</dt><dd>{order.contains_people === true ? "あり" : order.contains_people === false ? "なし" : "未確認（制作不可）"}</dd></div><div><dt>人物の取り扱い</dt><dd>{peopleHandlingLabel(order.people_handling)}</dd></div><div><dt>未成年者</dt><dd>{order.contains_minors === true ? "あり" : order.contains_minors === false ? "なし" : "未確認（制作不可）"}</dd></div><div><dt>規約・Privacy同意</dt><dd>{order.consented_at ? `${formatDateTime(order.consented_at)} · 規約 ${order.terms_version} / Privacy ${order.privacy_version}` : "同意記録なし"}</dd></div><div><dt>写真使用権限</dt><dd>{order.photo_rights_consented_at ? `${formatDateTime(order.photo_rights_consented_at)} · ${order.photo_rights_consent_version}` : "同意記録なし"}</dd></div><div><dt>写っている人物の同意</dt><dd>{order.contains_people === false ? "対象外" : order.depicted_people_consented_at ? `${formatDateTime(order.depicted_people_consented_at)} · ${order.depicted_people_consent_version}` : "同意記録なし"}</dd></div><div><dt>未成年者の保護者同意</dt><dd>{order.contains_minors === false ? "対象外" : order.minor_guardian_consented_at ? `${formatDateTime(order.minor_guardian_consented_at)} · ${order.minor_guardian_consent_version}` : "同意記録なし"}</dd></div><div><dt>外部AI処理同意</dt><dd>{order.external_ai_consent_at ? `${formatDateTime(order.external_ai_consent_at)} · Notice ${order.ai_notice_version}` : "同意記録なし"}</dd></div></dl>{memories.length > 0 && <div className="admin-memory-list">{memories.map((memory) => { const memoryPhotos = sourceAssets.filter((asset) => asset.memory_id === memory.id); return <article key={memory.id}><header><span>MEMORY {String(memory.sort_order).padStart(2, "0")}</span><strong>{memory.title}</strong><small>{memoryPhotos.length}枚</small></header><dl><div><dt>時期</dt><dd>{memory.when_text || "指定なし"}</dd></div><div><dt>場所</dt><dd>{memory.location || "指定なし"}</dd></div><div><dt>詳しい内容</dt><dd>{memory.description}</dd></div><div><dt>表情・動き</dt><dd>{memory.dog_behavior}</dd></div></dl><div className="admin-memory-photos">{memoryPhotos.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${memory.title}の写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}</small></a>)}</div><p className="admin-memory-check">内容と写真が同じ場面か、服・場所・季節が一致するか確認してください。</p></article>; })}</div>}</section>
+            <section className="admin-card" id="admin-story"><div className="card-head"><div><p className="eyebrow">CUSTOMER STORY</p><h3>思い出と写真の組み合わせ</h3></div><div className="admin-export-actions"><button className="button button-outline admin-json-copy" type="button" disabled={saving || exportingBundle || sourceAssets.length === 0} onClick={copyProductionJson}>JSONだけコピー</button><button className="button button-primary admin-bundle-download" type="button" disabled={saving || exportingBundle || sourceAssets.length === 0} onClick={downloadProductionBundle}>{exportingBundle ? "準備中…" : "GPT制作用データをダウンロード"}</button></div></div>{exportProgress && <p className="admin-export-progress" role="status"><span aria-hidden="true" />{exportProgress}</p>}<aside className="admin-operation-note strong"><strong>写真分析の前から利用できます。</strong><span>注文JSON・写真対応表・元写真を1つのZIPにまとめます。ZIPを展開し、order.jsonとphotos内の写真をGPTへ添付してください。</span></aside><dl className="admin-story"><div><dt>映画の種類</dt><dd>{order.purpose}</dd></div><div><dt>犬種・年齢</dt><dd>{order.breed} · {order.age_text || "未入力"}</dd></div><div><dt>性格</dt><dd>{order.personality.join("、") || "未入力"}</dd></div><div><dt>思い出の項目</dt><dd>{memories.length ? `${memories.length}件` : "旧形式の受付"}</dd></div>{memories.length === 0 && <><div><dt>はじめて会った日</dt><dd>{order.first_meeting || "未入力"}</dd></div><div><dt>いちばんの思い出</dt><dd>{order.favorite_memory || "未入力"}</dd></div></>}<div><dt>伝えたい言葉</dt><dd>{order.message_to_pet || "未入力"}</dd></div><div><dt>入れたくないこと</dt><dd>{order.avoid_notes || "なし"}</dd></div><div><dt>人物の有無</dt><dd>{order.contains_people === true ? "あり" : order.contains_people === false ? "なし" : "未確認（制作不可）"}</dd></div><div><dt>人物の取り扱い</dt><dd>{peopleHandlingLabel(order.people_handling)}</dd></div><div><dt>未成年者</dt><dd>{order.contains_minors === true ? "あり" : order.contains_minors === false ? "なし" : "未確認（制作不可）"}</dd></div><div><dt>規約・Privacy同意</dt><dd>{order.consented_at ? `${formatDateTime(order.consented_at)} · 規約 ${order.terms_version} / Privacy ${order.privacy_version}` : "同意記録なし"}</dd></div><div><dt>写真使用権限</dt><dd>{order.photo_rights_consented_at ? `${formatDateTime(order.photo_rights_consented_at)} · ${order.photo_rights_consent_version}` : "同意記録なし"}</dd></div><div><dt>写っている人物の同意</dt><dd>{order.contains_people === false ? "対象外" : order.depicted_people_consented_at ? `${formatDateTime(order.depicted_people_consented_at)} · ${order.depicted_people_consent_version}` : "同意記録なし"}</dd></div><div><dt>未成年者の保護者同意</dt><dd>{order.contains_minors === false ? "対象外" : order.minor_guardian_consented_at ? `${formatDateTime(order.minor_guardian_consented_at)} · ${order.minor_guardian_consent_version}` : "同意記録なし"}</dd></div><div><dt>外部AI処理同意</dt><dd>{order.external_ai_consent_at ? `${formatDateTime(order.external_ai_consent_at)} · Notice ${order.ai_notice_version}` : "同意記録なし"}</dd></div></dl>{memories.length > 0 && <div className="admin-memory-list">{memories.map((memory) => { const memoryPhotos = sourceAssets.filter((asset) => asset.memory_id === memory.id); return <article key={memory.id}><header><span>MEMORY {String(memory.sort_order).padStart(2, "0")}</span><strong>{memory.title}</strong><small>{memoryPhotos.length}枚</small></header><dl><div><dt>時期</dt><dd>{memory.when_text || "指定なし"}</dd></div><div><dt>場所</dt><dd>{memory.location || "指定なし"}</dd></div><div><dt>詳しい内容</dt><dd>{memory.description}</dd></div><div><dt>表情・動き</dt><dd>{memory.dog_behavior}</dd></div></dl><div className="admin-memory-photos">{memoryPhotos.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${memory.title}の写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}</small></a>)}</div><p className="admin-memory-check">内容と写真が同じ場面か、服・場所・季節が一致するか確認してください。</p></article>; })}</div>}</section>
 
             <section className="admin-card" id="admin-photos"><div className="card-head"><div><p className="eyebrow">CUSTOMER PHOTOS</p><h3>写真一覧</h3></div><span>{sourceAssets.length}枚</span></div>{sourceAssets.length ? <><div className="admin-photo-grid">{sourceAssets.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" aria-label={`${asset.original_filename}を大きく表示`} key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${order.pet_name}ちゃんの提出写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}{asset.memory_id ? " · 思い出に紐付け済み" : " · 追加写真"}</small></a>)}</div><p className="admin-operation-note">思い出ごとの対応関係は、上の「思い出と写真の組み合わせ」で確認できます。</p></> : <p className="admin-empty-copy">写真はまだ登録されていません。思い出ごとに1〜5枚、合計5枚以上の提出が必要です。</p>}</section>
 
