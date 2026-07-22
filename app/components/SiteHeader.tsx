@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthNavLink } from "./AuthNavLink";
-import { APPLICATIONS_OPEN, PRELAUNCH_CTA, START_STORY_HREF } from "../lib/site";
+import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../lib/site";
+import { StartStoryLink } from "./StartStoryLink";
 
 export function SiteHeader() {
   return (
@@ -19,14 +20,14 @@ export function SiteHeader() {
           <AuthNavLink />
         </nav>
         {APPLICATIONS_OPEN ? (
-          <Link className="header-cta" href={START_STORY_HREF}>思い出をつくる <span aria-hidden="true">↗</span></Link>
+          <StartStoryLink className="header-cta">思い出をつくる <span aria-hidden="true">↗</span></StartStoryLink>
         ) : (
           <span className="header-cta header-prelaunch" aria-label={PRELAUNCH_CTA}>現在準備中</span>
         )}
         <details className="mobile-nav">
           <summary aria-label="メニューを開閉"><span /><span /></summary>
           <nav aria-label="モバイルナビゲーション">
-            <Link href="/#memory-story">物語体験</Link><Link href="/film/momo-demo">完成デモ</Link><Link href="/#flow">制作の流れ</Link><Link href="/#plans">プラン</Link><Link href="/#faq">よくある質問</Link><AuthNavLink />{APPLICATIONS_OPEN ? <Link href={START_STORY_HREF}>思い出をつくる</Link> : <span className="mobile-prelaunch-link">お申し込み受付は準備中</span>}
+            <Link href="/#memory-story">物語体験</Link><Link href="/film/momo-demo">完成デモ</Link><Link href="/#flow">制作の流れ</Link><Link href="/#plans">プラン</Link><Link href="/#faq">よくある質問</Link><AuthNavLink />{APPLICATIONS_OPEN ? <StartStoryLink>思い出をつくる</StartStoryLink> : <span className="mobile-prelaunch-link">お申し込み受付は準備中</span>}
           </nav>
         </details>
       </div>

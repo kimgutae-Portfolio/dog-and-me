@@ -5,6 +5,7 @@ import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
 import { MobileStickyCta } from "./components/MobileStickyCta";
+import { StartStoryLink } from "./components/StartStoryLink";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 import {
   APPLICATIONS_OPEN,
@@ -13,7 +14,6 @@ import {
   PRELAUNCH_TITLE,
   SITE_DESCRIPTION,
   SITE_NAME,
-  START_STORY_HREF,
   SUPPORT_EMAIL,
 } from "./lib/site";
 import { getRequestOrigin } from "./lib/site-server";
@@ -124,9 +124,9 @@ export default async function Home() {
           </p>
           <div className="hero-actions">
             {APPLICATIONS_OPEN ? (
-              <Link className="button button-primary" href={START_STORY_HREF}>
+              <StartStoryLink className="button button-primary">
                 思い出をつくる <span aria-hidden="true">→</span>
-              </Link>
+              </StartStoryLink>
             ) : (
               <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
             )}
@@ -363,7 +363,7 @@ export default async function Home() {
           <h2>{APPLICATIONS_OPEN ? <>その子のことを、<br />ゆっくり聞かせてください。</> : <>ただいま、正式公開の<br />準備を進めています。</>}</h2>
           <p>{APPLICATIONS_OPEN ? `先着${MEMORY_FILM_PRICING.launchLimit}組は ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。入力内容はこの端末に自動で保存されます。` : PRELAUNCH_COPY}</p>
           {APPLICATIONS_OPEN ? (
-            <Link className="button button-cream" href={START_STORY_HREF}>思い出づくりを始める <span aria-hidden="true">→</span></Link>
+            <StartStoryLink className="button button-cream">思い出づくりを始める <span aria-hidden="true">→</span></StartStoryLink>
           ) : (
             <span className="button button-prelaunch button-prelaunch-light" aria-disabled="true">{PRELAUNCH_CTA}</span>
           )}

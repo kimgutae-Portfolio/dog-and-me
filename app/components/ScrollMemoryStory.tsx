@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { APPLICATIONS_OPEN, PRELAUNCH_CTA, START_STORY_HREF } from "../lib/site";
+import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../lib/site";
+import { StartStoryLink } from "./StartStoryLink";
 
 const chapters = [
   {
@@ -195,9 +195,9 @@ export function ScrollMemoryStory() {
             <p className="story-body">{chapter.copy}</p>
             {active === chapters.length - 1 && (
               APPLICATIONS_OPEN ? (
-                <Link className="button button-cream story-cta" href={START_STORY_HREF}>
+                <StartStoryLink className="button button-cream story-cta">
                   うちの子の物語をつくる <span aria-hidden="true">→</span>
-                </Link>
+                </StartStoryLink>
               ) : (
                 <span className="button button-prelaunch button-prelaunch-light story-cta" aria-disabled="true">{PRELAUNCH_CTA}</span>
               )

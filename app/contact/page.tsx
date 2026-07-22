@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "../components/InfoPage";
-import { START_STORY_HREF, SUPPORT_EMAIL } from "../lib/site";
+import { StartStoryLink } from "../components/StartStoryLink";
+import { SUPPORT_EMAIL } from "../lib/site";
 
 export const metadata: Metadata = {
   title: "お問い合わせ",
@@ -15,7 +16,7 @@ export default function ContactPage() {
       <section>
         <h2>メモリーフィルムのお申し込み</h2>
         <p>現在、初期10組限定のモニター価格でご相談を受け付けています。愛犬のことや残したい思い出をフォームからゆっくりお聞かせください。</p>
-        <Link className="button button-primary" href={START_STORY_HREF}>思い出づくりを始める →</Link>
+        <StartStoryLink className="button button-primary">思い出づくりを始める →</StartStoryLink>
       </section>
       <section>
         <h2>すでにご登録済みの方</h2>

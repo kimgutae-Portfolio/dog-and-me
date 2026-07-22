@@ -88,7 +88,9 @@ export function AuthPanel() {
     }
   };
 
-  if (loading) return <div className="wizard-loading">制作室への入口を準備しています…</div>;
+  if (loading || (user && !searchParams.get("confirmed"))) {
+    return <div className="wizard-loading">思い出づくりを準備しています…</div>;
+  }
 
   if (user && searchParams.get("confirmed")) {
     const registeredPetName = profile?.primary_pet_name || user.user_metadata?.pet_name;

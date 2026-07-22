@@ -210,6 +210,8 @@ export function StoryWizard() {
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const photoPreviewDialogRef = useRef<HTMLElement>(null);
   const photoGuideDialogRef = useRef<HTMLElement>(null);
+  const photoUploadTriggerRef = useRef<HTMLLabelElement>(null);
+  const photoGuideFocusTargetRef = useRef<"previous" | "upload">("previous");
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?mode=signup&next=/story");
@@ -304,6 +306,7 @@ export function StoryWizard() {
     if (!photoGuideOpen) return;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = photoGuideDialogRef.current;
+    const uploadTrigger = photoUploadTriggerRef.current;
     dialog?.querySelector<HTMLButtonElement>("button")?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -322,7 +325,15 @@ export function StoryWizard() {
     window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      previousFocus?.focus();
+      if (photoGuideFocusTargetRef.current === "upload") {
+        window.requestAnimationFrame(() => {
+          uploadTrigger?.focus({ preventScroll: true });
+          document.getElementById("photo-upload-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          photoGuideFocusTargetRef.current = "previous";
+        });
+      } else {
+        previousFocus?.focus();
+      }
     };
   }, [photoGuideOpen]);
 
@@ -426,8 +437,13 @@ export function StoryWizard() {
     setPhotoGuideOpen(false);
   };
   const showPhotoGuide = () => {
+    photoGuideFocusTargetRef.current = "previous";
     setPhotoGuideStep(0);
     setPhotoGuideOpen(true);
+  };
+  const closePhotoGuideAndShowUploader = () => {
+    photoGuideFocusTargetRef.current = "upload";
+    closePhotoGuide();
   };
   const scrollToPhotoTask = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   const handleNextPhotoTask = () => {
@@ -515,6 +531,7 @@ export function StoryWizard() {
     setStepValidationAttempted(false);
     setStep(targetStep);
     if (targetStep === 2 && window.localStorage.getItem("wan-memory-photo-guide-seen-v1") !== "1") {
+      photoGuideFocusTargetRef.current = "upload";
       setPhotoGuideStep(0);
       setPhotoGuideOpen(true);
     }
@@ -693,13 +710,21 @@ export function StoryWizard() {
             <section className="photo-task-guide" aria-labelledby="photo-task-guide-title">
               <header><div><p className="eyebrow">EASY GUIDE</p><h2 id="photo-task-guide-title">この画面で行うこと</h2></div><button type="button" onClick={showPhotoGuide}>写真選びガイドを見る</button></header>
               <p className="photo-task-guide-lead">写真を追加したあと、同じ写真の中から<strong>「お顔」と「全身」の基準を1枚ずつ</strong>選びます。</p>
+              <div className="photo-guide-photo-types">
+                <strong>この3種類が入るように選ぶと安心です</strong>
+                <ul>
+                  <li><span>FACE</span><b>お顔がよく分かる</b><small>目・鼻・口元が鮮明</small></li>
+                  <li><span>BODY</span><b>立っている全身</b><small>頭から足先まで見える</small></li>
+                  <li><span>SIDE</span><b>横向き・しっぽ</b><small>体型が分かる・任意</small></li>
+                </ul>
+                <p>上の写真を含めて、合計{MIN_TOTAL_PHOTOS}枚以上・最大{MAX_TOTAL_PHOTOS}枚までお送りいただけます。</p>
+              </div>
               <ol>{photoGuideItems.map((item, index) => <li className={item.complete ? "complete" : ""} key={item.label}><span aria-hidden="true">{item.complete ? "✓" : index + 1}</span><strong>{item.label}</strong><small>{item.complete ? "完了" : index === photoGuideItems.findIndex((entry) => !entry.complete) ? "次に行います" : "未完了"}</small></li>)}</ol>
               <button className="photo-next-task" type="button" onClick={handleNextPhotoTask}>{nextPhotoTaskLabel}<span aria-hidden="true">→</span></button>
             </section>
-            <section className="photo-needs-card"><h2>ご用意いただきたい写真</h2><ul><li>お顔がよく分かる写真</li><li>立っている全身写真</li><li>横向きとしっぽが分かる写真（任意）</li></ul><p>合計{MIN_TOTAL_PHOTOS}枚以上、最大{MAX_TOTAL_PHOTOS}枚までお預かりします。</p></section>
             <div className="shared-photo-upload" id="photo-upload-section">
               <input id="shared-photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={handlePhotos} />
-              <label htmlFor="shared-photo-input"><span className="upload-step-label">1. まずここをタップ</span><span className="upload-mark" aria-hidden="true">＋</span><strong>{photoFiles.length ? "写真を追加する" : "スマートフォンから写真を選ぶ"} <em>必須</em></strong><small>一度に複数選べます · JPG・PNG・HEIC・WebP</small></label>
+              <label htmlFor="shared-photo-input" ref={photoUploadTriggerRef} tabIndex={-1}><span className="upload-step-label">1. まずここをタップ</span><span className="upload-mark" aria-hidden="true">＋</span><strong>{photoFiles.length ? "写真を追加する" : "スマートフォンから写真を選ぶ"} <em>必須</em></strong><small>一度に複数選べます · JPG・PNG・HEIC・WebP</small></label>
             </div>
             <div className="upload-count" role="status" aria-live="polite"><strong>{photoFiles.length} / {MIN_TOTAL_PHOTOS}枚以上</strong><span>{photoFiles.length >= MIN_TOTAL_PHOTOS ? "必要な枚数が揃いました。" : `あと${MIN_TOTAL_PHOTOS - photoFiles.length}枚必要です。`}</span></div>
             {photoSelectionNotice && <aside className="photo-reselect-notice" role="status"><strong>写真の選択を更新しました。</strong><span>{photoSelectionNotice}</span></aside>}
@@ -746,7 +771,7 @@ export function StoryWizard() {
         <header><span>写真選びガイド</span><button type="button" onClick={closePhotoGuide} aria-label="写真選びガイドを閉じる">×</button></header>
         <div className="photo-guide-progress" aria-label={`${photoGuideStep + 1} / ${photoGuideSlides.length}`}><span style={{ width: `${((photoGuideStep + 1) / photoGuideSlides.length) * 100}%` }} /></div>
         <div className="photo-guide-content"><span className="photo-guide-number">{photoGuideSlides[photoGuideStep].number}</span><p className="eyebrow">STEP {photoGuideStep + 1} / {photoGuideSlides.length}</p><h2 id="photo-guide-title">{photoGuideSlides[photoGuideStep].title}</h2><p id="photo-guide-description">{photoGuideSlides[photoGuideStep].copy}</p>{photoGuideStep === 1 && <aside>写真をアップロードしただけでは選択は完了していません。並んだ写真をもう一度タップして、基準写真を決めます。</aside>}</div>
-        <footer>{photoGuideStep > 0 ? <button type="button" className="button button-ghost" onClick={() => setPhotoGuideStep((current) => current - 1)}>← 戻る</button> : <span />}{photoGuideStep < photoGuideSlides.length - 1 ? <button type="button" className="button button-primary" onClick={() => setPhotoGuideStep((current) => current + 1)}>次を見る →</button> : <button type="button" className="button button-primary" onClick={closePhotoGuide}>分かりました。写真を選ぶ →</button>}</footer>
+        <footer>{photoGuideStep > 0 ? <button type="button" className="button button-ghost" onClick={() => setPhotoGuideStep((current) => current - 1)}>← 戻る</button> : <span />}{photoGuideStep < photoGuideSlides.length - 1 ? <button type="button" className="button button-primary" onClick={() => setPhotoGuideStep((current) => current + 1)}>次を見る →</button> : <button type="button" className="button button-primary" onClick={closePhotoGuideAndShowUploader}>分かりました。写真を選ぶ →</button>}</footer>
       </section></div>}
       {previewPhoto && <div className="photo-preview-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPreviewPhotoKey(""); }}><section className="photo-preview-dialog" role="dialog" aria-modal="true" aria-label="写真の拡大表示" ref={photoPreviewDialogRef}><button type="button" onClick={() => setPreviewPhotoKey("")} aria-label="拡大表示を閉じる">×</button><img src={previewPhoto.previewUrl} alt="選択した愛犬の写真を拡大表示" /><small>{previewPhoto.file.name}</small></section></div>}
     </main>

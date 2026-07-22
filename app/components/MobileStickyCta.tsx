@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { START_STORY_HREF } from "../lib/site";
+import { StartStoryLink } from "./StartStoryLink";
 
 export function MobileStickyCta() {
   const [visible, setVisible] = useState(false);
@@ -28,7 +27,7 @@ export function MobileStickyCta() {
   return (
     <aside className={visible ? "mobile-sticky-cta visible" : "mobile-sticky-cta"} aria-label="お申し込み">
       <div><p>MEMORY FILM</p><strong>先着10組 モニター受付中</strong></div>
-      <Link className="button button-cream" href={START_STORY_HREF}>思い出をつくる <span aria-hidden="true">→</span></Link>
+      <StartStoryLink className="button button-cream">思い出をつくる <span aria-hidden="true">→</span></StartStoryLink>
     </aside>
   );
 }

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
-import { APPLICATIONS_OPEN, PRELAUNCH_CTA, START_STORY_HREF } from "../lib/site";
-import Link from "next/link";
+import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../lib/site";
+import { StartStoryLink } from "./StartStoryLink";
 
 type Pricing = {
   current_price: number;
@@ -48,7 +48,7 @@ export function LivePriceCard() {
       <p className="monitor-price-note">{pricing.campaign_active ? `初期${pricing.launch_limit}組の受付終了後は、通常価格 ¥${formatYen(pricing.regular_price)}（税込）になります。` : "受付時に内容と納期をご確認いただき、制作を開始します。"}</p>
       <ul><li>映像コンセプト2案</li><li>映画タイプ別の共通エンディング</li><li>選んだ1案の詳細構成</li><li>約1分の実写風映像</li><li>BGM・短い字幕</li><li>修正2回</li><li>専用メモリーサイト</li></ul>
       {APPLICATIONS_OPEN ? (
-        <Link className="button button-primary" href={START_STORY_HREF}>{pricing.campaign_active ? "モニター価格で相談する" : "このプランで相談する"}</Link>
+        <StartStoryLink className="button button-primary">{pricing.campaign_active ? "モニター価格で相談する" : "このプランで相談する"}</StartStoryLink>
       ) : (
         <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
       )}

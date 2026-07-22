@@ -215,14 +215,18 @@ test("starter preview was removed", async () => {
 
 test("signup stores the dog name and the story form reuses it", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [authPanel, storyWizard, migration] = await Promise.all([
+  const [authPanel, storyWizard, migration, startStoryLink] = await Promise.all([
     readFile(new URL("app/auth/AuthPanel.tsx", root), "utf8"),
     readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
     readFile(new URL("supabase/migrations/202607160002_profile_pet_name.sql", root), "utf8"),
+    readFile(new URL("app/components/StartStoryLink.tsx", root), "utf8"),
   ]);
   assert.match(authPanel, /愛犬のお名前/);
   assert.match(authPanel, /pet_name: petName\.trim\(\)/);
   assert.match(authPanel, /requestedMode\(searchParams\.get\("mode"\)\)/);
+  assert.match(authPanel, /loading \|\| \(user && !searchParams\.get\("confirmed"\)\)/);
+  assert.match(startStoryLink, /user \? "\/story" : START_STORY_HREF/);
+  assert.match(startStoryLink, /if \(!loading\) return/);
   assert.match(storyWizard, /profile\?\.primary_pet_name/);
   assert.match(storyWizard, /petName: parsed\.petName\?\.trim\(\) \|\| preferredPetName/);
   assert.match(storyWizard, /\/auth\?mode=signup&next=\/story/);
@@ -235,7 +239,12 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(storyWizard, /写真選びガイドを見る/);
   assert.match(storyWizard, /写真をアップロードしただけでは選択は完了していません/);
   assert.match(storyWizard, /タップして選ぶ/);
+  assert.match(storyWizard, /この3種類が入るように選ぶと安心です/);
+  assert.match(storyWizard, /photo-guide-photo-types/);
+  assert.doesNotMatch(storyWizard, /photo-needs-card|ご用意いただきたい写真/);
   assert.match(storyWizard, /wan-memory-photo-guide-seen-v1/);
+  assert.match(storyWizard, /closePhotoGuideAndShowUploader/);
+  assert.match(storyWizard, /photoUploadTriggerRef/);
   assert.match(storyWizard, /未入力\$\{missingFields\.length\}項目を確認する/);
   assert.match(storyWizard, /onClick=\{\(\) => goToStep\(item\.step\)\}/);
   assert.doesNotMatch(storyWizard, /if \(step === 1 &&/);
@@ -269,6 +278,8 @@ test("includes mobile breathing room, sticky conversion action, and touch story 
   assert.match(css, /\.shell \{ width: calc\(100% - 40px\); \}/);
   assert.match(css, /\.mobile-sticky-cta\.visible/);
   assert.match(css, /focus-visible/);
+  assert.match(css, /\.photo-guide-photo-types/);
+  assert.doesNotMatch(css, /border-left:\s*[34]px/);
   assert.match(page, /MobileStickyCta/);
   assert.match(story, /touchstart/);
   assert.match(story, /moveToChapter\(next\)/);
