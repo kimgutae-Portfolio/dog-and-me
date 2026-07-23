@@ -19,7 +19,7 @@ import {
 import { getRequestOrigin } from "./lib/site-server";
 
 export const metadata: Metadata = {
-  title: "愛犬の思い出動画・メモリアルムービー制作",
+  title: "愛犬の思い出動画・メモリーフィルム制作",
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
 };
@@ -29,7 +29,7 @@ const homeFaqs = [
   ["モニター価格とは何ですか？", `サービス品質の確認と改善のため、初期${MEMORY_FILM_PRICING.launchLimit}組限定で ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）にて制作します。受付終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`],
   ["AI映像で顔が変わることはありますか？", "生成表現には外見の揺らぎが生じる可能性があります。そのため自動納品はせず、担当者の確認とお客様のシーン確認を必ず行います。"],
   ["映像コンセプト2案とは何ですか？", "同じ写真とエピソードから、物語の切り口や場面構成が異なる2案をご提案します。お好きな1案を選んでいただき、約1分の映像として詳しく仕上げます。"],
-  ["2案の最後もそれぞれ違いますか？", "途中の物語と場面構成は異なりますが、最後は映画の種類に合わせた共通エンディングです。『いまを残す』は家族と歩き続ける場面、『虹の橋メモリアル』は空へ続く光の道を進み、思い出の中でいつも家族とつながっている気持ちを表します。"],
+  ["2案の最後もそれぞれ違いますか？", "途中の物語や場面構成は異なりますが、最後は『いまを残す』共通エンディングです。家族を振り返り、いつもの道を並んで歩き続ける場面で結びます。"],
   ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
   ["写真や動画はAIの学習に使われますか？", "WAN MEMORYが、お預かりした写真やエピソードを独自のAIモデル学習、広告、ポートフォリオ公開に使用することはありません。制作の一部で外部の生成AI・映像制作サービスを利用する場合があり、外部サービスでのデータの取り扱いは利用するサービスの条件に基づきます。必要な内容をご案内し、同意を確認してから処理します。"],
   ["人と一緒に写った写真も提出できますか？", "はい。ご家族と一緒に写っている写真もお送りいただけます。人物が写っている場合は、愛犬だけを切り抜くか、お顔が分からない後ろ姿・手元・足元・シルエットとして表現します。人物のお顔をAIで生成・再現する制作は、現在行っていません。"],
@@ -67,7 +67,7 @@ export default async function Home() {
       "@type": "Service",
       "@id": `${origin}/#memory-film-service`,
       name: "愛犬メモリーフィルム制作",
-      serviceType: "愛犬の思い出動画・メモリアルムービー制作",
+      serviceType: "愛犬の思い出動画・メモリーフィルム制作",
       description: SITE_DESCRIPTION,
       url: `${origin}/#plans`,
       provider: { "@id": `${origin}/#organization` },
@@ -173,12 +173,12 @@ export default async function Home() {
         <div className="shell">
           <div className="section-heading-row">
             <div>
-              <p className="eyebrow">TWO FILM TYPES</p>
-              <h2>ふたつの始まり、ふたつの結び。</h2>
+              <p className="eyebrow">ONE MEMORY FILM</p>
+              <h2>いまを残す、一つのかたち。</h2>
             </div>
-            <p>最初に、その子との今に合う映画を選びます。</p>
+            <p>一緒に過ごしている今を、その子らしい約1分の映画にします。</p>
           </div>
-          <div className="purpose-grid">
+          <div className="purpose-grid single">
             <article className="purpose-card purpose-now">
               <span className="purpose-number">01</span>
               <div className="purpose-card-content">
@@ -186,15 +186,6 @@ export default async function Home() {
                 <h3>いつもの日々を、未来の宝物に。</h3>
                 <p className="purpose-description">散歩やお昼寝、家族を待つ後ろ姿。今を一緒に過ごしているその子の表情を映画にします。</p>
                 <div className="purpose-ending"><span>COMMON ENDING</span><strong>また明日も、いつもの道を。</strong><p>家族を振り返り、並んで歩き続けるエンディング。</p></div>
-              </div>
-            </article>
-            <article className="purpose-card purpose-thanks">
-              <span className="purpose-number">02</span>
-              <div className="purpose-card-content">
-                <p className="card-kicker">虹の橋メモリアル</p>
-                <h3>さよならよりも、ありがとうを。</h3>
-                <p className="purpose-description">先に旅立ったその子へ、悲しみだけではなく、一緒に過ごせた喜びと感謝を伝えます。</p>
-                <div className="purpose-ending"><span>COMMON ENDING</span><strong>ありがとう。これからも、思い出の中で一緒に。</strong><p>空へ続く光の道を歩き、家族を一度振り返る穏やかなエンディング。</p></div>
               </div>
             </article>
           </div>
@@ -248,10 +239,10 @@ export default async function Home() {
               </div>
               <div className="film-meta">
                 <div>
-                  <p>またね、ルーク</p>
-                  <span>Gentle memorial</span>
+                  <p>はじめての海</p>
+                  <span>Cinematic daily film</span>
                 </div>
-                <span>ラブラドール・14歳</span>
+                <span>ゴールデンレトリバー・5歳</span>
               </div>
             </article>
           </div>
@@ -284,7 +275,7 @@ export default async function Home() {
           </div>
           <ol className="process-list">
             {[
-              ["01", "会員登録して、映画の種類を選ぶ", "メールアドレスで専用制作室をつくり、『いまを残す』か『虹の橋メモリアル』を選びます。"],
+              ["01", "会員登録して、相談を始める", "メールアドレスで専用制作室をつくり、愛犬の基本情報から入力を始めます。"],
               ["02", "思い出と写真を預ける", "エピソードと写真を非公開領域へ送信します。HEIC写真は自動でJPGへ変換します。"],
               ["03", "素材確認を待つ", "担当者がその子らしさとご希望を確認します。写真は制作中も追加できます。"],
               ["04", "映像コンセプト2案を受け取る", "方向性の異なる2つの物語を制作室へお届けします。"],

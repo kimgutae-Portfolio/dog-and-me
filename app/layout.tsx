@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(origin),
     applicationName: SITE_NAME,
     title: {
-      default: "愛犬の思い出動画・メモリアルムービー制作｜WAN MEMORY",
+      default: "愛犬の思い出動画・メモリーフィルム制作｜WAN MEMORY",
       template: `%s｜${SITE_NAME}`,
     },
     description: SITE_DESCRIPTION,
@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: "愛犬の思い出動画・メモリアルムービー制作｜WAN MEMORY",
+      title: "愛犬の思い出動画・メモリーフィルム制作｜WAN MEMORY",
       description: SITE_DESCRIPTION,
       url: origin,
       siteName: SITE_NAME,
@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: "愛犬の思い出動画・メモリアルムービー制作｜WAN MEMORY",
+      title: "愛犬の思い出動画・メモリーフィルム制作｜WAN MEMORY",
       description: SITE_DESCRIPTION,
       images: [`${origin}/og.png`],
     },

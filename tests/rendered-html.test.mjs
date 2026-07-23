@@ -25,7 +25,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /一緒に過ごした時間を/);
   assert.match(html, /WAN MEMORY/);
   assert.match(html, /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/"/);
-  assert.match(html, /愛犬の思い出動画・メモリアルムービー制作/);
+  assert.match(html, /愛犬の思い出動画・メモリーフィルム制作/);
   assert.match(html, /application\/ld\+json/);
   assert.match(html, /"@type":"Service"/);
   assert.match(html, /"@type":"FAQPage"/);
@@ -57,8 +57,8 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /人物のお顔をAIで生成・再現する制作は、現在行っていません/);
   assert.match(html, /映像コンセプト2案/);
   assert.match(html, /いまを残す思い出フィルム/);
-  assert.match(html, /虹の橋メモリアル/);
-  assert.match(html, /ありがとう。これからも、思い出の中で一緒に/);
+  assert.match(html, /いまを残す、一つのかたち/);
+  assert.doesNotMatch(html, /虹の橋|メモリアル|Gentle memorial|先に旅立|空へ続く/);
   assert.match(html, /BGM・短い字幕/);
   assert.doesNotMatch(html, /少し先で、待っているね|ナレーション・字幕/);
   assert.match(html, /CUSTOMER SITE DEMO/);
@@ -231,6 +231,10 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(storyWizard, /petName: parsed\.petName\?\.trim\(\) \|\| preferredPetName/);
   assert.match(storyWizard, /\/auth\?mode=signup&next=\/story/);
   assert.match(storyWizard, /映像はBGMと短い字幕を中心に/);
+  assert.match(storyWizard, /const FIXED_FILM_PURPOSE: FilmPurpose = "いまを残す"/);
+  assert.match(storyWizard, /const steps = \["愛犬のこと", "お写真", "思い出", "映画の雰囲気", "確認"\]/);
+  assert.match(storyWizard, /purpose: FIXED_FILM_PURPOSE/);
+  assert.doesNotMatch(storyWizard, /filmPurposes|selectFilmPurpose|CHOOSE YOUR FILM|虹の橋|メモリアル/);
   assert.doesNotMatch(storyWizard, /<span>ナレーション<\/span>/);
   assert.match(storyWizard, /const missingFields = useMemo<MissingField\[\]>/);
   assert.match(storyWizard, /totalPhotoCount < MIN_TOTAL_PHOTOS/);
@@ -270,6 +274,7 @@ test("concept selection requires an explicit send and stays editable before prod
   assert.doesNotMatch(studio, /onClick=\{\(\) => selectConcept\(concept\.slot\)\}/);
   assert.match(css, /\.concept-receipt-backdrop/);
   assert.match(migration, /status in \('concepts_ready', 'concept_selected'\)/);
+  assert.match(migration, /purpose in \('いまを残す', '虹の橋メモリアル'\)/);
 });
 
 test("includes mobile breathing room, sticky conversion action, and touch story snapping", async () => {

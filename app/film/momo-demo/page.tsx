@@ -6,12 +6,12 @@ import { StartStoryLink } from "../../components/StartStoryLink";
 import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../../lib/site";
 
 export const metadata: Metadata = {
-  title: "愛犬メモリアルムービー完成例｜モモと歩いた季節",
+  title: "愛犬メモリーフィルム完成例｜モモと歩いた季節",
   description: "愛犬の写真とエピソードから制作する約1分の思い出動画と、家族専用メモリーサイトの完成イメージをご覧いただけます。",
   alternates: { canonical: "/film/momo-demo" },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "愛犬メモリアルムービー完成例｜モモと歩いた季節",
+    title: "愛犬メモリーフィルム完成例｜モモと歩いた季節",
     description: "写真の向こうにある時間まで、実写映画のような映像へ。WAN MEMORYの完成デモです。",
     url: "/film/momo-demo",
     siteName: "WAN MEMORY",
@@ -52,7 +52,7 @@ export default function MomoDemoPage() {
 
       <section className="memory-demo-film" data-memory-page data-memory-reveal>
         <div className="memory-demo-shell">
-          <div className="memory-demo-section-head"><div><p>01 / THE FILM</p><h2>何度でも、会いにいける映画。</h2></div><span>閲覧専用 · ダウンロード非対応</span></div>
+          <div className="memory-demo-section-head"><div><p>01 / THE FILM</p><h2>いつでも、思い出せる映画。</h2></div><span>閲覧専用 · ダウンロード非対応</span></div>
           <DemoFilmPlayer />
           <p className="demo-film-note">※ デモ用に画面遷移を再現しています。実際のお客様ページでは完成した動画を再生できますが、ダウンロード機能は提供しません。画面録画などを完全に防止するものではありません。</p>
         </div>

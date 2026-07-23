@@ -132,12 +132,12 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .section-heading-row h2, .pricing-heading h2, .film-heading h2, .process-head h2, .faq-section h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(34px, 3.5vw, 50px); font-weight: 400; letter-spacing: .06em; }
 .section-heading-row > p, .pricing-heading > p, .process-head > p { margin: 0; color: var(--muted); font-size: 13px; }
 .purpose-grid { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.purpose-grid.single { max-width: 720px; grid-template-columns: 1fr; }
 .purpose-card { min-height: 510px; padding: 30px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; color: white; background: #65715f; }
 .purpose-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 76% 20%, rgba(255,255,255,.14), transparent 24%), linear-gradient(155deg, transparent 36%, rgba(14,20,16,.58)); }
 .purpose-card > * { position: relative; z-index: 1; }
 .purpose-now { background: linear-gradient(155deg, #7f8d79, #485547); }
 .purpose-day { background: linear-gradient(155deg, #c7a36f, #7f5f46); }
-.purpose-thanks { background: linear-gradient(155deg, #8c7668, #423d3a); }
 .purpose-number { align-self: flex-end; font-size: 11px; letter-spacing: .15em; opacity: .68; }
 .card-kicker { margin: 0 0 16px; font-size: 11px; font-weight: 700; letter-spacing: .15em; }
 .purpose-card h3 { max-width: 280px; margin: 0 0 18px; font-family: var(--font-serif); font-size: 25px; font-weight: 400; line-height: 1.55; }
@@ -828,14 +828,12 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .film-type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .film-type-card { min-height: 440px; padding: 26px; position: relative; display: flex; flex-direction: column; border: 1px solid var(--line); background: rgba(255,255,255,.48); cursor: pointer; transition: border-color .25s ease, background .25s ease, transform .25s ease; }
 .film-type-card:hover { transform: translateY(-2px); border-color: rgba(157,92,62,.55); }
-.film-type-card.memorial { background: #eeebe5; }
 .film-type-card.selected { border-color: var(--rust); background: #f2e8dc; box-shadow: inset 0 0 0 1px var(--rust); }
 .film-type-card.selected .choice-check { color: white; border-color: var(--rust); background: var(--rust); }
 .film-type-number { margin-bottom: 31px; color: var(--rust); font-family: var(--font-serif); font-size: 14px; }
 .film-type-card > strong { padding-right: 30px; font-family: var(--font-serif); font-size: 20px; font-weight: 400; line-height: 1.55; }
 .film-type-card > p { margin: 14px 0 24px; color: var(--muted); font-size: 10px; line-height: 1.8; }
 .film-type-ending { margin-top: auto; padding: 20px; color: white; background: var(--forest); }
-.film-type-card.memorial .film-type-ending { background: #5a5049; }
 .film-type-ending small, .film-type-ending b, .film-type-ending span, .film-type-ending em { display: block; }
 .film-type-ending small { color: rgba(255,255,255,.43); font-size: 6px; font-weight: 700; letter-spacing: .16em; }
 .film-type-ending b { margin-top: 10px; font-family: var(--font-serif); font-size: 15px; font-weight: 400; }
@@ -1079,7 +1077,6 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .concept-option > i { width: 28px; height: 28px; position: absolute; right: 20px; top: 20px; display: grid; place-items: center; border: 1px solid #b9b4a9; border-radius: 50%; color: transparent; font-size: 9px; font-style: normal; }
 .concept-option.selected > i { color: white; border-color: var(--rust); background: var(--rust); }
 .common-ending-card { margin-top: 16px; padding: 24px 26px; display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 28px; border: 1px solid #c9b9a8; background: #eee6da; }
-.common-ending-card.memorial { border-color: #c8b8ae; background: linear-gradient(135deg, #ece4df, #e2d7cf); }
 .common-ending-card > span { color: var(--rust); font-size: 7px; font-weight: 700; letter-spacing: .18em; }
 .common-ending-card small, .common-ending-card strong { display: block; }
 .common-ending-card small { color: #8b8278; font-size: 7px; letter-spacing: .12em; }
