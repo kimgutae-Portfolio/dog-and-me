@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
+const disclosureSubject = encodeURIComponent("WAN MEMORY 特定商取引法に基づく表示事項の開示希望");
+
 export default function ContactPage() {
   return (
     <InfoPage eyebrow="CONTACT" title="お問い合わせ" lead="サービス内容のご質問から、制作中のご相談までお気軽にお問い合わせください。">
@@ -29,11 +31,10 @@ export default function ContactPage() {
         <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL} →</a>
       </section>
       <section>
-        <h2>電話番号の開示をご希望の方</h2>
-        <p>特定商取引法に基づく電話番号は、ご請求に応じて、お申し込みの意思決定に先立って遅滞なく開示します。下のメールから「電話番号の開示希望」とお送りください。</p>
-        <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}?subject=WAN%20MEMORY%20%E9%9B%BB%E8%A9%B1%E7%95%AA%E5%8F%B7%E3%81%AE%E9%96%8B%E7%A4%BA%E5%B8%8C%E6%9C%9B`}>メールで開示を請求する →</a>
+        <h2>販売事業者情報の開示をご希望の方</h2>
+        <p>販売事業者名、運営責任者名、所在地および電話番号は、ご請求に応じて、お申し込みの意思決定に先立って遅滞なく電子メールで開示します。</p>
+        <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}?subject=${disclosureSubject}`}>表示事項の開示を請求する →</a>
       </section>
-      <aside className="info-note"><strong>運営者情報</strong><p>販売事業者・運営責任者：金具泰<br />所在地：〒599-8272 大阪府堺市中区深井中町327-47</p></aside>
     </InfoPage>
   );
 }

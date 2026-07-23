@@ -547,6 +547,11 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .pending-order-submit span { color: var(--muted); font-size: 8px; line-height: 1.6; }
 .pending-order-submit .button { flex: 0 0 auto; }
 .message-thread { max-height: 270px; margin: 18px 0; overflow-y: auto; display: grid; gap: 10px; }
+.message-notification-note { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; padding: 14px; border-radius: 14px; background: #f3efe5; box-shadow: inset 0 0 0 1px rgba(48, 58, 49, .08); }
+.message-notification-note > span { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 50%; background: var(--forest); color: #fff; font-size: 13px; }
+.message-notification-note p { margin: 0; }
+.message-notification-note strong { display: block; color: var(--ink); font-size: 10px; line-height: 1.65; }
+.message-notification-note small { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; line-height: 1.75; }
 .message-thread article { padding: 12px; background: #ebe7dc; }
 .message-thread article.mine { margin-left: 28px; background: #e1e8de; }
 .message-thread article small { color: #8b877d; font-size: 7px; }

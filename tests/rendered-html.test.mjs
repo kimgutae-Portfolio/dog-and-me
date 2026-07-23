@@ -131,11 +131,13 @@ test("server-renders public support and legal pages", async () => {
 
   const legalResponse = await render("/legal");
   const legalHtml = await legalResponse.text();
-  assert.match(legalHtml, /金具泰/);
-  assert.match(legalHtml, /〒599-8272 大阪府堺市中区深井中町327-47/);
-  assert.match(legalHtml, /お申し込みの意思決定に先立って遅滞なく開示/);
+  assert.doesNotMatch(legalHtml, /<dt>販売事業者<\/dt><dd>/);
+  assert.doesNotMatch(legalHtml, /〒\d{3}-\d{4}/);
+  assert.match(legalHtml, /販売事業者名、運営責任者名、所在地および電話番号/);
+  assert.match(legalHtml, /お申し込みの意思決定に先立って遅滞なく電子メールで開示/);
   assert.doesNotMatch(legalHtml, /href="tel:/);
-  assert.match(legalHtml, /クレジットカード決済（Stripe）/);
+  assert.match(legalHtml, /送信時点では料金は発生しません/);
+  assert.match(legalHtml, /クレジットカード（Stripe）/);
   assert.doesNotMatch(legalHtml, /正式な個人事業者情報.*掲載/);
 
   const contactResponse = await render("/contact");
@@ -143,8 +145,9 @@ test("server-renders public support and legal pages", async () => {
   assert.match(contactHtml, /info@wanmemory\.com/);
   assert.match(contactHtml, /mailto:info@wanmemory\.com/);
   assert.doesNotMatch(contactHtml, /ggutae0@gmail\.com/);
-  assert.match(contactHtml, /電話番号の開示をご希望の方/);
-  assert.match(contactHtml, /メールで開示を請求する/);
+  assert.doesNotMatch(contactHtml, /〒\d{3}-\d{4}/);
+  assert.match(contactHtml, /販売事業者情報の開示をご希望の方/);
+  assert.match(contactHtml, /表示事項の開示を請求する/);
   assert.doesNotMatch(contactHtml, /href="tel:/);
 });
 
@@ -564,4 +567,28 @@ test("loads Vercel Web Analytics from the root layout", async () => {
   assert.match(layout, /from "@vercel\/analytics\/next"/);
   assert.match(layout, /<Analytics \/>/);
   assert.ok(JSON.parse(packageSource).dependencies["@vercel/analytics"]);
+});
+
+test("emails customers only when an administrator sends a studio message", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [admin, studio, route, notification, envExample] = await Promise.all([
+    readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    readFile(new URL("app/api/admin/messages/route.ts", root), "utf8"),
+    readFile(new URL("app/lib/email/messageNotification.ts", root), "utf8"),
+    readFile(new URL(".env.example", root), "utf8"),
+  ]);
+
+  assert.ok(admin.includes('fetch("/api/admin/messages"'));
+  assert.match(route, /admin_send_message/);
+  assert.match(route, /sendCustomerMessageNotification/);
+  assert.ok(route.includes("/studio?order="));
+  assert.ok(route.includes("#messages"));
+  assert.match(notification, /内容はメールには記載していません/);
+  assert.match(studio, /担当者からの確認やお願いはこちらに届きます/);
+  assert.match(studio, /ご登録のメールアドレスにもお知らせします/);
+  assert.doesNotMatch(notification, /p_body|messageBody/);
+  assert.doesNotMatch(studio, /sendCustomerMessageNotification|\/api\/admin\/messages/);
+  assert.match(envExample, /RESEND_API_KEY=/);
+  assert.match(envExample, /RESEND_FROM_EMAIL=/);
 });

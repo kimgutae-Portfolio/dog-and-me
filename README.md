@@ -58,6 +58,9 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 CRON_SECRET=
+RESEND_API_KEY=
+RESEND_FROM_EMAIL="WAN MEMORY <info@wanmemory.com>"
+SITE_ORIGIN=https://www.wanmemory.com
 ```
 
 `supabase/migrations`をファイル名順に適用すると、テーブル、RLS、注文作成RPC、private bucket、人物写真を含む同意証跡、承認・決済ゲートが作成されます。`202607210002_operations_lockdown.sql`は互換用の空マイグレーションで、旧管理画面を先にロックしません。
@@ -79,11 +82,13 @@ select public.bootstrap_first_admin('owner@example.com');
 
 VercelのCronは毎日03:00（JST）に未完了相談を整理します。`SUPABASE_SERVICE_ROLE_KEY`と十分に長い`CRON_SECRET`はVercelのサーバー環境変数にのみ登録し、`NEXT_PUBLIC_`を付けないでください。
 
+運営者が制作管理画面からメッセージを送ると、Resendを使ってお客様の登録メールアドレスへ通知します。メール本文には制作メッセージや写真の内容を載せず、ログインが必要な制作室へのリンクだけを送ります。お客様から運営者へのメッセージではメールを送信しません。`RESEND_API_KEY`はサーバー環境変数としてのみ登録してください。
+
 ## 1次運用で手動の部分
 
 - Runwayでの映像制作
 - 料金案内と入金確認
 - 完成映像の管理画面アップロード
-- メール通知
+- お客様から運営者へのメール通知
 
 Stripe決済とAI生成APIの自動化は、初期10件の実制作時間と原価を確認した後に接続します。

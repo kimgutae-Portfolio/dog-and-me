@@ -601,13 +601,29 @@ export function AdminStudio() {
     const form = new FormData(event.currentTarget);
     const body = String(form.get("body") || "").trim();
     if (!body) return;
-    const { error: messageError } = await getSupabaseBrowserClient().rpc("admin_send_message", { p_order_id: order.id, p_body: body });
-    if (messageError) setError("メッセージを送信できませんでした。");
-    else {
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const response = await fetch("/api/admin/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionData.session?.access_token ?? ""}`,
+      },
+      body: JSON.stringify({ orderId: order.id, body }),
+    });
+    const result = await response.json().catch(() => null) as { saved?: boolean; notificationSent?: boolean } | null;
+    if (!response.ok || !result?.saved) {
+      setError("メッセージを送信できませんでした。");
+    } else {
       event.currentTarget.reset();
-      setNotice("お客様へメッセージを送りました。");
+      setNotice(result.notificationSent
+        ? "お客様へメッセージを送り、メールでお知らせしました。"
+        : "メッセージは保存しましたが、メール通知を送れませんでした。Resendの設定・送信履歴をご確認ください。");
       await loadDetails(order.id);
     }
+    setSaving(false);
   };
 
   if (authLoading || loading) return <div className="wizard-loading">運営画面を準備しています…</div>;
