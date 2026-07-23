@@ -247,6 +247,15 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .faq-list details[open] summary span { transform: rotate(45deg); }
 .faq-list details p { margin: -4px 36px 26px 0; color: var(--muted); font-size: 12px; line-height: 2; }
 
+.guide-section { background: #eee8dc; }
+.guide-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.guide-card-grid > a { min-height: 280px; padding: 30px; position: relative; display: flex; flex-direction: column; border: 1px solid rgba(37,37,31,.15); background: rgba(255,255,255,.32); transition: transform .25s ease, border-color .25s ease, background .25s ease; }
+.guide-card-grid > a:hover { transform: translateY(-3px); border-color: rgba(157,92,62,.5); background: rgba(255,255,255,.58); }
+.guide-card-grid span { color: var(--rust); font-family: var(--font-serif); font-size: 13px; }
+.guide-card-grid h3 { margin: 40px 0 14px; font-family: var(--font-serif); font-size: 22px; font-weight: 400; line-height: 1.55; }
+.guide-card-grid p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.9; }
+.guide-card-grid i { margin-top: auto; align-self: flex-end; color: var(--rust); font-size: 16px; font-style: normal; }
+
 .final-cta { padding: 118px 0; color: white; text-align: center; background: var(--rust); }
 .final-cta h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(42px, 5vw, 62px); font-weight: 400; line-height: 1.5; letter-spacing: .08em; }
 .final-cta p:not(.eyebrow) { margin: 24px 0 34px; color: rgba(255,255,255,.7); font-size: 12px; }
@@ -286,6 +295,43 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .info-note p { margin: 0; }
 .info-updated { margin: 0; color: var(--muted); font-size: 10px; }
 .info-actions { margin-top: 52px; display: flex; flex-wrap: wrap; gap: 12px; }
+.seo-breadcrumb { margin-top: -18px; display: flex; align-items: center; gap: 10px; color: #858277; font-size: 10px; line-height: 1.7; }
+.seo-breadcrumb a { color: var(--rust); text-decoration: underline; text-underline-offset: 3px; }
+.seo-lead-panel { padding: 28px 30px; border: 1px solid rgba(37,37,31,.15); background: #ece5d8; }
+.info-content > .seo-lead-panel p { color: #48483f; font-size: 13px; line-height: 2; }
+.seo-lead-panel ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 20px; list-style: none; }
+.seo-lead-panel li { position: relative; padding-left: 20px; }
+.seo-lead-panel li::before { content: "✓"; position: absolute; left: 0; color: var(--rust); font-size: 10px; font-weight: 700; }
+.seo-card-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.seo-card-grid article { padding: 20px; border: 1px solid var(--line); background: rgba(255,255,255,.32); }
+.seo-card-grid strong { display: block; margin-bottom: 9px; font-family: var(--font-serif); font-size: 15px; font-weight: 400; line-height: 1.6; }
+.info-content > section .seo-card-grid p { color: var(--muted); font-size: 10px; line-height: 1.8; }
+.seo-step-list, .seo-photo-list { margin: 18px 0 0; padding: 0; border-top: 1px solid var(--line); list-style: none; }
+.seo-step-list li, .seo-photo-list li { padding: 19px 0; display: grid; grid-template-columns: 48px 1fr; gap: 18px; border-bottom: 1px solid var(--line); }
+.seo-step-list li > span, .seo-photo-list li > span { color: var(--rust); font-family: var(--font-serif); font-size: 13px; }
+.seo-step-list strong, .seo-photo-list strong { display: block; margin-bottom: 5px; font-family: var(--font-serif); font-size: 16px; font-weight: 400; }
+.info-content > section .seo-step-list p, .info-content > section .seo-photo-list p { color: var(--muted); font-size: 11px; line-height: 1.85; }
+.seo-faq { border-top: 1px solid var(--line); }
+.seo-faq h2 { padding-top: 34px; }
+.seo-faq details { border-bottom: 1px solid var(--line); }
+.seo-faq summary { min-height: 64px; padding: 15px 0; display: flex; align-items: center; justify-content: space-between; gap: 24px; cursor: pointer; font-size: 12px; font-weight: 700; line-height: 1.7; list-style: none; }
+.seo-faq summary::-webkit-details-marker { display: none; }
+.seo-faq summary span { color: var(--rust); transition: transform .2s ease; }
+.seo-faq details[open] summary span { transform: rotate(45deg); }
+.info-content > .seo-faq details p { padding: 0 32px 20px 0; color: var(--muted); font-size: 11px; }
+.seo-cta { padding: 36px; color: white; background: var(--forest); }
+.seo-cta > p { margin: 0 0 10px; color: rgba(255,255,255,.58); font-size: 10px; line-height: 1.8; }
+.seo-cta h2 { margin: 0; font-family: var(--font-serif); font-size: 25px; font-weight: 400; line-height: 1.55; }
+.seo-cta > div { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; }
+.seo-cta .button-outline { color: white; border-color: rgba(255,255,255,.55); }
+.seo-cta .button-outline:hover { color: var(--ink); background: white; }
+.seo-guide-links { margin-top: 16px; padding-top: 34px; border-top: 1px solid var(--line); }
+.seo-guide-links > p { margin: 0 0 14px; color: var(--rust); font-size: 8px; font-weight: 700; letter-spacing: .18em; }
+.seo-guide-links > div { display: grid; gap: 8px; }
+.seo-guide-links a { min-height: 88px; padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: center; gap: 5px 20px; border: 1px solid var(--line); background: rgba(255,255,255,.25); }
+.seo-guide-links a span { font-family: var(--font-serif); font-size: 15px; }
+.seo-guide-links a small { grid-column: 1; color: var(--muted); font-size: 9px; line-height: 1.7; }
+.seo-guide-links a i { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--rust); font-style: normal; }
 .mobile-sticky-cta { display: none; }
 
 /* Customer memory site demo */
@@ -1472,6 +1518,26 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .info-title h1 { font-size: 37px; }
   .info-title > p:not(.eyebrow), .info-content > section p, .info-content > section li, .legal-table dt, .legal-table dd { font-size: 13px; line-height: 1.9; }
   .info-content { gap: 38px; }
+  .guide-card-grid { grid-template-columns: 1fr; }
+  .guide-card-grid > a { min-height: 220px; padding: 24px; }
+  .guide-card-grid h3 { margin-top: 28px; font-size: 21px; }
+  .guide-card-grid p { font-size: 12px; }
+  .seo-breadcrumb { margin-top: -10px; font-size: 11px; }
+  .seo-lead-panel { padding: 22px 20px; }
+  .info-content > .seo-lead-panel p { font-size: 14px; }
+  .seo-lead-panel ul, .seo-card-grid { grid-template-columns: 1fr; }
+  .seo-lead-panel li, .info-content > section .seo-card-grid p, .info-content > section .seo-step-list p, .info-content > section .seo-photo-list p, .info-content > .seo-faq details p { font-size: 12px; }
+  .seo-card-grid article { padding: 20px; }
+  .seo-card-grid strong, .seo-step-list strong, .seo-photo-list strong { font-size: 17px; }
+  .seo-faq summary { min-height: 70px; font-size: 13px; }
+  .seo-cta { padding: 28px 22px; }
+  .seo-cta > p { font-size: 11px; }
+  .seo-cta h2 { font-size: 23px; }
+  .seo-cta > div { align-items: stretch; flex-direction: column; }
+  .seo-cta .button { width: 100%; }
+  .seo-guide-links a { min-height: 100px; }
+  .seo-guide-links a span { font-size: 17px; }
+  .seo-guide-links a small { font-size: 11px; }
   .legal-table > div { grid-template-columns: 1fr; gap: 5px; }
   .info-actions { align-items: stretch; flex-direction: column; }
   .info-actions .button { width: 100%; }

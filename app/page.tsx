@@ -73,6 +73,14 @@ export default async function Home() {
       provider: { "@id": `${origin}/#organization` },
       areaServed: { "@type": "Country", name: "日本" },
       availableLanguage: "日本語",
+      image: `${origin}/og.png`,
+      offers: {
+        "@type": "Offer",
+        price: MEMORY_FILM_PRICING.launchPrice,
+        priceCurrency: "JPY",
+        availability: "https://schema.org/InStock",
+        url: `${origin}/#plans`,
+      },
     },
     {
       "@context": "https://schema.org",
@@ -326,6 +334,20 @@ export default async function Home() {
           </aside>
           <div className="pricing-grid">
             <LivePriceCard />
+          </div>
+        </div>
+      </section>
+
+      <section className="guide-section section" aria-labelledby="guide-title">
+        <div className="shell">
+          <div className="section-heading-row">
+            <div><p className="eyebrow">WAN MEMORY GUIDE</p><h2 id="guide-title">はじめての方へ。</h2></div>
+            <p>思い出動画の特徴と、写真の準備方法をご案内します。</p>
+          </div>
+          <div className="guide-card-grid">
+            <Link href="/aiken-omoide-douga"><span>01</span><h3>愛犬の思い出動画とは</h3><p>写真からどのように約1分の映像をつくるのか、制作方法と流れをご紹介します。</p><i aria-hidden="true">→</i></Link>
+            <Link href="/uchinoko-kinenbi-douga"><span>02</span><h3>うちの子記念日を動画に</h3><p>家族になった日や誕生日までの時間を、物語として残すヒントをまとめました。</p><i aria-hidden="true">→</i></Link>
+            <Link href="/dog-photo-guide"><span>03</span><h3>愛犬写真の選び方</h3><p>顔・全身・横向きなど、外見を保ちやすい基準写真の選び方をご案内します。</p><i aria-hidden="true">→</i></Link>
           </div>
         </div>
       </section>

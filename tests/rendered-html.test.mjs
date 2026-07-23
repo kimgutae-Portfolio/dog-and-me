@@ -87,7 +87,31 @@ test("serves crawl controls and an absolute public sitemap", async () => {
   for (const path of ["contact", "terms", "privacy", "legal"]) {
     assert.match(sitemap, new RegExp(`<loc>http:\\/\\/localhost\\/${path}<\\/loc>`));
   }
+  for (const path of ["aiken-omoide-douga", "uchinoko-kinenbi-douga", "dog-photo-guide"]) {
+    assert.match(sitemap, new RegExp(`<loc>http:\\/\\/localhost\\/${path}<\\/loc>`));
+  }
   assert.doesNotMatch(sitemap, /\/auth|\/story|\/studio|\/admin/);
+});
+
+test("renders focused Japanese SEO guide pages", async () => {
+  const expected = new Map([
+    ["/aiken-omoide-douga", ["愛犬の写真から、思い出動画をつくる", "愛犬の思い出動画を写真から制作"]],
+    ["/uchinoko-kinenbi-douga", ["うちの子記念日を、これからも見返せる映像に", "うちの子記念日の動画を愛犬の写真から制作"]],
+    ["/dog-photo-guide", ["愛犬の動画制作に適した、写真の選び方", "愛犬のAI動画制作に適した写真の選び方"]],
+  ]);
+
+  for (const [path, [heading, metadataTitle]] of expected) {
+    const response = await render(path);
+    assert.equal(response.status, 200, `${path} should render`);
+    const html = await response.text();
+    assert.match(html, new RegExp(heading));
+    assert.match(html, new RegExp(metadataTitle));
+    assert.match(html, new RegExp(`<link rel="canonical" href="https:\\/\\/www\\.wanmemory\\.com${path}`));
+    assert.match(html, /"@type":"WebPage"/);
+    assert.match(html, /"@type":"BreadcrumbList"/);
+    assert.match(html, /"@type":"FAQPage"/);
+    assert.doesNotMatch(html, /<meta name="robots" content="noindex/i);
+  }
 });
 
 test("server-renders public support and legal pages", async () => {

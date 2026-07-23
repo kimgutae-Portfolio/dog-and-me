@@ -14,8 +14,8 @@ export function SiteFooter() {
           <p>愛犬との時間を、一本の実写映画に。</p>
         </div>
         <div className="footer-links">
-          <div><p>SERVICE</p><Link href="/film/momo-demo">完成デモ</Link><Link href="/#flow">制作の流れ</Link><Link href="/#plans">プラン</Link>{APPLICATIONS_OPEN ? <StartStoryLink>お申し込み</StartStoryLink> : <span>お申し込み受付は準備中</span>}</div>
-          <div><p>SUPPORT</p><Link href="/#faq">よくある質問</Link><Link href="/studio">制作室</Link><Link href="/contact">お問い合わせ</Link><a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></div>
+          <div><p>SERVICE</p><Link href="/aiken-omoide-douga">愛犬の思い出動画</Link><Link href="/uchinoko-kinenbi-douga">うちの子記念日動画</Link><Link href="/film/momo-demo">完成デモ</Link><Link href="/#plans">プラン</Link>{APPLICATIONS_OPEN ? <StartStoryLink>お申し込み</StartStoryLink> : <span>お申し込み受付は準備中</span>}</div>
+          <div><p>SUPPORT</p><Link href="/dog-photo-guide">愛犬写真の選び方</Link><Link href="/#faq">よくある質問</Link><Link href="/studio">制作室</Link><Link href="/contact">お問い合わせ</Link><a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></div>
           <div><p>LEGAL</p><Link href="/terms">利用規約</Link><Link href="/privacy">プライバシーポリシー</Link><Link href="/legal">特定商取引法に基づく表記</Link></div>
         </div>
       </div>
