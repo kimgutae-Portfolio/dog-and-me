@@ -66,6 +66,7 @@ export function StudioClient() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [messageBody, setMessageBody] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [revisionCategory, setRevisionCategory] = useState("映像の動き");
   const [revisionBody, setRevisionBody] = useState("");
   const [approvalChecked, setApprovalChecked] = useState(false);
@@ -238,11 +239,21 @@ export function StudioClient() {
 
   const sendMessage = async (event: FormEvent) => {
     event.preventDefault();
-    if (!user || !order || !canOperateOrder || !messageBody.trim()) return;
-    const { error: messageError } = await getSupabaseBrowserClient().from("messages").insert({ order_id: order.id, sender_id: user.id, body: messageBody.trim() });
-    if (messageError) { setError("メッセージを送信できませんでした。"); return; }
-    setMessageBody("");
-    await loadDetails(order.id);
+    if (!user || !order || !canOperateOrder || !messageBody.trim() || sendingMessage) return;
+    setSendingMessage(true);
+    setError("");
+    try {
+      const { error: messageError } = await getSupabaseBrowserClient().from("messages").insert({ order_id: order.id, sender_id: user.id, body: messageBody.trim() });
+      if (messageError) {
+        setError("メッセージを送信できませんでした。");
+        return;
+      }
+      setMessageBody("");
+      setNotice("担当者へメッセージを送りました。");
+      await loadDetails(order.id);
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const requestRevision = async (event: FormEvent) => {
@@ -372,7 +383,7 @@ export function StudioClient() {
               {order.status === "awaiting_materials" && canOperateOrder ? <aside className="pending-order-submit"><div><strong>思い出と写真の入力が途中です。</strong><span>項目ごとの写真が分かるように、申込フォームから続きを入力してください。</span></div><Link className="button button-primary" href="/story">入力の続きを開く →</Link></aside> : canAddPhotos ? <label className={uploading ? "studio-upload-button disabled" : "studio-upload-button"}><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple disabled={uploading} onChange={addPhotos} /><span>＋ 補足写真を追加する</span><small>{uploading ? `送信中 ${uploadProgress}%` : "思い出に紐付かない追加資料としてお預かりします · 最大20枚"}</small></label> : <p className="readonly-preview-note">{readOnlyPreview ? "閲覧専用プレビューでは写真を追加できません。" : "停止中のご相談には写真を追加できません。"}</p>}
             </section>
 
-            <aside className="studio-card message-card" id="messages"><p className="eyebrow">MESSAGE</p><h2>担当者とのメッセージ</h2><div className="message-notification-note"><span aria-hidden="true">✉</span><p><strong>担当者からの確認やお願いはこちらに届きます。</strong><small>新しいメッセージは、ご登録のメールアドレスにもお知らせします。内容は制作室でご確認ください。</small></p></div><div className="message-thread">{messages.length ? messages.slice(-5).map((message) => { const fromCustomer = message.sender_id === order.user_id; return <article className={fromCustomer ? "mine" : ""} key={message.id}><small>{fromCustomer ? "あなた" : "担当ディレクター"} · {formatDate(message.created_at)}</small><p>{message.body}</p></article>; }) : <p className="message-empty">追加したい思い出やご質問をこちらから送れます。</p>}</div>{canOperateOrder ? <form className="message-form" onSubmit={sendMessage}><textarea value={messageBody} onChange={(event) => setMessageBody(event.target.value)} rows={3} maxLength={3000} placeholder="担当者へ伝えたいこと" /><button className="button button-outline" type="submit" disabled={!messageBody.trim()}>メッセージを送る</button></form> : <p className="readonly-preview-note">閲覧専用プレビューではメッセージを送信できません。</p>}</aside>
+            <aside className="studio-card message-card" id="messages"><p className="eyebrow">MESSAGE</p><h2>担当者とのメッセージ</h2><div className="message-notification-note"><span aria-hidden="true">✉</span><p><strong>担当者からの確認やお願いはこちらに届きます。</strong><small>新しいメッセージは、ご登録のメールアドレスにもお知らせします。内容は制作室でご確認ください。</small></p></div><div className="message-thread">{messages.length ? messages.slice(-5).map((message) => { const fromCustomer = message.sender_id === order.user_id; return <article className={fromCustomer ? "mine" : ""} key={message.id}><small>{fromCustomer ? "あなた" : "担当ディレクター"} · {formatDate(message.created_at)}</small><p>{message.body}</p></article>; }) : <p className="message-empty">追加したい思い出やご質問をこちらから送れます。</p>}</div>{canOperateOrder ? <form className="message-form" onSubmit={sendMessage}><textarea required value={messageBody} onChange={(event) => setMessageBody(event.target.value)} rows={3} maxLength={3000} placeholder="担当者へ伝えたいこと" /><button className="button button-outline message-send-button" type="submit" disabled={sendingMessage}>{sendingMessage ? "送信中…" : "メッセージを送る"}</button></form> : <p className="readonly-preview-note">閲覧専用プレビューではメッセージを送信できません。</p>}</aside>
           </div>
 
           {canOperateOrder ? <MemoryShareManager key={order.id} order={order} delivery={delivery} assets={assets} onChanged={() => loadDetails(order.id)} /> : delivery && <aside className="studio-card readonly-preview-note"><strong>専用メモリーサイト設定</strong><span>顧客画面では、納品後に写真アルバムと共有設定を変更できます。運営プレビューは閲覧専用です。</span></aside>}

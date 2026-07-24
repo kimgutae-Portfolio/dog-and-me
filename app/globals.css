@@ -559,6 +559,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .message-empty { color: var(--muted); font-size: 10px; line-height: 1.8; }
 .message-form { display: grid; gap: 10px; }
 .message-form textarea, .revision-form textarea, .revision-form select { width: 100%; padding: 12px; border: 1px solid var(--line); outline: 0; resize: vertical; background: rgba(255,255,255,.62); font-size: 10px; }
+.message-form .message-send-button:disabled { cursor: wait; }
 .delivery-card { margin-bottom: 22px; padding: 52px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 48px; align-items: center; color: white; background: #303a31; }
 .delivery-card h2 { margin: 0; font-family: var(--font-serif); font-size: 34px; font-weight: 400; }
 .delivery-card > div > p:not(.eyebrow) { margin: 20px 0 30px; color: rgba(255,255,255,.64); font-size: 10px; line-height: 1.9; }

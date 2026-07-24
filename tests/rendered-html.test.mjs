@@ -344,11 +344,16 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /disabled=\{saving \|\| !videoChecked/);
   assert.match(admin, /onChange=\{selectVideo\}/);
   assert.match(admin, /id="admin-photos"/);
-  assert.match(admin, /GPT制作用データをダウンロード/);
+  assert.match(admin, /GPT・Runway制作用データをダウンロード/);
   assert.match(admin, /storage\.from\("order-assets"\)\.download/);
   assert.match(admin, /import\("fflate"\)/);
   assert.match(admin, /photo-manifest\.json/);
   assert.match(admin, /GPT_INSTRUCTIONS\.txt/);
+  assert.match(admin, /createLandscape16x9/);
+  assert.match(admin, /canvas\.toBlob/);
+  assert.match(admin, /photos_16x9/);
+  assert.match(admin, /runway_16x9_archive_path/);
+  assert.match(admin, /1920x1080/);
   assert.match(admin, /requested_gpt_output/);
   assert.match(admin, /source_photos/);
   assert.match(admin, /アカウントの連絡先を除いた分析・制作用JSON/);
@@ -607,6 +612,9 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(notification, /内容はメールには記載していません/);
   assert.match(studio, /担当者からの確認やお願いはこちらに届きます/);
   assert.match(studio, /ご登録のメールアドレスにもお知らせします/);
+  assert.match(studio, /textarea required value=\{messageBody\}/);
+  assert.match(studio, /disabled=\{sendingMessage\}/);
+  assert.doesNotMatch(studio, /disabled=\{!messageBody\.trim\(\)\}/);
   assert.doesNotMatch(notification, /p_body|messageBody/);
   assert.doesNotMatch(studio, /sendCustomerMessageNotification|\/api\/admin\/messages/);
   assert.match(envExample, /RESEND_API_KEY=/);
