@@ -1,7 +1,7 @@
 "use client";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { OrderAsset } from "./types";
+import type { OrderAsset, StoryDraftAsset } from "./types";
 
 const HEIC_TYPES = new Set(["image/heic", "image/heif"]);
 const HEIC_EXTENSIONS = /\.(heic|heif)$/i;
@@ -13,6 +13,75 @@ async function normalizeImage(file: File): Promise<File> {
   const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
   const jpeg = Array.isArray(converted) ? converted[0] : converted;
   return new File([jpeg], file.name.replace(HEIC_EXTENSIONS, ".jpg"), { type: "image/jpeg" });
+}
+
+export type UploadedStoryDraftImage = {
+  asset: StoryDraftAsset;
+  file: File;
+};
+
+export async function uploadStoryDraftImage(
+  supabase: SupabaseClient,
+  userId: string,
+  draftId: string,
+  clientKey: string,
+  originalFile: File,
+  sortOrder: number,
+): Promise<UploadedStoryDraftImage> {
+  const file = await normalizeImage(originalFile);
+  const path = `${userId}/drafts/${draftId}/${clientKey}.${safeExtension(file)}`;
+
+  const { data: existing } = await supabase
+    .from("story_draft_assets")
+    .select("*")
+    .eq("draft_id", draftId)
+    .eq("client_key", clientKey)
+    .maybeSingle();
+
+  if (existing?.storage_path) {
+    await supabase.storage.from("order-assets").remove([existing.storage_path]);
+  }
+
+  const { data: metadata, error: metadataError } = await supabase
+    .from("story_draft_assets")
+    .upsert({
+      draft_id: draftId,
+      user_id: userId,
+      client_key: clientKey,
+      storage_path: path,
+      original_filename: file.name,
+      mime_type: file.type,
+      file_size: file.size,
+      sort_order: sortOrder,
+    }, { onConflict: "draft_id,client_key" })
+    .select("*")
+    .single();
+  if (metadataError) throw metadataError;
+
+  const { error: uploadError } = await supabase.storage
+    .from("order-assets")
+    .upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
+  if (uploadError) {
+    await supabase.from("story_draft_assets").delete().eq("id", metadata.id);
+    throw uploadError;
+  }
+
+  return { asset: metadata as StoryDraftAsset, file };
+}
+
+export async function deleteStoryDraftImage(
+  supabase: SupabaseClient,
+  asset: StoryDraftAsset,
+) {
+  const { error: storageError } = await supabase.storage
+    .from("order-assets")
+    .remove([asset.storage_path]);
+  if (storageError) throw storageError;
+  const { error: metadataError } = await supabase
+    .from("story_draft_assets")
+    .delete()
+    .eq("id", asset.id);
+  if (metadataError) throw metadataError;
 }
 
 function safeExtension(file: File) {

@@ -149,6 +149,30 @@ export type OrderAsset = {
   created_at: string;
 };
 
+export type StoryDraftRecord = {
+  id: string;
+  user_id: string;
+  pending_order_id: string | null;
+  data: Record<string, unknown>;
+  current_step: number;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StoryDraftAsset = {
+  id: string;
+  draft_id: string;
+  user_id: string;
+  client_key: string;
+  storage_path: string;
+  original_filename: string;
+  mime_type: string;
+  file_size: number;
+  sort_order: number;
+  created_at: string;
+};
+
 export type OrderMemory = {
   id: string;
   order_id: string;

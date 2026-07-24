@@ -18,6 +18,53 @@ export async function GET(request: NextRequest) {
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  const { data: expiredStoryDrafts, error: storyDraftError } = await supabase
+    .from("story_drafts")
+    .select("id,user_id")
+    .lte("expires_at", new Date().toISOString())
+    .limit(50);
+  if (storyDraftError) return NextResponse.json({ error: storyDraftError.message }, { status: 500 });
+
+  const expiredStoryDraftIds: string[] = [];
+  const storyDraftFailures: Array<{ draftId: string; reason: string }> = [];
+  for (const storyDraft of expiredStoryDrafts ?? []) {
+    const { data: draftAssets, error: draftAssetError } = await supabase
+      .from("story_draft_assets")
+      .select("storage_path")
+      .eq("draft_id", storyDraft.id);
+    if (draftAssetError) {
+      storyDraftFailures.push({ draftId: storyDraft.id, reason: draftAssetError.message });
+      continue;
+    }
+    const paths = (draftAssets ?? []).map((asset) => asset.storage_path);
+    let removablePaths = paths;
+    if (paths.length) {
+      const { data: promotedAssets, error: promotedAssetError } = await supabase
+        .from("assets")
+        .select("storage_path")
+        .in("storage_path", paths);
+      if (promotedAssetError) {
+        storyDraftFailures.push({ draftId: storyDraft.id, reason: promotedAssetError.message });
+        continue;
+      }
+      const promotedPaths = new Set((promotedAssets ?? []).map((asset) => asset.storage_path));
+      removablePaths = paths.filter((path) => !promotedPaths.has(path));
+    }
+    if (removablePaths.length) {
+      const { error: storageError } = await supabase.storage.from("order-assets").remove(removablePaths);
+      if (storageError) {
+        storyDraftFailures.push({ draftId: storyDraft.id, reason: storageError.message });
+        continue;
+      }
+    }
+    const { error: deleteError } = await supabase.from("story_drafts").delete().eq("id", storyDraft.id);
+    if (deleteError) {
+      storyDraftFailures.push({ draftId: storyDraft.id, reason: deleteError.message });
+      continue;
+    }
+    expiredStoryDraftIds.push(storyDraft.id);
+  }
+
   const { data: expiredOrders, error: orderError } = await supabase
     .from("orders")
     .select("id,user_id,status")
@@ -76,5 +123,12 @@ export async function GET(request: NextRequest) {
     expired.push(item.id);
   }
 
-  return NextResponse.json({ checked: expiredOrders?.length ?? 0, expired, failed });
+  return NextResponse.json({
+    storyDrafts: {
+      checked: expiredStoryDrafts?.length ?? 0,
+      expired: expiredStoryDraftIds,
+      failed: storyDraftFailures,
+    },
+    orders: { checked: expiredOrders?.length ?? 0, expired, failed },
+  });
 }

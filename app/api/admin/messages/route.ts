@@ -13,8 +13,7 @@ type MessageRequest = {
 export async function POST(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !publishableKey || !serviceRoleKey) {
+  if (!supabaseUrl || !publishableKey) {
     return NextResponse.json({ error: "server_not_configured" }, { status: 500 });
   }
 
@@ -57,12 +56,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: forbidden ? "forbidden" : "message_failed" }, { status: forbidden ? 403 : 400 });
   }
 
-  const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
   const [{ data: order }, { data: latestMessage }] = await Promise.all([
-    serviceClient.from("orders").select("user_id").eq("id", orderId).maybeSingle(),
-    serviceClient
+    userClient.from("orders").select("user_id").eq("id", orderId).maybeSingle(),
+    userClient
       .from("messages")
       .select("id")
       .eq("order_id", orderId)
@@ -76,7 +72,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ saved: true, notificationSent: false, notificationReason: "recipient_not_found" });
   }
 
-  const { data: customer } = await serviceClient
+  const { data: customer } = await userClient
     .from("profiles")
     .select("email")
     .eq("id", order.user_id)

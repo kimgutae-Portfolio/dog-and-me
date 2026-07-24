@@ -473,7 +473,7 @@ test("stores guided memory entries with one to five matching photos", async () =
   assert.match(story, /MAX_PHOTOS_PER_MEMORY = 5/);
   assert.match(story, /memory\.photoKeys\.length < MAX_PHOTOS_PER_MEMORY/);
   assert.match(story, /memories: \[createMemoryDraft\("memory-1"\), createMemoryDraft\("memory-2"\)\]/);
-  assert.match(story, /while \(parsedMemories\.length < MIN_MEMORY_COUNT\)/);
+  assert.match(story, /while \(memories\.length < MIN_MEMORY_COUNT\)/);
   assert.match(story, /className="memory-entry-toggle"/);
   assert.match(story, /aria-expanded=\{expanded\}/);
   assert.match(story, /前の思い出を完成すると開きます/);
@@ -530,15 +530,28 @@ test("stores appearance references and requires operator photo approval", async 
   assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 });
 
-test("keeps successful photo uploads and offers a focused retry", async () => {
+test("autosaves all five story steps and photos, then resumes the same account", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [uploads, story] = await Promise.all([
+  const [migration, uploads, story, cleanup] = await Promise.all([
+    readFile(new URL("supabase/migrations/202607240001_story_autosave.sql", root), "utf8"),
     readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
     readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
+    readFile(new URL("app/api/cron/cleanup-drafts/route.ts", root), "utf8"),
   ]);
-  assert.match(uploads, /existingByKey/);
-  assert.match(uploads, /OrderImageUploadError/);
-  assert.match(story, /だけ再試行する/);
+  assert.match(migration, /create table if not exists public\.story_drafts/);
+  assert.match(migration, /create table if not exists public\.story_draft_assets/);
+  assert.match(migration, /current_step smallint/);
+  assert.match(migration, /create or replace function public\.save_story_draft/);
+  assert.match(migration, /create or replace function public\.promote_story_draft_assets/);
+  assert.match(uploads, /uploadStoryDraftImage/);
+  assert.match(uploads, /story_draft_assets/);
+  assert.match(story, /wan-memory-story-draft-/);
+  assert.match(story, /p_current_step: step/);
+  assert.match(story, /前回の続きから再開しました/);
+  assert.match(story, /写真と入力内容を保存しました/);
+  assert.match(story, /photo\.status === "error"/);
+  assert.match(story, /再試行/);
+  assert.match(cleanup, /expiredStoryDrafts/);
 });
 
 test("keeps Vercel and Sites build outputs separate", async () => {
@@ -582,8 +595,13 @@ test("emails customers only when an administrator sends a studio message", async
   assert.ok(admin.includes('fetch("/api/admin/messages"'));
   assert.match(route, /admin_send_message/);
   assert.match(route, /sendCustomerMessageNotification/);
+  assert.doesNotMatch(route, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(route, /userClient\.from\("orders"\)/);
   assert.ok(route.includes("/studio?order="));
   assert.ok(route.includes("#messages"));
+  assert.match(admin, /admin-chat-panel/);
+  assert.match(admin, /prepareCustomerInputMessage/);
+  assert.match(admin, /value=\{messageDraft\}/);
   assert.match(notification, /内容はメールには記載していません/);
   assert.match(studio, /担当者からの確認やお願いはこちらに届きます/);
   assert.match(studio, /ご登録のメールアドレスにもお知らせします/);

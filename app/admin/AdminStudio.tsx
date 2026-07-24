@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
@@ -117,8 +117,11 @@ export function AdminStudio() {
   const [exportProgress, setExportProgress] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [messageDraft, setMessageDraft] = useState("");
   const [filter, setFilter] = useState("all");
   const [attentionByOrder, setAttentionByOrder] = useState<Record<string, AttentionCount>>({});
+  const messageComposerRef = useRef<HTMLTextAreaElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?next=/admin");
@@ -229,6 +232,13 @@ export function AdminStudio() {
     return () => window.clearTimeout(timer);
   }, [loadDetails, order]);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (messageListRef.current) messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [messages, selectedOrderId]);
+
   const hasAttention = (orderId: string) => {
     const count = attentionByOrder[orderId];
     return Boolean(count && count.messages + count.revisions > 0);
@@ -236,11 +246,16 @@ export function AdminStudio() {
   const visibleOrders = filter === "all" ? orders : filter === "attention" ? orders.filter((item) => hasAttention(item.id)) : orders.filter((item) => item.status === filter);
   const totalAttention = Object.values(attentionByOrder).reduce((total, count) => total + count.messages + count.revisions, 0);
 
+  const selectOrder = (orderId: string) => {
+    if (orderId !== selectedOrderId) setMessageDraft("");
+    setSelectedOrderId(orderId);
+  };
+
   const changeFilter = (nextFilter: string) => {
     setFilter(nextFilter);
     const nextOrders = nextFilter === "all" ? orders : nextFilter === "attention" ? orders.filter((item) => hasAttention(item.id)) : orders.filter((item) => item.status === nextFilter);
-    if (nextOrders.length && !nextOrders.some((item) => item.id === selectedOrderId)) setSelectedOrderId(nextOrders[0].id);
-    if (!nextOrders.length) setSelectedOrderId("");
+    if (nextOrders.length && !nextOrders.some((item) => item.id === selectedOrderId)) selectOrder(nextOrders[0].id);
+    if (!nextOrders.length) selectOrder("");
   };
 
   const saveOrder = async () => {
@@ -473,19 +488,42 @@ export function AdminStudio() {
   };
 
   const changePhotoAnalysisStatus = async (nextStatus: PhotoAnalysisStatus) => {
-    if (!order) return;
+    if (!order) return false;
     setSaving(true);
     setError("");
     const { error: statusError } = await getSupabaseBrowserClient().rpc("admin_set_photo_analysis_status", {
       p_order_id: order.id,
       p_status: nextStatus,
     });
-    if (statusError) setError("写真確認の状態を変更できませんでした。現在の状態と入力内容をご確認ください。");
-    else {
+    if (statusError) {
+      setError("写真確認の状態を変更できませんでした。現在の状態と入力内容をご確認ください。");
+      setSaving(false);
+      return false;
+    } else {
       setNotice(nextStatus === "approved" ? "写真と外見の基準を承認しました。次の制作工程へ進めます。" : "写真確認の状態を更新し、操作履歴へ記録しました。");
       await loadOrders();
     }
     setSaving(false);
+    return true;
+  };
+
+  const prepareCustomerInputMessage = async () => {
+    if (!order) return;
+    setMessageDraft((current) => current.trim() ? current : [
+      "お写真とお申し込み内容を確認しました。",
+      "制作を進める前に、追加で確認させていただきたいことがあります。",
+      "",
+      "【確認したい内容】",
+      "",
+    ].join("\n"));
+    window.requestAnimationFrame(() => {
+      if (window.matchMedia("(max-width: 1320px)").matches) {
+        document.getElementById("admin-message")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      messageComposerRef.current?.focus();
+    });
+    await changePhotoAnalysisStatus("needs_customer_input");
+    window.requestAnimationFrame(() => messageComposerRef.current?.focus());
   };
 
   const selectVideo = (event: ChangeEvent<HTMLInputElement>) => {
@@ -598,8 +636,7 @@ export function AdminStudio() {
   const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!order) return;
-    const form = new FormData(event.currentTarget);
-    const body = String(form.get("body") || "").trim();
+    const body = messageDraft.trim();
     if (!body) return;
     setSaving(true);
     setError("");
@@ -613,11 +650,13 @@ export function AdminStudio() {
       },
       body: JSON.stringify({ orderId: order.id, body }),
     });
-    const result = await response.json().catch(() => null) as { saved?: boolean; notificationSent?: boolean } | null;
+    const result = await response.json().catch(() => null) as { saved?: boolean; notificationSent?: boolean; error?: string; notificationReason?: string | null } | null;
     if (!response.ok || !result?.saved) {
-      setError("メッセージを送信できませんでした。");
+      setError(result?.error === "server_not_configured"
+        ? "メッセージ機能の接続設定を確認できませんでした。VercelのSupabase環境変数をご確認ください。"
+        : "メッセージを送信できませんでした。時間をおいてもう一度お試しください。");
     } else {
-      event.currentTarget.reset();
+      setMessageDraft("");
       setNotice(result.notificationSent
         ? "お客様へメッセージを送り、メールでお知らせしました。"
         : "メッセージは保存しましたが、メール通知を送れませんでした。Resendの設定・送信履歴をご確認ください。");
@@ -633,22 +672,24 @@ export function AdminStudio() {
     <main className="admin-page">
       <header className="admin-header"><Link className="brand" href="/"><span className="brand-mark">WM</span><span className="brand-type">WAN MEMORY<small>PRODUCTION ADMIN</small></span></Link><nav><Link href="/studio">顧客制作室</Link><span>{profile.full_name || profile.email}</span><button type="button" onClick={async () => { await signOut(); router.push("/"); }}>ログアウト</button></nav></header>
       <div className="admin-shell">
-        <aside className="admin-sidebar"><p className="eyebrow">ORDERS</p><h1>制作管理</h1>{totalAttention > 0 && <button type="button" className="admin-sidebar-total" onClick={() => changeFilter("attention")}><strong>{totalAttention}件</strong><span>対応が必要な連絡・修正</span></button>}<select aria-label="注文の状態で絞り込む" value={filter} onChange={(event) => changeFilter(event.target.value)}><option value="all">すべての注文</option><option value="attention">未対応あり（{totalAttention}件）</option>{statusOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select><label className="admin-mobile-order-picker"><span>対応する注文</span><select value={selectedOrderId} onChange={(event) => setSelectedOrderId(event.target.value)}>{visibleOrders.map((item) => { const attention = attentionByOrder[item.id]; const count = (attention?.messages ?? 0) + (attention?.revisions ?? 0); return <option value={item.id} key={item.id}>{count ? `● ${count}件 · ` : ""}{item.pet_name} · {ORDER_STATUS_LABELS[item.status]}</option>; })}</select></label><div className="admin-order-list">{visibleOrders.map((item) => { const attention = attentionByOrder[item.id]; const count = (attention?.messages ?? 0) + (attention?.revisions ?? 0); return <button type="button" className={item.id === selectedOrderId ? "active" : ""} onClick={() => setSelectedOrderId(item.id)} key={item.id}><span>{ORDER_STATUS_LABELS[item.status]}{count > 0 && <b className="admin-order-alert">未対応 {count}</b>}</span><strong>{item.pet_name}</strong><small>{item.order_number} · ¥{new Intl.NumberFormat("ja-JP").format(item.quoted_price)}</small></button>; })}</div></aside>
+        <aside className="admin-sidebar"><p className="eyebrow">ORDERS</p><h1>制作管理</h1>{totalAttention > 0 && <button type="button" className="admin-sidebar-total" onClick={() => changeFilter("attention")}><strong>{totalAttention}件</strong><span>対応が必要な連絡・修正</span></button>}<select aria-label="注文の状態で絞り込む" value={filter} onChange={(event) => changeFilter(event.target.value)}><option value="all">すべての注文</option><option value="attention">未対応あり（{totalAttention}件）</option>{statusOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select><label className="admin-mobile-order-picker"><span>対応する注文</span><select value={selectedOrderId} onChange={(event) => selectOrder(event.target.value)}>{visibleOrders.map((item) => { const attention = attentionByOrder[item.id]; const count = (attention?.messages ?? 0) + (attention?.revisions ?? 0); return <option value={item.id} key={item.id}>{count ? `● ${count}件 · ` : ""}{item.pet_name} · {ORDER_STATUS_LABELS[item.status]}</option>; })}</select></label><div className="admin-order-list">{visibleOrders.map((item) => { const attention = attentionByOrder[item.id]; const count = (attention?.messages ?? 0) + (attention?.revisions ?? 0); return <button type="button" className={item.id === selectedOrderId ? "active" : ""} onClick={() => selectOrder(item.id)} key={item.id}><span>{ORDER_STATUS_LABELS[item.status]}{count > 0 && <b className="admin-order-alert">未対応 {count}</b>}</span><strong>{item.pet_name}</strong><small>{item.order_number} · ¥{new Intl.NumberFormat("ja-JP").format(item.quoted_price)}</small></button>; })}</div></aside>
         <section className="admin-main">
           {notice && <p className="studio-alert" role="status">{notice}<button type="button" onClick={() => setNotice("")}>×</button></p>}
           {error && <p className="studio-alert error" role="alert">{error}<button type="button" onClick={() => setError("")}>×</button></p>}
           {!order ? <div className="admin-empty"><h2>注文はまだありません。</h2><p>新しい相談が入るとこちらに表示されます。</p></div> : <>
             <div className="admin-title"><div><p className="eyebrow">{order.order_number}</p><h2>{order.pet_name}ちゃんのメモリーフィルム</h2><span>{customer?.full_name || customer?.email || order.user_id}</span></div><Link className="button button-outline" href={`/studio?order=${order.id}&preview=1`} target="_blank" rel="noreferrer">顧客画面を閲覧</Link></div>
 
+            <div className="admin-workspace">
+              <div className="admin-content">
             <section className="admin-card admin-photo-analysis" id="admin-photo-analysis">
               <div className="card-head"><div><p className="eyebrow">APPEARANCE REVIEW</p><h3>外見の基準と写真確認</h3></div><span className={`photo-analysis-status ${productionFields.photoAnalysisStatus}`}>{photoAnalysisStatusLabel(productionFields.photoAnalysisStatus)}</span></div>
               {productionFields.appearancePolicy === null && <aside className="admin-operation-note warning"><strong>既存形式の注文です。</strong><span>新しい外見基準が未入力のため、お客様への追加確認が必要です。</span></aside>}
               <div className="admin-reference-photo-grid">{appearanceReferenceCards.map(({ label, assetId, asset }) => <article key={label}><strong>{label}</strong>{asset && assetUrls[asset.id] ? <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer"><span className="admin-photo-thumb" role="img" aria-label={`${label}写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /></a> : <span className="admin-reference-empty">{assetId ? "読み込み中" : "未選択"}</span>}<small>{asset?.original_filename ?? "—"}</small></article>)}</div>
               <dl className="admin-story"><div><dt>外見の適用方法</dt><dd>{appearancePolicyLabel(productionFields.appearancePolicy)}</dd></div>{productionFields.appearancePolicy === "selected_period" && <><div><dt>選んだ時期</dt><dd>{productionFields.selectedAppearanceDescription || "説明なし"}</dd></div><div><dt>時期の基準写真</dt><dd>{selectedAppearanceAssets.length ? selectedAppearanceAssets.map((asset) => asset.original_filename).join("、") : "未選択"}</dd></div></>}<div><dt>変わってほしくない特徴</dt><dd>{productionFields.ownerLockedTraits.length ? productionFields.ownerLockedTraits.join("、") : "指定なし"}</dd></div><div><dt>映画的な再構成の確認</dt><dd>{productionFields.aiReconstructionAcknowledged ? "確認済み" : "未確認"}</dd></div><div><dt>承認日時</dt><dd>{formatDateTime(productionFields.photoAnalysisApprovedAt)}</dd></div><div><dt>承認した運営者</dt><dd>{productionFields.photoAnalysisApprovedBy ? productionFields.photoAnalysisApprovedBy === user.id ? profile?.email || user.id : productionFields.photoAnalysisApprovedBy : "—"}</dd></div></dl>
               <div className="admin-photo-analysis-actions">
-                {productionFields.photoAnalysisStatus === "pending_operator_review" && <><button className="button button-primary" type="button" disabled={saving} onClick={() => changePhotoAnalysisStatus("approved")}>写真分析を承認する →</button><button className="button button-outline" type="button" disabled={saving} onClick={() => changePhotoAnalysisStatus("needs_customer_input")}>お客様への確認が必要</button></>}
+                {productionFields.photoAnalysisStatus === "pending_operator_review" && <><button className="button button-primary" type="button" disabled={saving} onClick={() => changePhotoAnalysisStatus("approved")}>写真分析を承認する →</button><button className="button button-outline" type="button" disabled={saving} onClick={prepareCustomerInputMessage}>お客様への確認が必要・連絡する</button></>}
                 {productionFields.photoAnalysisStatus === "needs_customer_input" && <button className="button button-outline" type="button" disabled={saving} onClick={() => changePhotoAnalysisStatus("pending_operator_review")}>追加内容を確認待ちに戻す</button>}
-                {productionFields.photoAnalysisStatus === "approved" && <button className="button button-outline" type="button" disabled={saving} onClick={() => changePhotoAnalysisStatus("needs_customer_input")}>承認を取り消し、追加確認へ</button>}
+                {productionFields.photoAnalysisStatus === "approved" && <button className="button button-outline" type="button" disabled={saving} onClick={prepareCustomerInputMessage}>承認を取り消し、追加確認を連絡する</button>}
               </div>
               {!photoAnalysisApproved && <aside className="admin-operation-note warning"><strong>次の制作工程は停止中です。</strong><span>사진 분석에 대한 운영자 승인이 필요합니다. 승인 후 다음 제작 단계로 진행할 수 있습니다.</span></aside>}
             </section>
@@ -669,7 +710,17 @@ export function AdminStudio() {
 
             <section className="admin-card" id="admin-video"><div className="card-head"><div><p className="eyebrow">VIDEO WORKFLOW</p><h3>{videoMode === "review" ? "完成前の確認映像" : "完成映像の最終納品"}</h3></div><span>MP4 / MOV / WebM</span></div><div className="admin-video-tabs"><button type="button" className={videoMode === "review" ? "active" : ""} onClick={() => { setVideoMode("review"); clearVideo(); }}>1. 顧客確認用</button><button type="button" className={videoMode === "final" ? "active" : ""} onClick={() => { setVideoMode("final"); clearVideo(); }}>2. 最終納品</button></div>{videoMode === "review" ? <><aside className="admin-operation-note strong"><strong>このアップロードでは納品済みになりません。</strong><span>お客様の制作室に確認映像を表示し、状態を「完成前の映像をご確認ください」へ進めます。</span></aside>{!canUploadReview && <aside className="admin-operation-note warning"><strong>確認映像を公開できません。</strong><span>{order.payment_status !== "paid" ? "先に入金確認を保存してください。" : !consentCurrent ? "お客様による現在版の同意記録が必要です。" : "コンセプト選択後、進行状況を「約1分の映画を制作しています」へ進めてください。"}</span></aside>}</> : <><div className="admin-form-grid"><label><span>映画タイトル</span><input value={deliveryTitle} onChange={(event) => setDeliveryTitle(event.target.value)} /></label><label className="wide"><span>お客様へのメッセージ</span><textarea rows={3} value={deliveryMessage} onChange={(event) => setDeliveryMessage(event.target.value)} /></label></div>{!canUploadFinal && <aside className="admin-operation-note warning"><strong>まだ最終納品できません。</strong><span>{order.payment_status !== "paid" ? "入金確認が必要です。" : !consentCurrent ? "現在版の同意記録が必要です。" : openRevisions.length ? "未対応の修正依頼をすべて解決してください。" : !order.customer_approved_at ? "お客様が確認映像の「この映像で確定する」を押すまでお待ちください。" : "お客様が承認した映像と制作工程を確認してください。"}</span></aside>}</>}<label className={saving || (videoMode === "review" ? !canUploadReview : !canUploadFinal) ? "admin-video-upload disabled" : "admin-video-upload"}><input key={videoInputKey} type="file" accept="video/mp4,video/quicktime,video/webm" disabled={saving || (videoMode === "review" ? !canUploadReview : !canUploadFinal)} onChange={selectVideo} /><strong>{videoFile ? "別の映像を選ぶ" : videoMode === "review" ? "確認映像を選ぶ" : "完成映像を選ぶ"}</strong><small>選択しただけでは公開・納品されません。次の確認欄で確定します。</small></label>{videoFile && <div className="admin-delivery-review" role="group" aria-label="映像アップロードの最終確認"><p className="eyebrow">UPLOAD CHECK</p><h4>{videoMode === "review" ? "まだ顧客へ公開されていません" : "まだ納品されていません"}</h4><dl><div><dt>お客様</dt><dd>{order.pet_name}ちゃん · {customer?.full_name || customer?.email || "登録ユーザー"}</dd></div><div><dt>ファイル</dt><dd>{videoFile.name}</dd></div><div><dt>サイズ</dt><dd>{(videoFile.size / 1024 / 1024).toFixed(1)} MB</dd></div><div><dt>用途</dt><dd>{videoMode === "review" ? "完成前の顧客確認" : "最終納品"}</dd></div></dl><label className="admin-delivery-check"><input type="checkbox" checked={videoChecked} onChange={(event) => setVideoChecked(event.target.checked)} /><span>お客様名・ファイル名・用途を確認しました</span></label><div><button className="button button-outline" type="button" disabled={saving} onClick={clearVideo}>選び直す</button><button className="button button-primary" type="button" disabled={saving || !videoChecked || (videoMode === "review" ? !canUploadReview : !canUploadFinal)} onClick={uploadVideo}>{saving ? "アップロード中…" : videoMode === "review" ? "確認映像として公開する →" : "確認した内容で納品する →"}</button></div></div>}{reviewVideos.length > 0 && <div className="admin-video-history"><strong>公開済みの確認映像</strong>{reviewVideos.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" key={asset.id}>{asset.original_filename}<small>{formatDate(asset.created_at)}</small></a>)}</div>}{videoMode === "final" && finalVideos.length > 0 && <div className="admin-video-history"><strong>登録済みの完成映像</strong>{finalVideos.map((asset) => <div className="admin-video-retry" key={asset.id}><a href={assetUrls[asset.id]} target="_blank" rel="noreferrer">{asset.original_filename}<small>{formatDate(asset.created_at)}</small></a><button className="button button-outline" type="button" disabled={saving || !canUploadFinal} onClick={() => retryDelivery(asset)}>この映像で納品を再試行</button></div>)}</div>}</section>
 
-            <section className="admin-card" id="admin-message"><div className="card-head"><div><p className="eyebrow">MESSAGES</p><h3>お客様との連絡</h3></div><span>{openMessages.length}件 未対応</span></div><div className="admin-work-list admin-message-list">{messages.length ? messages.map((message) => { const fromCustomer = message.sender_id === order.user_id; return <article className={fromCustomer ? "customer" : "admin"} key={message.id}><div><span className={fromCustomer && message.status === "open" ? "work-status open" : "work-status"}>{fromCustomer ? message.status === "open" ? "未対応" : "対応済み" : "運営から送信"}</span><small>{formatDate(message.created_at)}</small></div><p>{message.body}</p>{fromCustomer && message.status === "open" && <button className="button button-outline" type="button" disabled={saving} onClick={() => resolveMessage(message.id)}>対応済みにする</button>}</article>; }) : <p className="admin-empty-copy">メッセージはまだありません。</p>}</div><form className="admin-message-form" onSubmit={sendMessage}><textarea name="body" rows={4} maxLength={3000} placeholder="追加写真のお願い、確認事項、進行状況など" /><button className="button button-outline" type="submit">メッセージを送る</button></form></section>
+              </div>
+              <aside className="admin-card admin-chat-panel" id="admin-message">
+                <div className="card-head"><div><p className="eyebrow">MESSAGES</p><h3>お客様との連絡</h3></div><span>{openMessages.length}件 未対応</span></div>
+                <p className="admin-chat-guide">ここから送った内容は制作室に保存され、お客様にはメールでも新着をお知らせします。</p>
+                <div className="admin-work-list admin-message-list" ref={messageListRef}>{messages.length ? messages.map((message) => { const fromCustomer = message.sender_id === order.user_id; return <article className={fromCustomer ? "customer" : "admin"} key={message.id}><div><span className={fromCustomer && message.status === "open" ? "work-status open" : "work-status"}>{fromCustomer ? message.status === "open" ? "未対応" : "対応済み" : "運営から送信"}</span><small>{formatDateTime(message.created_at)}</small></div><p>{message.body}</p>{fromCustomer && message.status === "open" && <button className="button button-outline" type="button" disabled={saving} onClick={() => resolveMessage(message.id)}>対応済みにする</button>}</article>; }) : <p className="admin-empty-copy">メッセージはまだありません。</p>}</div>
+                <form className="admin-message-form" onSubmit={sendMessage}>
+                  <label><span>お客様へのメッセージ</span><textarea ref={messageComposerRef} name="body" rows={5} maxLength={3000} value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} placeholder="追加写真のお願い、確認事項、進行状況など" /><small>メール本文には内容を載せず、制作室に新着があることだけをお知らせします。</small></label>
+                  <button className="button button-primary" type="submit" disabled={saving || !messageDraft.trim()}>{saving ? "送信中…" : "メッセージを送る"}</button>
+                </form>
+              </aside>
+            </div>
           </>}
         </section>
       </div>

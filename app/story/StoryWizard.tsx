@@ -8,14 +8,25 @@ import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS } from "../lib/consent";
 import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
-import type { AppearancePolicy } from "../lib/supabase/types";
-import { OrderImageUploadError, uploadOrderImages } from "../lib/supabase/uploads";
+import type { AppearancePolicy, StoryDraftAsset, StoryDraftRecord } from "../lib/supabase/types";
+import { deleteStoryDraftImage, uploadStoryDraftImage } from "../lib/supabase/uploads";
 
 type FilmPurpose = "いまを残す";
 type PresenceAnswer = "" | "none" | "included";
 type PeopleHandling = "" | "not_applicable" | "dog_only_crop" | "anonymous_person" | "original_still" | "consult";
 type MissingField = { key: string; label: string; step: number };
-type PhotoDraft = { clientKey: string; file: File; previewUrl: string };
+type PhotoSaveStatus = "uploading" | "saved" | "error";
+type PhotoDraft = {
+  clientKey: string;
+  file: File | null;
+  previewUrl: string;
+  originalName: string;
+  fileSize: number;
+  lastModified: number;
+  persistedAsset: StoryDraftAsset | null;
+  status: PhotoSaveStatus;
+};
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 type MemoryDraft = {
   clientKey: string;
@@ -116,6 +127,53 @@ const emptyDraft: Draft = {
   aiReconstructionAcknowledged: false,
 };
 
+function normalizeDraft(value: unknown, preferredPetName: string, validPhotoKeys?: Set<string>): Draft {
+  const parsed = value && typeof value === "object" ? value as Partial<Draft> & { firstMeeting?: string; favoriteMemory?: string; consent?: boolean } : {};
+  const memories: MemoryDraft[] = Array.isArray(parsed.memories) && parsed.memories.length
+    ? parsed.memories.slice(0, MAX_MEMORY_COUNT).map((memory, index) => {
+        const source = memory && typeof memory === "object" ? memory as Partial<MemoryDraft> : {};
+        return {
+          ...createMemoryDraft(source.clientKey || `memory-${index + 1}`),
+          ...source,
+          photoKeys: Array.isArray(source.photoKeys)
+            ? source.photoKeys.filter((key): key is string => typeof key === "string" && (!validPhotoKeys || validPhotoKeys.has(key))).slice(0, MAX_PHOTOS_PER_MEMORY)
+            : [],
+        };
+      })
+    : [{
+        ...createMemoryDraft("memory-1"),
+        title: parsed.firstMeeting ? "はじめて会った日" : "大切な思い出",
+        description: parsed.favoriteMemory || parsed.firstMeeting || "",
+      }];
+  while (memories.length < MIN_MEMORY_COUNT) memories.push(createMemoryDraft(`memory-${memories.length + 1}`));
+  const photoKey = (key: unknown) => typeof key === "string" && (!validPhotoKeys || validPhotoKeys.has(key)) ? key : "";
+  const photoKeys = (keys: unknown) => Array.isArray(keys)
+    ? keys.filter((key): key is string => typeof key === "string" && (!validPhotoKeys || validPhotoKeys.has(key)))
+    : [];
+
+  return {
+    ...emptyDraft,
+    ...parsed,
+    petName: parsed.petName?.trim() || preferredPetName,
+    memories,
+    purpose: FIXED_FILM_PURPOSE,
+    style: styles.some(([title]) => title === parsed.style) ? parsed.style as string : emptyDraft.style,
+    primaryFacePhotoKey: photoKey(parsed.primaryFacePhotoKey),
+    primaryBodyPhotoKey: photoKey(parsed.primaryBodyPhotoKey),
+    sideTailPhotoKey: photoKey(parsed.sideTailPhotoKey),
+    selectedAppearancePhotoKeys: photoKeys(parsed.selectedAppearancePhotoKeys).slice(0, 3),
+    ownerLockedTraits: Array.isArray(parsed.ownerLockedTraits) && parsed.ownerLockedTraits.length
+      ? parsed.ownerLockedTraits.filter((trait): trait is string => typeof trait === "string").slice(0, 3)
+      : [""],
+    termsConsent: parsed.termsConsent ?? parsed.consent ?? false,
+    photoRightsConsent: parsed.photoRightsConsent ?? false,
+    depictedPeopleConsent: parsed.depictedPeopleConsent ?? false,
+    minorGuardianConsent: parsed.minorGuardianConsent ?? false,
+    externalAiConsent: parsed.externalAiConsent ?? false,
+    aiReconstructionAcknowledged: parsed.aiReconstructionAcknowledged ?? false,
+  };
+}
+
 const steps = ["愛犬のこと", "お写真", "思い出", "映画の雰囲気", "確認"];
 const personalities = ["甘えん坊", "元気", "おだやか", "食いしん坊", "人が好き", "マイペース", "優しい", "ちょっぴり頑固"];
 const styles = [
@@ -173,7 +231,7 @@ function PhotoSelector({ id, stepLabel, legend, guide, optional, name, photos, v
         return <label className={selected ? "photo-choice-card selected" : "photo-choice-card"} key={`${name}-${photo.clientKey}`}>
           <input type="radio" name={name} checked={selected} onChange={() => onChange(photo.clientKey)} />
           <img src={photo.previewUrl} alt={`愛犬の写真 ${index + 1}`} loading="lazy" />
-          <span className="photo-choice-meta" title={photo.file.name}>写真 {index + 1}</span>
+          <span className="photo-choice-meta" title={photo.originalName}>写真 {index + 1}</span>
           {roleKeys[photo.clientKey]?.map((badge) => <small className="photo-role-badge" key={badge}>{badge}</small>)}
           {!selected && <span className="photo-choice-action">タップして選ぶ</span>}
           {selected && <strong className="photo-selected-mark">✓ {roleLabel}</strong>}
@@ -191,9 +249,11 @@ export function StoryWizard() {
   const [photoFiles, setPhotoFiles] = useState<PhotoDraft[]>([]);
   const [previewPhotoKey, setPreviewPhotoKey] = useState("");
   const [hydrated, setHydrated] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [draftId, setDraftId] = useState("");
+  const [pendingOrderId, setPendingOrderId] = useState("");
+  const [restored, setRestored] = useState(false);
   const [error, setError] = useState("");
-  const [failedUploadName, setFailedUploadName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [photoSelectionNotice, setPhotoSelectionNotice] = useState("");
@@ -208,6 +268,7 @@ export function StoryWizard() {
   const photoGuideDialogRef = useRef<HTMLElement>(null);
   const photoUploadTriggerRef = useRef<HTMLLabelElement>(null);
   const photoGuideFocusTargetRef = useRef<"previous" | "upload">("previous");
+  const saveSequenceRef = useRef(0);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?mode=signup&next=/story");
@@ -216,66 +277,135 @@ export function StoryWizard() {
   const preferredPetName = (profile?.primary_pet_name || user?.user_metadata?.pet_name || "").trim();
 
   useEffect(() => {
-    if (authLoading || hydrated) return;
-    const timer = window.setTimeout(() => {
-      const stored = window.localStorage.getItem("kimi-film-draft");
-      if (stored) {
-        try {
+    if (authLoading || hydrated || !user) return;
+    let cancelled = false;
+    const restore = async () => {
+      const supabase = getSupabaseBrowserClient();
+      const localKey = `wan-memory-story-draft-${user.id}`;
+      let localDraft: unknown = null;
+      let localStep = 0;
+      try {
+        const stored = window.localStorage.getItem(localKey) || window.localStorage.getItem("kimi-film-draft");
+        if (stored) {
           const parsed = JSON.parse(stored);
-          const parsedMemories: MemoryDraft[] = Array.isArray(parsed.memories) && parsed.memories.length
-            ? parsed.memories.slice(0, MAX_MEMORY_COUNT).map((memory: Partial<MemoryDraft>, index: number) => ({
-                ...createMemoryDraft(memory.clientKey || `memory-${index + 1}`),
-                ...memory,
-                photoKeys: [],
-              }))
-            : [{ ...createMemoryDraft("memory-1"), title: parsed.firstMeeting ? "はじめて会った日" : "大切な思い出", description: parsed.favoriteMemory || parsed.firstMeeting || "" }];
-          while (parsedMemories.length < MIN_MEMORY_COUNT) parsedMemories.push(createMemoryDraft(`memory-${parsedMemories.length + 1}`));
-          setActiveMemoryKey(parsedMemories[0].clientKey);
-          setDraft({
-            ...emptyDraft,
-            ...parsed,
-            petName: parsed.petName?.trim() || preferredPetName,
-            memories: parsedMemories,
-            purpose: FIXED_FILM_PURPOSE,
-            style: styles.some(([title]) => title === parsed.style) ? parsed.style : emptyDraft.style,
-            primaryFacePhotoKey: "",
-            primaryBodyPhotoKey: "",
-            sideTailPhotoKey: "",
-            selectedAppearancePhotoKeys: [],
-            ownerLockedTraits: Array.isArray(parsed.ownerLockedTraits) && parsed.ownerLockedTraits.length ? parsed.ownerLockedTraits.slice(0, 3) : [""],
-            termsConsent: parsed.termsConsent ?? parsed.consent ?? false,
-            photoRightsConsent: parsed.photoRightsConsent ?? false,
-            depictedPeopleConsent: parsed.depictedPeopleConsent ?? false,
-            minorGuardianConsent: parsed.minorGuardianConsent ?? false,
-            externalAiConsent: parsed.externalAiConsent ?? false,
-            aiReconstructionAcknowledged: false,
-          });
-        } catch { setDraft({ ...emptyDraft, petName: preferredPetName }); }
-      } else setDraft({ ...emptyDraft, petName: preferredPetName });
+          localDraft = parsed?.data ?? parsed;
+          localStep = Number.isInteger(parsed?.currentStep) ? parsed.currentStep : 0;
+        }
+      } catch {
+        localDraft = null;
+      }
+
+      const { data: serverDraft, error: draftError } = await supabase
+        .from("story_drafts")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+
+      if (draftError) {
+        setDraft(normalizeDraft(localDraft, preferredPetName));
+        setStep(Math.max(0, Math.min(localStep, steps.length - 1)));
+        setSaveStatus("error");
+        setHydrated(true);
+        return;
+      }
+
+      const record = serverDraft as StoryDraftRecord | null;
+      if (!record) {
+        const initial = normalizeDraft(localDraft, preferredPetName);
+        const { data: createdId, error: createError } = await supabase.rpc("save_story_draft", {
+          p_draft_id: null,
+          p_data: initial,
+          p_current_step: Math.max(0, Math.min(localStep, steps.length - 1)),
+        });
+        if (cancelled) return;
+        if (createError || !createdId) {
+          setDraft(initial);
+          setStep(Math.max(0, Math.min(localStep, steps.length - 1)));
+          setSaveStatus("error");
+          setHydrated(true);
+          return;
+        }
+        setDraftId(createdId as string);
+        setDraft(initial);
+        setStep(Math.max(0, Math.min(localStep, steps.length - 1)));
+        setActiveMemoryKey(initial.memories.find((memory) => !isMemoryReady(memory))?.clientKey ?? initial.memories[0].clientKey);
+        setSaveStatus("saved");
+        setHydrated(true);
+        return;
+      }
+
+      const { data: storedAssets, error: assetError } = await supabase
+        .from("story_draft_assets")
+        .select("*")
+        .eq("draft_id", record.id)
+        .order("sort_order");
+      if (cancelled) return;
+      if (assetError) {
+        setSaveStatus("error");
+        setHydrated(true);
+        return;
+      }
+
+      const assets = (storedAssets ?? []) as StoryDraftAsset[];
+      const restoredPhotos = await Promise.all(assets.map(async (asset) => {
+        const { data } = await supabase.storage.from("order-assets").createSignedUrl(asset.storage_path, 3600);
+        return {
+          clientKey: asset.client_key,
+          file: null,
+          previewUrl: data?.signedUrl ?? "",
+          originalName: asset.original_filename,
+          fileSize: asset.file_size,
+          lastModified: 0,
+          persistedAsset: asset,
+          status: "saved" as const,
+        };
+      }));
+      if (cancelled) return;
+      const validPhotoKeys = new Set(restoredPhotos.map((photo) => photo.clientKey));
+      const restoredDraft = normalizeDraft(record.data, preferredPetName, validPhotoKeys);
+      setDraftId(record.id);
+      setPendingOrderId(record.pending_order_id ?? "");
+      setPhotoFiles(restoredPhotos.filter((photo) => photo.previewUrl));
+      setDraft(restoredDraft);
+      setStep(Math.max(0, Math.min(record.current_step, steps.length - 1)));
+      setActiveMemoryKey(restoredDraft.memories.find((memory) => !isMemoryReady(memory))?.clientKey ?? restoredDraft.memories[0].clientKey);
+      setRestored(Boolean(record.updated_at || assets.length));
+      setSaveStatus("saved");
       setHydrated(true);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [authLoading, hydrated, preferredPetName]);
+    };
+    void restore();
+    return () => { cancelled = true; };
+  }, [authLoading, hydrated, preferredPetName, user]);
 
   useEffect(() => {
-    if (!hydrated) return;
-    const timer = window.setTimeout(() => {
-      window.localStorage.setItem("kimi-film-draft", JSON.stringify(draft));
-      setSaved(true);
-      window.setTimeout(() => setSaved(false), 1400);
-    }, 350);
+    if (!hydrated || !user) return;
+    const localKey = `wan-memory-story-draft-${user.id}`;
+    window.localStorage.setItem(localKey, JSON.stringify({ data: draft, currentStep: step }));
+    if (!draftId) return;
+    const sequence = ++saveSequenceRef.current;
+    const timer = window.setTimeout(async () => {
+      setSaveStatus("saving");
+      const { error: saveError } = await getSupabaseBrowserClient().rpc("save_story_draft", {
+        p_draft_id: draftId,
+        p_data: draft,
+        p_current_step: step,
+      });
+      if (saveSequenceRef.current !== sequence) return;
+      setSaveStatus(saveError ? "error" : "saved");
+    }, 700);
     return () => window.clearTimeout(timer);
-  }, [draft, hydrated]);
+  }, [draft, draftId, hydrated, step, user]);
 
   useEffect(() => { photoFilesRef.current = photoFiles; }, [photoFiles]);
   useEffect(() => () => { photoFilesRef.current.forEach((photo) => URL.revokeObjectURL(photo.previewUrl)); }, []);
 
   useEffect(() => {
-    if (!photoFiles.length || submitting) return;
+    if (!photoFiles.some((photo) => photo.status === "uploading") || submitting) return;
     const confirmBeforeLeave = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
     window.addEventListener("beforeunload", confirmBeforeLeave);
     return () => window.removeEventListener("beforeunload", confirmBeforeLeave);
-  }, [photoFiles.length, submitting]);
+  }, [photoFiles, submitting]);
 
   useEffect(() => {
     if (!previewPhotoKey) return;
@@ -350,20 +480,89 @@ export function StoryWizard() {
     return roles;
   }, [draft.primaryBodyPhotoKey, draft.primaryFacePhotoKey, draft.sideTailPhotoKey]);
 
+  const persistPhoto = async (photo: PhotoDraft, sortOrder: number) => {
+    if (!user || !draftId || !photo.file) return;
+    try {
+      const result = await uploadStoryDraftImage(
+        getSupabaseBrowserClient(),
+        user.id,
+        draftId,
+        photo.clientKey,
+        photo.file,
+        sortOrder,
+      );
+      setPhotoFiles((current) => current.map((item) => {
+        if (item.clientKey !== photo.clientKey) return item;
+        if (result.file !== item.file) {
+          URL.revokeObjectURL(item.previewUrl);
+        }
+        return {
+          ...item,
+          file: result.file,
+          previewUrl: result.file !== item.file ? URL.createObjectURL(result.file) : item.previewUrl,
+          originalName: result.file.name,
+          fileSize: result.file.size,
+          persistedAsset: result.asset,
+          status: "saved",
+        };
+      }));
+      setPhotoSelectionNotice("写真を自動保存しました。下の一覧から基準写真を選んでください。");
+    } catch (caught) {
+      console.error(caught);
+      setPhotoFiles((current) => current.map((item) => item.clientKey === photo.clientKey ? { ...item, status: "error" } : item));
+      setPhotoSelectionNotice(`「${photo.originalName}」を保存できませんでした。写真の「再試行」を押してください。`);
+    }
+  };
+
   const handlePhotos = (event: ChangeEvent<HTMLInputElement>) => {
     const incoming = Array.from(event.target.files ?? []);
-    setPhotoFiles((current) => {
-      const existing = new Set(current.map((photo) => `${photo.file.name}:${photo.file.size}:${photo.file.lastModified}`));
-      const accepted = incoming.filter((file) => !existing.has(`${file.name}:${file.size}:${file.lastModified}`)).slice(0, MAX_TOTAL_PHOTOS - current.length);
-      if (accepted.length < incoming.length) setPhotoSelectionNotice(current.length + accepted.length >= MAX_TOTAL_PHOTOS ? `写真は最大${MAX_TOTAL_PHOTOS}枚までです。超えた分は追加されていません。` : "同じ写真は重複せず、1枚だけ追加しました。");
-      else setPhotoSelectionNotice(accepted.length ? "写真を追加しました。下の一覧から基準写真を選んでください。" : "");
-      return [...current, ...accepted.map((file) => ({ clientKey: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) }))];
+    const existing = new Set(photoFiles.map((photo) => `${photo.originalName}:${photo.fileSize}:${photo.lastModified}`));
+    const accepted = incoming
+      .filter((file) => !existing.has(`${file.name}:${file.size}:${file.lastModified}`))
+      .slice(0, MAX_TOTAL_PHOTOS - photoFiles.length);
+    const additions: PhotoDraft[] = accepted.map((file) => ({
+      clientKey: crypto.randomUUID(),
+      file,
+      previewUrl: URL.createObjectURL(file),
+      originalName: file.name,
+      fileSize: file.size,
+      lastModified: file.lastModified,
+      persistedAsset: null,
+      status: "uploading",
+    }));
+    if (accepted.length < incoming.length) {
+      setPhotoSelectionNotice(photoFiles.length + accepted.length >= MAX_TOTAL_PHOTOS
+        ? `写真は最大${MAX_TOTAL_PHOTOS}枚までです。超えた分は追加されていません。`
+        : "同じ写真は重複せず、1枚だけ追加しました。");
+    } else {
+      setPhotoSelectionNotice(accepted.length ? "写真を安全に自動保存しています…" : "");
+    }
+    setPhotoFiles((current) => [...current, ...additions]);
+    additions.forEach((photo, index) => {
+      void persistPhoto(photo, photoFiles.length + index);
     });
     event.target.value = "";
   };
 
-  const removePhoto = (photoKey: string) => {
+  const retryPhoto = (photoKey: string) => {
+    const index = photoFiles.findIndex((photo) => photo.clientKey === photoKey);
+    const photo = photoFiles[index];
+    if (!photo?.file) return;
+    setPhotoFiles((current) => current.map((item) => item.clientKey === photoKey ? { ...item, status: "uploading" } : item));
+    void persistPhoto(photo, index);
+  };
+
+  const removePhoto = async (photoKey: string) => {
     const target = photoFiles.find((photo) => photo.clientKey === photoKey);
+    if (target?.persistedAsset) {
+      try {
+        await deleteStoryDraftImage(getSupabaseBrowserClient(), target.persistedAsset);
+      } catch (caught) {
+        console.error(caught);
+        setPhotoSelectionNotice("写真を削除できませんでした。通信状態をご確認のうえ、もう一度お試しください。");
+        return;
+      }
+    }
     if (target) URL.revokeObjectURL(target.previewUrl);
     setPhotoFiles((current) => current.filter((photo) => photo.clientKey !== photoKey));
     setDraft((current) => ({
@@ -406,6 +605,7 @@ export function StoryWizard() {
   };
 
   const totalPhotoCount = photoFiles.length;
+  const unsavedPhotoCount = photoFiles.filter((photo) => photo.status !== "saved").length;
   const totalLinkedPhotoCount = useMemo(() => draft.memories.reduce((total, memory) => total + memory.photoKeys.length, 0), [draft.memories]);
   const allMemoryEntriesComplete = useMemo(() => draft.memories.every(isMemoryReady), [draft.memories]);
 
@@ -476,6 +676,7 @@ export function StoryWizard() {
     if (!draft.age.trim()) missing.push({ key: "age", label: "年齢（推定でも可）", step: 0 });
     if (draft.personality.length === 0) missing.push({ key: "personality", label: "性格（1つ以上）", step: 0 });
     if (totalPhotoCount < MIN_TOTAL_PHOTOS) missing.push({ key: "totalPhotos", label: `写真${MIN_TOTAL_PHOTOS}枚以上（現在${totalPhotoCount}枚）`, step: 1 });
+    if (unsavedPhotoCount > 0) missing.push({ key: "photoUploads", label: `写真の自動保存完了（未完了${unsavedPhotoCount}枚）`, step: 1 });
     if (!draft.primaryFacePhotoKey) missing.push({ key: "primaryFace", label: "お顔の基準写真", step: 1 });
     if (!draft.primaryBodyPhotoKey) missing.push({ key: "primaryBody", label: "全身の基準写真", step: 1 });
     if (!draft.appearancePolicy) missing.push({ key: "appearancePolicy", label: "思い出の中の姿", step: 1 });
@@ -505,7 +706,7 @@ export function StoryWizard() {
     if (!draft.externalAiConsent) missing.push({ key: "externalAiConsent", label: "外部AIサービスでの処理への同意", step: 4 });
     if (!draft.aiReconstructionAcknowledged) missing.push({ key: "aiReconstructionAcknowledged", label: "映画的な再構成についての確認", step: 4 });
     return missing;
-  }, [draft, totalLinkedPhotoCount, totalPhotoCount]);
+  }, [draft, totalLinkedPhotoCount, totalPhotoCount, unsavedPhotoCount]);
 
   const currentStepMissingFields = useMemo(() => missingFields.filter((item) => item.step === step), [missingFields, step]);
 
@@ -542,11 +743,14 @@ export function StoryWizard() {
       return;
     }
     if (!user) { router.push("/auth?mode=signup&next=/story"); return; }
+    if (!draftId) {
+      setError("下書きの保存を確認できませんでした。通信状態をご確認のうえ、ページを再読み込みしてください。");
+      return;
+    }
 
     setSubmitting(true);
     setUploadProgress(0);
     setError("");
-    setFailedUploadName("");
     const supabase = getSupabaseBrowserClient();
 
     try {
@@ -572,7 +776,7 @@ export function StoryWizard() {
         minor_guardian_consent_version: CONSENT_VERSIONS.minorGuardian,
         people_policy_version: CONSENT_VERSIONS.peoplePolicy,
       };
-      let orderId = window.localStorage.getItem("wan-memory-pending-order-id") || "";
+      let orderId = pendingOrderId || window.localStorage.getItem("wan-memory-pending-order-id") || "";
       if (orderId) {
         const { data: pendingOrder } = await supabase.from("orders").select("id,status").eq("id", orderId).eq("user_id", user.id).maybeSingle();
         if (pendingOrder?.status === "awaiting_materials") {
@@ -589,7 +793,13 @@ export function StoryWizard() {
         const created = Array.isArray(data) ? data[0] : data;
         if (!created?.order_id) throw new Error("注文番号を作成できませんでした。");
         orderId = created.order_id;
+        setPendingOrderId(orderId);
         window.localStorage.setItem("wan-memory-pending-order-id", orderId);
+        const { error: linkDraftError } = await supabase.rpc("link_story_draft_order", {
+          p_draft_id: draftId,
+          p_order_id: orderId,
+        });
+        if (linkDraftError) throw linkDraftError;
       }
 
       const memoryIds = new Map<string, string>();
@@ -609,15 +819,15 @@ export function StoryWizard() {
         memoryIds.set(memory.clientKey, memoryId as string);
       }
 
-      const uploadedAssets = await uploadOrderImages(
-        supabase,
-        user.id,
-        orderId,
-        photoFiles.map((photo) => photo.file),
-        (completed, total) => setUploadProgress(Math.round((completed / total) * 100)),
-      );
-      if (uploadedAssets.length !== photoFiles.length) throw new Error("写真をすべて確認できませんでした。");
-      const assetIdByPhotoKey = new Map(photoFiles.map((photo, index) => [photo.clientKey, uploadedAssets[index].id]));
+      setUploadProgress(70);
+      const { data: promotedAssets, error: promotionError } = await supabase.rpc("promote_story_draft_assets", {
+        p_draft_id: draftId,
+        p_order_id: orderId,
+      });
+      if (promotionError) throw promotionError;
+      const promoted = (promotedAssets ?? []) as Array<{ client_key: string; asset_id: string }>;
+      if (promoted.length !== photoFiles.length) throw new Error("自動保存した写真をすべて確認できませんでした。");
+      const assetIdByPhotoKey = new Map(promoted.map((photo) => [photo.client_key, photo.asset_id]));
       const requiredAssetId = (photoKey: string) => {
         const id = assetIdByPhotoKey.get(photoKey);
         if (!id) throw new Error("選んだ写真を確認できませんでした。");
@@ -652,12 +862,18 @@ export function StoryWizard() {
 
       const { error: submitError } = await supabase.rpc("submit_memory_order", { p_order_id: orderId });
       if (submitError) throw submitError;
+      setUploadProgress(100);
+      const { error: completeDraftError } = await supabase.rpc("complete_story_draft", {
+        p_draft_id: draftId,
+        p_order_id: orderId,
+      });
+      if (completeDraftError) console.error(completeDraftError);
       window.localStorage.removeItem("kimi-film-draft");
+      window.localStorage.removeItem(`wan-memory-story-draft-${user.id}`);
       window.localStorage.removeItem("wan-memory-pending-order-id");
       router.push(`/studio?received=1&order=${orderId}`);
     } catch (caught) {
       console.error(caught);
-      if (caught instanceof OrderImageUploadError) setFailedUploadName(caught.fileName);
       const message = caught instanceof Error && /[ぁ-んァ-ヶ一-龠]/.test(caught.message)
         ? caught.message
         : "受付を完了できませんでした。通信状態をご確認のうえ、もう一度お試しください。";
@@ -673,7 +889,13 @@ export function StoryWizard() {
     <main className="wizard-page">
       <header className="wizard-header">
         <Link className="brand" href="/" aria-label="WAN MEMORY トップへ"><span className="brand-mark" aria-hidden="true">WM</span><span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span></Link>
-        <div className="save-status" aria-live="polite"><span className={saved ? "save-dot active" : "save-dot"} />{saved ? "下書きを保存しました" : "入力内容は自動保存されます"}</div>
+        <div className={`save-status ${saveStatus}`} aria-live="polite">
+          <span className={saveStatus === "saved" ? "save-dot active" : "save-dot"} />
+          {saveStatus === "saving" ? "自動保存中…"
+            : saveStatus === "saved" ? "写真と入力内容を保存しました"
+              : saveStatus === "error" ? "保存できません。通信をご確認ください"
+                : "入力内容は自動保存されます"}
+        </div>
         <Link className="wizard-close" href="/" aria-label="入力を閉じる">×</Link>
       </header>
       <div className="wizard-progress"><span style={{ width: `${progress}%` }} /></div>
@@ -681,6 +903,11 @@ export function StoryWizard() {
         <aside className="wizard-side"><p>YOUR STORY</p><ol>{steps.map((label, index) => <li className={index === step ? "active" : index < step ? "done" : ""} key={label}><span>{index < step ? "✓" : index + 1}</span>{label}</li>)}</ol><blockquote>「きれいに書こうとしなくて大丈夫です。覚えているままを聞かせてください。」</blockquote></aside>
 
         <section className="wizard-main" aria-labelledby="step-title">
+          {restored && <aside className="draft-restored-notice" role="status">
+            <span aria-hidden="true">✓</span>
+            <div><strong>前回の続きから再開しました。</strong><small>入力内容と写真は保存されています。</small></div>
+            <button type="button" onClick={() => setRestored(false)} aria-label="再開のお知らせを閉じる">×</button>
+          </aside>}
           <div className="step-count">STEP {String(step + 1).padStart(2, "0")} / {String(steps.length).padStart(2, "0")} <strong>{steps[step]}</strong></div>
           {step === 0 && <div className="wizard-panel"><p className="eyebrow">ABOUT YOUR DOG</p><h1 id="step-title">その子のことを教えてください。</h1><p className="step-lead">「必須」と表示された項目をすべて入力すると、次のステップへ進めます。</p><div className="form-grid"><label><span>お名前 <em>必須</em></span><input required value={draft.petName} onChange={(event) => update("petName", event.target.value)} placeholder="例：モモ" /></label><label><span>お名前の読み方 <small>任意</small></span><input value={draft.nameKana} onChange={(event) => update("nameKana", event.target.value)} placeholder="例：もも" /></label><label><span>犬種 <em>必須</em></span><input required value={draft.breed} onChange={(event) => update("breed", event.target.value)} placeholder="例：柴犬" /></label><label><span>年齢 <em>必須</em></span><input required value={draft.age} onChange={(event) => update("age", event.target.value)} placeholder="例：12歳 / 推定3歳" /></label></div><fieldset className="chip-field"><legend>どんな性格ですか？ <small>1つ以上・必須</small></legend><div>{personalities.map((personality) => <button type="button" className={draft.personality.includes(personality) ? "chip selected" : "chip"} onClick={() => togglePersonality(personality)} key={personality}>{personality}<span aria-hidden="true">＋</span></button>)}</div></fieldset></div>}
 
@@ -714,7 +941,7 @@ export function StoryWizard() {
             <div className="upload-count" role="status" aria-live="polite"><strong>{photoFiles.length} / {MIN_TOTAL_PHOTOS}枚以上</strong><span>{photoFiles.length >= MIN_TOTAL_PHOTOS ? "必要な枚数が揃いました。" : `あと${MIN_TOTAL_PHOTOS - photoFiles.length}枚必要です。`}</span></div>
             {photoSelectionNotice && <aside className="photo-selection-feedback" role="status"><strong>写真の選択を更新しました。</strong><span>{photoSelectionNotice}</span></aside>}
             {photoFiles.length > 0 && <><h2 className="uploaded-photo-heading">追加した写真 <small>写真を押すと大きく確認できます</small></h2><div className="uploaded-photo-grid" aria-label="選択した写真">
-              {photoFiles.map((photo, index) => <article key={photo.clientKey}><button type="button" className="uploaded-photo-preview" onClick={() => setPreviewPhotoKey(photo.clientKey)}><img src={photo.previewUrl} alt={`追加した愛犬の写真 ${index + 1}`} loading="lazy" /><span>大きく見る</span></button><div><small title={photo.file.name}>写真 {index + 1}</small>{roleKeys[photo.clientKey]?.map((badge) => <strong key={badge}>{badge}</strong>)}<button type="button" onClick={() => removePhoto(photo.clientKey)}>削除</button></div></article>)}
+              {photoFiles.map((photo, index) => <article className={`uploaded-photo-item ${photo.status}`} key={photo.clientKey}><button type="button" className="uploaded-photo-preview" disabled={!photo.previewUrl} onClick={() => setPreviewPhotoKey(photo.clientKey)}><img src={photo.previewUrl} alt={`追加した愛犬の写真 ${index + 1}`} loading="lazy" /><span>大きく見る</span></button><div><small title={photo.originalName}>写真 {index + 1}</small>{roleKeys[photo.clientKey]?.map((badge) => <strong key={badge}>{badge}</strong>)}{photo.status === "uploading" && <em className="photo-save-state">保存中…</em>}{photo.status === "saved" && <em className="photo-save-state saved">保存済み ✓</em>}{photo.status === "error" && <button type="button" className="photo-retry-button" onClick={() => retryPhoto(photo.clientKey)}>再試行</button>}<button type="button" disabled={photo.status === "uploading"} onClick={() => void removePhoto(photo.clientKey)}>削除</button></div></article>)}
             </div></>}
 
             {photoFiles.length > 0 && <div className="representative-photo-stack">
@@ -746,7 +973,7 @@ export function StoryWizard() {
           </div>}
 
           {[1, 2, 3].includes(step) && (currentStepMissingFields.length > 0 ? <aside className={stepValidationAttempted ? "step-required-panel attempted" : "step-required-panel"} id="step-required-status" role="status" aria-live="polite"><strong>このステップは、あと{currentStepMissingFields.length}項目の入力が必要です。</strong><span>「必須」の内容をすべて入力すると、次へ進めます。</span><ul>{currentStepMissingFields.map((item) => <li key={item.key}>{item.label}</li>)}</ul></aside> : <aside className="step-ready-panel" id="step-required-status" role="status"><span aria-hidden="true">✓</span><strong>このステップの必須項目が揃いました。次へ進めます。</strong></aside>)}
-          {error && <div className="form-error" role="alert" tabIndex={-1} ref={errorSummaryRef}><span>{error}</span>{failedUploadName && <button type="button" disabled={submitting} onClick={submit}>「{failedUploadName}」だけ再試行する</button>}</div>}
+          {error && <div className="form-error" role="alert" tabIndex={-1} ref={errorSummaryRef}><span>{error}</span></div>}
           {submitting && <div className="submit-progress" role="status"><span style={{ width: `${totalPhotoCount ? uploadProgress : 100}%` }} /><p>{totalPhotoCount ? `思い出と写真を安全に送信しています… ${uploadProgress}%` : "ご相談を受け付けています…"}</p></div>}
           <div className="wizard-actions">{step > 0 ? <button className="button button-ghost" type="button" disabled={submitting} onClick={() => goToStep(step - 1)}>← 戻る</button> : <span />}{step < steps.length - 1 ? <button className="button button-primary" type="button" aria-describedby={[0, 1, 2].includes(step) ? "step-required-status" : undefined} onClick={goNext}>次へ進む →</button> : <button className="button button-primary" type="button" disabled={submitting} onClick={submit}>{submitting ? "送信中…" : missingFields.length ? `未入力${missingFields.length}項目を確認する →` : "相談を受け付ける →"}</button>}</div>
         </section>
@@ -757,7 +984,7 @@ export function StoryWizard() {
         <div className="photo-guide-content"><span className="photo-guide-number">{photoGuideSlides[photoGuideStep].number}</span><p className="eyebrow">STEP {photoGuideStep + 1} / {photoGuideSlides.length}</p><h2 id="photo-guide-title">{photoGuideSlides[photoGuideStep].title}</h2><p id="photo-guide-description">{photoGuideSlides[photoGuideStep].copy}</p>{photoGuideStep === 1 && <aside>写真をアップロードしただけでは選択は完了していません。並んだ写真をもう一度タップして、基準写真を決めます。</aside>}</div>
         <footer>{photoGuideStep > 0 ? <button type="button" className="button button-ghost" onClick={() => setPhotoGuideStep((current) => current - 1)}>← 戻る</button> : <span />}{photoGuideStep < photoGuideSlides.length - 1 ? <button type="button" className="button button-primary" onClick={() => setPhotoGuideStep((current) => current + 1)}>次を見る →</button> : <button type="button" className="button button-primary" onClick={closePhotoGuideAndShowUploader}>分かりました。写真を選ぶ →</button>}</footer>
       </section></div>}
-      {previewPhoto && <div className="photo-preview-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPreviewPhotoKey(""); }}><section className="photo-preview-dialog" role="dialog" aria-modal="true" aria-label="写真の拡大表示" ref={photoPreviewDialogRef}><button type="button" onClick={() => setPreviewPhotoKey("")} aria-label="拡大表示を閉じる">×</button><img src={previewPhoto.previewUrl} alt="選択した愛犬の写真を拡大表示" /><small>{previewPhoto.file.name}</small></section></div>}
+      {previewPhoto && <div className="photo-preview-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPreviewPhotoKey(""); }}><section className="photo-preview-dialog" role="dialog" aria-modal="true" aria-label="写真の拡大表示" ref={photoPreviewDialogRef}><button type="button" onClick={() => setPreviewPhotoKey("")} aria-label="拡大表示を閉じる">×</button><img src={previewPhoto.previewUrl} alt="選択した愛犬の写真を拡大表示" /><small>{previewPhoto.originalName}</small></section></div>}
     </main>
   );
 }
