@@ -524,6 +524,8 @@ test("stores appearance references and requires operator photo approval", async 
   assert.doesNotMatch(story, /Runway|ChatGPT|OpenAI|GPT|prompt|credit/i);
 
   assert.match(admin, /admin_set_photo_analysis_status/);
+  assert.match(admin, /order\.status === "materials_submitted"/);
+  assert.match(admin, /p_status: "reviewing_materials"/);
   assert.match(admin, /사진 분석에 대한 운영자 승인이 필요합니다/);
   assert.match(admin, /外見の基準と写真確認/);
   assert.match(css, /\.uploaded-photo-grid/);

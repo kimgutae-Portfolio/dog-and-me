@@ -211,6 +211,7 @@ export function AdminStudio() {
   }) : statusOptions;
   const consentCurrent = Boolean(order && hasCurrentConsent(order));
   const photoAnalysisApproved = productionFields.photoAnalysisStatus === "approved";
+  const conceptPublishingStatusValid = Boolean(order && ["materials_submitted", "reviewing_materials", "concepts_ready"].includes(order.status));
   const canUploadReview = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && ["production", "revision_requested", "customer_review"].includes(order.status));
   const canUploadFinal = Boolean(order && photoAnalysisApproved && order.status === "quality_check" && order.payment_status === "paid" && consentCurrent && order.customer_approved_at && order.customer_approved_review_asset_id && openRevisions.length === 0);
 
@@ -283,8 +284,27 @@ export function AdminStudio() {
       setError("コンセプトA・Bのタイトルと概要を入力してください。");
       return;
     }
+    if (!conceptPublishingStatusValid) {
+      setError(`現在の工程「${ORDER_STATUS_LABELS[order.status]}」ではコンセプトを公開できません。注文の進行状況をご確認ください。`);
+      return;
+    }
     setSaving(true);
     setError("");
+    const supabase = getSupabaseBrowserClient();
+    if (order.status === "materials_submitted") {
+      const { error: reviewStartError } = await supabase.rpc("admin_update_order", {
+        p_order_id: order.id,
+        p_status: "reviewing_materials",
+        p_payment_status: order.payment_status,
+        p_due_date: order.due_date,
+        p_admin_notes: order.admin_notes,
+      });
+      if (reviewStartError) {
+        setError("写真とお話の確認工程を開始できませんでした。画面を更新して、もう一度お試しください。");
+        setSaving(false);
+        return;
+      }
+    }
     const conceptsPayload = ([['A', conceptA], ['B', conceptB]] as const).map(([slot, value]) => ({
       slot,
       title: value.title.trim(),
@@ -292,8 +312,10 @@ export function AdminStudio() {
       summary: value.summary.trim(),
       scenes: value.scenes.split("\n").map((scene) => scene.trim()).filter(Boolean),
     }));
-    const { error: conceptError } = await getSupabaseBrowserClient().rpc("admin_publish_concepts", { p_order_id: order.id, p_concepts: conceptsPayload });
-    if (conceptError) setError("2案を公開できませんでした。先に進行状況を『写真とお話を確認しています』へ変更してください。");
+    const { error: conceptError } = await supabase.rpc("admin_publish_concepts", { p_order_id: order.id, p_concepts: conceptsPayload });
+    if (conceptError) setError(conceptError.message.includes("current status")
+      ? "注文の状態が別の画面で変更されました。画面を更新して、現在の工程をご確認ください。"
+      : "2案を公開できませんでした。入力内容と現在の制作工程をご確認ください。");
     else {
       setNotice("2つのコンセプトを公開し、操作履歴へ記録しました。");
       await Promise.all([loadOrders(), loadDetails(order.id)]);
@@ -704,7 +726,7 @@ export function AdminStudio() {
 
             <section className="admin-card" id="admin-photos"><div className="card-head"><div><p className="eyebrow">CUSTOMER PHOTOS</p><h3>写真一覧</h3></div><span>{sourceAssets.length}枚</span></div>{sourceAssets.length ? <><div className="admin-photo-grid">{sourceAssets.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" aria-label={`${asset.original_filename}を大きく表示`} key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${order.pet_name}ちゃんの提出写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}{asset.memory_id ? " · 思い出に紐付け済み" : " · 追加写真"}</small></a>)}</div><p className="admin-operation-note">思い出ごとの対応関係は、上の「思い出と写真の組み合わせ」で確認できます。</p></> : <p className="admin-empty-copy">写真はまだ登録されていません。思い出ごとに1〜5枚、合計5枚以上の提出が必要です。</p>}</section>
 
-            <section className="admin-card" id="admin-concepts"><div className="card-head"><div><p className="eyebrow">CONCEPT DELIVERY</p><h3>映像コンセプト2案</h3></div><span>{concepts.length}/2 保存済み</span></div><div className="admin-concepts">{([['A', conceptA, setConceptA], ['B', conceptB, setConceptB]] as const).map(([slot, value, setter]) => <div key={slot}><strong>CONCEPT {slot}</strong><label><span>タイトル</span><input value={value.title} onChange={(event) => setter({ ...value, title: event.target.value })} placeholder={`${order.pet_name}と歩いた季節`} /></label><label><span>トーン</span><input value={value.tone} onChange={(event) => setter({ ...value, tone: event.target.value })} placeholder="やさしく、映画のように" /></label><label><span>概要</span><textarea rows={4} value={value.summary} onChange={(event) => setter({ ...value, summary: event.target.value })} /></label><label><span>シーン（1行に1つ）</span><textarea rows={5} value={value.scenes} onChange={(event) => setter({ ...value, scenes: event.target.value })} placeholder={"はじめて会った日\nいつもの散歩道\n家族を待つ時間"} /></label></div>)}</div><button className="button button-primary" type="button" disabled={saving || !photoAnalysisApproved} onClick={saveConcepts}>2案を顧客へ公開する →</button></section>
+            <section className="admin-card" id="admin-concepts"><div className="card-head"><div><p className="eyebrow">CONCEPT DELIVERY</p><h3>映像コンセプト2案</h3></div><span>{concepts.length}/2 保存済み</span></div>{order.status === "materials_submitted" && photoAnalysisApproved && <aside className="admin-operation-note strong"><strong>公開時に確認工程を自動で開始します。</strong><span>コンセプトを公開すると、進行状況を「写真とお話を確認しています」から「コンセプト2案をご確認ください」へ順番に記録します。</span></aside>}{!conceptPublishingStatusValid && <aside className="admin-operation-note warning"><strong>現在の工程では公開できません。</strong><span>進行状況「{ORDER_STATUS_LABELS[order.status]}」を確認してください。制作開始後に内容を変更する場合は、先に適切な工程へ戻す必要があります。</span></aside>}<div className="admin-concepts">{([['A', conceptA, setConceptA], ['B', conceptB, setConceptB]] as const).map(([slot, value, setter]) => <div key={slot}><strong>CONCEPT {slot}</strong><label><span>タイトル</span><input value={value.title} onChange={(event) => setter({ ...value, title: event.target.value })} placeholder={`${order.pet_name}と歩いた季節`} /></label><label><span>トーン</span><input value={value.tone} onChange={(event) => setter({ ...value, tone: event.target.value })} placeholder="やさしく、映画のように" /></label><label><span>概要</span><textarea rows={4} value={value.summary} onChange={(event) => setter({ ...value, summary: event.target.value })} /></label><label><span>シーン（1行に1つ）</span><textarea rows={5} value={value.scenes} onChange={(event) => setter({ ...value, scenes: event.target.value })} placeholder={"はじめて会った日\nいつもの散歩道\n家族を待つ時間"} /></label></div>)}</div><button className="button button-primary" type="button" disabled={saving || !photoAnalysisApproved || !conceptPublishingStatusValid} onClick={saveConcepts}>2案を顧客へ公開する →</button></section>
 
             <section className="admin-card" id="admin-revisions"><div className="card-head"><div><p className="eyebrow">REVISION REQUESTS</p><h3>修正依頼</h3></div><span>{order.revision_used}/{order.revision_limit}回使用</span></div>{revisions.length ? <div className="admin-work-list">{revisions.map((revision) => <article key={revision.id}><div><span className={revision.status === "open" ? "work-status open" : "work-status"}>{revision.status === "open" ? "対応が必要" : "対応済み"}</span><small>{formatDate(revision.created_at)}</small></div><strong>{revision.category}</strong><p>{revision.body}</p>{revision.status === "open" && <button className="button button-outline" type="button" disabled={saving} onClick={() => resolveRevision(revision.id)}>対応完了にする</button>}</article>)}</div> : <p className="admin-empty-copy">修正依頼はまだありません。</p>}<p className="admin-operation-note">修正版を「完成前の確認映像」として公開してから、該当依頼を対応完了にしてください。上限はDBでも{order.revision_limit}回に制限されています。</p></section>
 
