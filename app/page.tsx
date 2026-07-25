@@ -170,7 +170,7 @@ export default async function Home() {
             <div className="trust-row" aria-label="サービスの特徴">
               <span>実写中心</span>
               <span>人の手で監修</span>
-              <span>思い出2つ・写真5枚から</span>
+              <span>写真3枚・思い出3つから</span>
             </div>
           </div>
         </div>

@@ -163,6 +163,7 @@ export function AdminStudio() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoChecked, setVideoChecked] = useState(false);
   const [videoInputKey, setVideoInputKey] = useState(0);
+  const [customerInputPending, setCustomerInputPending] = useState(false);
   const [stillFile, setStillFile] = useState<File | null>(null);
   const [stillTitle, setStillTitle] = useState("");
   const [stillInputKey, setStillInputKey] = useState(0);
@@ -288,6 +289,7 @@ export function AdminStudio() {
       setStillFile(null);
       setStillTitle("");
       setStillInputKey((current) => current + 1);
+      setCustomerInputPending(false);
       loadDetails(order.id);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -609,7 +611,9 @@ export function AdminStudio() {
     return true;
   };
 
-  const prepareCustomerInputMessage = async () => {
+  // The status only moves to needs_customer_input when the message is actually
+  // sent, so the customer never sees "追加確認が必要" before the explanation.
+  const prepareCustomerInputMessage = () => {
     if (!order) return;
     setMessageDraft((current) => current.trim() ? current : [
       "お写真とお申し込み内容を確認しました。",
@@ -618,14 +622,19 @@ export function AdminStudio() {
       "【確認したい内容】",
       "",
     ].join("\n"));
+    setCustomerInputPending(true);
+    setError("");
     window.requestAnimationFrame(() => {
       if (window.matchMedia("(max-width: 1320px)").matches) {
         document.getElementById("admin-message")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       messageComposerRef.current?.focus();
     });
-    await changePhotoAnalysisStatus("needs_customer_input");
-    window.requestAnimationFrame(() => messageComposerRef.current?.focus());
+  };
+
+  const cancelCustomerInputRequest = () => {
+    setCustomerInputPending(false);
+    setNotice("追加確認の連絡を取りやめました。写真確認の状態は変わっていません。");
   };
 
   const selectVideo = (event: ChangeEvent<HTMLInputElement>) => {
@@ -849,9 +858,24 @@ export function AdminStudio() {
         : "メッセージを送信できませんでした。時間をおいてもう一度お試しください。");
     } else {
       setMessageDraft("");
-      setNotice(result.notificationSent
+      const notifyNote = result.notificationSent
         ? "お客様へメッセージを送り、メールでお知らせしました。"
-        : "メッセージは保存しましたが、メール通知を送れませんでした。Resendの設定・送信履歴をご確認ください。");
+        : "メッセージは保存しましたが、メール通知を送れませんでした。Resendの設定・送信履歴をご確認ください。";
+      if (customerInputPending) {
+        const { error: statusError } = await supabase.rpc("admin_set_photo_analysis_status", {
+          p_order_id: order.id,
+          p_status: "needs_customer_input",
+        });
+        if (statusError) {
+          setError("メッセージは送信しましたが、写真確認の状態を「お客様へ追加確認が必要」へ変更できませんでした。現在の状態をご確認ください。");
+        } else {
+          setNotice(`${notifyNote}あわせて写真確認の状態を「お客様へ追加確認が必要」へ変更しました。`);
+        }
+        setCustomerInputPending(false);
+        await loadOrders();
+      } else {
+        setNotice(notifyNote);
+      }
       await loadDetails(order.id);
     }
     setSaving(false);
@@ -879,10 +903,11 @@ export function AdminStudio() {
               <div className="admin-reference-photo-grid">{appearanceReferenceCards.map(({ label, assetId, asset }) => <article key={label}><strong>{label}</strong>{asset && assetUrls[asset.id] ? <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer"><span className="admin-photo-thumb" role="img" aria-label={`${label}写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /></a> : <span className="admin-reference-empty">{assetId ? "読み込み中" : "未選択"}</span>}<small>{asset?.original_filename ?? "—"}</small></article>)}</div>
               <dl className="admin-story"><div><dt>外見の適用方法</dt><dd>{appearancePolicyLabel(productionFields.appearancePolicy)}</dd></div>{productionFields.appearancePolicy === "selected_period" && <><div><dt>選んだ時期</dt><dd>{productionFields.selectedAppearanceDescription || "説明なし"}</dd></div><div><dt>時期の基準写真</dt><dd>{selectedAppearanceAssets.length ? selectedAppearanceAssets.map((asset) => asset.original_filename).join("、") : "未選択"}</dd></div></>}<div><dt>変わってほしくない特徴</dt><dd>{productionFields.ownerLockedTraits.length ? productionFields.ownerLockedTraits.join("、") : "指定なし"}</dd></div><div><dt>映画的な再構成の確認</dt><dd>{productionFields.aiReconstructionAcknowledged ? "確認済み" : "未確認"}</dd></div><div><dt>承認日時</dt><dd>{formatDateTime(productionFields.photoAnalysisApprovedAt)}</dd></div><div><dt>承認した運営者</dt><dd>{productionFields.photoAnalysisApprovedBy ? productionFields.photoAnalysisApprovedBy === user.id ? profile?.email || user.id : productionFields.photoAnalysisApprovedBy : "—"}</dd></div></dl>
               <div className="admin-photo-analysis-actions">
-                {productionFields.photoAnalysisStatus === "pending_operator_review" && <><button className="button button-primary" type="button" disabled={saving} onClick={() => changePhotoAnalysisStatus("approved")}>写真分析を承認する →</button><button className="button button-outline" type="button" disabled={saving} onClick={prepareCustomerInputMessage}>お客様への確認が必要・連絡する</button></>}
+                {productionFields.photoAnalysisStatus === "pending_operator_review" && <><button className="button button-primary" type="button" disabled={saving || customerInputPending} onClick={() => changePhotoAnalysisStatus("approved")}>写真分析を承認する →</button><button className="button button-outline" type="button" disabled={saving || customerInputPending} onClick={prepareCustomerInputMessage}>お客様への確認が必要・連絡する</button></>}
                 {productionFields.photoAnalysisStatus === "needs_customer_input" && <button className="button button-outline" type="button" disabled={saving} onClick={() => changePhotoAnalysisStatus("pending_operator_review")}>追加内容を確認待ちに戻す</button>}
-                {productionFields.photoAnalysisStatus === "approved" && <button className="button button-outline" type="button" disabled={saving} onClick={prepareCustomerInputMessage}>承認を取り消し、追加確認を連絡する</button>}
+                {productionFields.photoAnalysisStatus === "approved" && <button className="button button-outline" type="button" disabled={saving || customerInputPending} onClick={prepareCustomerInputMessage}>承認を取り消し、追加確認を連絡する</button>}
               </div>
+              {customerInputPending && <aside className="admin-operation-note strong"><strong>まだ状態は変更していません。</strong><span>右の「お客様との連絡」で確認したい内容を書き、メッセージを送信すると、そのタイミングで写真確認の状態を「お客様へ追加確認が必要」へ変更します。</span></aside>}
               {!photoAnalysisApproved && <aside className="admin-operation-note warning"><strong>次の制作工程は停止中です。</strong><span>사진 분석에 대한 운영자 승인이 필요합니다. 승인 후 다음 제작 단계로 진행할 수 있습니다.</span></aside>}
             </section>
 
@@ -894,7 +919,7 @@ export function AdminStudio() {
 
             <section className="admin-card" id="admin-story"><div className="card-head"><div><p className="eyebrow">CUSTOMER STORY</p><h3>思い出と写真の組み合わせ</h3></div><div className="admin-export-actions"><button className="button button-outline admin-json-copy" type="button" disabled={saving || exportingBundle || sourceAssets.length === 0} onClick={copyProductionJson}>JSONだけコピー</button><button className="button button-primary admin-bundle-download" type="button" disabled={saving || exportingBundle || sourceAssets.length === 0} onClick={downloadProductionBundle}>{exportingBundle ? "準備中…" : "GPT・Runway制作用データをダウンロード"}</button></div></div>{exportProgress && <p className="admin-export-progress" role="status"><span aria-hidden="true" />{exportProgress}</p>}<aside className="admin-operation-note strong"><strong>元写真と16:9制作写真を一緒に準備します。</strong><span>ZIPのphotosには分析用の元写真、photos_16x9にはRunway・横長編集用の1920×1080 JPGが入ります。縦写真も切り取らず、余白を同じ写真のぼかし背景で自然に補います。</span></aside><dl className="admin-story"><div><dt>映画の種類</dt><dd>{order.purpose}</dd></div><div><dt>犬種・年齢</dt><dd>{order.breed} · {order.age_text || "未入力"}</dd></div><div><dt>性格</dt><dd>{order.personality.join("、") || "未入力"}</dd></div><div><dt>思い出の項目</dt><dd>{memories.length ? `${memories.length}件` : "旧形式の受付"}</dd></div>{memories.length === 0 && <><div><dt>はじめて会った日</dt><dd>{order.first_meeting || "未入力"}</dd></div><div><dt>いちばんの思い出</dt><dd>{order.favorite_memory || "未入力"}</dd></div></>}<div><dt>伝えたい言葉</dt><dd>{order.message_to_pet || "未入力"}</dd></div>{order.avoid_notes && <div><dt>入れたくないこと（旧形式）</dt><dd>{order.avoid_notes}</dd></div>}<div><dt>人物写真の取り扱い</dt><dd>{order.contains_people === null ? "固定ポリシー：お顔は使用せず、後ろ姿などのみ" : `旧形式の記録：${order.contains_people ? "人物あり" : "人物なし"} · ${peopleHandlingLabel(order.people_handling)} · 未成年者${order.contains_minors ? "あり" : "なし"}`}</dd></div><div><dt>規約・Privacy同意</dt><dd>{order.consented_at ? `${formatDateTime(order.consented_at)} · 規約 ${order.terms_version} / Privacy ${order.privacy_version}` : "同意記録なし"}</dd></div><div><dt>写真使用権限・人物の了解</dt><dd>{order.photo_rights_consented_at ? `${formatDateTime(order.photo_rights_consented_at)} · ${order.photo_rights_consent_version}` : "同意記録なし"}</dd></div><div><dt>外部AI処理同意</dt><dd>{order.external_ai_consent_at ? `${formatDateTime(order.external_ai_consent_at)} · Notice ${order.ai_notice_version}` : "同意記録なし"}</dd></div></dl>{memories.length > 0 && <div className="admin-memory-list">{memories.map((memory) => { const memoryPhotos = sourceAssets.filter((asset) => asset.memory_id === memory.id); return <article key={memory.id}><header><span>MEMORY {String(memory.sort_order).padStart(2, "0")}</span><strong>{memory.title}</strong><small>{memoryPhotos.length}枚</small></header><dl><div><dt>時期</dt><dd>{memory.when_text || "指定なし"}</dd></div><div><dt>場所</dt><dd>{memory.location || "指定なし"}</dd></div><div><dt>詳しい内容</dt><dd>{memory.description}</dd></div>{memory.dog_behavior && <div><dt>表情・動き（旧形式）</dt><dd>{memory.dog_behavior}</dd></div>}</dl><div className="admin-memory-photos">{memoryPhotos.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${memory.title}の写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}</small></a>)}</div><p className="admin-memory-check">内容と写真が同じ場面か、服・場所・季節が一致するか確認してください。</p></article>; })}</div>}</section>
 
-            <section className="admin-card" id="admin-photos"><div className="card-head"><div><p className="eyebrow">CUSTOMER PHOTOS</p><h3>写真一覧</h3></div><span>{sourceAssets.length}枚</span></div>{sourceAssets.length ? <><div className="admin-photo-grid">{sourceAssets.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" aria-label={`${asset.original_filename}を大きく表示`} key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${order.pet_name}ちゃんの提出写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}{asset.memory_id ? " · 思い出に紐付け済み" : " · 追加写真"}</small></a>)}</div><p className="admin-operation-note">思い出ごとの対応関係は、上の「思い出と写真の組み合わせ」で確認できます。</p></> : <p className="admin-empty-copy">写真はまだ登録されていません。思い出ごとに1〜5枚、合計5枚以上の提出が必要です。</p>}</section>
+            <section className="admin-card" id="admin-photos"><div className="card-head"><div><p className="eyebrow">CUSTOMER PHOTOS</p><h3>写真一覧</h3></div><span>{sourceAssets.length}枚</span></div>{sourceAssets.length ? <><div className="admin-photo-grid">{sourceAssets.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" aria-label={`${asset.original_filename}を大きく表示`} key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${order.pet_name}ちゃんの提出写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}{asset.memory_id ? " · 思い出に紐付け済み" : " · 追加写真"}</small></a>)}</div><p className="admin-operation-note">基準写真3枚と、思い出ごとの参考写真（任意）がすべて含まれます。どの思い出の場面かは、上の「思い出と写真の組み合わせ」で確認できます。</p></> : <p className="admin-empty-copy">写真はまだ登録されていません。基準写真3枚（お顔・全身・横向き）が必須で、思い出ごとの場面写真は任意です。</p>}</section>
 
             <section className="admin-card" id="admin-concepts"><div className="card-head"><div><p className="eyebrow">CONCEPT DELIVERY</p><h3>映像コンセプト2案</h3></div><span>{concepts.length}/2 保存済み</span></div>{order.status === "materials_submitted" && photoAnalysisApproved && <aside className="admin-operation-note strong"><strong>公開時に確認工程を自動で開始します。</strong><span>コンセプトを公開すると、進行状況を「写真とお話を確認しています」から「コンセプト2案をご確認ください」へ順番に記録します。</span></aside>}{!conceptPublishingStatusValid && <aside className="admin-operation-note warning"><strong>現在の工程では公開できません。</strong><span>進行状況「{ORDER_STATUS_LABELS[order.status]}」を確認してください。制作開始後に内容を変更する場合は、先に適切な工程へ戻す必要があります。</span></aside>}<div className="admin-concepts">{([['A', conceptA, setConceptA], ['B', conceptB, setConceptB]] as const).map(([slot, value, setter]) => <div key={slot}><strong>CONCEPT {slot}</strong><label><span>タイトル</span><input value={value.title} onChange={(event) => setter({ ...value, title: event.target.value })} placeholder={`${order.pet_name}と歩いた季節`} /></label><label><span>トーン</span><input value={value.tone} onChange={(event) => setter({ ...value, tone: event.target.value })} placeholder="やさしく、映画のように" /></label><label><span>概要</span><textarea rows={4} value={value.summary} onChange={(event) => setter({ ...value, summary: event.target.value })} /></label><label><span>シーン（1行に1つ）</span><textarea rows={5} value={value.scenes} onChange={(event) => setter({ ...value, scenes: event.target.value })} placeholder={"はじめて会った日\nいつもの散歩道\n家族を待つ時間"} /></label></div>)}</div><button className="button button-primary" type="button" disabled={saving || !photoAnalysisApproved || !conceptPublishingStatusValid} onClick={saveConcepts}>2案を顧客へ公開する →</button></section>
 
@@ -923,10 +948,11 @@ export function AdminStudio() {
               <aside className="admin-card admin-chat-panel" id="admin-message">
                 <div className="card-head"><div><p className="eyebrow">MESSAGES</p><h3>お客様との連絡</h3></div><span>{openMessages.length}件 未対応</span></div>
                 <p className="admin-chat-guide">ここから送った内容は制作室に保存され、お客様にはメールでも新着をお知らせします。</p>
+                {customerInputPending && <aside className="admin-operation-note warning"><strong>送信すると「お客様へ追加確認が必要」へ変更します。</strong><span>確認したい内容を書いてから送信してください。まだ状態は変わっていません。<button type="button" className="admin-inline-cancel" onClick={cancelCustomerInputRequest}>この連絡を取りやめる</button></span></aside>}
                 <div className="admin-work-list admin-message-list" ref={messageListRef}>{messages.length ? messages.map((message) => { const fromCustomer = message.sender_id === order.user_id; return <article className={fromCustomer ? "customer" : "admin"} key={message.id}><div><span className={fromCustomer && message.status === "open" ? "work-status open" : "work-status"}>{fromCustomer ? message.status === "open" ? "未対応" : "対応済み" : "運営から送信"}</span><small>{formatDateTime(message.created_at)}</small></div><p>{message.body}</p>{fromCustomer && message.status === "open" && <button className="button button-outline" type="button" disabled={saving} onClick={() => resolveMessage(message.id)}>対応済みにする</button>}</article>; }) : <p className="admin-empty-copy">メッセージはまだありません。</p>}</div>
                 <form className="admin-message-form" onSubmit={sendMessage}>
                   <label><span>お客様へのメッセージ</span><textarea ref={messageComposerRef} name="body" rows={5} maxLength={3000} value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} placeholder="追加写真のお願い、確認事項、進行状況など" /><small>メール本文には内容を載せず、制作室に新着があることだけをお知らせします。</small></label>
-                  <button className="button button-primary" type="submit" disabled={saving || !messageDraft.trim()}>{saving ? "送信中…" : "メッセージを送る"}</button>
+                  <button className="button button-primary" type="submit" disabled={saving || !messageDraft.trim()}>{saving ? "送信中…" : customerInputPending ? "送信して追加確認へ変更する →" : "メッセージを送る"}</button>
                 </form>
               </aside>
             </div>
