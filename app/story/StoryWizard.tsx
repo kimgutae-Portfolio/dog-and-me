@@ -8,12 +8,10 @@ import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS } from "../lib/consent";
 import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
-import type { AppearancePolicy, StoryDraftAsset, StoryDraftRecord } from "../lib/supabase/types";
+import type { StoryDraftAsset, StoryDraftRecord } from "../lib/supabase/types";
 import { deleteStoryDraftImage, uploadStoryDraftImage } from "../lib/supabase/uploads";
 
 type FilmPurpose = "いまを残す";
-type PresenceAnswer = "" | "none" | "included";
-type PeopleHandling = "" | "not_applicable" | "dog_only_crop" | "anonymous_person" | "original_still" | "consult";
 type MissingField = { key: string; label: string; step: number };
 type PhotoSaveStatus = "uploading" | "saved" | "error";
 type PhotoDraft = {
@@ -52,20 +50,11 @@ type Draft = {
   ratio: string;
   narration: string;
   bgm: string;
-  peoplePresence: PresenceAnswer;
-  peopleHandling: PeopleHandling;
-  minorPresence: PresenceAnswer;
   primaryFacePhotoKey: string;
   primaryBodyPhotoKey: string;
   sideTailPhotoKey: string;
-  appearancePolicy: AppearancePolicy;
-  selectedAppearanceDescription: string;
-  selectedAppearancePhotoKeys: string[];
-  ownerLockedTraits: string[];
   termsConsent: boolean;
   photoRightsConsent: boolean;
-  depictedPeopleConsent: boolean;
-  minorGuardianConsent: boolean;
   externalAiConsent: boolean;
   aiReconstructionAcknowledged: boolean;
 };
@@ -108,20 +97,11 @@ const emptyDraft: Draft = {
   ratio: "16:9 横型",
   narration: "ナレーションなし",
   bgm: "おまかせ",
-  peoplePresence: "",
-  peopleHandling: "",
-  minorPresence: "",
   primaryFacePhotoKey: "",
   primaryBodyPhotoKey: "",
   sideTailPhotoKey: "",
-  appearancePolicy: "photo_era_by_scene",
-  selectedAppearanceDescription: "",
-  selectedAppearancePhotoKeys: [],
-  ownerLockedTraits: [""],
   termsConsent: false,
   photoRightsConsent: false,
-  depictedPeopleConsent: false,
-  minorGuardianConsent: false,
   externalAiConsent: false,
   aiReconstructionAcknowledged: false,
 };
@@ -146,9 +126,6 @@ function normalizeDraft(value: unknown, preferredPetName: string, validPhotoKeys
       }];
   while (memories.length < MIN_MEMORY_COUNT) memories.push(createMemoryDraft(`memory-${memories.length + 1}`));
   const photoKey = (key: unknown) => typeof key === "string" && (!validPhotoKeys || validPhotoKeys.has(key)) ? key : "";
-  const photoKeys = (keys: unknown) => Array.isArray(keys)
-    ? keys.filter((key): key is string => typeof key === "string" && (!validPhotoKeys || validPhotoKeys.has(key)))
-    : [];
 
   return {
     ...emptyDraft,
@@ -160,14 +137,8 @@ function normalizeDraft(value: unknown, preferredPetName: string, validPhotoKeys
     primaryFacePhotoKey: photoKey(parsed.primaryFacePhotoKey),
     primaryBodyPhotoKey: photoKey(parsed.primaryBodyPhotoKey),
     sideTailPhotoKey: photoKey(parsed.sideTailPhotoKey),
-    selectedAppearancePhotoKeys: photoKeys(parsed.selectedAppearancePhotoKeys).slice(0, 3),
-    ownerLockedTraits: Array.isArray(parsed.ownerLockedTraits) && parsed.ownerLockedTraits.length
-      ? parsed.ownerLockedTraits.filter((trait): trait is string => typeof trait === "string").slice(0, 3)
-      : [""],
     termsConsent: parsed.termsConsent ?? parsed.consent ?? false,
     photoRightsConsent: parsed.photoRightsConsent ?? false,
-    depictedPeopleConsent: parsed.depictedPeopleConsent ?? false,
-    minorGuardianConsent: parsed.minorGuardianConsent ?? false,
     externalAiConsent: parsed.externalAiConsent ?? false,
     aiReconstructionAcknowledged: parsed.aiReconstructionAcknowledged ?? false,
   };
@@ -180,26 +151,6 @@ const styles = [
   ["日本映画のように", "季節感と余白を大切に、落ち着いた画づくりで。"],
   ["明るく楽しい思い出", "元気なテンポと明るい色で、その子らしく。"],
 ];
-const appearanceOptions: Array<[AppearancePolicy, string]> = [
-  ["photo_era_by_scene", "写真を撮った当時の姿を、場面ごとに残したい"],
-  ["current_appearance", "現在の姿で全編を統一したい"],
-  ["selected_period", "特定の時期の姿で全編を統一したい"],
-];
-const peopleHandlingOptions = [
-  ["dog_only_crop", "愛犬だけを切り抜いて使用する（おすすめ）"],
-  ["anonymous_person", "お顔が分からない後ろ姿・手元・足元・シルエットで表現する"],
-  ["original_still", "元の家族写真を、動かさずそのまま映像内に使用する"],
-  ["consult", "どの方法がよいか担当者に相談したい"],
-] as const;
-
-function peopleHandlingLabel(value: PeopleHandling) {
-  if (value === "not_applicable") return "該当なし";
-  return peopleHandlingOptions.find(([key]) => key === value)?.[1] ?? "未選択";
-}
-
-function appearancePolicyLabel(value: AppearancePolicy) {
-  return appearanceOptions.find(([key]) => key === value)?.[1] ?? "未選択";
-}
 
 type PhotoSelectorProps = {
   id: string;
@@ -569,26 +520,10 @@ export function StoryWizard() {
       primaryFacePhotoKey: current.primaryFacePhotoKey === photoKey ? "" : current.primaryFacePhotoKey,
       primaryBodyPhotoKey: current.primaryBodyPhotoKey === photoKey ? "" : current.primaryBodyPhotoKey,
       sideTailPhotoKey: current.sideTailPhotoKey === photoKey ? "" : current.sideTailPhotoKey,
-      selectedAppearancePhotoKeys: current.selectedAppearancePhotoKeys.filter((key) => key !== photoKey),
       memories: current.memories.map((memory) => ({ ...memory, photoKeys: memory.photoKeys.filter((key) => key !== photoKey) })),
     }));
     setPhotoSelectionNotice("削除した写真の基準設定と思い出とのつながりを解除しました。必要な項目を選び直してください。");
   };
-
-  const selectPeoplePresence = (value: PresenceAnswer) => setDraft((current) => value === "none"
-    ? { ...current, peoplePresence: value, peopleHandling: "not_applicable", minorPresence: "none", depictedPeopleConsent: false, minorGuardianConsent: false }
-    : { ...current, peoplePresence: value, peopleHandling: "", minorPresence: "", depictedPeopleConsent: false, minorGuardianConsent: false });
-
-  const selectAppearancePolicy = (policy: AppearancePolicy) => setDraft((current) => ({
-    ...current,
-    appearancePolicy: policy,
-    selectedAppearanceDescription: policy === "selected_period" ? current.selectedAppearanceDescription : "",
-    selectedAppearancePhotoKeys: policy === "selected_period" ? current.selectedAppearancePhotoKeys : [],
-  }));
-
-  const updateTrait = (index: number, value: string) => update("ownerLockedTraits", draft.ownerLockedTraits.map((trait, traitIndex) => traitIndex === index ? value : trait));
-  const removeTrait = (index: number) => update("ownerLockedTraits", draft.ownerLockedTraits.filter((_, traitIndex) => traitIndex !== index));
-  const addTrait = () => { if (draft.ownerLockedTraits.length < 3) update("ownerLockedTraits", [...draft.ownerLockedTraits, ""]); };
 
   const assignedMemoryByPhoto = useMemo(() => {
     const assigned: Record<string, string> = {};
@@ -679,17 +614,6 @@ export function StoryWizard() {
     if (!draft.primaryFacePhotoKey) missing.push({ key: "primaryFace", label: "お顔の基準写真", step: 1 });
     if (!draft.primaryBodyPhotoKey) missing.push({ key: "primaryBody", label: "全身の基準写真", step: 1 });
     if (!draft.sideTailPhotoKey) missing.push({ key: "sideTail", label: "横向き・しっぽの基準写真", step: 1 });
-    if (!draft.appearancePolicy) missing.push({ key: "appearancePolicy", label: "思い出の中の姿", step: 1 });
-    if (draft.appearancePolicy === "selected_period") {
-      if (!draft.selectedAppearanceDescription.trim() || draft.selectedAppearanceDescription.trim().length > 200) missing.push({ key: "appearanceDescription", label: "残したい時期の姿（200文字以内）", step: 1 });
-      if (draft.selectedAppearancePhotoKeys.length < 1 || draft.selectedAppearancePhotoKeys.length > 3) missing.push({ key: "appearancePhotos", label: "その時期が分かる写真（1〜3枚）", step: 1 });
-    }
-    const traits = draft.ownerLockedTraits.map((trait) => trait.trim()).filter(Boolean);
-    if (draft.ownerLockedTraits.some((trait) => trait.trim().length > 80) || traits.length > 3) missing.push({ key: "traits", label: "変わってほしくない特徴（各80文字・3つまで）", step: 1 });
-    if (!draft.peoplePresence) missing.push({ key: "peoplePresence", label: "写真に人物が写っているか", step: 1 });
-    if (draft.peoplePresence === "included" && !draft.peopleHandling) missing.push({ key: "peopleHandling", label: "人物の映像での取り扱い", step: 1 });
-    if (draft.peoplePresence === "included" && !draft.minorPresence) missing.push({ key: "minorPresence", label: "未成年者が写っているか", step: 1 });
-    if (draft.minorPresence === "included" && !draft.minorGuardianConsent) missing.push({ key: "minorGuardianConsent", label: "未成年者の保護者同意", step: 1 });
     if (draft.memories.length < MIN_MEMORY_COUNT) missing.push({ key: "memories", label: `思い出の項目（${MIN_MEMORY_COUNT}つ以上）`, step: 2 });
     draft.memories.forEach((memory, index) => {
       const number = index + 1;
@@ -700,7 +624,6 @@ export function StoryWizard() {
     if (!draft.message.trim()) missing.push({ key: "message", label: "その子へ伝えたいこと", step: 2 });
     if (!draft.termsConsent) missing.push({ key: "termsConsent", label: "利用規約・プライバシーポリシーへの同意", step: 4 });
     if (!draft.photoRightsConsent) missing.push({ key: "photoRightsConsent", label: "提出写真の使用権限の確認", step: 4 });
-    if (draft.peoplePresence === "included" && !draft.depictedPeopleConsent) missing.push({ key: "depictedPeopleConsent", label: "写真に写っている人物の同意確認", step: 4 });
     if (!draft.externalAiConsent) missing.push({ key: "externalAiConsent", label: "外部AIサービスでの処理への同意", step: 4 });
     if (!draft.aiReconstructionAcknowledged) missing.push({ key: "aiReconstructionAcknowledged", label: "映画的な再構成についての確認", step: 4 });
     return missing;
@@ -760,18 +683,11 @@ export function StoryWizard() {
         style: draft.style, aspect_ratio: draft.ratio, narration: draft.narration, bgm: draft.bgm,
         consent_accepted: draft.termsConsent,
         photo_rights_consent_accepted: draft.photoRightsConsent,
-        depicted_people_consent_accepted: draft.peoplePresence === "included" ? draft.depictedPeopleConsent : false,
-        minor_guardian_consent_accepted: draft.minorPresence === "included" ? draft.minorGuardianConsent : false,
         external_ai_consent_accepted: draft.externalAiConsent,
-        contains_people: draft.peoplePresence === "included",
-        people_handling: draft.peopleHandling,
-        contains_minors: draft.minorPresence === "included",
         terms_version: CONSENT_VERSIONS.terms,
         privacy_version: CONSENT_VERSIONS.privacy,
         ai_notice_version: CONSENT_VERSIONS.aiNotice,
         photo_rights_consent_version: CONSENT_VERSIONS.photoRights,
-        depicted_people_consent_version: CONSENT_VERSIONS.depictedPeople,
-        minor_guardian_consent_version: CONSENT_VERSIONS.minorGuardian,
         people_policy_version: CONSENT_VERSIONS.peoplePolicy,
       };
       let orderId = pendingOrderId || window.localStorage.getItem("wan-memory-pending-order-id") || "";
@@ -849,10 +765,6 @@ export function StoryWizard() {
           primary_face_photo_id: requiredAssetId(draft.primaryFacePhotoKey),
           primary_body_photo_id: requiredAssetId(draft.primaryBodyPhotoKey),
           side_tail_photo_id: requiredAssetId(draft.sideTailPhotoKey),
-          appearance_policy: draft.appearancePolicy,
-          selected_appearance_description: draft.appearancePolicy === "selected_period" ? draft.selectedAppearanceDescription.trim() : null,
-          selected_appearance_photo_ids: draft.appearancePolicy === "selected_period" ? draft.selectedAppearancePhotoKeys.map(requiredAssetId) : [],
-          owner_locked_traits: draft.ownerLockedTraits.map((trait) => trait.trim()).filter(Boolean),
           ai_reconstruction_acknowledged: draft.aiReconstructionAcknowledged,
         },
       });
@@ -948,14 +860,9 @@ export function StoryWizard() {
               <PhotoSelector id="side-tail-section" stepLabel="4" legend="横向きの体型と、しっぽの形が分かる写真を選んでください" name="side-tail" photos={photoFiles} value={draft.sideTailPhotoKey} roleLabel="横向き・しっぽ" roleKeys={roleKeys} onChange={(value) => update("sideTailPhotoKey", value)} />
             </div>}
 
-            <fieldset className="appearance-policy-fieldset" id="appearance-policy-section"><legend>思い出の中の姿を、どのように残したいですか？ <em>必須</em></legend><div>{appearanceOptions.map(([value, label]) => <label className={draft.appearancePolicy === value ? "selected" : ""} key={value}><input type="radio" name="appearance-policy" checked={draft.appearancePolicy === value} onChange={() => selectAppearancePolicy(value)} /><span>{label}</span><i aria-hidden="true">{draft.appearancePolicy === value ? "✓" : ""}</i></label>)}</div></fieldset>
-            {draft.appearancePolicy === "selected_period" && <section className="selected-period-panel"><label><span>残したい時期の姿を教えてください <em>必須</em></span><textarea rows={3} maxLength={200} value={draft.selectedAppearanceDescription} onChange={(event) => update("selectedAppearanceDescription", event.target.value)} placeholder="例：2〜3歳頃の、耳の毛が少し短かった姿" /><small>{draft.selectedAppearanceDescription.trim().length} / 200</small></label><fieldset><legend>その時期が分かる写真を1〜3枚選んでください <em>必須</em></legend><div className="photo-choice-grid compact">{photoFiles.map((photo, index) => { const selected = draft.selectedAppearancePhotoKeys.includes(photo.clientKey); const disabled = !selected && draft.selectedAppearancePhotoKeys.length >= 3; return <label className={selected ? "photo-choice-card selected" : "photo-choice-card"} key={`period-${photo.clientKey}`}><input type="checkbox" checked={selected} disabled={disabled} onChange={() => update("selectedAppearancePhotoKeys", selected ? draft.selectedAppearancePhotoKeys.filter((key) => key !== photo.clientKey) : [...draft.selectedAppearancePhotoKeys, photo.clientKey])} /><img src={photo.previewUrl} alt={`愛犬の写真 ${index + 1}`} loading="lazy" />{!selected && !disabled && <span className="photo-choice-action">タップして選ぶ</span>}{selected && <strong className="photo-selected-mark">✓ 時期の基準</strong>}</label>; })}</div></fieldset></section>}
 
-            <section className="locked-traits-panel"><h2>変わってほしくない、この子らしい特徴を教えてください <small>任意・最大3つ</small></h2><p>目の大きさ、耳の形、口元、毛の長さ、しっぽ、いつもの表情など</p>{draft.ownerLockedTraits.map((trait, index) => <label key={`trait-${index}`}><span>特徴 {index + 1}</span><input value={trait} maxLength={80} onChange={(event) => updateTrait(index, event.target.value)} placeholder="例：丸く大きな黒い目" /><small>{trait.length} / 80</small>{draft.ownerLockedTraits.length > 1 && <button type="button" onClick={() => removeTrait(index)}>削除</button>}</label>)}{draft.ownerLockedTraits.length < 3 && <button type="button" className="add-trait-button" onClick={addTrait}>＋ 特徴を追加</button>}</section>
 
-            <aside className="people-photo-policy"><p className="eyebrow">PEOPLE IN PHOTOS</p><h2>人物が写っている写真について</h2><p>ご家族と一緒に写っている写真もお送りいただけます。現在のWAN MEMORYでは、人物のお顔を新しく生成・再現する制作は行っていません。</p><p>愛犬だけを切り抜く、お顔が分からない後ろ姿・手元・足元・シルエットで表現する、または元の家族写真を動かさずそのまま映像内に使用する方法からお選びいただけます。</p></aside>
-            <fieldset className="photo-policy-question"><legend>お送りいただく写真に人物は写っていますか？ <em>必須</em></legend><div className="photo-policy-options"><label><input type="radio" name="peoplePresence" checked={draft.peoplePresence === "none"} onChange={() => selectPeoplePresence("none")} /><span>人物は写っていない</span></label><label><input type="radio" name="peoplePresence" checked={draft.peoplePresence === "included"} onChange={() => selectPeoplePresence("included")} /><span>人物が写っている</span></label></div></fieldset>
-            {draft.peoplePresence === "included" && <div className="people-photo-details"><fieldset className="photo-policy-question"><legend>人物の映像での取り扱いを選んでください。 <em>必須</em></legend><div className="photo-policy-options vertical">{peopleHandlingOptions.map(([value, label]) => <label key={value}><input type="radio" name="peopleHandling" checked={draft.peopleHandling === value} onChange={() => update("peopleHandling", value)} /><span>{label}</span></label>)}</div></fieldset><fieldset className="photo-policy-question"><legend>写真に未成年の方は写っていますか？ <em>必須</em></legend><div className="photo-policy-options"><label><input type="radio" name="minorPresence" checked={draft.minorPresence === "none"} onChange={() => setDraft((current) => ({ ...current, minorPresence: "none", minorGuardianConsent: false }))} /><span>写っていない</span></label><label><input type="radio" name="minorPresence" checked={draft.minorPresence === "included"} onChange={() => update("minorPresence", "included")} /><span>写っている</span></label></div></fieldset>{draft.minorPresence === "included" && <label className="guardian-consent"><input type="checkbox" checked={draft.minorGuardianConsent} onChange={(event) => update("minorGuardianConsent", event.target.checked)} /><span>未成年者が写っている写真について、保護者から制作利用の同意を得ています。 <em>必須</em></span></label>}</div>}
+            <aside className="people-photo-policy"><p className="eyebrow">PEOPLE IN PHOTOS</p><h2>人物が写っている写真について</h2><p>ご家族と一緒に写っている写真もお送りいただけます。人物のお顔は映像に使用・生成せず、後ろ姿などお顔が分からない形でのみ使用します。写真に人物が写っている場合は、その方（未成年者の場合は保護者）の了解を得たうえでお送りください。</p></aside>
           </div>}
 
           {step === 2 && <div className="wizard-panel"><p className="eyebrow">YOUR MEMORIES</p><h1 id="step-title">覚えていることを、少しずつ。</h1><p className="step-lead">思い出は最低{MIN_MEMORY_COUNT}つ必要です。文章を入力し、先ほど選んだ写真から同じ場面の写真をつないでください。</p><section className="memory-writing-guide" aria-labelledby="memory-writing-guide-title"><div><p className="eyebrow">WRITING GUIDE</p><h2 id="memory-writing-guide-title">映像にしやすい伝え方</h2></div><ol><li><span>01</span><div><strong>ひとつの出来事に絞る</strong><p>「旅行」だけではなく「海辺で初めて波を見た日」のように、ひとつの場面にします。</p></div></li><li><span>02</span><div><strong>その子の動きや表情を書く</strong><p>走った、振り返った、首をかしげたなど、実際に見た様子を教えてください。</p></div></li><li><span>03</span><div><strong>内容と同じ写真をつなぐ</strong><p>場所・服・季節が分かる写真を1〜{MAX_PHOTOS_PER_MEMORY}枚選びます。</p></div></li></ol><p>例：「去年の春、いつもの公園で桜を見ました。モモは花びらを追いかけたあと、こちらを見て首をかしげました。」</p></section>
@@ -965,8 +872,8 @@ export function StoryWizard() {
 
           {step === 3 && <div className="wizard-panel"><p className="eyebrow">FILM DIRECTION</p><h1 id="step-title">どんな空気の映画にしますか？</h1><p className="step-lead">迷ったら「日常映画」がおすすめです。担当者からもご提案します。映像はBGMと短い字幕を中心に、思い出へ集中できる構成にします。</p><div className="style-list">{styles.map(([title, copy], index) => <label className={draft.style === title ? "style-card selected" : "style-card"} key={title}><input type="radio" name="style" checked={draft.style === title} onChange={() => update("style", title)} /><span className={`style-swatch swatch-${index + 1}`} aria-hidden="true" /><span><strong>{title}</strong><small>{copy}</small></span><span className="radio-dot" /></label>)}</div><div className="form-grid compact"><label><span>映像比率</span><select value={draft.ratio} onChange={(event) => update("ratio", event.target.value)}><option>16:9 横型</option><option>9:16 縦型</option><option>1:1 正方形</option></select></label><label><span>BGM</span><select value={draft.bgm} onChange={(event) => update("bgm", event.target.value)}><option>おまかせ</option><option>静かなピアノ</option><option>アコースティックギター</option><option>映画音楽のように</option></select></label></div></div>}
 
-          {step === 4 && <div className="wizard-panel"><p className="eyebrow">REVIEW</p><h1 id="step-title">ありがとうございます。</h1><p className="step-lead">まずは相談受付としてお預かりします。決済は内容と納期をご確認いただいた後です。</p><div className="review-card"><div className="review-title"><span className="brand-mark" aria-hidden="true">WM</span><div><strong>{draft.petName || "愛犬"}ちゃんの映画</strong><small>{FIXED_FILM_PURPOSE_LABEL}・{draft.style}</small></div></div><section className="review-section"><header><h2>基本情報</h2><button type="button" onClick={() => goToStep(0)}>修正する</button></header><dl><div><dt>お名前</dt><dd>{draft.petName || "未入力"}</dd></div><div><dt>犬種・年齢</dt><dd>{[draft.breed, draft.age].filter(Boolean).join(" / ") || "未入力"}</dd></div><div><dt>性格</dt><dd>{draft.personality.join("、") || "未入力"}</dd></div><div><dt>映画の種類</dt><dd>{FIXED_FILM_PURPOSE_LABEL}</dd></div></dl></section><section className="review-section"><header><h2>お写真とその子らしさ</h2><button type="button" onClick={() => goToStep(1)}>修正する</button></header><div className="review-reference-grid">{[["お顔の基準", draft.primaryFacePhotoKey], ["全身の基準", draft.primaryBodyPhotoKey], ["横向き・しっぽ", draft.sideTailPhotoKey]] .map(([label, key]) => { const photo = photoFiles.find((item) => item.clientKey === key); return <article key={label}><strong>{label}</strong>{photo ? <img src={photo.previewUrl} alt={`${label}として選んだ愛犬の写真`} /> : <span>未選択</span>}</article>; })}</div><dl><div><dt>思い出の中の姿</dt><dd>{appearancePolicyLabel(draft.appearancePolicy)}</dd></div>{draft.appearancePolicy === "selected_period" && <div><dt>残したい時期</dt><dd>{draft.selectedAppearanceDescription || "未入力"} · 写真{draft.selectedAppearancePhotoKeys.length}枚</dd></div>}<div><dt>変わってほしくない特徴</dt><dd>{draft.ownerLockedTraits.map((trait) => trait.trim()).filter(Boolean).join("、") || "指定なし"}</dd></div><div><dt>人物の有無</dt><dd>{draft.peoplePresence === "included" ? "あり" : draft.peoplePresence === "none" ? "なし" : "未入力"}</dd></div>{draft.peoplePresence === "included" && <><div><dt>人物の取り扱い</dt><dd>{peopleHandlingLabel(draft.peopleHandling)}</dd></div><div><dt>未成年者</dt><dd>{draft.minorPresence === "included" ? "あり" : draft.minorPresence === "none" ? "なし" : "未入力"}</dd></div></>}</dl></section><section className="review-section"><header><h2>思い出</h2><button type="button" onClick={() => goToStep(2)}>修正する</button></header><div className="review-memory-list">{draft.memories.map((memory, index) => <article key={memory.clientKey}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{memory.title || "タイトル未入力"}</strong><p>{memory.description || "詳しい内容が未入力です。"}</p><small>{memory.whenText || "時期未入力"} · {memory.location || "場所未入力"} · 写真{memory.photoKeys.length}枚</small></div></article>)}</div></section><section className="review-section"><header><h2>仕上がり</h2><button type="button" onClick={() => goToStep(3)}>修正する</button></header><dl><div><dt>希望</dt><dd>{draft.ratio}・BGM：{draft.bgm}</dd></div><div><dt>プラン</dt><dd>メモリーフィルム</dd></div><div><dt>料金</dt><dd className="review-monitor-price"><strong>先着{MEMORY_FILM_PRICING.launchLimit}組 ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）</strong><small>必要な思い出と写真の送信が完了した時点で確定・終了後は ¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</small></dd></div><div><dt>コンセプト</dt><dd>2案から1案を選択</dd></div><div><dt>専用サイト</dt><dd>プランに含まれます</dd></div></dl></section></div>
-            <div className="consent-stack"><label className="consent-box"><input type="checkbox" checked={draft.termsConsent} onChange={(event) => update("termsConsent", event.target.checked)} /><span><strong>利用規約とプライバシーポリシーに同意します <em>必須</em></strong><small><Link href="/terms" target="_blank">利用規約</Link>（{CONSENT_VERSIONS.terms}）と<Link href="/privacy" target="_blank">プライバシーポリシー</Link>（{CONSENT_VERSIONS.privacy}）を確認しました。</small></span></label><label className="consent-box"><input type="checkbox" checked={draft.photoRightsConsent} onChange={(event) => update("photoRightsConsent", event.target.checked)} /><span><strong>写真の使用権限について確認しました <em>必須</em></strong><small>提出する写真について、本サービスの映像制作に使用する権限を持っています。確認文版：{CONSENT_VERSIONS.photoRights}</small></span></label>{draft.peoplePresence === "included" && <label className="consent-box"><input type="checkbox" checked={draft.depictedPeopleConsent} onChange={(event) => update("depictedPeopleConsent", event.target.checked)} /><span><strong>写っている人物の同意を得ています <em>必須</em></strong><small>写真に写っているご本人から、本サービスの制作に使用する同意を得ています。確認文版：{CONSENT_VERSIONS.depictedPeople}</small></span></label>}<label className="consent-box"><input type="checkbox" checked={draft.externalAiConsent} onChange={(event) => update("externalAiConsent", event.target.checked)} /><span><strong>外部AIサービスの利用を確認しました <em>必須</em></strong><small>映像制作のため、写真や制作情報が外部AIサービスで処理される場合があります。WAN MEMORYが独自のAIモデル学習や広告・ポートフォリオ公開に使用することはありません。外部サービスでのデータの取り扱いは各サービスの条件に基づきます。案内版：{CONSENT_VERSIONS.aiNotice}</small></span></label><label className="consent-box important"><input type="checkbox" checked={draft.aiReconstructionAcknowledged} onChange={(event) => update("aiReconstructionAcknowledged", event.target.checked)} /><span><strong>映画的な再構成について確認しました <em>必須</em></strong><small>AI技術を使用する場面は、元写真を大切にしながら映画的に再構成されるため、細部が完全に同一にならない場合があることを確認しました。</small></span></label></div>
+          {step === 4 && <div className="wizard-panel"><p className="eyebrow">REVIEW</p><h1 id="step-title">ありがとうございます。</h1><p className="step-lead">まずは相談受付としてお預かりします。決済は内容と納期をご確認いただいた後です。</p><div className="review-card"><div className="review-title"><span className="brand-mark" aria-hidden="true">WM</span><div><strong>{draft.petName || "愛犬"}ちゃんの映画</strong><small>{FIXED_FILM_PURPOSE_LABEL}・{draft.style}</small></div></div><section className="review-section"><header><h2>基本情報</h2><button type="button" onClick={() => goToStep(0)}>修正する</button></header><dl><div><dt>お名前</dt><dd>{draft.petName || "未入力"}</dd></div><div><dt>犬種・年齢</dt><dd>{[draft.breed, draft.age].filter(Boolean).join(" / ") || "未入力"}</dd></div><div><dt>性格</dt><dd>{draft.personality.join("、") || "未入力"}</dd></div><div><dt>映画の種類</dt><dd>{FIXED_FILM_PURPOSE_LABEL}</dd></div></dl></section><section className="review-section"><header><h2>お写真とその子らしさ</h2><button type="button" onClick={() => goToStep(1)}>修正する</button></header><div className="review-reference-grid">{[["お顔の基準", draft.primaryFacePhotoKey], ["全身の基準", draft.primaryBodyPhotoKey], ["横向き・しっぽ", draft.sideTailPhotoKey]] .map(([label, key]) => { const photo = photoFiles.find((item) => item.clientKey === key); return <article key={label}><strong>{label}</strong>{photo ? <img src={photo.previewUrl} alt={`${label}として選んだ愛犬の写真`} /> : <span>未選択</span>}</article>; })}</div><dl><div><dt>人物が写っている写真</dt><dd>お顔は使用せず、後ろ姿などお顔が分からない形でのみ使用します</dd></div></dl></section><section className="review-section"><header><h2>思い出</h2><button type="button" onClick={() => goToStep(2)}>修正する</button></header><div className="review-memory-list">{draft.memories.map((memory, index) => <article key={memory.clientKey}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{memory.title || "タイトル未入力"}</strong><p>{memory.description || "詳しい内容が未入力です。"}</p><small>{memory.whenText || "時期未入力"} · {memory.location || "場所未入力"} · 写真{memory.photoKeys.length}枚</small></div></article>)}</div></section><section className="review-section"><header><h2>仕上がり</h2><button type="button" onClick={() => goToStep(3)}>修正する</button></header><dl><div><dt>希望</dt><dd>{draft.ratio}・BGM：{draft.bgm}</dd></div><div><dt>プラン</dt><dd>メモリーフィルム</dd></div><div><dt>料金</dt><dd className="review-monitor-price"><strong>先着{MEMORY_FILM_PRICING.launchLimit}組 ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）</strong><small>必要な思い出と写真の送信が完了した時点で確定・終了後は ¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</small></dd></div><div><dt>コンセプト</dt><dd>2案から1案を選択</dd></div><div><dt>専用サイト</dt><dd>プランに含まれます</dd></div></dl></section></div>
+            <div className="consent-stack"><label className="consent-box"><input type="checkbox" checked={draft.termsConsent} onChange={(event) => update("termsConsent", event.target.checked)} /><span><strong>利用規約とプライバシーポリシーに同意します <em>必須</em></strong><small><Link href="/terms" target="_blank">利用規約</Link>（{CONSENT_VERSIONS.terms}）と<Link href="/privacy" target="_blank">プライバシーポリシー</Link>（{CONSENT_VERSIONS.privacy}）を確認しました。</small></span></label><label className="consent-box"><input type="checkbox" checked={draft.photoRightsConsent} onChange={(event) => update("photoRightsConsent", event.target.checked)} /><span><strong>写真の使用権限と人物の取り扱いについて確認しました <em>必須</em></strong><small>提出する写真について、本サービスの映像制作に使用する権限を持っています。人物が写っている場合は、その方（未成年者の場合は保護者）の了解を得ており、お顔は映像に使用されないことを確認しました。確認文版：{CONSENT_VERSIONS.photoRights}</small></span></label><label className="consent-box"><input type="checkbox" checked={draft.externalAiConsent} onChange={(event) => update("externalAiConsent", event.target.checked)} /><span><strong>外部AIサービスの利用を確認しました <em>必須</em></strong><small>映像制作のため、写真や制作情報が外部AIサービスで処理される場合があります。WAN MEMORYが独自のAIモデル学習や広告・ポートフォリオ公開に使用することはありません。外部サービスでのデータの取り扱いは各サービスの条件に基づきます。案内版：{CONSENT_VERSIONS.aiNotice}</small></span></label><label className="consent-box important"><input type="checkbox" checked={draft.aiReconstructionAcknowledged} onChange={(event) => update("aiReconstructionAcknowledged", event.target.checked)} /><span><strong>映画的な再構成について確認しました <em>必須</em></strong><small>AI技術を使用する場面は、元写真を大切にしながら映画的に再構成されるため、細部が完全に同一にならない場合があることを確認しました。</small></span></label></div>
             {missingFields.length > 0 ? <aside className="missing-fields-panel" role="status" aria-labelledby="missing-fields-title"><p className="eyebrow">REQUIRED ITEMS</p><h2 id="missing-fields-title">あと{missingFields.length}項目の入力が必要です。</h2><p>項目を選ぶと入力する画面へ戻れます。すべて入力すると、ご相談を送信できます。</p><ul>{missingFields.map((item) => <li key={item.key}><button type="button" onClick={() => goToStep(item.step)}><span>{steps[item.step]}</span><strong>{item.label}</strong><em>入力する →</em></button></li>)}</ul></aside> : <aside className="ready-to-submit" role="status"><span aria-hidden="true">✓</span><div><strong>必要な項目がすべて揃いました。</strong><small>下のボタンからご相談を送信できます。</small></div></aside>}
           </div>}
 

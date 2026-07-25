@@ -6,7 +6,7 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } fro
 import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS, hasCurrentConsent } from "../lib/consent";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
-import type { Delivery, FilmConcept, MemoryOrder, OrderAsset, OrderMemory, OrderMessage, PeopleHandling, RevisionRequest } from "../lib/supabase/types";
+import type { Delivery, FilmConcept, MemoryOrder, OrderAsset, OrderMemory, OrderMessage, RevisionRequest } from "../lib/supabase/types";
 import { ORDER_STATUS_LABELS } from "../lib/supabase/types";
 import { uploadOrderImages } from "../lib/supabase/uploads";
 import { MemoryShareManager } from "./MemoryShareManager";
@@ -81,12 +81,7 @@ export function StudioClient() {
   const [acceptingConsent, setAcceptingConsent] = useState(false);
   const [consentTermsChecked, setConsentTermsChecked] = useState(false);
   const [consentPhotoRightsChecked, setConsentPhotoRightsChecked] = useState(false);
-  const [consentPeopleChecked, setConsentPeopleChecked] = useState(false);
-  const [consentGuardianChecked, setConsentGuardianChecked] = useState(false);
   const [consentAiChecked, setConsentAiChecked] = useState(false);
-  const [renewContainsPeople, setRenewContainsPeople] = useState<"" | "none" | "included">("");
-  const [renewPeopleHandling, setRenewPeopleHandling] = useState<PeopleHandling | "">("");
-  const [renewContainsMinors, setRenewContainsMinors] = useState<"" | "none" | "included">("");
   const received = searchParams.get("received") === "1";
 
   useEffect(() => {
@@ -288,9 +283,7 @@ export function StudioClient() {
   };
 
   const acceptCurrentConsents = async () => {
-    const peopleDetailsComplete = renewContainsPeople === "none" || (renewContainsPeople === "included" && Boolean(renewPeopleHandling) && Boolean(renewContainsMinors));
-    const conditionalConsentsComplete = renewContainsPeople !== "included" || (consentPeopleChecked && (renewContainsMinors !== "included" || consentGuardianChecked));
-    if (!order || !canOperateOrder || !consentTermsChecked || !consentPhotoRightsChecked || !consentAiChecked || !peopleDetailsComplete || !conditionalConsentsComplete) return;
+    if (!order || !canOperateOrder || !consentTermsChecked || !consentPhotoRightsChecked || !consentAiChecked) return;
     setAcceptingConsent(true);
     setError("");
     const { error: consentError } = await getSupabaseBrowserClient().rpc("accept_order_consents", {
@@ -299,24 +292,15 @@ export function StudioClient() {
       p_privacy_version: CONSENT_VERSIONS.privacy,
       p_ai_notice_version: CONSENT_VERSIONS.aiNotice,
       p_photo_rights_consent_version: CONSENT_VERSIONS.photoRights,
-      p_depicted_people_consent_version: CONSENT_VERSIONS.depictedPeople,
-      p_minor_guardian_consent_version: CONSENT_VERSIONS.minorGuardian,
       p_people_policy_version: CONSENT_VERSIONS.peoplePolicy,
-      p_contains_people: renewContainsPeople === "included",
-      p_people_handling: renewContainsPeople === "none" ? "not_applicable" : renewPeopleHandling,
-      p_contains_minors: renewContainsMinors === "included",
       p_consent_accepted: consentTermsChecked,
       p_photo_rights_consent_accepted: consentPhotoRightsChecked,
-      p_depicted_people_consent_accepted: renewContainsPeople === "included" ? consentPeopleChecked : false,
-      p_minor_guardian_consent_accepted: renewContainsMinors === "included" ? consentGuardianChecked : false,
       p_external_ai_consent_accepted: consentAiChecked,
     });
     if (consentError) setError("同意内容を記録できませんでした。もう一度お試しください。");
     else {
       setConsentTermsChecked(false);
       setConsentPhotoRightsChecked(false);
-      setConsentPeopleChecked(false);
-      setConsentGuardianChecked(false);
       setConsentAiChecked(false);
       setNotice("写真・人物の取り扱いと外部サービス利用への同意を記録しました。");
       await loadOrders();
@@ -383,7 +367,7 @@ export function StudioClient() {
       {received && <div className="received-banner"><span aria-hidden="true">✓</span><div><strong>ご相談と写真を受け付けました。</strong><p>ここから追加写真、コンセプト選択、映像確認、お届けまで進められます。</p></div></div>}
       {conceptReceipt && <div className="concept-receipt-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setConceptReceipt(null); }}><section className="concept-receipt-dialog" role="alertdialog" aria-modal="true" aria-labelledby="concept-receipt-title" aria-describedby="concept-receipt-copy"><div className="concept-receipt-film" aria-hidden="true"><i /><i /><span>WM</span><i /><i /></div><p className="eyebrow">SELECTION RECEIVED · CONCEPT {conceptReceipt.slot}</p><h2 id="concept-receipt-title">コンセプトをお預かりしました。</h2><p id="concept-receipt-copy">「{conceptReceipt.title}」で制作希望を送信しました。担当者が内容を確認し、次の準備を進めますので、少しお待ちください。</p><aside><strong>制作が始まる前なら変更できます</strong><span>制作室が「映像制作」へ進む前は、もう一方の案を選んで再送信できます。</span></aside><button autoFocus className="button button-primary" type="button" onClick={() => setConceptReceipt(null)}>制作室に戻る →</button></section></div>}
       <div className="studio-shell">
-        <div className="studio-account-bar"><div><small>ACCOUNT</small><strong>{profile?.full_name || user.email}</strong></div>{orders.length > 1 && <label><span>制作中の映画</span><select value={selectedOrderId} onChange={(event) => { setSelectedOrderId(event.target.value); setPendingConceptSlot(null); setConceptReceipt(null); setApprovalChecked(false); setStillsApprovalChecked(false); setStillsChangeBody(""); setRenewContainsPeople(""); setRenewPeopleHandling(""); setRenewContainsMinors(""); setConsentTermsChecked(false); setConsentPhotoRightsChecked(false); setConsentPeopleChecked(false); setConsentGuardianChecked(false); setConsentAiChecked(false); }}>{orders.map((item) => <option value={item.id} key={item.id}>{item.pet_name} · {item.order_number}</option>)}</select></label>}</div>
+        <div className="studio-account-bar"><div><small>ACCOUNT</small><strong>{profile?.full_name || user.email}</strong></div>{orders.length > 1 && <label><span>制作中の映画</span><select value={selectedOrderId} onChange={(event) => { setSelectedOrderId(event.target.value); setPendingConceptSlot(null); setConceptReceipt(null); setApprovalChecked(false); setStillsApprovalChecked(false); setStillsChangeBody(""); setConsentTermsChecked(false); setConsentPhotoRightsChecked(false); setConsentAiChecked(false); }}>{orders.map((item) => <option value={item.id} key={item.id}>{item.pet_name} · {item.order_number}</option>)}</select></label>}</div>
 
         {readOnlyPreview && <aside className="studio-preview-banner" role="status"><strong>運営用・顧客画面プレビュー</strong><span>閲覧専用です。コンセプト選択、写真追加、メッセージ、修正、承認、共有設定は操作できません。</span><Link href="/admin">運営管理へ戻る</Link></aside>}
         {error && <p className="studio-alert error" role="alert">{error}</p>}
@@ -395,17 +379,11 @@ export function StudioClient() {
           {!consentCurrent && !["delivered", "cancelled"].includes(order.status) && <aside className="studio-consent-renewal" id="consent-renewal">
             <div><p className="eyebrow">CONSENT RECORD</p><h2>制作を続けるため、現在の内容をご確認ください。</h2><p>人物の写り込みと写真の利用条件を確認し、外部制作サービスで処理する前に、選択内容・同意日時・確認文のバージョンを注文へ記録します。</p></div>
             {canOperateOrder ? <>
-              <fieldset className="studio-consent-question"><legend>お預けいただいた写真に人物は写っていますか？ <em>必須</em></legend><div><label><input type="radio" name="renewPeople" checked={renewContainsPeople === "none"} onChange={() => { setRenewContainsPeople("none"); setRenewPeopleHandling("not_applicable"); setRenewContainsMinors("none"); setConsentPeopleChecked(false); setConsentGuardianChecked(false); }} /><span>人物は写っていない</span></label><label><input type="radio" name="renewPeople" checked={renewContainsPeople === "included"} onChange={() => { setRenewContainsPeople("included"); setRenewPeopleHandling(""); setRenewContainsMinors(""); }} /><span>人物が写っている</span></label></div></fieldset>
-              {renewContainsPeople === "included" && <div className="studio-people-consent-details">
-                <fieldset className="studio-consent-question"><legend>人物の映像での取り扱い <em>必須</em></legend><div className="vertical"><label><input type="radio" name="renewHandling" checked={renewPeopleHandling === "dog_only_crop"} onChange={() => setRenewPeopleHandling("dog_only_crop")} /><span>愛犬だけを切り抜いて使用する（おすすめ）</span></label><label><input type="radio" name="renewHandling" checked={renewPeopleHandling === "anonymous_person"} onChange={() => setRenewPeopleHandling("anonymous_person")} /><span>顔が分からない後ろ姿・手元・足元・シルエットで表現する</span></label><label><input type="radio" name="renewHandling" checked={renewPeopleHandling === "original_still"} onChange={() => setRenewPeopleHandling("original_still")} /><span>元の家族写真をAIで動かさず、そのまま使用する</span></label><label><input type="radio" name="renewHandling" checked={renewPeopleHandling === "consult"} onChange={() => setRenewPeopleHandling("consult")} /><span>担当者に相談したい</span></label></div></fieldset>
-                <fieldset className="studio-consent-question"><legend>未成年者は写っていますか？ <em>必須</em></legend><div><label><input type="radio" name="renewMinors" checked={renewContainsMinors === "none"} onChange={() => { setRenewContainsMinors("none"); setConsentGuardianChecked(false); }} /><span>写っていない</span></label><label><input type="radio" name="renewMinors" checked={renewContainsMinors === "included"} onChange={() => setRenewContainsMinors("included")} /><span>写っている</span></label></div></fieldset>
-              </div>}
+              <aside className="studio-people-policy-note"><strong>人物が写っている写真について</strong><span>お顔は映像に使用・生成せず、後ろ姿などお顔が分からない形でのみ使用します。</span></aside>
               <label><input type="checkbox" checked={consentTermsChecked} onChange={(event) => setConsentTermsChecked(event.target.checked)} /><span><Link href="/terms" target="_blank">利用規約</Link>（{CONSENT_VERSIONS.terms}）・<Link href="/privacy" target="_blank">プライバシーポリシー</Link>（{CONSENT_VERSIONS.privacy}）を確認し、同意します。</span></label>
-              <label><input type="checkbox" checked={consentPhotoRightsChecked} onChange={(event) => setConsentPhotoRightsChecked(event.target.checked)} /><span>提出した写真を本サービスの映像制作に使用する権限を持っています（確認文 {CONSENT_VERSIONS.photoRights}）。</span></label>
-              {renewContainsPeople === "included" && <label><input type="checkbox" checked={consentPeopleChecked} onChange={(event) => setConsentPeopleChecked(event.target.checked)} /><span>写真に写っているご本人から、本サービスの制作に使用する同意を得ています（確認文 {CONSENT_VERSIONS.depictedPeople}）。</span></label>}
-              {renewContainsMinors === "included" && <label><input type="checkbox" checked={consentGuardianChecked} onChange={(event) => setConsentGuardianChecked(event.target.checked)} /><span>未成年者が写っている写真について、保護者から制作利用の同意を得ています（確認文 {CONSENT_VERSIONS.minorGuardian}）。</span></label>}
+              <label><input type="checkbox" checked={consentPhotoRightsChecked} onChange={(event) => setConsentPhotoRightsChecked(event.target.checked)} /><span>提出した写真を本サービスの映像制作に使用する権限を持っています。人物が写っている場合は、その方（未成年者の場合は保護者）の了解を得ており、お顔は使用されないことを確認しました（確認文 {CONSENT_VERSIONS.photoRights}）。</span></label>
               <label><input type="checkbox" checked={consentAiChecked} onChange={(event) => setConsentAiChecked(event.target.checked)} /><span>映像制作のため、写真や制作情報が外部AIサービスで処理される場合があることを確認しました。WAN MEMORYが独自のAIモデル学習や広告・ポートフォリオ公開に使用することはありません。外部サービスでの取り扱いは各サービスの条件に基づきます（案内 {CONSENT_VERSIONS.aiNotice}）。</span></label>
-              <button className="button button-primary" type="button" disabled={acceptingConsent || !consentTermsChecked || !consentPhotoRightsChecked || !consentAiChecked || !renewContainsPeople || (renewContainsPeople === "included" && (!renewPeopleHandling || !renewContainsMinors || !consentPeopleChecked || (renewContainsMinors === "included" && !consentGuardianChecked)))} onClick={acceptCurrentConsents}>{acceptingConsent ? "記録中…" : "同意内容を注文に記録する →"}</button>
+              <button className="button button-primary" type="button" disabled={acceptingConsent || !consentTermsChecked || !consentPhotoRightsChecked || !consentAiChecked} onClick={acceptCurrentConsents}>{acceptingConsent ? "記録中…" : "同意内容を注文に記録する →"}</button>
             </> : <span>この表示は顧客画面でのみ操作できます。</span>}
           </aside>}
 
