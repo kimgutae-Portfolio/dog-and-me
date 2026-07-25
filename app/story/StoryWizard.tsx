@@ -44,11 +44,6 @@ type Draft = {
   personality: string[];
   memories: MemoryDraft[];
   message: string;
-  avoid: string;
-  style: string;
-  ratio: string;
-  narration: string;
-  bgm: string;
   primaryFacePhotoKey: string;
   primaryBodyPhotoKey: string;
   sideTailPhotoKey: string;
@@ -67,6 +62,12 @@ const MAX_TOTAL_PHOTOS = 30;
 const MAX_PHOTOS_PER_MEMORY = 5;
 const FIXED_FILM_PURPOSE: FilmPurpose = "いまを残す";
 const FIXED_FILM_PURPOSE_LABEL = "いまを残す思い出フィルム";
+// The film format is fixed: one warm everyday-film tone, 16:9, no narration,
+// and BGM chosen by the director. Customers no longer pick these.
+const FIXED_FILM_STYLE = "あたたかな日常映画";
+const FIXED_ASPECT_RATIO = "16:9 横型";
+const FIXED_NARRATION = "ナレーションなし";
+const FIXED_BGM = "おまかせ";
 
 const createMemoryDraft = (clientKey: string): MemoryDraft => ({
   clientKey,
@@ -91,11 +92,6 @@ const emptyDraft: Draft = {
   personality: [],
   memories: [createMemoryDraft("memory-1"), createMemoryDraft("memory-2"), createMemoryDraft("memory-3")],
   message: "",
-  avoid: "",
-  style: "あたたかな日常映画",
-  ratio: "16:9 横型",
-  narration: "ナレーションなし",
-  bgm: "おまかせ",
   primaryFacePhotoKey: "",
   primaryBodyPhotoKey: "",
   sideTailPhotoKey: "",
@@ -137,7 +133,6 @@ function normalizeDraft(value: unknown, preferredPetName: string, validPhotoKeys
     petName: parsed.petName?.trim() || preferredPetName,
     memories,
     purpose: FIXED_FILM_PURPOSE,
-    style: styles.some(([title]) => title === parsed.style) ? parsed.style as string : emptyDraft.style,
     primaryFacePhotoKey: photoKey(parsed.primaryFacePhotoKey),
     primaryBodyPhotoKey: photoKey(parsed.primaryBodyPhotoKey),
     sideTailPhotoKey: photoKey(parsed.sideTailPhotoKey),
@@ -148,13 +143,8 @@ function normalizeDraft(value: unknown, preferredPetName: string, validPhotoKeys
   };
 }
 
-const steps = ["愛犬のこと", "お写真", "思い出", "映画の雰囲気", "確認"];
+const steps = ["愛犬のこと", "お写真", "思い出", "確認"];
 const personalities = ["甘えん坊", "元気", "おだやか", "食いしん坊", "人が好き", "マイペース", "優しい", "ちょっぴり頑固"];
-const styles = [
-  ["あたたかな日常映画", "自然光といつもの場所。静かな幸福を残します。"],
-  ["日本映画のように", "季節感と余白を大切に、落ち着いた画づくりで。"],
-  ["明るく楽しい思い出", "元気なテンポと明るい色で、その子らしく。"],
-];
 
 type ReferencePhotoField = "primaryFacePhotoKey" | "primaryBodyPhotoKey" | "sideTailPhotoKey";
 
@@ -614,10 +604,10 @@ export function StoryWizard() {
       if (memory.description.trim().length < 30) missing.push({ key: `memory-${memory.clientKey}-description`, label: `思い出${number}の詳しい内容（30文字以上）`, step: 2 });
     });
     if (!draft.message.trim()) missing.push({ key: "message", label: "その子へ伝えたいこと", step: 2 });
-    if (!draft.termsConsent) missing.push({ key: "termsConsent", label: "利用規約・プライバシーポリシーへの同意", step: 4 });
-    if (!draft.photoRightsConsent) missing.push({ key: "photoRightsConsent", label: "提出写真の使用権限の確認", step: 4 });
-    if (!draft.externalAiConsent) missing.push({ key: "externalAiConsent", label: "外部AIサービスでの処理への同意", step: 4 });
-    if (!draft.aiReconstructionAcknowledged) missing.push({ key: "aiReconstructionAcknowledged", label: "映画的な再構成についての確認", step: 4 });
+    if (!draft.termsConsent) missing.push({ key: "termsConsent", label: "利用規約・プライバシーポリシーへの同意", step: 3 });
+    if (!draft.photoRightsConsent) missing.push({ key: "photoRightsConsent", label: "提出写真の使用権限の確認", step: 3 });
+    if (!draft.externalAiConsent) missing.push({ key: "externalAiConsent", label: "外部AIサービスでの処理への同意", step: 3 });
+    if (!draft.aiReconstructionAcknowledged) missing.push({ key: "aiReconstructionAcknowledged", label: "映画的な再構成についての確認", step: 3 });
     return missing;
   }, [draft, unsavedPhotoCount]);
 
@@ -671,8 +661,8 @@ export function StoryWizard() {
       const orderPayload = {
         pet_name: draft.petName, name_kana: draft.nameKana, breed: draft.breed, age_text: draft.age,
         purpose: FIXED_FILM_PURPOSE, personality: draft.personality, first_meeting: "",
-        favorite_memory: memorySummary, message_to_pet: draft.message, avoid_notes: draft.avoid,
-        style: draft.style, aspect_ratio: draft.ratio, narration: draft.narration, bgm: draft.bgm,
+        favorite_memory: memorySummary, message_to_pet: draft.message, avoid_notes: null,
+        style: FIXED_FILM_STYLE, aspect_ratio: FIXED_ASPECT_RATIO, narration: FIXED_NARRATION, bgm: FIXED_BGM,
         consent_accepted: draft.termsConsent,
         photo_rights_consent_accepted: draft.photoRightsConsent,
         external_ai_consent_accepted: draft.externalAiConsent,
@@ -855,12 +845,11 @@ export function StoryWizard() {
 
           {step === 2 && <div className="wizard-panel"><p className="eyebrow">YOUR MEMORIES</p><h1 id="step-title">覚えていることを、少しずつ。</h1><p className="step-lead">約1分の映画は、{FIXED_MEMORY_COUNT}つの思い出で構成します。担当ディレクターが内容を読み、場面イメージを制作して映像の前にお見せします。</p><section className="memory-writing-guide" aria-labelledby="memory-writing-guide-title"><div><p className="eyebrow">WRITING GUIDE</p><h2 id="memory-writing-guide-title">映像にしやすい伝え方</h2></div><ol><li><span>01</span><div><strong>ひとつの出来事に絞る</strong><p>「旅行」だけではなく「海辺で初めて波を見た日」のように、ひとつの場面にします。</p></div></li><li><span>02</span><div><strong>その子の動きや表情も一緒に書く</strong><p>走った、振り返った、首をかしげたなど、実際に見た様子を文章の中に含めてください。</p></div></li><li><span>03</span><div><strong>写真があれば参考として添える</strong><p>同じ場面の写真があれば任意で選べます。なくても、文章と基準写真から場面をおつくりします。</p></div></li></ol><p>例：「去年の春、いつもの公園で桜を見ました。モモは花びらを追いかけたあと、こちらを見て首をかしげました。」</p></section>
             <div className="memory-entry-list">{draft.memories.map((memory, index) => { const complete = isMemoryReady(memory); const expanded = activeMemoryKey === memory.clientKey; return <article className={`memory-entry-card${complete ? " complete" : ""}`} key={memory.clientKey}><button type="button" className="memory-entry-toggle" aria-expanded={expanded} aria-controls={`memory-entry-content-${memory.clientKey}`} onClick={() => setActiveMemoryKey((current) => current === memory.clientKey ? "" : memory.clientKey)}><span className="memory-entry-toggle-copy"><span>MEMORY {String(index + 1).padStart(2, "0")} / {FIXED_MEMORY_COUNT}</span><strong>{memory.title.trim() || `思い出 ${index + 1}`}</strong></span><span className="memory-entry-status">{complete ? "入力完了 ✓" : expanded ? "入力中" : "入力する"}</span><span className={expanded ? "memory-entry-chevron open" : "memory-entry-chevron"} aria-hidden="true">⌄</span></button>{expanded && <div className="memory-entry-content" id={`memory-entry-content-${memory.clientKey}`}><div className="memory-entry-fields"><label className="wide"><span>思い出のタイトル <em>必須</em></span><input required value={memory.title} maxLength={80} onChange={(event) => updateMemory(memory.clientKey, "title", event.target.value)} placeholder="例：はじめて海を見た日" /></label><label><span>いつ頃ですか？ <small>任意</small></span><input value={memory.whenText} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "whenText", event.target.value)} placeholder="例：2025年の春 / 3歳の頃" /></label><label><span>どこでの思い出ですか？ <small>任意</small></span><input value={memory.location} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "location", event.target.value)} placeholder="例：いつもの公園、家のリビング" /></label><label className="wide"><span>そのときのことを詳しく教えてください <em>必須・30文字以上</em></span><textarea required rows={6} maxLength={2000} value={memory.description} onChange={(event) => updateMemory(memory.clientKey, "description", event.target.value)} placeholder="誰と、どんな時間を過ごし、何が心に残っていますか？ その子の表情やしぐさ（走った、振り返った、首をかしげたなど）も一緒に書いていただくと、場面づくりの参考になります。" /><small className={memory.description.trim().length >= 30 ? "field-count complete" : "field-count"}>{memory.description.trim().length} / 30文字以上</small></label></div><fieldset className="memory-photo-linker"><legend>この思い出と同じ場面の写真 <em>任意・参考資料</em></legend><p>この思い出の写真があれば、ここから{MAX_PHOTOS_PER_MEMORY}枚までアップロードできます。担当ディレクターが場面づくりの参考にします。写真がなくても、文章と3枚の基準写真をもとに場面イメージを制作し、映像の前にお見せします。</p><div className="memory-photo-grid">{memory.photoKeys.map((photoKey, photoIndex) => { const photo = photoByKey.get(photoKey); if (!photo) return null; return <article className={`memory-photo-item ${photo.status}`} key={photoKey}><button type="button" className="memory-photo-thumb" onClick={() => setPreviewPhotoKey(photoKey)}><img src={photo.previewUrl} alt={`${memory.title.trim() || `思い出 ${index + 1}`}の写真 ${photoIndex + 1}`} loading="lazy" /><span>大きく見る</span></button><div>{photo.status === "uploading" && <em className="photo-save-state">保存中…</em>}{photo.status === "saved" && <em className="photo-save-state saved">保存済み ✓</em>}{photo.status === "error" && <button type="button" className="photo-retry-button" onClick={() => retryPhoto(photoKey)}>再試行</button>}<button type="button" disabled={photo.status === "uploading"} onClick={() => void removePhoto(photoKey)}>削除</button></div></article>; })}{memory.photoKeys.length < MAX_PHOTOS_PER_MEMORY && <label className="memory-photo-add" htmlFor={`memory-photo-input-${memory.clientKey}`}><span className="upload-mark" aria-hidden="true">＋</span><strong>写真を追加</strong><small>任意・複数選択できます</small></label>}</div><input id={`memory-photo-input-${memory.clientKey}`} className="reference-slot-input" type="file" accept={PHOTO_INPUT_ACCEPT} multiple onChange={(event) => handleMemoryPhotoUpload(event, memory.clientKey)} /><strong className="memory-photo-count">{memory.photoKeys.length} / {MAX_PHOTOS_PER_MEMORY}枚</strong></fieldset></div>}</article>; })}</div>
-            <div className="memory-entry-add"><p>約1分の映画は、はじまりの場面・{FIXED_MEMORY_COUNT}つの思い出・おわりのご挨拶で構成します。<br />入力できた思い出：{draft.memories.filter(isMemoryReady).length} / {FIXED_MEMORY_COUNT}項目 · 参考写真{totalLinkedPhotoCount}枚<br />{allMemoryEntriesComplete ? "すべて入力できました。ほかに伝えたい思い出があれば、下の「その子へ伝えたいこと」やお申し込み後のメッセージでお知らせください。" : "思い出はいつでも書き直せます。順番も気にせず、書きやすいものから入力してください。"}</p></div><div className="stacked-fields memory-ending-fields"><label><span>その子へ伝えたいこと <em>必須</em></span><textarea required rows={3} value={draft.message} onChange={(event) => update("message", event.target.value)} placeholder="映画の最後に残したい言葉があれば" /></label><label><span>映像に入れたくないこと <small>任意</small></span><textarea rows={2} value={draft.avoid} onChange={(event) => update("avoid", event.target.value)} placeholder="病院の場面、最後の時期、直接的な表現など。遠慮なく書いてください" /></label></div>
+            <div className="memory-entry-add"><p>約1分の映画は、はじまりの場面・{FIXED_MEMORY_COUNT}つの思い出・おわりのご挨拶で構成します。<br />入力できた思い出：{draft.memories.filter(isMemoryReady).length} / {FIXED_MEMORY_COUNT}項目 · 参考写真{totalLinkedPhotoCount}枚<br />{allMemoryEntriesComplete ? "すべて入力できました。ほかに伝えたい思い出があれば、下の「その子へ伝えたいこと」やお申し込み後のメッセージでお知らせください。" : "思い出はいつでも書き直せます。順番も気にせず、書きやすいものから入力してください。"}</p></div><div className="stacked-fields memory-ending-fields"><label><span>その子へ伝えたいこと <em>必須</em></span><textarea required rows={3} value={draft.message} onChange={(event) => update("message", event.target.value)} placeholder="映画の最後に残したい言葉があれば" /></label></div>
           </div>}
 
-          {step === 3 && <div className="wizard-panel"><p className="eyebrow">FILM DIRECTION</p><h1 id="step-title">どんな空気の映画にしますか？</h1><p className="step-lead">迷ったら「日常映画」がおすすめです。担当者からもご提案します。映像はBGMと短い字幕を中心に、思い出へ集中できる構成にします。</p><div className="style-list">{styles.map(([title, copy], index) => <label className={draft.style === title ? "style-card selected" : "style-card"} key={title}><input type="radio" name="style" checked={draft.style === title} onChange={() => update("style", title)} /><span className={`style-swatch swatch-${index + 1}`} aria-hidden="true" /><span><strong>{title}</strong><small>{copy}</small></span><span className="radio-dot" /></label>)}</div><div className="form-grid compact"><label><span>映像比率</span><select value={draft.ratio} onChange={(event) => update("ratio", event.target.value)}><option>16:9 横型</option><option>9:16 縦型</option><option>1:1 正方形</option></select></label><label><span>BGM</span><select value={draft.bgm} onChange={(event) => update("bgm", event.target.value)}><option>おまかせ</option><option>静かなピアノ</option><option>アコースティックギター</option><option>映画音楽のように</option></select></label></div></div>}
 
-          {step === 4 && <div className="wizard-panel"><p className="eyebrow">REVIEW</p><h1 id="step-title">ありがとうございます。</h1><p className="step-lead">まずは相談受付としてお預かりします。決済は内容と納期をご確認いただいた後です。</p><div className="review-card"><div className="review-title"><span className="brand-mark" aria-hidden="true">WM</span><div><strong>{draft.petName || "愛犬"}ちゃんの映画</strong><small>{FIXED_FILM_PURPOSE_LABEL}・{draft.style}</small></div></div><section className="review-section"><header><h2>基本情報</h2><button type="button" onClick={() => goToStep(0)}>修正する</button></header><dl><div><dt>お名前</dt><dd>{draft.petName || "未入力"}</dd></div><div><dt>犬種・年齢</dt><dd>{[draft.breed, draft.age].filter(Boolean).join(" / ") || "未入力"}</dd></div><div><dt>性格</dt><dd>{draft.personality.join("、") || "未入力"}</dd></div><div><dt>映画の種類</dt><dd>{FIXED_FILM_PURPOSE_LABEL}</dd></div></dl></section><section className="review-section"><header><h2>お写真とその子らしさ</h2><button type="button" onClick={() => goToStep(1)}>修正する</button></header><div className="review-reference-grid">{[["お顔の基準", draft.primaryFacePhotoKey], ["全身の基準", draft.primaryBodyPhotoKey], ["横向き・しっぽ", draft.sideTailPhotoKey]] .map(([label, key]) => { const photo = photoFiles.find((item) => item.clientKey === key); return <article key={label}><strong>{label}</strong>{photo ? <img src={photo.previewUrl} alt={`${label}として選んだ愛犬の写真`} /> : <span>未選択</span>}</article>; })}</div><dl><div><dt>人物が写っている写真</dt><dd>お顔は使用せず、後ろ姿などお顔が分からない形でのみ使用します</dd></div></dl></section><section className="review-section"><header><h2>思い出</h2><button type="button" onClick={() => goToStep(2)}>修正する</button></header><div className="review-memory-list">{draft.memories.map((memory, index) => <article key={memory.clientKey}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{memory.title || "タイトル未入力"}</strong><p>{memory.description || "詳しい内容が未入力です。"}</p><small>{memory.whenText || "時期未入力"} · {memory.location || "場所未入力"} · 写真{memory.photoKeys.length}枚</small></div></article>)}</div></section><section className="review-section"><header><h2>仕上がり</h2><button type="button" onClick={() => goToStep(3)}>修正する</button></header><dl><div><dt>希望</dt><dd>{draft.ratio}・BGM：{draft.bgm}</dd></div><div><dt>プラン</dt><dd>メモリーフィルム</dd></div><div><dt>料金</dt><dd className="review-monitor-price"><strong>先着{MEMORY_FILM_PRICING.launchLimit}組 ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）</strong><small>必要な思い出と写真の送信が完了した時点で確定・終了後は ¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</small></dd></div><div><dt>コンセプト</dt><dd>2案から1案を選択</dd></div><div><dt>専用サイト</dt><dd>プランに含まれます</dd></div></dl></section></div>
+          {step === 3 && <div className="wizard-panel"><p className="eyebrow">REVIEW</p><h1 id="step-title">ありがとうございます。</h1><p className="step-lead">まずは相談受付としてお預かりします。決済は内容と納期をご確認いただいた後です。</p><div className="review-card"><div className="review-title"><span className="brand-mark" aria-hidden="true">WM</span><div><strong>{draft.petName || "愛犬"}ちゃんの映画</strong><small>{FIXED_FILM_PURPOSE_LABEL}・{FIXED_FILM_STYLE}</small></div></div><section className="review-section"><header><h2>基本情報</h2><button type="button" onClick={() => goToStep(0)}>修正する</button></header><dl><div><dt>お名前</dt><dd>{draft.petName || "未入力"}</dd></div><div><dt>犬種・年齢</dt><dd>{[draft.breed, draft.age].filter(Boolean).join(" / ") || "未入力"}</dd></div><div><dt>性格</dt><dd>{draft.personality.join("、") || "未入力"}</dd></div><div><dt>映画の種類</dt><dd>{FIXED_FILM_PURPOSE_LABEL}</dd></div></dl></section><section className="review-section"><header><h2>お写真とその子らしさ</h2><button type="button" onClick={() => goToStep(1)}>修正する</button></header><div className="review-reference-grid">{[["お顔の基準", draft.primaryFacePhotoKey], ["全身の基準", draft.primaryBodyPhotoKey], ["横向き・しっぽ", draft.sideTailPhotoKey]] .map(([label, key]) => { const photo = photoFiles.find((item) => item.clientKey === key); return <article key={label}><strong>{label}</strong>{photo ? <img src={photo.previewUrl} alt={`${label}として選んだ愛犬の写真`} /> : <span>未選択</span>}</article>; })}</div><dl><div><dt>人物が写っている写真</dt><dd>お顔は使用せず、後ろ姿などお顔が分からない形でのみ使用します</dd></div></dl></section><section className="review-section"><header><h2>思い出</h2><button type="button" onClick={() => goToStep(2)}>修正する</button></header><div className="review-memory-list">{draft.memories.map((memory, index) => <article key={memory.clientKey}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{memory.title || "タイトル未入力"}</strong><p>{memory.description || "詳しい内容が未入力です。"}</p><small>{memory.whenText || "時期未入力"} · {memory.location || "場所未入力"} · 写真{memory.photoKeys.length}枚</small></div></article>)}</div></section><section className="review-section"><header><h2>仕上がり</h2></header><dl><div><dt>映像の仕様</dt><dd>約1分・{FIXED_ASPECT_RATIO}・{FIXED_FILM_STYLE}<br />BGMと短い字幕は担当ディレクターがお選びします</dd></div><div><dt>プラン</dt><dd>メモリーフィルム</dd></div><div><dt>料金</dt><dd className="review-monitor-price"><strong>先着{MEMORY_FILM_PRICING.launchLimit}組 ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）</strong><small>必要な思い出と写真の送信が完了した時点で確定・終了後は ¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</small></dd></div><div><dt>コンセプト</dt><dd>2案から1案を選択</dd></div><div><dt>専用サイト</dt><dd>プランに含まれます</dd></div></dl></section></div>
             <div className="consent-stack"><label className="consent-box"><input type="checkbox" checked={draft.termsConsent} onChange={(event) => update("termsConsent", event.target.checked)} /><span><strong>利用規約とプライバシーポリシーに同意します <em>必須</em></strong><small><Link href="/terms" target="_blank">利用規約</Link>（{CONSENT_VERSIONS.terms}）と<Link href="/privacy" target="_blank">プライバシーポリシー</Link>（{CONSENT_VERSIONS.privacy}）を確認しました。</small></span></label><label className="consent-box"><input type="checkbox" checked={draft.photoRightsConsent} onChange={(event) => update("photoRightsConsent", event.target.checked)} /><span><strong>写真の使用権限と人物の取り扱いについて確認しました <em>必須</em></strong><small>提出する写真について、本サービスの映像制作に使用する権限を持っています。人物が写っている場合は、その方（未成年者の場合は保護者）の了解を得ており、お顔は映像に使用されないことを確認しました。確認文版：{CONSENT_VERSIONS.photoRights}</small></span></label><label className="consent-box"><input type="checkbox" checked={draft.externalAiConsent} onChange={(event) => update("externalAiConsent", event.target.checked)} /><span><strong>外部AIサービスの利用を確認しました <em>必須</em></strong><small>映像制作のため、写真や制作情報が外部AIサービスで処理される場合があります。WAN MEMORYが独自のAIモデル学習や広告・ポートフォリオ公開に使用することはありません。外部サービスでのデータの取り扱いは各サービスの条件に基づきます。案内版：{CONSENT_VERSIONS.aiNotice}</small></span></label><label className="consent-box important"><input type="checkbox" checked={draft.aiReconstructionAcknowledged} onChange={(event) => update("aiReconstructionAcknowledged", event.target.checked)} /><span><strong>映画的な再構成について確認しました <em>必須</em></strong><small>AI技術を使用する場面は、元写真を大切にしながら映画的に再構成されるため、細部が完全に同一にならない場合があることを確認しました。</small></span></label></div>
             {missingFields.length > 0 ? <aside className="missing-fields-panel" role="status" aria-labelledby="missing-fields-title"><p className="eyebrow">REQUIRED ITEMS</p><h2 id="missing-fields-title">あと{missingFields.length}項目の入力が必要です。</h2><p>項目を選ぶと入力する画面へ戻れます。すべて入力すると、ご相談を送信できます。</p><ul>{missingFields.map((item) => <li key={item.key}><button type="button" onClick={() => goToStep(item.step)}><span>{steps[item.step]}</span><strong>{item.label}</strong><em>入力する →</em></button></li>)}</ul></aside> : <aside className="ready-to-submit" role="status"><span aria-hidden="true">✓</span><div><strong>必要な項目がすべて揃いました。</strong><small>下のボタンからご相談を送信できます。</small></div></aside>}
           </div>}

@@ -917,7 +917,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .step-lead { margin: 16px 0 36px; color: var(--muted); font-size: 12px; line-height: 1.8; }
 .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .choice-card { min-height: 116px; padding: 22px; position: relative; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--line); cursor: pointer; background: rgba(255,255,255,.45); transition: border .2s ease, background .2s ease; }
-.choice-card input, .film-type-card input, .style-card input, .upload-box input { position: absolute; opacity: 0; pointer-events: none; }
+.choice-card input, .film-type-card input, .upload-box input { position: absolute; opacity: 0; pointer-events: none; }
 .choice-card strong { font-family: var(--font-serif); font-size: 17px; font-weight: 400; }
 .choice-card small { margin-top: 8px; color: var(--muted); font-size: 9px; }
 .choice-check { position: absolute; right: 16px; top: 16px; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid #bbb7ad; border-radius: 50%; color: transparent; font-size: 9px; }
@@ -1020,19 +1020,6 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .photo-selection-feedback { margin-top: 18px; padding: 15px 17px; display: grid; gap: 5px; border: 1px solid #bdc8ba; color: #405143; background: #e8eee5; box-shadow: inset 0 0 0 4px rgba(104,128,107,.05); }
 .photo-selection-feedback strong { font-size: 11px; }
 .photo-selection-feedback span { color: #5e685b; font-size: 9px; line-height: 1.7; }
-.style-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.style-card { min-height: 124px; padding: 16px; position: relative; display: grid; grid-template-columns: 78px 1fr 20px; align-items: center; gap: 16px; border: 1px solid var(--line); cursor: pointer; background: rgba(255,255,255,.42); }
-.style-swatch { width: 78px; height: 88px; display: block; background: #75816f; }
-.swatch-1 { background: linear-gradient(145deg, #d0b681, #6f7c6c); }
-.swatch-2 { background: linear-gradient(145deg, #b4afa1, #59665f); }
-.swatch-3 { background: linear-gradient(145deg, #d8c087, #a87347); }
-.swatch-4 { background: linear-gradient(145deg, #aa8067, #484744); }
-.style-card strong, .style-card small { display: block; }
-.style-card strong { margin-bottom: 8px; font-family: var(--font-serif); font-size: 15px; font-weight: 400; }
-.style-card small { color: var(--muted); font-size: 9px; line-height: 1.7; }
-.radio-dot { width: 17px; height: 17px; border: 1px solid #aaa79e; border-radius: 50%; }
-.style-card.selected { border-color: var(--rust); background: #f2e8dc; }
-.style-card.selected .radio-dot { border: 5px solid var(--rust); }
 .form-grid.compact { margin-top: 22px; grid-template-columns: repeat(2, 1fr); }
 .review-card { padding: 28px; border: 1px solid var(--line); background: rgba(255,255,255,.5); }
 .review-title { padding-bottom: 22px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); }
@@ -1392,7 +1379,7 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .wizard-main { width: calc(100% - 40px); padding: 42px 0 66px; }
   .wizard-panel h1 { font-size: 32px; line-height: 1.55; }
   .step-lead { margin-bottom: 32px; font-size: 13px; line-height: 1.9; }
-  .choice-grid, .film-type-grid, .form-grid, .style-list, .form-grid.compact { grid-template-columns: 1fr; }
+  .choice-grid, .film-type-grid, .form-grid { grid-template-columns: 1fr; }
   .form-grid input, .form-grid select, .stacked-fields textarea { font-size: 16px; }
   .memory-writing-guide { padding: 22px 18px; }
   .memory-writing-guide > div { align-items: flex-start; flex-direction: column; gap: 7px; }
@@ -1425,8 +1412,6 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .chip { min-height: 44px; }
   .choice-card { min-height: 100px; }
   .film-type-card { min-height: auto; padding: 22px; }
-  .style-card { grid-template-columns: 66px 1fr 18px; }
-  .style-swatch { width: 66px; height: 76px; }
   .wizard-actions .button { min-width: 128px; padding: 0 16px; }
   .review-card dl div { grid-template-columns: 90px 1fr; }
   .review-memory-list p, .review-memory-list small { font-size: 10px; }
@@ -1739,8 +1724,6 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .wizard-page .film-type-card > p,
 .wizard-page .film-type-ending span,
 .wizard-page .film-type-ending em,
-.wizard-page .style-card small { font-size: 13px; line-height: 1.8; }
-.wizard-page .style-card strong { font-size: 17px; }
 .wizard-page .consent-box input { width: 22px; height: 22px; }
 .wizard-page .people-photo-policy > p { font-size: 14px; line-height: 1.85; }
 .wizard-page .reference-slot > p,
@@ -1806,9 +1789,11 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .photo-task-guide > ol > li.complete > small { color: #4c6548; font-weight: 700; }
 
 .upload-step-label { margin-bottom: 11px; padding: 6px 10px; color: #6e3f32; border-radius: 999px; background: #f2dfd5; font-size: 13px; font-weight: 700; }
-.memory-photo-linker legend,
+.reference-slot legend,
+.memory-photo-linker legend { font-size: 22px; }
 .photo-selector-step { min-width: 34px; height: 34px; margin-right: 10px; display: inline-grid; place-items: center; border-radius: 50%; color: white; background: var(--rust); font-family: var(--font-sans); font-size: 14px; font-weight: 700; vertical-align: middle; }
-.memory-photo-linker legend em,
+.reference-slot legend em,
+.memory-photo-linker legend em { font-size: 11px; }
 .photo-selection-feedback strong { font-size: 14px; }
 .photo-selection-feedback span { font-size: 13px; }
 
@@ -1858,7 +1843,8 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
   .photo-guide-photo-types ul { grid-template-columns: 1fr; }
   .photo-guide-photo-types li { grid-template-columns: 54px 1fr; align-items: center; gap: 2px 10px; }
   .photo-guide-photo-types li > span { grid-row: 1 / span 2; }
-  .memory-photo-linker legend,
+  .reference-slot legend,
+  .memory-photo-linker legend { font-size: 20px; }
   .photo-guide-backdrop { padding: 0; align-items: end; }
   .photo-guide-dialog { width: 100%; max-height: 92dvh; border-radius: 18px 18px 0 0; }
   .photo-guide-content { min-height: 0; padding: 28px 22px 26px; }
