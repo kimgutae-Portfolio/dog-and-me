@@ -190,7 +190,7 @@ export type OrderMemory = {
   when_text: string | null;
   location: string | null;
   description: string;
-  dog_behavior: string;
+  dog_behavior: string | null;
   created_at: string;
   updated_at: string;
 };

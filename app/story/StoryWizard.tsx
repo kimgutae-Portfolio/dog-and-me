@@ -32,7 +32,6 @@ type MemoryDraft = {
   whenText: string;
   location: string;
   description: string;
-  dogBehavior: string;
   photoKeys: string[];
 };
 
@@ -59,7 +58,10 @@ type Draft = {
   aiReconstructionAcknowledged: boolean;
 };
 
-const MIN_MEMORY_COUNT = 2;
+// The form asks for a fixed number of memories so the 60-second film has a
+// stable shape (intro 5s + 3 memories x 15s + ending 10s). The database still
+// accepts 2-6 entries, so this count can change without a migration.
+const FIXED_MEMORY_COUNT = 3;
 const MAX_MEMORY_COUNT = 6;
 const MIN_TOTAL_PHOTOS = 3;
 const MAX_TOTAL_PHOTOS = 30;
@@ -73,14 +75,12 @@ const createMemoryDraft = (clientKey: string): MemoryDraft => ({
   whenText: "",
   location: "",
   description: "",
-  dogBehavior: "",
   photoKeys: [],
 });
 
 const isMemoryReady = (memory: MemoryDraft) => (
   Boolean(memory.title.trim())
   && memory.description.trim().length >= 30
-  && memory.dogBehavior.trim().length >= 10
 );
 
 const emptyDraft: Draft = {
@@ -90,7 +90,7 @@ const emptyDraft: Draft = {
   breed: "",
   age: "",
   personality: [],
-  memories: [createMemoryDraft("memory-1"), createMemoryDraft("memory-2")],
+  memories: [createMemoryDraft("memory-1"), createMemoryDraft("memory-2"), createMemoryDraft("memory-3")],
   message: "",
   avoid: "",
   style: "あたたかな日常映画",
@@ -110,10 +110,15 @@ function normalizeDraft(value: unknown, preferredPetName: string, validPhotoKeys
   const parsed = value && typeof value === "object" ? value as Partial<Draft> & { firstMeeting?: string; favoriteMemory?: string; consent?: boolean } : {};
   const memories: MemoryDraft[] = Array.isArray(parsed.memories) && parsed.memories.length
     ? parsed.memories.slice(0, MAX_MEMORY_COUNT).map((memory, index) => {
-        const source = memory && typeof memory === "object" ? memory as Partial<MemoryDraft> : {};
+        const source = memory && typeof memory === "object" ? memory as Partial<MemoryDraft> & { dogBehavior?: string } : {};
+        const legacyBehavior = typeof source.dogBehavior === "string" ? source.dogBehavior.trim() : "";
+        const description = typeof source.description === "string" ? source.description : "";
         return {
           ...createMemoryDraft(source.clientKey || `memory-${index + 1}`),
           ...source,
+          description: legacyBehavior && !description.includes(legacyBehavior)
+            ? [description, legacyBehavior].filter(Boolean).join("\n")
+            : description,
           photoKeys: Array.isArray(source.photoKeys)
             ? source.photoKeys.filter((key): key is string => typeof key === "string" && (!validPhotoKeys || validPhotoKeys.has(key))).slice(0, MAX_PHOTOS_PER_MEMORY)
             : [],
@@ -124,7 +129,7 @@ function normalizeDraft(value: unknown, preferredPetName: string, validPhotoKeys
         title: parsed.firstMeeting ? "はじめて会った日" : "大切な思い出",
         description: parsed.favoriteMemory || parsed.firstMeeting || "",
       }];
-  while (memories.length < MIN_MEMORY_COUNT) memories.push(createMemoryDraft(`memory-${memories.length + 1}`));
+  while (memories.length < FIXED_MEMORY_COUNT) memories.push(createMemoryDraft(`memory-${memories.length + 1}`));
   const photoKey = (key: unknown) => typeof key === "string" && (!validPhotoKeys || validPhotoKeys.has(key)) ? key : "";
 
   return {
@@ -211,7 +216,6 @@ export function StoryWizard() {
   const [stepValidationAttempted, setStepValidationAttempted] = useState(false);
   const [photoGuideOpen, setPhotoGuideOpen] = useState(false);
   const [photoGuideStep, setPhotoGuideStep] = useState(0);
-  const autoAdvancedMemories = useRef(new Set<string>());
   const photoFilesRef = useRef<PhotoDraft[]>([]);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const photoPreviewDialogRef = useRef<HTMLElement>(null);
@@ -578,31 +582,6 @@ export function StoryWizard() {
     : !draft.primaryBodyPhotoKey ? "全身の基準写真を選ぶ"
     : "次の設定へ進む";
 
-  const addMemory = () => {
-    if (draft.memories.length >= MAX_MEMORY_COUNT || !allMemoryEntriesComplete) return;
-    const clientKey = `memory-${crypto.randomUUID()}`;
-    update("memories", [...draft.memories, createMemoryDraft(clientKey)]);
-    setActiveMemoryKey(clientKey);
-  };
-  const removeMemory = (clientKey: string) => {
-    if (draft.memories.length <= MIN_MEMORY_COUNT) return;
-    const removedIndex = draft.memories.findIndex((memory) => memory.clientKey === clientKey);
-    const remaining = draft.memories.filter((memory) => memory.clientKey !== clientKey);
-    update("memories", remaining);
-    if (activeMemoryKey === clientKey) setActiveMemoryKey(remaining[Math.max(0, removedIndex - 1)]?.clientKey ?? remaining[0]?.clientKey ?? "");
-  };
-
-  useEffect(() => {
-    if (!hydrated) return;
-    for (let index = 0; index < draft.memories.length - 1; index += 1) {
-      const memory = draft.memories[index];
-      if (!isMemoryReady(memory) || autoAdvancedMemories.current.has(memory.clientKey)) continue;
-      autoAdvancedMemories.current.add(memory.clientKey);
-      setActiveMemoryKey((current) => current === memory.clientKey ? draft.memories[index + 1].clientKey : current);
-      break;
-    }
-  }, [draft.memories, hydrated]);
-
   const missingFields = useMemo<MissingField[]>(() => {
     const missing: MissingField[] = [];
     if (!draft.petName.trim()) missing.push({ key: "petName", label: "愛犬のお名前", step: 0 });
@@ -614,12 +593,11 @@ export function StoryWizard() {
     if (!draft.primaryFacePhotoKey) missing.push({ key: "primaryFace", label: "お顔の基準写真", step: 1 });
     if (!draft.primaryBodyPhotoKey) missing.push({ key: "primaryBody", label: "全身の基準写真", step: 1 });
     if (!draft.sideTailPhotoKey) missing.push({ key: "sideTail", label: "横向き・しっぽの基準写真", step: 1 });
-    if (draft.memories.length < MIN_MEMORY_COUNT) missing.push({ key: "memories", label: `思い出の項目（${MIN_MEMORY_COUNT}つ以上）`, step: 2 });
+    if (draft.memories.length < FIXED_MEMORY_COUNT) missing.push({ key: "memories", label: `思い出の項目（${FIXED_MEMORY_COUNT}つ）`, step: 2 });
     draft.memories.forEach((memory, index) => {
       const number = index + 1;
       if (!memory.title.trim()) missing.push({ key: `memory-${memory.clientKey}-title`, label: `思い出${number}のタイトル`, step: 2 });
       if (memory.description.trim().length < 30) missing.push({ key: `memory-${memory.clientKey}-description`, label: `思い出${number}の詳しい内容（30文字以上）`, step: 2 });
-      if (memory.dogBehavior.trim().length < 10) missing.push({ key: `memory-${memory.clientKey}-behavior`, label: `思い出${number}の表情・動き（10文字以上）`, step: 2 });
     });
     if (!draft.message.trim()) missing.push({ key: "message", label: "その子へ伝えたいこと", step: 2 });
     if (!draft.termsConsent) missing.push({ key: "termsConsent", label: "利用規約・プライバシーポリシーへの同意", step: 4 });
@@ -727,7 +705,7 @@ export function StoryWizard() {
           p_when_text: memory.whenText.trim() || null,
           p_location: memory.location.trim() || null,
           p_description: memory.description.trim(),
-          p_dog_behavior: memory.dogBehavior.trim(),
+          p_dog_behavior: null,
         });
         if (memoryError || !memoryId) throw memoryError || new Error("思い出を保存できませんでした。");
         memoryIds.set(memory.clientKey, memoryId as string);
@@ -865,9 +843,9 @@ export function StoryWizard() {
             <aside className="people-photo-policy"><p className="eyebrow">PEOPLE IN PHOTOS</p><h2>人物が写っている写真について</h2><p>ご家族と一緒に写っている写真もお送りいただけます。人物のお顔は映像に使用・生成せず、後ろ姿などお顔が分からない形でのみ使用します。写真に人物が写っている場合は、その方（未成年者の場合は保護者）の了解を得たうえでお送りください。</p></aside>
           </div>}
 
-          {step === 2 && <div className="wizard-panel"><p className="eyebrow">YOUR MEMORIES</p><h1 id="step-title">覚えていることを、少しずつ。</h1><p className="step-lead">思い出は最低{MIN_MEMORY_COUNT}つ必要です。文章を入力し、先ほど選んだ写真から同じ場面の写真をつないでください。</p><section className="memory-writing-guide" aria-labelledby="memory-writing-guide-title"><div><p className="eyebrow">WRITING GUIDE</p><h2 id="memory-writing-guide-title">映像にしやすい伝え方</h2></div><ol><li><span>01</span><div><strong>ひとつの出来事に絞る</strong><p>「旅行」だけではなく「海辺で初めて波を見た日」のように、ひとつの場面にします。</p></div></li><li><span>02</span><div><strong>その子の動きや表情を書く</strong><p>走った、振り返った、首をかしげたなど、実際に見た様子を教えてください。</p></div></li><li><span>03</span><div><strong>内容と同じ写真をつなぐ</strong><p>場所・服・季節が分かる写真を1〜{MAX_PHOTOS_PER_MEMORY}枚選びます。</p></div></li></ol><p>例：「去年の春、いつもの公園で桜を見ました。モモは花びらを追いかけたあと、こちらを見て首をかしげました。」</p></section>
-            <div className="memory-entry-list">{draft.memories.map((memory, index) => { const complete = isMemoryReady(memory); const unlocked = index === 0 || draft.memories.slice(0, index).every(isMemoryReady); const expanded = activeMemoryKey === memory.clientKey && unlocked; return <article className={`memory-entry-card${complete ? " complete" : ""}${!unlocked ? " locked" : ""}`} key={memory.clientKey}><button type="button" className="memory-entry-toggle" aria-expanded={expanded} aria-controls={`memory-entry-content-${memory.clientKey}`} disabled={!unlocked} onClick={() => setActiveMemoryKey((current) => current === memory.clientKey ? "" : memory.clientKey)}><span className="memory-entry-toggle-copy"><span>MEMORY {String(index + 1).padStart(2, "0")}</span><strong>{memory.title.trim() || `思い出 ${index + 1}`}</strong></span><span className="memory-entry-status">{complete ? "入力完了 ✓" : !unlocked ? "前の思い出を完成すると開きます" : expanded ? "入力中" : "続きを入力"}</span><span className={expanded ? "memory-entry-chevron open" : "memory-entry-chevron"} aria-hidden="true">⌄</span></button>{expanded && <div className="memory-entry-content" id={`memory-entry-content-${memory.clientKey}`}>{index >= MIN_MEMORY_COUNT && <div className="memory-entry-tools"><button type="button" onClick={() => removeMemory(memory.clientKey)}>この項目を削除</button></div>}<div className="memory-entry-fields"><label className="wide"><span>思い出のタイトル <em>必須</em></span><input required value={memory.title} maxLength={80} onChange={(event) => updateMemory(memory.clientKey, "title", event.target.value)} placeholder="例：はじめて海を見た日" /></label><label><span>いつ頃ですか？ <small>任意</small></span><input value={memory.whenText} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "whenText", event.target.value)} placeholder="例：2025年の春 / 3歳の頃" /></label><label><span>どこでの思い出ですか？ <small>任意</small></span><input value={memory.location} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "location", event.target.value)} placeholder="例：いつもの公園、家のリビング" /></label><label className="wide"><span>そのときのことを詳しく教えてください <em>必須・30文字以上</em></span><textarea required rows={5} maxLength={2000} value={memory.description} onChange={(event) => updateMemory(memory.clientKey, "description", event.target.value)} placeholder="誰と、どんな時間を過ごし、何が心に残っていますか？ 写真に写っている場面と結びつくように書いてください。" /><small className={memory.description.trim().length >= 30 ? "field-count complete" : "field-count"}>{memory.description.trim().length} / 30文字以上</small></label><label className="wide"><span>その子の表情や動き <em>必須・10文字以上</em></span><textarea required rows={3} maxLength={1000} value={memory.dogBehavior} onChange={(event) => updateMemory(memory.clientKey, "dogBehavior", event.target.value)} placeholder="例：花びらを追いかけ、最後にこちらを見て首をかしげました。" /><small className={memory.dogBehavior.trim().length >= 10 ? "field-count complete" : "field-count"}>{memory.dogBehavior.trim().length} / 10文字以上</small></label></div><fieldset className="memory-photo-linker"><legend>この思い出と同じ場面の写真 <em>任意・0〜{MAX_PHOTOS_PER_MEMORY}枚</em></legend><p>写真カードをタップして選びます。同じ写真を別の思い出に重ねて設定することはできません。写真がない思い出は、3枚の基準写真とエピソードをもとに場面イメージを制作します。</p><div className="photo-choice-grid compact">{photoFiles.map((photo, photoIndex) => { const selected = memory.photoKeys.includes(photo.clientKey); const assignedToOther = Boolean(assignedMemoryByPhoto[photo.clientKey] && assignedMemoryByPhoto[photo.clientKey] !== memory.clientKey); const disabled = assignedToOther || (!selected && memory.photoKeys.length >= MAX_PHOTOS_PER_MEMORY); return <label className={selected ? "photo-choice-card selected" : disabled ? "photo-choice-card disabled" : "photo-choice-card"} key={`${memory.clientKey}-${photo.clientKey}`}><input type="checkbox" checked={selected} disabled={disabled} onChange={() => toggleMemoryPhoto(memory.clientKey, photo.clientKey)} /><img src={photo.previewUrl} alt={`愛犬の写真 ${photoIndex + 1}`} loading="lazy" />{!selected && !disabled && <span className="photo-choice-action">この思い出に選ぶ</span>}{selected && <strong className="photo-selected-mark">✓ この思い出</strong>}{assignedToOther && <small className="photo-assigned-label">別の思い出で選択済み</small>}</label>; })}</div><strong className="memory-photo-count">{memory.photoKeys.length} / {MAX_PHOTOS_PER_MEMORY}枚</strong></fieldset></div>}</article>; })}</div>
-            <div className="memory-entry-add"><button type="button" disabled={draft.memories.length >= MAX_MEMORY_COUNT || !allMemoryEntriesComplete} onClick={addMemory}>＋ 別の思い出を追加する</button><p>{!allMemoryEntriesComplete && draft.memories.length < MAX_MEMORY_COUNT ? "表示中の思い出をすべて完成すると、次の項目を追加できます。" : `${MIN_MEMORY_COUNT}〜${MAX_MEMORY_COUNT}項目・写真は任意（各${MAX_PHOTOS_PER_MEMORY}枚まで）です。`}<br />現在：{draft.memories.length}項目 / 写真{totalLinkedPhotoCount}枚</p></div><div className="stacked-fields memory-ending-fields"><label><span>その子へ伝えたいこと <em>必須</em></span><textarea required rows={3} value={draft.message} onChange={(event) => update("message", event.target.value)} placeholder="映画の最後に残したい言葉があれば" /></label><label><span>映像に入れたくないこと <small>任意</small></span><textarea rows={2} value={draft.avoid} onChange={(event) => update("avoid", event.target.value)} placeholder="病院の場面、最後の時期、直接的な表現など。遠慮なく書いてください" /></label></div>
+          {step === 2 && <div className="wizard-panel"><p className="eyebrow">YOUR MEMORIES</p><h1 id="step-title">覚えていることを、少しずつ。</h1><p className="step-lead">約1分の映画は、{FIXED_MEMORY_COUNT}つの思い出で構成します。担当ディレクターが内容を読み、場面イメージを制作して映像の前にお見せします。</p><section className="memory-writing-guide" aria-labelledby="memory-writing-guide-title"><div><p className="eyebrow">WRITING GUIDE</p><h2 id="memory-writing-guide-title">映像にしやすい伝え方</h2></div><ol><li><span>01</span><div><strong>ひとつの出来事に絞る</strong><p>「旅行」だけではなく「海辺で初めて波を見た日」のように、ひとつの場面にします。</p></div></li><li><span>02</span><div><strong>その子の動きや表情も一緒に書く</strong><p>走った、振り返った、首をかしげたなど、実際に見た様子を文章の中に含めてください。</p></div></li><li><span>03</span><div><strong>写真があれば参考として添える</strong><p>同じ場面の写真があれば任意で選べます。なくても、文章と基準写真から場面をおつくりします。</p></div></li></ol><p>例：「去年の春、いつもの公園で桜を見ました。モモは花びらを追いかけたあと、こちらを見て首をかしげました。」</p></section>
+            <div className="memory-entry-list">{draft.memories.map((memory, index) => { const complete = isMemoryReady(memory); const expanded = activeMemoryKey === memory.clientKey; return <article className={`memory-entry-card${complete ? " complete" : ""}`} key={memory.clientKey}><button type="button" className="memory-entry-toggle" aria-expanded={expanded} aria-controls={`memory-entry-content-${memory.clientKey}`} onClick={() => setActiveMemoryKey((current) => current === memory.clientKey ? "" : memory.clientKey)}><span className="memory-entry-toggle-copy"><span>MEMORY {String(index + 1).padStart(2, "0")} / {FIXED_MEMORY_COUNT}</span><strong>{memory.title.trim() || `思い出 ${index + 1}`}</strong></span><span className="memory-entry-status">{complete ? "入力完了 ✓" : expanded ? "入力中" : "入力する"}</span><span className={expanded ? "memory-entry-chevron open" : "memory-entry-chevron"} aria-hidden="true">⌄</span></button>{expanded && <div className="memory-entry-content" id={`memory-entry-content-${memory.clientKey}`}><div className="memory-entry-fields"><label className="wide"><span>思い出のタイトル <em>必須</em></span><input required value={memory.title} maxLength={80} onChange={(event) => updateMemory(memory.clientKey, "title", event.target.value)} placeholder="例：はじめて海を見た日" /></label><label><span>いつ頃ですか？ <small>任意</small></span><input value={memory.whenText} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "whenText", event.target.value)} placeholder="例：2025年の春 / 3歳の頃" /></label><label><span>どこでの思い出ですか？ <small>任意</small></span><input value={memory.location} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "location", event.target.value)} placeholder="例：いつもの公園、家のリビング" /></label><label className="wide"><span>そのときのことを詳しく教えてください <em>必須・30文字以上</em></span><textarea required rows={6} maxLength={2000} value={memory.description} onChange={(event) => updateMemory(memory.clientKey, "description", event.target.value)} placeholder="誰と、どんな時間を過ごし、何が心に残っていますか？ その子の表情やしぐさ（走った、振り返った、首をかしげたなど）も一緒に書いていただくと、場面づくりの参考になります。" /><small className={memory.description.trim().length >= 30 ? "field-count complete" : "field-count"}>{memory.description.trim().length} / 30文字以上</small></label></div><fieldset className="memory-photo-linker"><legend>この思い出と同じ場面の写真 <em>任意・参考資料</em></legend><p>あれば{MAX_PHOTOS_PER_MEMORY}枚まで選べます。選んだ写真は担当ディレクターが場面づくりの参考にします。写真がなくても、文章と3枚の基準写真をもとに場面イメージを制作し、映像の前にお見せします。</p><div className="photo-choice-grid compact">{photoFiles.map((photo, photoIndex) => { const selected = memory.photoKeys.includes(photo.clientKey); const assignedToOther = Boolean(assignedMemoryByPhoto[photo.clientKey] && assignedMemoryByPhoto[photo.clientKey] !== memory.clientKey); const disabled = assignedToOther || (!selected && memory.photoKeys.length >= MAX_PHOTOS_PER_MEMORY); return <label className={selected ? "photo-choice-card selected" : disabled ? "photo-choice-card disabled" : "photo-choice-card"} key={`${memory.clientKey}-${photo.clientKey}`}><input type="checkbox" checked={selected} disabled={disabled} onChange={() => toggleMemoryPhoto(memory.clientKey, photo.clientKey)} /><img src={photo.previewUrl} alt={`愛犬の写真 ${photoIndex + 1}`} loading="lazy" />{!selected && !disabled && <span className="photo-choice-action">この思い出に選ぶ</span>}{selected && <strong className="photo-selected-mark">✓ この思い出</strong>}{assignedToOther && <small className="photo-assigned-label">別の思い出で選択済み</small>}</label>; })}</div><strong className="memory-photo-count">{memory.photoKeys.length} / {MAX_PHOTOS_PER_MEMORY}枚</strong></fieldset></div>}</article>; })}</div>
+            <div className="memory-entry-add"><p>約1分の映画は、はじまりの場面・{FIXED_MEMORY_COUNT}つの思い出・おわりのご挨拶で構成します。<br />入力できた思い出：{draft.memories.filter(isMemoryReady).length} / {FIXED_MEMORY_COUNT}項目 · 参考写真{totalLinkedPhotoCount}枚<br />{allMemoryEntriesComplete ? "すべて入力できました。ほかに伝えたい思い出があれば、下の「その子へ伝えたいこと」やお申し込み後のメッセージでお知らせください。" : "思い出はいつでも書き直せます。順番も気にせず、書きやすいものから入力してください。"}</p></div><div className="stacked-fields memory-ending-fields"><label><span>その子へ伝えたいこと <em>必須</em></span><textarea required rows={3} value={draft.message} onChange={(event) => update("message", event.target.value)} placeholder="映画の最後に残したい言葉があれば" /></label><label><span>映像に入れたくないこと <small>任意</small></span><textarea rows={2} value={draft.avoid} onChange={(event) => update("avoid", event.target.value)} placeholder="病院の場面、最後の時期、直接的な表現など。遠慮なく書いてください" /></label></div>
           </div>}
 
           {step === 3 && <div className="wizard-panel"><p className="eyebrow">FILM DIRECTION</p><h1 id="step-title">どんな空気の映画にしますか？</h1><p className="step-lead">迷ったら「日常映画」がおすすめです。担当者からもご提案します。映像はBGMと短い字幕を中心に、思い出へ集中できる構成にします。</p><div className="style-list">{styles.map(([title, copy], index) => <label className={draft.style === title ? "style-card selected" : "style-card"} key={title}><input type="radio" name="style" checked={draft.style === title} onChange={() => update("style", title)} /><span className={`style-swatch swatch-${index + 1}`} aria-hidden="true" /><span><strong>{title}</strong><small>{copy}</small></span><span className="radio-dot" /></label>)}</div><div className="form-grid compact"><label><span>映像比率</span><select value={draft.ratio} onChange={(event) => update("ratio", event.target.value)}><option>16:9 横型</option><option>9:16 縦型</option><option>1:1 正方形</option></select></label><label><span>BGM</span><select value={draft.bgm} onChange={(event) => update("bgm", event.target.value)}><option>おまかせ</option><option>静かなピアノ</option><option>アコースティックギター</option><option>映画音楽のように</option></select></label></div></div>}
