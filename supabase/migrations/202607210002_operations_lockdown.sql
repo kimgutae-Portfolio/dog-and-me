@@ -1,0 +1,6 @@
+-- Intentionally left as a compatibility marker.
+-- The actual privilege lockdown is a post-deploy step:
+-- supabase/post_deploy/operations_lockdown_after_admin_deploy.sql
+--
+-- Keeping this migration non-destructive guarantees that a normal `db push`
+-- cannot lock the legacy admin UI before the RPC-based app is deployed.
