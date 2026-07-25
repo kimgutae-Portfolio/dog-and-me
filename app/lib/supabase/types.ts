@@ -14,6 +14,7 @@ export type OrderStatus =
   | "reviewing_materials"
   | "concepts_ready"
   | "concept_selected"
+  | "stills_review"
   | "production"
   | "customer_review"
   | "revision_requested"
@@ -82,6 +83,10 @@ export type MemoryOrder = {
   admin_notes: string | null;
   revision_limit: number;
   revision_used: number;
+  stills_revision_limit: number;
+  stills_revision_used: number;
+  stills_approved_at: string | null;
+  stills_approved_by: string | null;
   consented_at: string | null;
   terms_version: string | null;
   privacy_version: string | null;
@@ -138,7 +143,7 @@ export type OrderAsset = {
   order_id: string;
   user_id: string;
   memory_id: string | null;
-  category: "source_image" | "source_video" | "review_video" | "final_video" | "thumbnail";
+  category: "source_image" | "source_video" | "scene_still" | "review_video" | "final_video" | "thumbnail";
   storage_path: string;
   original_filename: string;
   mime_type: string;
@@ -146,6 +151,8 @@ export type OrderAsset = {
   album_visible: boolean;
   album_caption: string | null;
   album_sort_order: number;
+  scene_title: string | null;
+  scene_sort_order: number;
   created_at: string;
 };
 
@@ -244,6 +251,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   reviewing_materials: "写真とお話を確認しています",
   concepts_ready: "コンセプト2案をご確認ください",
   concept_selected: "選んだ物語を構成しています",
+  stills_review: "場面イメージをご確認ください",
   production: "約1分の映画を制作しています",
   customer_review: "完成前の映像をご確認ください",
   revision_requested: "修正内容を反映しています",

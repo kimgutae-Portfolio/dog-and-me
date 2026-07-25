@@ -16,6 +16,7 @@ const journeySteps = [
   ["素材確認", "担当者が内容を確認"],
   ["2案提案", "異なる物語をご提案"],
   ["1案選択", "お客様が方向性を決定"],
+  ["場面確認", "場面イメージをご確認"],
   ["映像制作", "約1分の映画を制作"],
   ["確認・修正", "完成前の最終確認"],
   ["お届け", "映画と専用サイトを納品"],
@@ -27,11 +28,12 @@ const statusStep: Record<MemoryOrder["status"], number> = {
   reviewing_materials: 1,
   concepts_ready: 2,
   concept_selected: 3,
-  production: 4,
-  customer_review: 5,
-  revision_requested: 5,
-  quality_check: 5,
-  delivered: 6,
+  stills_review: 4,
+  production: 5,
+  customer_review: 6,
+  revision_requested: 6,
+  quality_check: 6,
+  delivered: 7,
   cancelled: 0,
 };
 
@@ -71,6 +73,11 @@ export function StudioClient() {
   const [revisionBody, setRevisionBody] = useState("");
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [approvingReview, setApprovingReview] = useState(false);
+  const [sceneStillUrls, setSceneStillUrls] = useState<Record<string, string>>({});
+  const [stillsApprovalChecked, setStillsApprovalChecked] = useState(false);
+  const [approvingStills, setApprovingStills] = useState(false);
+  const [stillsChangeBody, setStillsChangeBody] = useState("");
+  const [sendingStillsChange, setSendingStillsChange] = useState(false);
   const [acceptingConsent, setAcceptingConsent] = useState(false);
   const [consentTermsChecked, setConsentTermsChecked] = useState(false);
   const [consentPhotoRightsChecked, setConsentPhotoRightsChecked] = useState(false);
@@ -137,6 +144,7 @@ export function StudioClient() {
   const order = useMemo(() => orders.find((item) => item.id === selectedOrderId) ?? null, [orders, selectedOrderId]);
   const finalAsset = useMemo(() => delivery ? assets.find((asset) => asset.id === delivery.final_asset_id) ?? null : null, [assets, delivery]);
   const reviewAsset = useMemo(() => assets.filter((asset) => asset.category === "review_video").at(-1) ?? null, [assets]);
+  const sceneStills = useMemo(() => assets.filter((asset) => asset.category === "scene_still").sort((a, b) => a.scene_sort_order - b.scene_sort_order || a.created_at.localeCompare(b.created_at)), [assets]);
 
   useEffect(() => {
     if (!finalAsset) return;
@@ -147,6 +155,16 @@ export function StudioClient() {
     if (!reviewAsset) return;
     getSupabaseBrowserClient().storage.from("order-assets").createSignedUrl(reviewAsset.storage_path, 3600).then(({ data }) => setReviewVideoUrl(data?.signedUrl ?? ""));
   }, [reviewAsset]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = getSupabaseBrowserClient();
+    Promise.all(sceneStills.map(async (asset) => {
+      const { data } = await supabase.storage.from("order-assets").createSignedUrl(asset.storage_path, 3600);
+      return [asset.id, data?.signedUrl ?? ""] as const;
+    })).then((entries) => { if (!cancelled) setSceneStillUrls(Object.fromEntries(entries)); });
+    return () => { cancelled = true; };
+  }, [sceneStills]);
 
   const currentStep = order ? statusStep[order.status] : 0;
   const isOrderOwner = Boolean(order && user && order.user_id === user.id);
@@ -159,6 +177,7 @@ export function StudioClient() {
   const sourceAssets = assets.filter((asset) => asset.category === "source_image");
   const canAddPhotos = canOperateOrder && order?.status !== "cancelled";
   const revisionsRemaining = order ? Math.max(order.revision_limit - order.revision_used, 0) : 0;
+  const stillsChangesRemaining = order ? Math.max(order.stills_revision_limit - order.stills_revision_used, 0) : 0;
   const hasOpenRevisions = revisions.some((revision) => revision.status === "open");
   const hasPendingConceptChange = Boolean(canEditConcept && pendingConcept && effectiveConceptSlot !== order?.selected_concept_slot);
   const nextAction = useMemo(() => {
@@ -173,6 +192,8 @@ export function StudioClient() {
         return { title: "2つの物語から1案を選択", copy: "気になる案を選び、制作希望を送信してください。", href: "#concepts", label: "コンセプトを選ぶ" };
       case "concept_selected":
         return { title: "選んだ物語を確認", copy: "映像制作へ進む前なら、もう一方の案へ変更できます。", href: "#concepts", label: "選択した案を見る" };
+      case "stills_review":
+        return { title: "場面イメージを確認", copy: "映像にする前の場面イメージが届いています。この内容で制作を進めてよいかご確認ください。", href: "#stills", label: "場面イメージを見る" };
       case "production":
         return { title: "映像を制作しています", copy: "担当者が約1分の映像に仕上げています。追加のご連絡はこちらから送れます。", href: "#messages", label: "担当者へ連絡する" };
       case "customer_review":
@@ -318,6 +339,39 @@ export function StudioClient() {
     setApprovingReview(false);
   };
 
+  const approveSceneStills = async () => {
+    if (!order || !canOperateOrder || !stillsApprovalChecked || sceneStills.length === 0 || order.status !== "stills_review") return;
+    setApprovingStills(true);
+    setError("");
+    const { error: approvalError } = await getSupabaseBrowserClient().rpc("customer_approve_scene_stills", { p_order_id: order.id });
+    if (approvalError) {
+      setError(approvalError.message.includes("payment") ? "入金確認が完了していません。担当者へご確認ください。" : "場面イメージを確定できませんでした。もう一度お試しください。");
+    } else {
+      setStillsApprovalChecked(false);
+      setNotice("場面イメージを確定しました。この内容で映像制作を開始します。");
+      await Promise.all([loadOrders(), loadDetails(order.id)]);
+    }
+    setApprovingStills(false);
+  };
+
+  const requestStillsChange = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!order || !canOperateOrder || !stillsChangeBody.trim() || sendingStillsChange || order.status !== "stills_review") return;
+    setSendingStillsChange(true);
+    setError("");
+    const { error: changeError } = await getSupabaseBrowserClient().rpc("request_stills_change", { p_order_id: order.id, p_body: stillsChangeBody.trim() });
+    if (changeError) {
+      setError(changeError.message.includes("stills revision limit reached")
+        ? "場面イメージの調整2回を使い切っています。追加のご希望はメッセージでご相談ください。"
+        : "調整のご希望を送信できませんでした。もう一度お試しください。");
+    } else {
+      setStillsChangeBody("");
+      setNotice("調整のご希望をお送りしました。新しい場面イメージをお待ちください。");
+      await Promise.all([loadOrders(), loadDetails(order.id)]);
+    }
+    setSendingStillsChange(false);
+  };
+
   if (authLoading || loading || !user) return <div className="wizard-loading">制作室を準備しています…</div>;
 
   return (
@@ -329,7 +383,7 @@ export function StudioClient() {
       {received && <div className="received-banner"><span aria-hidden="true">✓</span><div><strong>ご相談と写真を受け付けました。</strong><p>ここから追加写真、コンセプト選択、映像確認、お届けまで進められます。</p></div></div>}
       {conceptReceipt && <div className="concept-receipt-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setConceptReceipt(null); }}><section className="concept-receipt-dialog" role="alertdialog" aria-modal="true" aria-labelledby="concept-receipt-title" aria-describedby="concept-receipt-copy"><div className="concept-receipt-film" aria-hidden="true"><i /><i /><span>WM</span><i /><i /></div><p className="eyebrow">SELECTION RECEIVED · CONCEPT {conceptReceipt.slot}</p><h2 id="concept-receipt-title">コンセプトをお預かりしました。</h2><p id="concept-receipt-copy">「{conceptReceipt.title}」で制作希望を送信しました。担当者が内容を確認し、次の準備を進めますので、少しお待ちください。</p><aside><strong>制作が始まる前なら変更できます</strong><span>制作室が「映像制作」へ進む前は、もう一方の案を選んで再送信できます。</span></aside><button autoFocus className="button button-primary" type="button" onClick={() => setConceptReceipt(null)}>制作室に戻る →</button></section></div>}
       <div className="studio-shell">
-        <div className="studio-account-bar"><div><small>ACCOUNT</small><strong>{profile?.full_name || user.email}</strong></div>{orders.length > 1 && <label><span>制作中の映画</span><select value={selectedOrderId} onChange={(event) => { setSelectedOrderId(event.target.value); setPendingConceptSlot(null); setConceptReceipt(null); setApprovalChecked(false); setRenewContainsPeople(""); setRenewPeopleHandling(""); setRenewContainsMinors(""); setConsentTermsChecked(false); setConsentPhotoRightsChecked(false); setConsentPeopleChecked(false); setConsentGuardianChecked(false); setConsentAiChecked(false); }}>{orders.map((item) => <option value={item.id} key={item.id}>{item.pet_name} · {item.order_number}</option>)}</select></label>}</div>
+        <div className="studio-account-bar"><div><small>ACCOUNT</small><strong>{profile?.full_name || user.email}</strong></div>{orders.length > 1 && <label><span>制作中の映画</span><select value={selectedOrderId} onChange={(event) => { setSelectedOrderId(event.target.value); setPendingConceptSlot(null); setConceptReceipt(null); setApprovalChecked(false); setStillsApprovalChecked(false); setStillsChangeBody(""); setRenewContainsPeople(""); setRenewPeopleHandling(""); setRenewContainsMinors(""); setConsentTermsChecked(false); setConsentPhotoRightsChecked(false); setConsentPeopleChecked(false); setConsentGuardianChecked(false); setConsentAiChecked(false); }}>{orders.map((item) => <option value={item.id} key={item.id}>{item.pet_name} · {item.order_number}</option>)}</select></label>}</div>
 
         {readOnlyPreview && <aside className="studio-preview-banner" role="status"><strong>運営用・顧客画面プレビュー</strong><span>閲覧専用です。コンセプト選択、写真追加、メッセージ、修正、承認、共有設定は操作できません。</span><Link href="/admin">運営管理へ戻る</Link></aside>}
         {error && <p className="studio-alert error" role="alert">{error}</p>}
@@ -357,15 +411,33 @@ export function StudioClient() {
 
           {nextAction && <aside className="studio-next-action" aria-label="今やること"><div><p className="eyebrow">NEXT ACTION · 今やること</p><h2>{nextAction.title}</h2><span>{nextAction.copy}</span></div><a className="button button-primary" href={nextAction.href}>{nextAction.label} →</a></aside>}
 
-          <section className="studio-status"><div className="status-copy"><span className="status-badge">現在のステップ {currentStep + 1} / {journeySteps.length}</span><h2>{ORDER_STATUS_LABELS[order.status]}</h2><p>{order.status === "delivered" ? "大切な映画をいつでもこちらでご覧いただけます。" : order.status === "concepts_ready" ? "方向性の異なる2つの物語から、その子らしい1案を選んでください。" : "進行が変わると、この制作室でお知らせします。追加したい思い出や写真はいつでもお送りください。"}</p><span className="estimate">予定完成日：{formatDate(order.due_date)}</span></div><div className="status-visual" aria-hidden="true"><div className="reel-circle"><span>WM</span></div><i /><i /><i /></div></section>
+          <section className="studio-status"><div className="status-copy"><span className="status-badge">現在のステップ {currentStep + 1} / {journeySteps.length}</span><h2>{ORDER_STATUS_LABELS[order.status]}</h2><p>{order.status === "delivered" ? "大切な映画をいつでもこちらでご覧いただけます。" : order.status === "concepts_ready" ? "方向性の異なる2つの物語から、その子らしい1案を選んでください。" : order.status === "stills_review" ? "映像にする前の場面イメージをご用意しました。内容をご確認ください。" : "進行が変わると、この制作室でお知らせします。追加したい思い出や写真はいつでもお送りください。"}</p><span className="estimate">予定完成日：{formatDate(order.due_date)}</span></div><div className="status-visual" aria-hidden="true"><div className="reel-circle"><span>WM</span></div><i /><i /><i /></div></section>
 
-          <section className="timeline-card desktop-studio-timeline"><div className="card-head"><div><p className="eyebrow">PRODUCTION JOURNEY</p><h2>受付からお届けまで</h2></div><span>{ORDER_STATUS_LABELS[order.status]}</span></div><ol className="studio-timeline studio-timeline-seven">{journeySteps.map(([title, copy], index) => <li className={index <= currentStep ? "active" : ""} key={title}><span>{index < currentStep ? "✓" : String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{copy}</small></div></li>)}</ol></section>
-          <details className="timeline-card mobile-studio-timeline"><summary><span><small>PRODUCTION JOURNEY</small><strong>受付からお届けまで</strong></span><i>7つの工程を見る</i></summary><ol className="studio-timeline studio-timeline-seven">{journeySteps.map(([title, copy], index) => <li className={index <= currentStep ? "active" : ""} key={title}><span>{index < currentStep ? "✓" : String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{copy}</small></div></li>)}</ol></details>
+          <section className="timeline-card desktop-studio-timeline"><div className="card-head"><div><p className="eyebrow">PRODUCTION JOURNEY</p><h2>受付からお届けまで</h2></div><span>{ORDER_STATUS_LABELS[order.status]}</span></div><ol className="studio-timeline studio-timeline-eight">{journeySteps.map(([title, copy], index) => <li className={index <= currentStep ? "active" : ""} key={title}><span>{index < currentStep ? "✓" : String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{copy}</small></div></li>)}</ol></section>
+          <details className="timeline-card mobile-studio-timeline"><summary><span><small>PRODUCTION JOURNEY</small><strong>受付からお届けまで</strong></span><i>8つの工程を見る</i></summary><ol className="studio-timeline studio-timeline-eight">{journeySteps.map(([title, copy], index) => <li className={index <= currentStep ? "active" : ""} key={title}><span>{index < currentStep ? "✓" : String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{copy}</small></div></li>)}</ol></details>
 
           {concepts.length > 0 && currentStep >= 2 && <section className="concept-section studio-card" id="concepts">
             <div className="card-head"><div><p className="eyebrow">CHOOSE YOUR FILM CONCEPT</p><h2>2つの物語から、1つを選ぶ</h2></div><span>{canEditConcept ? "案を選んだあと、下のボタンで送信します" : "制作が始まったため選択は確定しています"}</span></div>
             <div className="concept-grid">{concepts.map((concept) => <button type="button" disabled={!canEditConcept} aria-pressed={effectiveConceptSlot === concept.slot} className={effectiveConceptSlot === concept.slot ? "concept-option selected" : "concept-option"} onClick={() => { setPendingConceptSlot(concept.slot); setError(""); }} key={concept.id}><span className="concept-card-top"><span className="concept-label">CONCEPT {concept.slot}</span>{order.selected_concept_slot === concept.slot && <span className="concept-sent-tag">送信済み</span>}</span><strong>{concept.title}</strong><small>{concept.tone}</small><p>{concept.summary}</p><ol>{concept.scenes.map((scene, index) => <li key={`${concept.id}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span>{scene}</li>)}</ol><i aria-hidden="true">{effectiveConceptSlot === concept.slot ? "✓" : ""}</i></button>)}</div>
             <div className="concept-confirm"><p><span>{pendingConcept ? order.selected_concept_slot === pendingConcept.slot ? "送信済みの物語" : order.selected_concept_slot ? "変更する物語" : "選択中の物語" : "コンセプトを選択してください"}</span><strong>{pendingConcept?.title ?? "A・Bどちらかの案を選んでください"}</strong><small>{canEditConcept ? order.selected_concept_slot ? "映像制作へ進む前なら、何度でも変更できます。" : "カードを選んだだけでは送信されません。" : "映像制作へ進んだため、現在の案から変更できません。"}</small></p><button className="button button-cream" type="button" disabled={!canEditConcept || !pendingConcept || confirmingConcept || effectiveConceptSlot === order.selected_concept_slot} onClick={confirmConcept}>{confirmingConcept ? "送信中…" : !canEditConcept ? "選択は確定しています" : !pendingConcept ? "案を選んでください" : effectiveConceptSlot === order.selected_concept_slot ? "この案は送信済みです" : order.selected_concept_slot ? "この案に変更して送る →" : "この案で制作希望を送る →"}</button></div>
+          </section>}
+
+          {sceneStills.length > 0 && (order.status === "stills_review" || order.stills_approved_at) && <section className="studio-card stills-review-card" id="stills">
+            <div className="card-head"><div><p className="eyebrow">SCENE STILLS PREVIEW</p><h2>{order.stills_approved_at ? "場面イメージを確定しました。" : "映像になる場面イメージをご確認ください。"}</h2></div><span>{order.stills_approved_at ? `確定受付 ${formatDateTime(order.stills_approved_at)}` : `調整のご依頼 残り${stillsChangesRemaining}回 / 全${order.stills_revision_limit}回`}</span></div>
+            <p className="stills-review-lead">{order.stills_approved_at ? "この場面イメージをもとに、約1分の映像を制作しています。" : "これらの静止画をもとに、動きを加えて映像に仕上げます。雰囲気・その子らしさ・場面の内容をご確認ください。"}</p>
+            <div className="stills-grid">{sceneStills.map((asset, index) => <figure key={asset.id}>{sceneStillUrls[asset.id] ? <img src={sceneStillUrls[asset.id]} alt={asset.scene_title ?? `場面イメージ${index + 1}`} loading="lazy" /> : <span className="stills-loading">読み込み中…</span>}<figcaption><span>{String(index + 1).padStart(2, "0")}</span>{asset.scene_title ?? "場面イメージ"}</figcaption></figure>)}</div>
+            {order.status === "stills_review" && canOperateOrder && <div className="review-approval-panel">
+              <p className="eyebrow">SCENE APPROVAL</p>
+              <h3>この場面イメージで映像制作へ進めますか？</h3>
+              <label><input type="checkbox" checked={stillsApprovalChecked} onChange={(event) => setStillsApprovalChecked(event.target.checked)} /><span>表示されている場面イメージを確認し、この内容で映像制作へ進むことに同意します。</span></label>
+              <button className="button button-cream" type="button" disabled={!stillsApprovalChecked || approvingStills} onClick={approveSceneStills}>{approvingStills ? "確定中…" : "この場面イメージで映像を制作する →"}</button>
+              {stillsChangesRemaining > 0 ? <form className="revision-form stills-change-form" onSubmit={requestStillsChange}>
+                <p className="stills-change-lead"><strong>調整をご希望の場合</strong><small>気になる場面と直したい内容を教えてください。担当者が作り直してもう一度お見せします（残り{stillsChangesRemaining}回）。</small></p>
+                <textarea required rows={3} maxLength={3000} value={stillsChangeBody} onChange={(event) => setStillsChangeBody(event.target.value)} placeholder="例：2場面目の背景を、いつもの公園の芝生に近づけてください。" />
+                <button className="button button-outline" type="submit" disabled={sendingStillsChange || !stillsChangeBody.trim()}>{sendingStillsChange ? "送信中…" : "調整を依頼する →"}</button>
+              </form> : <aside className="revision-limit-note"><strong>場面イメージの調整{order.stills_revision_limit}回を使用しました。</strong><span>追加のご希望は、担当者とのメッセージからご相談ください。</span></aside>}
+            </div>}
+            {order.status === "stills_review" && readOnlyPreview && <div className="review-approval-panel readonly"><strong>顧客画面ではここに「この場面イメージで映像を制作する」が表示されます。</strong><span>運営プレビューからは承認できません。</span></div>}
           </section>}
 
           {hasPendingConceptChange && pendingConcept && <aside className="mobile-concept-submit" aria-live="polite"><div><small>CONCEPT {pendingConcept.slot} を選択中</small><strong>{pendingConcept.title}</strong></div><button className="button button-cream" type="button" disabled={confirmingConcept} onClick={confirmConcept}>{confirmingConcept ? "送信中…" : "この案で送る →"}</button></aside>}

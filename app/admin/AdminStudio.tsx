@@ -20,7 +20,8 @@ const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
   materials_submitted: ["materials_submitted", "reviewing_materials", "cancelled"],
   reviewing_materials: ["reviewing_materials", "cancelled"],
   concepts_ready: ["concepts_ready", "reviewing_materials", "cancelled"],
-  concept_selected: ["concept_selected", "concepts_ready", "production", "cancelled"],
+  concept_selected: ["concept_selected", "concepts_ready", "stills_review", "production", "cancelled"],
+  stills_review: ["stills_review", "concept_selected", "cancelled"],
   production: ["production", "concept_selected", "cancelled"],
   customer_review: ["customer_review", "production", "cancelled"],
   revision_requested: ["revision_requested", "production", "cancelled"],
@@ -162,6 +163,9 @@ export function AdminStudio() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoChecked, setVideoChecked] = useState(false);
   const [videoInputKey, setVideoInputKey] = useState(0);
+  const [stillFile, setStillFile] = useState<File | null>(null);
+  const [stillTitle, setStillTitle] = useState("");
+  const [stillInputKey, setStillInputKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exportingBundle, setExportingBundle] = useState(false);
@@ -224,7 +228,7 @@ export function AdminStudio() {
     setConceptA(toDraft(loadedConcepts.find((concept) => concept.slot === "A")));
     setConceptB(toDraft(loadedConcepts.find((concept) => concept.slot === "B")));
 
-    const signable = loadedAssets.filter((asset) => asset.category === "source_image" || asset.category === "review_video" || asset.category === "final_video");
+    const signable = loadedAssets.filter((asset) => asset.category === "source_image" || asset.category === "scene_still" || asset.category === "review_video" || asset.category === "final_video");
     const signed = await Promise.all(signable.map(async (asset) => {
       const { data } = await supabase.storage.from("order-assets").createSignedUrl(asset.storage_path, 3600);
       return [asset.id, data?.signedUrl ?? ""] as const;
@@ -250,19 +254,21 @@ export function AdminStudio() {
     ["横向き・しっぽ", productionFields.sideTailPhotoId],
   ] as const).map(([label, assetId]) => ({ label, assetId, asset: sourceAssets.find((item) => item.id === assetId) ?? null })), [productionFields.primaryBodyPhotoId, productionFields.primaryFacePhotoId, productionFields.sideTailPhotoId, sourceAssets]);
   const selectedAppearanceAssets = useMemo(() => sourceAssets.filter((asset) => productionFields.selectedAppearancePhotoIds.includes(asset.id)), [productionFields.selectedAppearancePhotoIds, sourceAssets]);
+  const sceneStills = useMemo(() => assets.filter((asset) => asset.category === "scene_still").sort((a, b) => a.scene_sort_order - b.scene_sort_order || a.created_at.localeCompare(b.created_at)), [assets]);
   const reviewVideos = useMemo(() => assets.filter((asset) => asset.category === "review_video"), [assets]);
   const finalVideos = useMemo(() => assets.filter((asset) => asset.category === "final_video"), [assets]);
   const openMessages = useMemo(() => messages.filter((message) => message.sender_id === order?.user_id && message.status === "open"), [messages, order?.user_id]);
   const openRevisions = useMemo(() => revisions.filter((revision) => revision.status === "open"), [revisions]);
   const selectableStatuses = order ? statusOptions.filter(([value]) => {
     if (!allowedTransitions[order.status].includes(value)) return false;
-    if (value !== order.status && ["production", "customer_review", "revision_requested", "quality_check"].includes(value) && order.payment_status !== "paid") return false;
-    if (value !== order.status && ["concepts_ready", "concept_selected", "production", "customer_review", "revision_requested", "quality_check"].includes(value) && productionFields.photoAnalysisStatus !== "approved") return false;
+    if (value !== order.status && ["stills_review", "production", "customer_review", "revision_requested", "quality_check"].includes(value) && order.payment_status !== "paid") return false;
+    if (value !== order.status && ["concepts_ready", "concept_selected", "stills_review", "production", "customer_review", "revision_requested", "quality_check"].includes(value) && productionFields.photoAnalysisStatus !== "approved") return false;
     return true;
   }) : statusOptions;
   const consentCurrent = Boolean(order && hasCurrentConsent(order));
   const photoAnalysisApproved = productionFields.photoAnalysisStatus === "approved";
   const conceptPublishingStatusValid = Boolean(order && ["materials_submitted", "reviewing_materials", "concepts_ready"].includes(order.status));
+  const canManageStills = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && ["concept_selected", "stills_review"].includes(order.status));
   const canUploadReview = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && ["production", "revision_requested", "customer_review"].includes(order.status));
   const canUploadFinal = Boolean(order && photoAnalysisApproved && order.status === "quality_check" && order.payment_status === "paid" && consentCurrent && order.customer_approved_at && order.customer_approved_review_asset_id && openRevisions.length === 0);
 
@@ -279,6 +285,9 @@ export function AdminStudio() {
       setVideoFile(null);
       setVideoChecked(false);
       setVideoInputKey((current) => current + 1);
+      setStillFile(null);
+      setStillTitle("");
+      setStillInputKey((current) => current + 1);
       loadDetails(order.id);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -707,6 +716,96 @@ export function AdminStudio() {
     setSaving(false);
   };
 
+  const uploadSceneStill = async () => {
+    if (!order || !stillFile || !canManageStills) return;
+    const title = stillTitle.trim();
+    if (!title) {
+      setError("場面のタイトルを入力してください。");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const extension = stillFile.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${order.user_id}/${order.id}/stills/scene_still-${crypto.randomUUID()}.${extension}`;
+    const mimeType = stillFile.type || "image/jpeg";
+    const { error: uploadError } = await supabase.storage.from("order-assets").upload(path, stillFile, { contentType: mimeType, upsert: false });
+    if (uploadError) {
+      setError("場面イメージをアップロードできませんでした。");
+      setSaving(false);
+      return;
+    }
+    const { error: registerError } = await supabase.rpc("admin_register_scene_still", {
+      p_order_id: order.id,
+      p_storage_path: path,
+      p_original_filename: stillFile.name,
+      p_mime_type: mimeType,
+      p_file_size: stillFile.size,
+      p_scene_title: title,
+      p_scene_sort_order: sceneStills.length,
+    });
+    if (registerError) {
+      await supabase.storage.from("order-assets").remove([path]);
+      setError("場面イメージを登録できませんでした。入金・同意・現在の工程をご確認ください。");
+      setSaving(false);
+      return;
+    }
+    setStillFile(null);
+    setStillTitle("");
+    setStillInputKey((current) => current + 1);
+    setNotice("場面イメージを追加しました。公開ボタンを押すまでお客様には表示されません。");
+    await loadDetails(order.id);
+    setSaving(false);
+  };
+
+  const deleteSceneStill = async (asset: OrderAsset) => {
+    if (!order || !canManageStills) return;
+    if (!window.confirm(`「${asset.scene_title ?? asset.original_filename}」を削除しますか？`)) return;
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const { data: storagePath, error: deleteError } = await supabase.rpc("admin_delete_scene_still", { p_asset_id: asset.id });
+    if (deleteError) {
+      setError("場面イメージを削除できませんでした。");
+    } else {
+      if (storagePath) await supabase.storage.from("order-assets").remove([storagePath as string]);
+      setNotice("場面イメージを削除しました。");
+      await loadDetails(order.id);
+    }
+    setSaving(false);
+  };
+
+  const publishSceneStills = async () => {
+    if (!order || !canManageStills || sceneStills.length === 0) return;
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const { error: publishError } = await supabase.rpc("admin_publish_scene_stills", { p_order_id: order.id });
+    if (publishError) {
+      setError("場面イメージを公開できませんでした。入金・同意・現在の工程をご確認ください。");
+      setSaving(false);
+      return;
+    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const response = await fetch("/api/admin/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionData.session?.access_token ?? ""}`,
+      },
+      body: JSON.stringify({
+        orderId: order.id,
+        body: "場面イメージを公開しました。制作室の「場面イメージの確認」からご確認のうえ、この内容で映像制作へ進めてよいかお知らせください。",
+      }),
+    }).catch(() => null);
+    const result = response ? await response.json().catch(() => null) as { saved?: boolean; notificationSent?: boolean } | null : null;
+    setNotice(result?.notificationSent
+      ? "場面イメージをお客様へ公開し、メールでお知らせしました。"
+      : "場面イメージを公開しました。メール通知は送れなかったため、必要ならメッセージでお知らせください。");
+    await Promise.all([loadOrders(), loadDetails(order.id)]);
+    setSaving(false);
+  };
+
   const resolveMessage = async (messageId: string) => {
     if (!order) return;
     setSaving(true);
@@ -788,7 +887,7 @@ export function AdminStudio() {
 
             <aside className="admin-attention-summary" aria-label="未対応項目"><div><strong>{sourceAssets.length}</strong><span>お預かり写真</span></div><div className={openMessages.length ? "needs-action" : ""}><strong>{openMessages.length}</strong><span>未対応メッセージ</span></div><div className={openRevisions.length ? "needs-action" : ""}><strong>{openRevisions.length}</strong><span>未対応の修正</span></div><div><strong>{order.revision_used}/{order.revision_limit}</strong><span>使用済み修正回数</span></div></aside>
 
-            <nav className="admin-mobile-sections" aria-label="管理項目"><a href="#admin-progress">進行</a><a href="#admin-story">内容</a><a href="#admin-photos">写真</a><a href="#admin-concepts">2案</a><a href="#admin-revisions">修正</a><a href="#admin-video">映像</a><a href="#admin-message">連絡</a></nav>
+            <nav className="admin-mobile-sections" aria-label="管理項目"><a href="#admin-progress">進行</a><a href="#admin-story">内容</a><a href="#admin-photos">写真</a><a href="#admin-concepts">2案</a><a href="#admin-stills">場面</a><a href="#admin-revisions">修正</a><a href="#admin-video">映像</a><a href="#admin-message">連絡</a></nav>
 
             <section className="admin-card" id="admin-progress"><div className="card-head"><div><p className="eyebrow">PRODUCTION STATUS</p><h3>進行状況・入金・納期</h3></div><span>許可された次の工程だけを表示</span></div>{order.payment_status !== "paid" && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>入金確認前です。</strong><span>「入金確認済み」を一度保存するまで、映像制作・確認映像公開・納品には進めません。</span></aside>}{!consentCurrent && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>写真・人物の取り扱いに必要な同意記録が揃っていません。</strong><span>お客様が制作室で人物・未成年者の有無、写真使用権限、写っている人物の同意、外部制作サービスでの処理を確認するまで制作を開始できません。</span></aside>}{order.customer_approved_at && <aside className="admin-operation-note strong"><strong>お客様が確認映像を確定済みです。</strong><span>{formatDateTime(order.customer_approved_at)} · 承認した確認映像ID {order.customer_approved_review_asset_id}</span></aside>}<div className="admin-form-grid"><label><span>現在の状態</span><select value={status} onChange={(event) => setStatus(event.target.value as OrderStatus)}>{selectableStatuses.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label><span>入金状態</span><select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as MemoryOrder["payment_status"])}><option value="pending">ご案内前</option><option value="invoice_sent">お支払い待ち</option><option value="paid">入金確認済み</option><option value="refunded">返金済み</option></select></label><label><span>予定完成日</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label><label className="wide"><span>運営メモ（顧客には非表示）</span><textarea rows={3} value={adminNotes} onChange={(event) => setAdminNotes(event.target.value)} /></label></div><button className="button button-primary" type="button" disabled={saving} onClick={saveOrder}>進行状況を保存</button></section>
 
@@ -797,6 +896,23 @@ export function AdminStudio() {
             <section className="admin-card" id="admin-photos"><div className="card-head"><div><p className="eyebrow">CUSTOMER PHOTOS</p><h3>写真一覧</h3></div><span>{sourceAssets.length}枚</span></div>{sourceAssets.length ? <><div className="admin-photo-grid">{sourceAssets.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" aria-label={`${asset.original_filename}を大きく表示`} key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${order.pet_name}ちゃんの提出写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}{asset.memory_id ? " · 思い出に紐付け済み" : " · 追加写真"}</small></a>)}</div><p className="admin-operation-note">思い出ごとの対応関係は、上の「思い出と写真の組み合わせ」で確認できます。</p></> : <p className="admin-empty-copy">写真はまだ登録されていません。思い出ごとに1〜5枚、合計5枚以上の提出が必要です。</p>}</section>
 
             <section className="admin-card" id="admin-concepts"><div className="card-head"><div><p className="eyebrow">CONCEPT DELIVERY</p><h3>映像コンセプト2案</h3></div><span>{concepts.length}/2 保存済み</span></div>{order.status === "materials_submitted" && photoAnalysisApproved && <aside className="admin-operation-note strong"><strong>公開時に確認工程を自動で開始します。</strong><span>コンセプトを公開すると、進行状況を「写真とお話を確認しています」から「コンセプト2案をご確認ください」へ順番に記録します。</span></aside>}{!conceptPublishingStatusValid && <aside className="admin-operation-note warning"><strong>現在の工程では公開できません。</strong><span>進行状況「{ORDER_STATUS_LABELS[order.status]}」を確認してください。制作開始後に内容を変更する場合は、先に適切な工程へ戻す必要があります。</span></aside>}<div className="admin-concepts">{([['A', conceptA, setConceptA], ['B', conceptB, setConceptB]] as const).map(([slot, value, setter]) => <div key={slot}><strong>CONCEPT {slot}</strong><label><span>タイトル</span><input value={value.title} onChange={(event) => setter({ ...value, title: event.target.value })} placeholder={`${order.pet_name}と歩いた季節`} /></label><label><span>トーン</span><input value={value.tone} onChange={(event) => setter({ ...value, tone: event.target.value })} placeholder="やさしく、映画のように" /></label><label><span>概要</span><textarea rows={4} value={value.summary} onChange={(event) => setter({ ...value, summary: event.target.value })} /></label><label><span>シーン（1行に1つ）</span><textarea rows={5} value={value.scenes} onChange={(event) => setter({ ...value, scenes: event.target.value })} placeholder={"はじめて会った日\nいつもの散歩道\n家族を待つ時間"} /></label></div>)}</div><button className="button button-primary" type="button" disabled={saving || !photoAnalysisApproved || !conceptPublishingStatusValid} onClick={saveConcepts}>2案を顧客へ公開する →</button></section>
+
+            <section className="admin-card" id="admin-stills">
+              <div className="card-head"><div><p className="eyebrow">SCENE STILLS</p><h3>場面イメージの確認依頼</h3></div><span>{sceneStills.length}枚 · 調整 {order.stills_revision_used}/{order.stills_revision_limit}回</span></div>
+              <aside className="admin-operation-note strong"><strong>映像化の前に、場面の静止画をお客様へ確認してもらいます。</strong><span>ここで追加した画像は「公開」を押すまで表示されません。公開すると状態が「場面イメージをご確認ください」へ進み、お客様の承認後に映像制作へ移ります。</span></aside>
+              {!canManageStills && <aside className="admin-operation-note warning"><strong>場面イメージを管理できません。</strong><span>{!photoAnalysisApproved ? "先に写真分析を承認してください。" : order.payment_status !== "paid" ? "先に入金確認を保存してください。" : !consentCurrent ? "お客様による現在版の同意記録が必要です。" : "コンセプト選択後（「選んだ物語を構成しています」または「場面イメージをご確認ください」）に管理できます。"}</span></aside>}
+              {order.stills_approved_at && <aside className="admin-operation-note strong"><strong>お客様が場面イメージを確定済みです。</strong><span>{formatDateTime(order.stills_approved_at)} に承認されました。映像制作へ進めてください。</span></aside>}
+              {sceneStills.length > 0 && <div className="admin-photo-grid">{sceneStills.map((asset) => <div className="admin-still-item" key={asset.id}>{assetUrls[asset.id] ? <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer"><span className="admin-photo-thumb" role="img" aria-label={asset.scene_title ?? asset.original_filename} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /></a> : <span>読み込み中</span>}<small>{String(asset.scene_sort_order + 1).padStart(2, "0")} · {asset.scene_title ?? asset.original_filename}</small>{canManageStills && <button className="button button-outline" type="button" disabled={saving} onClick={() => deleteSceneStill(asset)}>削除</button>}</div>)}</div>}
+              {canManageStills && <div className="admin-form-grid">
+                <label><span>場面のタイトル（お客様に表示）</span><input value={stillTitle} maxLength={80} onChange={(event) => setStillTitle(event.target.value)} placeholder="桜の花びらを追いかける場面" /></label>
+                <label><span>画像ファイル（JPG / PNG / WebP）</span><input key={stillInputKey} type="file" accept="image/jpeg,image/png,image/webp" disabled={saving} onChange={(event) => setStillFile(event.target.files?.[0] ?? null)} /></label>
+              </div>}
+              {canManageStills && <div className="admin-still-actions">
+                <button className="button button-outline" type="button" disabled={saving || !stillFile || !stillTitle.trim()} onClick={uploadSceneStill}>{saving ? "追加中…" : "場面イメージを追加"}</button>
+                <button className="button button-primary" type="button" disabled={saving || sceneStills.length === 0} onClick={publishSceneStills}>{order.status === "stills_review" ? "更新した場面イメージを再公開する →" : "場面イメージを公開する →"}</button>
+              </div>}
+              <p className="admin-operation-note">お客様の調整依頼はメッセージ欄に「【場面イメージの調整依頼】」として届きます。差し替え後に再公開してください。調整はDBでも{order.stills_revision_limit}回に制限されています。</p>
+            </section>
 
             <section className="admin-card" id="admin-revisions"><div className="card-head"><div><p className="eyebrow">REVISION REQUESTS</p><h3>修正依頼</h3></div><span>{order.revision_used}/{order.revision_limit}回使用</span></div>{revisions.length ? <div className="admin-work-list">{revisions.map((revision) => <article key={revision.id}><div><span className={revision.status === "open" ? "work-status open" : "work-status"}>{revision.status === "open" ? "対応が必要" : "対応済み"}</span><small>{formatDate(revision.created_at)}</small></div><strong>{revision.category}</strong><p>{revision.body}</p>{revision.status === "open" && <button className="button button-outline" type="button" disabled={saving} onClick={() => resolveRevision(revision.id)}>対応完了にする</button>}</article>)}</div> : <p className="admin-empty-copy">修正依頼はまだありません。</p>}<p className="admin-operation-note">修正版を「完成前の確認映像」として公開してから、該当依頼を対応完了にしてください。上限はDBでも{order.revision_limit}回に制限されています。</p></section>
 
