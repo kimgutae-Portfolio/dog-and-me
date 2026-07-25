@@ -63,7 +63,6 @@ type Draft = {
 // accepts 2-6 entries, so this count can change without a migration.
 const FIXED_MEMORY_COUNT = 3;
 const MAX_MEMORY_COUNT = 6;
-const MIN_TOTAL_PHOTOS = 3;
 const MAX_TOTAL_PHOTOS = 30;
 const MAX_PHOTOS_PER_MEMORY = 5;
 const FIXED_FILM_PURPOSE: FilmPurpose = "いまを残す";
@@ -157,42 +156,70 @@ const styles = [
   ["明るく楽しい思い出", "元気なテンポと明るい色で、その子らしく。"],
 ];
 
-type PhotoSelectorProps = {
+type ReferencePhotoField = "primaryFacePhotoKey" | "primaryBodyPhotoKey" | "sideTailPhotoKey";
+
+const PHOTO_INPUT_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
+
+const referenceSlots: Array<{ field: ReferencePhotoField; id: string; badge: string; title: string; guide: string }> = [
+  {
+    field: "primaryFacePhotoKey",
+    id: "primary-face-section",
+    badge: "FACE",
+    title: "お顔がよく分かる写真",
+    guide: "正面または斜め前から撮影され、目・鼻・口元がはっきり見える1枚を選んでください。",
+  },
+  {
+    field: "primaryBodyPhotoKey",
+    id: "primary-body-section",
+    badge: "BODY",
+    title: "立っている全身の写真",
+    guide: "頭から足先、しっぽまで入っている1枚。体型と毛の様子が分かるものが理想です。",
+  },
+  {
+    field: "sideTailPhotoKey",
+    id: "side-tail-section",
+    badge: "SIDE",
+    title: "横向き・しっぽの写真",
+    guide: "横から見た体のラインと、しっぽの形が分かる1枚を選んでください。",
+  },
+];
+
+type ReferencePhotoSlotProps = {
   id: string;
-  stepLabel: string;
-  legend: string;
-  guide?: string;
-  optional?: boolean;
-  name: string;
-  photos: PhotoDraft[];
-  value: string;
-  roleLabel: string;
-  roleKeys: Record<string, string[]>;
-  onChange: (value: string) => void;
+  index: number;
+  badge: string;
+  title: string;
+  guide: string;
+  photo: PhotoDraft | undefined;
+  onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+  onRemove: () => void;
+  onRetry: () => void;
+  onPreview: () => void;
 };
 
-function PhotoSelector({ id, stepLabel, legend, guide, optional, name, photos, value, roleLabel, roleKeys, onChange }: PhotoSelectorProps) {
-  return <fieldset className="representative-photo-fieldset" id={id}>
-    <legend><span className="photo-selector-step">{stepLabel}</span>{legend} <em>{optional ? "任意" : "必須"}</em></legend>
-    {guide && <p>{guide}</p>}
-    <div className="photo-choice-grid">
-      {optional && <label className={value ? "photo-choice-card empty" : "photo-choice-card empty selected"}>
-        <input type="radio" name={name} checked={!value} onChange={() => onChange("")} />
-        <span className="photo-choice-empty">選択しない</span>
-        {!value && <strong className="photo-selected-mark">✓ 未選択</strong>}
-      </label>}
-      {photos.map((photo, index) => {
-        const selected = value === photo.clientKey;
-        return <label className={selected ? "photo-choice-card selected" : "photo-choice-card"} key={`${name}-${photo.clientKey}`}>
-          <input type="radio" name={name} checked={selected} onChange={() => onChange(photo.clientKey)} />
-          <img src={photo.previewUrl} alt={`愛犬の写真 ${index + 1}`} loading="lazy" />
-          <span className="photo-choice-meta" title={photo.originalName}>写真 {index + 1}</span>
-          {roleKeys[photo.clientKey]?.map((badge) => <small className="photo-role-badge" key={badge}>{badge}</small>)}
-          {!selected && <span className="photo-choice-action">タップして選ぶ</span>}
-          {selected && <strong className="photo-selected-mark">✓ {roleLabel}</strong>}
-        </label>;
-      })}
-    </div>
+function ReferencePhotoSlot({ id, index, badge, title, guide, photo, onUpload, onRemove, onRetry, onPreview }: ReferencePhotoSlotProps) {
+  const inputId = `${id}-input`;
+  return <fieldset className={photo ? "reference-slot filled" : "reference-slot"} id={id}>
+    <legend><span className="photo-selector-step">{index}</span>{title} <em>必須</em></legend>
+    <p><span className="reference-slot-badge">{badge}</span>{guide}</p>
+    {photo ? <div className="reference-slot-filled">
+      <button type="button" className="reference-slot-thumb" onClick={onPreview}><img src={photo.previewUrl} alt={`${title}として登録した写真`} /><span>大きく見る</span></button>
+      <div className="reference-slot-meta">
+        <small title={photo.originalName}>{photo.originalName}</small>
+        {photo.status === "uploading" && <em className="photo-save-state">保存中…</em>}
+        {photo.status === "saved" && <em className="photo-save-state saved">保存済み ✓</em>}
+        {photo.status === "error" && <button type="button" className="photo-retry-button" onClick={onRetry}>再試行</button>}
+        <div className="reference-slot-actions">
+          <label htmlFor={inputId} className="reference-slot-replace">写真を変更</label>
+          <button type="button" disabled={photo.status === "uploading"} onClick={onRemove}>削除</button>
+        </div>
+      </div>
+    </div> : <label htmlFor={inputId} className="reference-slot-empty">
+      <span className="upload-mark" aria-hidden="true">＋</span>
+      <strong>この写真を選ぶ</strong>
+      <small>JPG・PNG・HEIC・WebP</small>
+    </label>}
+    <input id={inputId} className="reference-slot-input" type="file" accept={PHOTO_INPUT_ACCEPT} onChange={onUpload} />
   </fieldset>;
 }
 
@@ -220,7 +247,6 @@ export function StoryWizard() {
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const photoPreviewDialogRef = useRef<HTMLElement>(null);
   const photoGuideDialogRef = useRef<HTMLElement>(null);
-  const photoUploadTriggerRef = useRef<HTMLLabelElement>(null);
   const photoGuideFocusTargetRef = useRef<"previous" | "upload">("previous");
   const saveSequenceRef = useRef(0);
 
@@ -385,7 +411,6 @@ export function StoryWizard() {
     if (!photoGuideOpen) return;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = photoGuideDialogRef.current;
-    const uploadTrigger = photoUploadTriggerRef.current;
     dialog?.querySelector<HTMLButtonElement>("button")?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -406,8 +431,7 @@ export function StoryWizard() {
       window.removeEventListener("keydown", onKeyDown);
       if (photoGuideFocusTargetRef.current === "upload") {
         window.requestAnimationFrame(() => {
-          uploadTrigger?.focus({ preventScroll: true });
-          document.getElementById("photo-upload-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          document.getElementById("primary-face-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
           photoGuideFocusTargetRef.current = "previous";
         });
       } else {
@@ -424,15 +448,6 @@ export function StoryWizard() {
   }));
   const togglePersonality = (value: string) => update("personality", draft.personality.includes(value) ? draft.personality.filter((item) => item !== value) : [...draft.personality, value]);
   const previewPhoto = photoFiles.find((photo) => photo.clientKey === previewPhotoKey);
-
-  const roleKeys = useMemo(() => {
-    const roles: Record<string, string[]> = {};
-    const add = (key: string, label: string) => { if (key) (roles[key] ??= []).push(label); };
-    add(draft.primaryFacePhotoKey, "お顔の基準");
-    add(draft.primaryBodyPhotoKey, "全身の基準");
-    add(draft.sideTailPhotoKey, "横向き・しっぽ");
-    return roles;
-  }, [draft.primaryBodyPhotoKey, draft.primaryFacePhotoKey, draft.sideTailPhotoKey]);
 
   const persistPhoto = async (photo: PhotoDraft, sortOrder: number) => {
     if (!user || !draftId || !photo.file) return;
@@ -468,12 +483,15 @@ export function StoryWizard() {
     }
   };
 
-  const handlePhotos = (event: ChangeEvent<HTMLInputElement>) => {
-    const incoming = Array.from(event.target.files ?? []);
-    const existing = new Set(photoFiles.map((photo) => `${photo.originalName}:${photo.fileSize}:${photo.lastModified}`));
-    const accepted = incoming
-      .filter((file) => !existing.has(`${file.name}:${file.size}:${file.lastModified}`))
-      .slice(0, MAX_TOTAL_PHOTOS - photoFiles.length);
+  // Uploads land in one pool, but each upload control owns the photos it adds:
+  // the three reference slots in step 1, and each memory's own picker in step 2.
+  const ingestPhotos = (incoming: File[], limit: number): PhotoDraft[] => {
+    const current = photoFilesRef.current;
+    const accepted = incoming.slice(0, Math.max(0, Math.min(limit, MAX_TOTAL_PHOTOS - current.length)));
+    if (!accepted.length) {
+      if (incoming.length) setPhotoSelectionNotice(`写真は全体で最大${MAX_TOTAL_PHOTOS}枚までです。`);
+      return [];
+    }
     const additions: PhotoDraft[] = accepted.map((file) => ({
       clientKey: crypto.randomUUID(),
       file,
@@ -484,18 +502,40 @@ export function StoryWizard() {
       persistedAsset: null,
       status: "uploading",
     }));
-    if (accepted.length < incoming.length) {
-      setPhotoSelectionNotice(photoFiles.length + accepted.length >= MAX_TOTAL_PHOTOS
-        ? `写真は最大${MAX_TOTAL_PHOTOS}枚までです。超えた分は追加されていません。`
-        : "同じ写真は重複せず、1枚だけ追加しました。");
-    } else {
-      setPhotoSelectionNotice(accepted.length ? "写真を安全に自動保存しています…" : "");
-    }
-    setPhotoFiles((current) => [...current, ...additions]);
+    setPhotoSelectionNotice(accepted.length < incoming.length
+      ? `写真は全体で最大${MAX_TOTAL_PHOTOS}枚までです。超えた分は追加されていません。`
+      : "写真を安全に自動保存しています…");
+    setPhotoFiles((prev) => [...prev, ...additions]);
     additions.forEach((photo, index) => {
-      void persistPhoto(photo, photoFiles.length + index);
+      void persistPhoto(photo, current.length + index);
     });
+    return additions;
+  };
+
+  const handleReferenceUpload = (event: ChangeEvent<HTMLInputElement>, field: ReferencePhotoField) => {
+    const file = event.target.files?.[0];
     event.target.value = "";
+    if (!file) return;
+    const previousKey = draft[field];
+    const [added] = ingestPhotos([file], 1);
+    if (!added) return;
+    update(field, added.clientKey);
+    if (previousKey) void removePhoto(previousKey);
+  };
+
+  const handleMemoryPhotoUpload = (event: ChangeEvent<HTMLInputElement>, memoryKey: string) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    const memory = draft.memories.find((item) => item.clientKey === memoryKey);
+    if (!memory || !files.length) return;
+    const room = MAX_PHOTOS_PER_MEMORY - memory.photoKeys.length;
+    if (room <= 0) {
+      setPhotoSelectionNotice(`この思い出の写真は${MAX_PHOTOS_PER_MEMORY}枚までです。`);
+      return;
+    }
+    const added = ingestPhotos(files, room);
+    if (!added.length) return;
+    updateMemory(memoryKey, "photoKeys", [...memory.photoKeys, ...added.map((photo) => photo.clientKey)]);
   };
 
   const retryPhoto = (photoKey: string) => {
@@ -529,35 +569,19 @@ export function StoryWizard() {
     setPhotoSelectionNotice("削除した写真の基準設定と思い出とのつながりを解除しました。必要な項目を選び直してください。");
   };
 
-  const assignedMemoryByPhoto = useMemo(() => {
-    const assigned: Record<string, string> = {};
-    draft.memories.forEach((memory) => memory.photoKeys.forEach((key) => { assigned[key] = memory.clientKey; }));
-    return assigned;
-  }, [draft.memories]);
-
-  const toggleMemoryPhoto = (memoryKey: string, photoKey: string) => {
-    const memory = draft.memories.find((item) => item.clientKey === memoryKey);
-    if (!memory) return;
-    if (memory.photoKeys.includes(photoKey)) updateMemory(memoryKey, "photoKeys", memory.photoKeys.filter((key) => key !== photoKey));
-    else if (!assignedMemoryByPhoto[photoKey] && memory.photoKeys.length < MAX_PHOTOS_PER_MEMORY) updateMemory(memoryKey, "photoKeys", [...memory.photoKeys, photoKey]);
-  };
-
+  const photoByKey = useMemo(() => new Map(photoFiles.map((photo) => [photo.clientKey, photo])), [photoFiles]);
   const totalPhotoCount = photoFiles.length;
   const unsavedPhotoCount = photoFiles.filter((photo) => photo.status !== "saved").length;
   const totalLinkedPhotoCount = useMemo(() => draft.memories.reduce((total, memory) => total + memory.photoKeys.length, 0), [draft.memories]);
   const allMemoryEntriesComplete = useMemo(() => draft.memories.every(isMemoryReady), [draft.memories]);
 
-  const photoUploadComplete = totalPhotoCount >= MIN_TOTAL_PHOTOS;
-  const photoReferenceGuideItems = [
-    { label: "お顔の基準を1枚選択", complete: Boolean(draft.primaryFacePhotoKey) },
-    { label: "全身の基準を1枚選択", complete: Boolean(draft.primaryBodyPhotoKey) },
-  ];
-  const nextIncompleteReferenceIndex = photoReferenceGuideItems.findIndex((item) => !item.complete);
+  const referencePhotoCount = referenceSlots.filter((slot) => Boolean(draft[slot.field])).length;
+  const referencePhotosComplete = referencePhotoCount === referenceSlots.length;
   const photoGuideSlides = [
-    { number: "01", title: `まず、写真を${MIN_TOTAL_PHOTOS}枚以上追加します`, copy: "スマートフォンの写真一覧から、顔・全身・思い出の場面が分かる写真をまとめて選べます。あとから追加や削除もできます。" },
-    { number: "02", title: "次に、お顔の基準を1枚選びます", copy: "追加した写真がもう一度並びます。目・鼻・口元がはっきり見える写真を、カードごとタップしてください。" },
-    { number: "03", title: "全身の基準も1枚選びます", copy: "立った姿で頭から足先まで見える写真がおすすめです。同じ写真をお顔と全身の両方に選んでも問題ありません。" },
-    { number: "04", title: "次の画面で、思い出と写真をつなぎます", copy: "最後に『この写真はどの思い出の場面か』を選びます。迷った場合は、写真に近い出来事を選べば大丈夫です。" },
+    { number: "01", title: "お顔の写真を1枚アップロード", copy: "正面または斜め前から撮影され、目・鼻・口元がはっきり見える写真を選んでください。この1枚が、映像の中のお顔の基準になります。" },
+    { number: "02", title: "全身の写真を1枚アップロード", copy: "立った姿で頭から足先、しっぽまで見える写真がおすすめです。体型と毛の様子が分かるものを選んでください。" },
+    { number: "03", title: "横向き・しっぽの写真を1枚アップロード", copy: "横から見た体のラインと、しっぽの形が分かる1枚です。同じ写真を複数の枠に使っても問題ありません。" },
+    { number: "04", title: "思い出の写真は、次の画面で", copy: "この画面では基準の3枚だけをお預かりします。思い出の場面写真は次の画面で、思い出ごとに任意でアップロードできます。" },
   ];
   const closePhotoGuide = () => {
     window.localStorage.setItem("wan-memory-photo-guide-seen-v1", "1");
@@ -572,15 +596,6 @@ export function StoryWizard() {
     photoGuideFocusTargetRef.current = "upload";
     closePhotoGuide();
   };
-  const scrollToPhotoTask = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const handleNextPhotoTask = () => {
-    if (!draft.primaryFacePhotoKey) { scrollToPhotoTask("primary-face-section"); return; }
-    if (!draft.primaryBodyPhotoKey) { scrollToPhotoTask("primary-body-section"); return; }
-    scrollToPhotoTask("appearance-policy-section");
-  };
-  const nextPhotoTaskLabel = !draft.primaryFacePhotoKey ? "お顔の基準写真を選ぶ"
-    : !draft.primaryBodyPhotoKey ? "全身の基準写真を選ぶ"
-    : "次の設定へ進む";
 
   const missingFields = useMemo<MissingField[]>(() => {
     const missing: MissingField[] = [];
@@ -588,7 +603,6 @@ export function StoryWizard() {
     if (!draft.breed.trim()) missing.push({ key: "breed", label: "犬種", step: 0 });
     if (!draft.age.trim()) missing.push({ key: "age", label: "年齢（推定でも可）", step: 0 });
     if (draft.personality.length === 0) missing.push({ key: "personality", label: "性格（1つ以上）", step: 0 });
-    if (totalPhotoCount < MIN_TOTAL_PHOTOS) missing.push({ key: "totalPhotos", label: `写真${MIN_TOTAL_PHOTOS}枚以上（現在${totalPhotoCount}枚）`, step: 1 });
     if (unsavedPhotoCount > 0) missing.push({ key: "photoUploads", label: `写真の自動保存完了（未完了${unsavedPhotoCount}枚）`, step: 1 });
     if (!draft.primaryFacePhotoKey) missing.push({ key: "primaryFace", label: "お顔の基準写真", step: 1 });
     if (!draft.primaryBodyPhotoKey) missing.push({ key: "primaryBody", label: "全身の基準写真", step: 1 });
@@ -605,7 +619,7 @@ export function StoryWizard() {
     if (!draft.externalAiConsent) missing.push({ key: "externalAiConsent", label: "外部AIサービスでの処理への同意", step: 4 });
     if (!draft.aiReconstructionAcknowledged) missing.push({ key: "aiReconstructionAcknowledged", label: "映画的な再構成についての確認", step: 4 });
     return missing;
-  }, [draft, totalPhotoCount, unsavedPhotoCount]);
+  }, [draft, unsavedPhotoCount]);
 
   const currentStepMissingFields = useMemo(() => missingFields.filter((item) => item.step === step), [missingFields, step]);
 
@@ -801,50 +815,46 @@ export function StoryWizard() {
 
           {step === 1 && <div className="wizard-panel photo-preparation-panel">
             <p className="eyebrow">YOUR PHOTOS</p><h1 id="step-title">その子らしさが分かる写真を。</h1>
-            <p className="step-lead">映像の中で大切な姿をできるだけ自然に残すため、<br />お顔・全身・横向きが分かる写真をご用意ください。<br />強いフィルターや大きくぼけた写真は避けてください。</p>
+            <p className="step-lead">映像づくりの基準になる<strong>3枚</strong>をお預かりします。<br />お顔・全身・横向きを1枚ずつ選んでください。<br />強いフィルターや大きくぼけた写真は避けてください。</p>
             <section className="photo-task-guide" aria-labelledby="photo-task-guide-title">
               <header><div><p className="eyebrow">EASY GUIDE</p><h2 id="photo-task-guide-title">この画面で行うこと</h2></div><button type="button" onClick={showPhotoGuide}>写真選びガイドを見る</button></header>
-              <p className="photo-task-guide-lead">写真を追加したあと、同じ写真の中から<strong>「お顔」と「全身」の基準を1枚ずつ</strong>選びます。</p>
-              <div className={photoUploadComplete ? "photo-guide-photo-types complete" : "photo-guide-photo-types"}>
+              <p className="photo-task-guide-lead">下の<strong>3つの枠に1枚ずつ</strong>アップロードします。思い出の場面写真は、次の画面で思い出ごとに追加できます。</p>
+              <div className={referencePhotosComplete ? "photo-guide-photo-types complete" : "photo-guide-photo-types"}>
                 <div className="photo-guide-upload-head">
-                  <span aria-hidden="true">{photoUploadComplete ? "✓" : "1"}</span>
-                  <div><strong>写真を{MIN_TOTAL_PHOTOS}枚以上追加</strong><small>まずは、映像づくりに使う写真をまとめて選びます</small></div>
-                  <em>{photoUploadComplete ? `${totalPhotoCount}枚・完了` : `${totalPhotoCount} / ${MIN_TOTAL_PHOTOS}枚`}</em>
+                  <span aria-hidden="true">{referencePhotosComplete ? "✓" : "3"}</span>
+                  <div><strong>基準写真を3枚アップロード</strong><small>この3枚で、その子の見た目の基準をつくります</small></div>
+                  <em>{referencePhotoCount} / 3枚</em>
                 </div>
-                <p className="photo-guide-type-intro">この3種類が入るように選ぶと安心です</p>
                 <ul>
                   <li><span>FACE</span><b>お顔がよく分かる</b><small>目・鼻・口元が鮮明</small></li>
                   <li><span>BODY</span><b>立っている全身</b><small>頭から足先まで見える</small></li>
-                  <li><span>SIDE</span><b>横向き・しっぽ</b><small>体型が分かる・必須</small></li>
+                  <li><span>SIDE</span><b>横向き・しっぽ</b><small>体のラインが分かる</small></li>
                 </ul>
-                <small className="photo-guide-type-note">上の写真を含めて、最大{MAX_TOTAL_PHOTOS}枚までお送りいただけます。</small>
+                <small className="photo-guide-type-note">同じ写真を複数の枠に使いたい場合は、それぞれの枠で同じ写真を選んでください。</small>
               </div>
-              <ol>{photoReferenceGuideItems.map((item, index) => <li className={item.complete ? "complete" : ""} key={item.label}><span aria-hidden="true">{item.complete ? "✓" : index + 2}</span><strong>{item.label}</strong><small>{item.complete ? "完了" : !photoUploadComplete ? "写真の追加後" : index === nextIncompleteReferenceIndex ? "次に行います" : "その次"}</small></li>)}</ol>
-              {totalPhotoCount >= MIN_TOTAL_PHOTOS && <button className="photo-next-task" type="button" onClick={handleNextPhotoTask}>{nextPhotoTaskLabel}<span aria-hidden="true">→</span></button>}
             </section>
-            <div className="shared-photo-upload" id="photo-upload-section">
-              <input id="shared-photo-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple onChange={handlePhotos} />
-              <label htmlFor="shared-photo-input" ref={photoUploadTriggerRef} tabIndex={-1}><span className="upload-step-label">1. まずここをタップ</span><span className="upload-mark" aria-hidden="true">＋</span><strong>{photoFiles.length ? "写真を追加する" : "スマートフォンから写真を選ぶ"} <em>必須</em></strong><small>一度に複数選べます · JPG・PNG・HEIC・WebP</small></label>
+            {photoSelectionNotice && <aside className="photo-selection-feedback" role="status"><strong>写真を更新しました。</strong><span>{photoSelectionNotice}</span></aside>}
+
+            <div className="reference-slot-stack">
+              {referenceSlots.map((slot, index) => <ReferencePhotoSlot
+                key={slot.field}
+                id={slot.id}
+                index={index + 1}
+                badge={slot.badge}
+                title={slot.title}
+                guide={slot.guide}
+                photo={photoByKey.get(draft[slot.field])}
+                onUpload={(event) => handleReferenceUpload(event, slot.field)}
+                onRemove={() => void removePhoto(draft[slot.field])}
+                onRetry={() => retryPhoto(draft[slot.field])}
+                onPreview={() => setPreviewPhotoKey(draft[slot.field])}
+              />)}
             </div>
-            <div className="upload-count" role="status" aria-live="polite"><strong>{photoFiles.length} / {MIN_TOTAL_PHOTOS}枚以上</strong><span>{photoFiles.length >= MIN_TOTAL_PHOTOS ? "必要な枚数が揃いました。" : `あと${MIN_TOTAL_PHOTOS - photoFiles.length}枚必要です。`}</span></div>
-            {photoSelectionNotice && <aside className="photo-selection-feedback" role="status"><strong>写真の選択を更新しました。</strong><span>{photoSelectionNotice}</span></aside>}
-            {photoFiles.length > 0 && <><h2 className="uploaded-photo-heading">追加した写真 <small>写真を押すと大きく確認できます</small></h2><div className="uploaded-photo-grid" aria-label="選択した写真">
-              {photoFiles.map((photo, index) => <article className={`uploaded-photo-item ${photo.status}`} key={photo.clientKey}><button type="button" className="uploaded-photo-preview" disabled={!photo.previewUrl} onClick={() => setPreviewPhotoKey(photo.clientKey)}><img src={photo.previewUrl} alt={`追加した愛犬の写真 ${index + 1}`} loading="lazy" /><span>大きく見る</span></button><div><small title={photo.originalName}>写真 {index + 1}</small>{roleKeys[photo.clientKey]?.map((badge) => <strong key={badge}>{badge}</strong>)}{photo.status === "uploading" && <em className="photo-save-state">保存中…</em>}{photo.status === "saved" && <em className="photo-save-state saved">保存済み ✓</em>}{photo.status === "error" && <button type="button" className="photo-retry-button" onClick={() => retryPhoto(photo.clientKey)}>再試行</button>}<button type="button" disabled={photo.status === "uploading"} onClick={() => void removePhoto(photo.clientKey)}>削除</button></div></article>)}
-            </div></>}
-
-            {photoFiles.length > 0 && <div className="representative-photo-stack">
-              <PhotoSelector id="primary-face-section" stepLabel="2" legend="いちばん「この子らしい」顔の写真を1枚選んでください" guide="写真カードをタップして選びます。正面または斜め前から撮影され、目・鼻・口元がはっきり見える写真がおすすめです。" name="primary-face" photos={photoFiles} value={draft.primaryFacePhotoKey} roleLabel="お顔の基準" roleKeys={roleKeys} onChange={(value) => update("primaryFacePhotoKey", value)} />
-              <PhotoSelector id="primary-body-section" stepLabel="3" legend="実際の体型がいちばん分かる全身写真を1枚選んでください" guide="写真カードをタップして選びます。立っている状態で、頭から足先、しっぽまで見える写真が理想です。同じ写真をお顔の基準にも選べます。" name="primary-body" photos={photoFiles} value={draft.primaryBodyPhotoKey} roleLabel="全身の基準" roleKeys={roleKeys} onChange={(value) => update("primaryBodyPhotoKey", value)} />
-              <PhotoSelector id="side-tail-section" stepLabel="4" legend="横向きの体型と、しっぽの形が分かる写真を選んでください" name="side-tail" photos={photoFiles} value={draft.sideTailPhotoKey} roleLabel="横向き・しっぽ" roleKeys={roleKeys} onChange={(value) => update("sideTailPhotoKey", value)} />
-            </div>}
-
-
-
             <aside className="people-photo-policy"><p className="eyebrow">PEOPLE IN PHOTOS</p><h2>人物が写っている写真について</h2><p>ご家族と一緒に写っている写真もお送りいただけます。人物のお顔は映像に使用・生成せず、後ろ姿などお顔が分からない形でのみ使用します。写真に人物が写っている場合は、その方（未成年者の場合は保護者）の了解を得たうえでお送りください。</p></aside>
           </div>}
 
           {step === 2 && <div className="wizard-panel"><p className="eyebrow">YOUR MEMORIES</p><h1 id="step-title">覚えていることを、少しずつ。</h1><p className="step-lead">約1分の映画は、{FIXED_MEMORY_COUNT}つの思い出で構成します。担当ディレクターが内容を読み、場面イメージを制作して映像の前にお見せします。</p><section className="memory-writing-guide" aria-labelledby="memory-writing-guide-title"><div><p className="eyebrow">WRITING GUIDE</p><h2 id="memory-writing-guide-title">映像にしやすい伝え方</h2></div><ol><li><span>01</span><div><strong>ひとつの出来事に絞る</strong><p>「旅行」だけではなく「海辺で初めて波を見た日」のように、ひとつの場面にします。</p></div></li><li><span>02</span><div><strong>その子の動きや表情も一緒に書く</strong><p>走った、振り返った、首をかしげたなど、実際に見た様子を文章の中に含めてください。</p></div></li><li><span>03</span><div><strong>写真があれば参考として添える</strong><p>同じ場面の写真があれば任意で選べます。なくても、文章と基準写真から場面をおつくりします。</p></div></li></ol><p>例：「去年の春、いつもの公園で桜を見ました。モモは花びらを追いかけたあと、こちらを見て首をかしげました。」</p></section>
-            <div className="memory-entry-list">{draft.memories.map((memory, index) => { const complete = isMemoryReady(memory); const expanded = activeMemoryKey === memory.clientKey; return <article className={`memory-entry-card${complete ? " complete" : ""}`} key={memory.clientKey}><button type="button" className="memory-entry-toggle" aria-expanded={expanded} aria-controls={`memory-entry-content-${memory.clientKey}`} onClick={() => setActiveMemoryKey((current) => current === memory.clientKey ? "" : memory.clientKey)}><span className="memory-entry-toggle-copy"><span>MEMORY {String(index + 1).padStart(2, "0")} / {FIXED_MEMORY_COUNT}</span><strong>{memory.title.trim() || `思い出 ${index + 1}`}</strong></span><span className="memory-entry-status">{complete ? "入力完了 ✓" : expanded ? "入力中" : "入力する"}</span><span className={expanded ? "memory-entry-chevron open" : "memory-entry-chevron"} aria-hidden="true">⌄</span></button>{expanded && <div className="memory-entry-content" id={`memory-entry-content-${memory.clientKey}`}><div className="memory-entry-fields"><label className="wide"><span>思い出のタイトル <em>必須</em></span><input required value={memory.title} maxLength={80} onChange={(event) => updateMemory(memory.clientKey, "title", event.target.value)} placeholder="例：はじめて海を見た日" /></label><label><span>いつ頃ですか？ <small>任意</small></span><input value={memory.whenText} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "whenText", event.target.value)} placeholder="例：2025年の春 / 3歳の頃" /></label><label><span>どこでの思い出ですか？ <small>任意</small></span><input value={memory.location} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "location", event.target.value)} placeholder="例：いつもの公園、家のリビング" /></label><label className="wide"><span>そのときのことを詳しく教えてください <em>必須・30文字以上</em></span><textarea required rows={6} maxLength={2000} value={memory.description} onChange={(event) => updateMemory(memory.clientKey, "description", event.target.value)} placeholder="誰と、どんな時間を過ごし、何が心に残っていますか？ その子の表情やしぐさ（走った、振り返った、首をかしげたなど）も一緒に書いていただくと、場面づくりの参考になります。" /><small className={memory.description.trim().length >= 30 ? "field-count complete" : "field-count"}>{memory.description.trim().length} / 30文字以上</small></label></div><fieldset className="memory-photo-linker"><legend>この思い出と同じ場面の写真 <em>任意・参考資料</em></legend><p>あれば{MAX_PHOTOS_PER_MEMORY}枚まで選べます。選んだ写真は担当ディレクターが場面づくりの参考にします。写真がなくても、文章と3枚の基準写真をもとに場面イメージを制作し、映像の前にお見せします。</p><div className="photo-choice-grid compact">{photoFiles.map((photo, photoIndex) => { const selected = memory.photoKeys.includes(photo.clientKey); const assignedToOther = Boolean(assignedMemoryByPhoto[photo.clientKey] && assignedMemoryByPhoto[photo.clientKey] !== memory.clientKey); const disabled = assignedToOther || (!selected && memory.photoKeys.length >= MAX_PHOTOS_PER_MEMORY); return <label className={selected ? "photo-choice-card selected" : disabled ? "photo-choice-card disabled" : "photo-choice-card"} key={`${memory.clientKey}-${photo.clientKey}`}><input type="checkbox" checked={selected} disabled={disabled} onChange={() => toggleMemoryPhoto(memory.clientKey, photo.clientKey)} /><img src={photo.previewUrl} alt={`愛犬の写真 ${photoIndex + 1}`} loading="lazy" />{!selected && !disabled && <span className="photo-choice-action">この思い出に選ぶ</span>}{selected && <strong className="photo-selected-mark">✓ この思い出</strong>}{assignedToOther && <small className="photo-assigned-label">別の思い出で選択済み</small>}</label>; })}</div><strong className="memory-photo-count">{memory.photoKeys.length} / {MAX_PHOTOS_PER_MEMORY}枚</strong></fieldset></div>}</article>; })}</div>
+            <div className="memory-entry-list">{draft.memories.map((memory, index) => { const complete = isMemoryReady(memory); const expanded = activeMemoryKey === memory.clientKey; return <article className={`memory-entry-card${complete ? " complete" : ""}`} key={memory.clientKey}><button type="button" className="memory-entry-toggle" aria-expanded={expanded} aria-controls={`memory-entry-content-${memory.clientKey}`} onClick={() => setActiveMemoryKey((current) => current === memory.clientKey ? "" : memory.clientKey)}><span className="memory-entry-toggle-copy"><span>MEMORY {String(index + 1).padStart(2, "0")} / {FIXED_MEMORY_COUNT}</span><strong>{memory.title.trim() || `思い出 ${index + 1}`}</strong></span><span className="memory-entry-status">{complete ? "入力完了 ✓" : expanded ? "入力中" : "入力する"}</span><span className={expanded ? "memory-entry-chevron open" : "memory-entry-chevron"} aria-hidden="true">⌄</span></button>{expanded && <div className="memory-entry-content" id={`memory-entry-content-${memory.clientKey}`}><div className="memory-entry-fields"><label className="wide"><span>思い出のタイトル <em>必須</em></span><input required value={memory.title} maxLength={80} onChange={(event) => updateMemory(memory.clientKey, "title", event.target.value)} placeholder="例：はじめて海を見た日" /></label><label><span>いつ頃ですか？ <small>任意</small></span><input value={memory.whenText} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "whenText", event.target.value)} placeholder="例：2025年の春 / 3歳の頃" /></label><label><span>どこでの思い出ですか？ <small>任意</small></span><input value={memory.location} maxLength={120} onChange={(event) => updateMemory(memory.clientKey, "location", event.target.value)} placeholder="例：いつもの公園、家のリビング" /></label><label className="wide"><span>そのときのことを詳しく教えてください <em>必須・30文字以上</em></span><textarea required rows={6} maxLength={2000} value={memory.description} onChange={(event) => updateMemory(memory.clientKey, "description", event.target.value)} placeholder="誰と、どんな時間を過ごし、何が心に残っていますか？ その子の表情やしぐさ（走った、振り返った、首をかしげたなど）も一緒に書いていただくと、場面づくりの参考になります。" /><small className={memory.description.trim().length >= 30 ? "field-count complete" : "field-count"}>{memory.description.trim().length} / 30文字以上</small></label></div><fieldset className="memory-photo-linker"><legend>この思い出と同じ場面の写真 <em>任意・参考資料</em></legend><p>この思い出の写真があれば、ここから{MAX_PHOTOS_PER_MEMORY}枚までアップロードできます。担当ディレクターが場面づくりの参考にします。写真がなくても、文章と3枚の基準写真をもとに場面イメージを制作し、映像の前にお見せします。</p><div className="memory-photo-grid">{memory.photoKeys.map((photoKey, photoIndex) => { const photo = photoByKey.get(photoKey); if (!photo) return null; return <article className={`memory-photo-item ${photo.status}`} key={photoKey}><button type="button" className="memory-photo-thumb" onClick={() => setPreviewPhotoKey(photoKey)}><img src={photo.previewUrl} alt={`${memory.title.trim() || `思い出 ${index + 1}`}の写真 ${photoIndex + 1}`} loading="lazy" /><span>大きく見る</span></button><div>{photo.status === "uploading" && <em className="photo-save-state">保存中…</em>}{photo.status === "saved" && <em className="photo-save-state saved">保存済み ✓</em>}{photo.status === "error" && <button type="button" className="photo-retry-button" onClick={() => retryPhoto(photoKey)}>再試行</button>}<button type="button" disabled={photo.status === "uploading"} onClick={() => void removePhoto(photoKey)}>削除</button></div></article>; })}{memory.photoKeys.length < MAX_PHOTOS_PER_MEMORY && <label className="memory-photo-add" htmlFor={`memory-photo-input-${memory.clientKey}`}><span className="upload-mark" aria-hidden="true">＋</span><strong>写真を追加</strong><small>任意・複数選択できます</small></label>}</div><input id={`memory-photo-input-${memory.clientKey}`} className="reference-slot-input" type="file" accept={PHOTO_INPUT_ACCEPT} multiple onChange={(event) => handleMemoryPhotoUpload(event, memory.clientKey)} /><strong className="memory-photo-count">{memory.photoKeys.length} / {MAX_PHOTOS_PER_MEMORY}枚</strong></fieldset></div>}</article>; })}</div>
             <div className="memory-entry-add"><p>約1分の映画は、はじまりの場面・{FIXED_MEMORY_COUNT}つの思い出・おわりのご挨拶で構成します。<br />入力できた思い出：{draft.memories.filter(isMemoryReady).length} / {FIXED_MEMORY_COUNT}項目 · 参考写真{totalLinkedPhotoCount}枚<br />{allMemoryEntriesComplete ? "すべて入力できました。ほかに伝えたい思い出があれば、下の「その子へ伝えたいこと」やお申し込み後のメッセージでお知らせください。" : "思い出はいつでも書き直せます。順番も気にせず、書きやすいものから入力してください。"}</p></div><div className="stacked-fields memory-ending-fields"><label><span>その子へ伝えたいこと <em>必須</em></span><textarea required rows={3} value={draft.message} onChange={(event) => update("message", event.target.value)} placeholder="映画の最後に残したい言葉があれば" /></label><label><span>映像に入れたくないこと <small>任意</small></span><textarea rows={2} value={draft.avoid} onChange={(event) => update("avoid", event.target.value)} placeholder="病院の場面、最後の時期、直接的な表現など。遠慮なく書いてください" /></label></div>
           </div>}
 
