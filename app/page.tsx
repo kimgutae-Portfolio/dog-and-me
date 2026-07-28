@@ -127,9 +127,9 @@ export default async function Home() {
             一本の映画に。
           </h1>
           <p className="hero-copy">
-            写真とエピソードをもとに、愛犬との記憶を
+            愛犬の写真とエピソードをもとに、思い出のワンシーンを
             <br className="desktop-only" />
-            実写映画のような映像へ仕立てます。
+            実写映画のように再構成する映像です。
           </p>
           <div className="hero-actions">
             {APPLICATIONS_OPEN ? (

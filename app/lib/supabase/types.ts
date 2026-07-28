@@ -85,8 +85,12 @@ export type MemoryOrder = {
   revision_used: number;
   stills_revision_limit: number;
   stills_revision_used: number;
+  stills_change_open: boolean;
+  stills_review_version: number;
   stills_approved_at: string | null;
   stills_approved_by: string | null;
+  stills_approved_version: number | null;
+  stills_approved_asset_ids: string[] | null;
   consented_at: string | null;
   terms_version: string | null;
   privacy_version: string | null;
@@ -116,6 +120,13 @@ export type MemoryOrder = {
   customer_approved_at: string | null;
   customer_approved_by: string | null;
   customer_approved_review_asset_id: string | null;
+  production_started_at: string | null;
+  production_completed_at: string | null;
+  production_work_minutes: number;
+  runway_credits_used: number;
+  runway_generation_count: number;
+  runway_retry_count: number;
+  production_log: string | null;
   draft_expires_at: string | null;
   stage_updated_at: string;
   created_at: string;

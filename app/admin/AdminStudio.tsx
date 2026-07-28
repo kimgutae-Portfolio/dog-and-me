@@ -20,7 +20,7 @@ const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
   materials_submitted: ["materials_submitted", "reviewing_materials", "cancelled"],
   reviewing_materials: ["reviewing_materials", "cancelled"],
   concepts_ready: ["concepts_ready", "reviewing_materials", "cancelled"],
-  concept_selected: ["concept_selected", "concepts_ready", "stills_review", "production", "cancelled"],
+  concept_selected: ["concept_selected", "concepts_ready", "stills_review", "cancelled"],
   stills_review: ["stills_review", "concept_selected", "cancelled"],
   production: ["production", "concept_selected", "cancelled"],
   customer_review: ["customer_review", "production", "cancelled"],
@@ -157,6 +157,11 @@ export function AdminStudio() {
   const [paymentStatus, setPaymentStatus] = useState<MemoryOrder["payment_status"]>("pending");
   const [dueDate, setDueDate] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
+  const [productionWorkMinutes, setProductionWorkMinutes] = useState(0);
+  const [runwayCreditsUsed, setRunwayCreditsUsed] = useState(0);
+  const [runwayGenerationCount, setRunwayGenerationCount] = useState(0);
+  const [runwayRetryCount, setRunwayRetryCount] = useState(0);
+  const [productionLog, setProductionLog] = useState("");
   const [deliveryTitle, setDeliveryTitle] = useState("");
   const [deliveryMessage, setDeliveryMessage] = useState("");
   const [videoMode, setVideoMode] = useState<VideoMode>("review");
@@ -269,7 +274,7 @@ export function AdminStudio() {
   const consentCurrent = Boolean(order && hasCurrentConsent(order));
   const photoAnalysisApproved = productionFields.photoAnalysisStatus === "approved";
   const conceptPublishingStatusValid = Boolean(order && ["materials_submitted", "reviewing_materials", "concepts_ready"].includes(order.status));
-  const canManageStills = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && ["concept_selected", "stills_review"].includes(order.status));
+  const canPrepareStills = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && order.status === "concept_selected");
   const canUploadReview = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && ["production", "revision_requested", "customer_review"].includes(order.status));
   const canUploadFinal = Boolean(order && photoAnalysisApproved && order.status === "quality_check" && order.payment_status === "paid" && consentCurrent && order.customer_approved_at && order.customer_approved_review_asset_id && openRevisions.length === 0);
 
@@ -280,6 +285,11 @@ export function AdminStudio() {
       setPaymentStatus(order.payment_status);
       setDueDate(order.due_date ?? "");
       setAdminNotes(order.admin_notes ?? "");
+      setProductionWorkMinutes(order.production_work_minutes ?? 0);
+      setRunwayCreditsUsed(order.runway_credits_used ?? 0);
+      setRunwayGenerationCount(order.runway_generation_count ?? 0);
+      setRunwayRetryCount(order.runway_retry_count ?? 0);
+      setProductionLog(order.production_log ?? "");
       setDeliveryTitle(`${order.pet_name}との映画`);
       setDeliveryMessage(`${order.pet_name}ちゃんとの大切な時間を、一本の映画に仕上げました。`);
       setVideoMode("review");
@@ -334,6 +344,26 @@ export function AdminStudio() {
     });
     if (updateError) setError(`進行状況を保存できませんでした。${updateError.message.includes("invalid order status transition") ? "許可されていない工程への移動です。" : ""}`);
     else { setNotice("進行状況を保存し、履歴へ記録しました。"); await loadOrders(); }
+    setSaving(false);
+  };
+
+  const saveProductionMetrics = async () => {
+    if (!order) return;
+    setSaving(true);
+    setError("");
+    const { error: metricsError } = await getSupabaseBrowserClient().rpc("admin_save_production_metrics", {
+      p_order_id: order.id,
+      p_work_minutes: Math.max(0, Math.trunc(productionWorkMinutes || 0)),
+      p_runway_credits: Math.max(0, Math.trunc(runwayCreditsUsed || 0)),
+      p_generation_count: Math.max(0, Math.trunc(runwayGenerationCount || 0)),
+      p_retry_count: Math.max(0, Math.trunc(runwayRetryCount || 0)),
+      p_notes: productionLog.trim() || null,
+    });
+    if (metricsError) setError("制作メモを保存できませんでした。入力内容をご確認ください。");
+    else {
+      setNotice("制作時間・Runway使用量を記録しました。初期10組の原価検証に利用できます。");
+      await loadOrders();
+    }
     setSaving(false);
   };
 
@@ -727,7 +757,7 @@ export function AdminStudio() {
   };
 
   const uploadSceneStill = async () => {
-    if (!order || !stillFile || !canManageStills) return;
+    if (!order || !stillFile || !canPrepareStills) return;
     const title = stillTitle.trim();
     if (!title) {
       setError("場面のタイトルを入力してください。");
@@ -769,7 +799,7 @@ export function AdminStudio() {
   };
 
   const deleteSceneStill = async (asset: OrderAsset) => {
-    if (!order || !canManageStills) return;
+    if (!order || !canPrepareStills) return;
     if (!window.confirm(`「${asset.scene_title ?? asset.original_filename}」を削除しますか？`)) return;
     setSaving(true);
     setError("");
@@ -786,7 +816,7 @@ export function AdminStudio() {
   };
 
   const publishSceneStills = async () => {
-    if (!order || !canManageStills || sceneStills.length === 0) return;
+    if (!order || !canPrepareStills || sceneStills.length === 0) return;
     setSaving(true);
     setError("");
     const supabase = getSupabaseBrowserClient();
@@ -813,6 +843,19 @@ export function AdminStudio() {
       ? "場面イメージをお客様へ公開し、メールでお知らせしました。"
       : "場面イメージを公開しました。メール通知は送れなかったため、必要ならメッセージでお知らせください。");
     await Promise.all([loadOrders(), loadDetails(order.id)]);
+    setSaving(false);
+  };
+
+  const beginStillsRevision = async () => {
+    if (!order || order.status !== "stills_review" || !order.stills_change_open) return;
+    setSaving(true);
+    setError("");
+    const { error: revisionError } = await getSupabaseBrowserClient().rpc("admin_begin_stills_revision", { p_order_id: order.id });
+    if (revisionError) setError("場面イメージの調整を開始できませんでした。現在の工程をご確認ください。");
+    else {
+      setNotice("場面イメージの調整を開始しました。差し替え後に、もう一度公開してください。");
+      await Promise.all([loadOrders(), loadDetails(order.id)]);
+    }
     setSaving(false);
   };
 
@@ -924,23 +967,36 @@ export function AdminStudio() {
             <section className="admin-card" id="admin-concepts"><div className="card-head"><div><p className="eyebrow">CONCEPT DELIVERY</p><h3>映像コンセプト2案</h3></div><span>{concepts.length}/2 保存済み</span></div>{order.status === "materials_submitted" && photoAnalysisApproved && <aside className="admin-operation-note strong"><strong>公開時に確認工程を自動で開始します。</strong><span>コンセプトを公開すると、進行状況を「写真とお話を確認しています」から「コンセプト2案をご確認ください」へ順番に記録します。</span></aside>}{!conceptPublishingStatusValid && <aside className="admin-operation-note warning"><strong>現在の工程では公開できません。</strong><span>進行状況「{ORDER_STATUS_LABELS[order.status]}」を確認してください。制作開始後に内容を変更する場合は、先に適切な工程へ戻す必要があります。</span></aside>}<div className="admin-concepts">{([['A', conceptA, setConceptA], ['B', conceptB, setConceptB]] as const).map(([slot, value, setter]) => <div key={slot}><strong>CONCEPT {slot}</strong><label><span>タイトル</span><input value={value.title} onChange={(event) => setter({ ...value, title: event.target.value })} placeholder={`${order.pet_name}と歩いた季節`} /></label><label><span>トーン</span><input value={value.tone} onChange={(event) => setter({ ...value, tone: event.target.value })} placeholder="やさしく、映画のように" /></label><label><span>概要</span><textarea rows={4} value={value.summary} onChange={(event) => setter({ ...value, summary: event.target.value })} /></label><label><span>シーン（1行に1つ）</span><textarea rows={5} value={value.scenes} onChange={(event) => setter({ ...value, scenes: event.target.value })} placeholder={"はじめて会った日\nいつもの散歩道\n家族を待つ時間"} /></label></div>)}</div><button className="button button-primary" type="button" disabled={saving || !photoAnalysisApproved || !conceptPublishingStatusValid} onClick={saveConcepts}>2案を顧客へ公開する →</button></section>
 
             <section className="admin-card" id="admin-stills">
-              <div className="card-head"><div><p className="eyebrow">SCENE STILLS</p><h3>場面イメージの確認依頼</h3></div><span>{sceneStills.length}枚 · 調整 {order.stills_revision_used}/{order.stills_revision_limit}回</span></div>
+              <div className="card-head"><div><p className="eyebrow">SCENE STILLS</p><h3>場面イメージの確認依頼</h3></div><span>{sceneStills.length}枚 · 確認版 {order.stills_review_version} · 調整 {order.stills_revision_used}/{order.stills_revision_limit}回</span></div>
               <aside className="admin-operation-note strong"><strong>映像化の前に、場面の静止画をお客様へ確認してもらいます。</strong><span>ここで追加した画像は「公開」を押すまで表示されません。公開すると状態が「場面イメージをご確認ください」へ進み、お客様の承認後に映像制作へ移ります。</span></aside>
-              {!canManageStills && <aside className="admin-operation-note warning"><strong>場面イメージを管理できません。</strong><span>{!photoAnalysisApproved ? "先に写真分析を承認してください。" : order.payment_status !== "paid" ? "先に入金確認を保存してください。" : !consentCurrent ? "お客様による現在版の同意記録が必要です。" : "コンセプト選択後（「選んだ物語を構成しています」または「場面イメージをご確認ください」）に管理できます。"}</span></aside>}
-              {order.stills_approved_at && <aside className="admin-operation-note strong"><strong>お客様が場面イメージを確定済みです。</strong><span>{formatDateTime(order.stills_approved_at)} に承認されました。映像制作へ進めてください。</span></aside>}
-              {sceneStills.length > 0 && <div className="admin-photo-grid">{sceneStills.map((asset) => <div className="admin-still-item" key={asset.id}>{assetUrls[asset.id] ? <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer"><span className="admin-photo-thumb" role="img" aria-label={asset.scene_title ?? asset.original_filename} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /></a> : <span>読み込み中</span>}<small>{String(asset.scene_sort_order + 1).padStart(2, "0")} · {asset.scene_title ?? asset.original_filename}</small>{canManageStills && <button className="button button-outline" type="button" disabled={saving} onClick={() => deleteSceneStill(asset)}>削除</button>}</div>)}</div>}
-              {canManageStills && <div className="admin-form-grid">
+              {order.status === "stills_review" && order.stills_change_open ? <aside className="admin-operation-note warning"><strong>お客様から場面イメージの調整依頼があります。</strong><span>先に調整作業を開始し、差し替え後に改めて公開してください。再公開するまでお客様は承認できません。</span><button className="button button-primary" type="button" disabled={saving} onClick={beginStillsRevision}>調整を開始する →</button></aside> : order.status === "stills_review" ? <aside className="admin-operation-note strong"><strong>お客様の確認待ちです。</strong><span>公開済みの場面イメージは、確認中に差し替えできません。</span></aside> : !canPrepareStills && <aside className="admin-operation-note warning"><strong>場面イメージを管理できません。</strong><span>{!photoAnalysisApproved ? "先に写真分析を承認してください。" : order.payment_status !== "paid" ? "先に入金確認を保存してください。" : !consentCurrent ? "お客様による現在版の同意記録が必要です。" : "コンセプト選択後に管理できます。"}</span></aside>}
+              {order.stills_approved_at && <aside className="admin-operation-note strong"><strong>お客様が場面イメージを確定済みです。</strong><span>{formatDateTime(order.stills_approved_at)} · 確認版 {order.stills_approved_version ?? order.stills_review_version} を承認済みです。映像制作へ進めてください。</span></aside>}
+              {sceneStills.length > 0 && <div className="admin-photo-grid">{sceneStills.map((asset) => <div className="admin-still-item" key={asset.id}>{assetUrls[asset.id] ? <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer"><span className="admin-photo-thumb" role="img" aria-label={asset.scene_title ?? asset.original_filename} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /></a> : <span>読み込み中</span>}<small>{String(asset.scene_sort_order + 1).padStart(2, "0")} · {asset.scene_title ?? asset.original_filename}</small>{canPrepareStills && <button className="button button-outline" type="button" disabled={saving} onClick={() => deleteSceneStill(asset)}>削除</button>}</div>)}</div>}
+              {canPrepareStills && <div className="admin-form-grid">
                 <label><span>場面のタイトル（お客様に表示）</span><input value={stillTitle} maxLength={80} onChange={(event) => setStillTitle(event.target.value)} placeholder="桜の花びらを追いかける場面" /></label>
                 <label><span>画像ファイル（JPG / PNG / WebP）</span><input key={stillInputKey} type="file" accept="image/jpeg,image/png,image/webp" disabled={saving} onChange={(event) => setStillFile(event.target.files?.[0] ?? null)} /></label>
               </div>}
-              {canManageStills && <div className="admin-still-actions">
+              {canPrepareStills && <div className="admin-still-actions">
                 <button className="button button-outline" type="button" disabled={saving || !stillFile || !stillTitle.trim()} onClick={uploadSceneStill}>{saving ? "追加中…" : "場面イメージを追加"}</button>
-                <button className="button button-primary" type="button" disabled={saving || sceneStills.length === 0} onClick={publishSceneStills}>{order.status === "stills_review" ? "更新した場面イメージを再公開する →" : "場面イメージを公開する →"}</button>
+                <button className="button button-primary" type="button" disabled={saving || sceneStills.length === 0} onClick={publishSceneStills}>場面イメージを公開する →</button>
               </div>}
-              <p className="admin-operation-note">お客様の調整依頼はメッセージ欄に「【場面イメージの調整依頼】」として届きます。差し替え後に再公開してください。調整はDBでも{order.stills_revision_limit}回に制限されています。</p>
+              <p className="admin-operation-note">お客様の調整依頼は再公開するまで承認を止めます。公開後にメッセージを「対応済み」にし、確認版ごとに承認記録を残します。</p>
             </section>
 
             <section className="admin-card" id="admin-revisions"><div className="card-head"><div><p className="eyebrow">REVISION REQUESTS</p><h3>修正依頼</h3></div><span>{order.revision_used}/{order.revision_limit}回使用</span></div>{revisions.length ? <div className="admin-work-list">{revisions.map((revision) => <article key={revision.id}><div><span className={revision.status === "open" ? "work-status open" : "work-status"}>{revision.status === "open" ? "対応が必要" : "対応済み"}</span><small>{formatDate(revision.created_at)}</small></div><strong>{revision.category}</strong><p>{revision.body}</p>{revision.status === "open" && <button className="button button-outline" type="button" disabled={saving} onClick={() => resolveRevision(revision.id)}>対応完了にする</button>}</article>)}</div> : <p className="admin-empty-copy">修正依頼はまだありません。</p>}<p className="admin-operation-note">修正版を「完成前の確認映像」として公開してから、該当依頼を対応完了にしてください。上限はDBでも{order.revision_limit}回に制限されています。</p></section>
+
+            <section className="admin-card" id="admin-metrics">
+              <div className="card-head"><div><p className="eyebrow">FIRST 10 METRICS</p><h3>制作コストの記録</h3></div><span>運営者のみ</span></div>
+              <p className="admin-operation-note">最初の10組は、実制作にかかった時間とRunway使用量を残します。次の料金・制作枠を判断するための内部メモで、お客様には表示されません。</p>
+              <div className="admin-form-grid">
+                <label><span>制作時間（分）</span><input type="number" min="0" value={productionWorkMinutes} onChange={(event) => setProductionWorkMinutes(Number(event.target.value))} /></label>
+                <label><span>Runway使用クレジット</span><input type="number" min="0" value={runwayCreditsUsed} onChange={(event) => setRunwayCreditsUsed(Number(event.target.value))} /></label>
+                <label><span>生成回数</span><input type="number" min="0" value={runwayGenerationCount} onChange={(event) => setRunwayGenerationCount(Number(event.target.value))} /></label>
+                <label><span>再生成回数</span><input type="number" min="0" value={runwayRetryCount} onChange={(event) => setRunwayRetryCount(Number(event.target.value))} /></label>
+                <label className="wide"><span>制作メモ（任意）</span><textarea rows={3} maxLength={3000} value={productionLog} onChange={(event) => setProductionLog(event.target.value)} placeholder="例：外見テストを2回作成。リードの形を修正して3回目を採用。" /></label>
+              </div>
+              <button className="button button-outline" type="button" disabled={saving} onClick={saveProductionMetrics}>制作記録を保存</button>
+            </section>
 
             <section className="admin-card" id="admin-video"><div className="card-head"><div><p className="eyebrow">VIDEO WORKFLOW</p><h3>{videoMode === "review" ? "完成前の確認映像" : "完成映像の最終納品"}</h3></div><span>MP4 / MOV / WebM</span></div><div className="admin-video-tabs"><button type="button" className={videoMode === "review" ? "active" : ""} onClick={() => { setVideoMode("review"); clearVideo(); }}>1. 顧客確認用</button><button type="button" className={videoMode === "final" ? "active" : ""} onClick={() => { setVideoMode("final"); clearVideo(); }}>2. 最終納品</button></div>{videoMode === "review" ? <><aside className="admin-operation-note strong"><strong>このアップロードでは納品済みになりません。</strong><span>お客様の制作室に確認映像を表示し、状態を「完成前の映像をご確認ください」へ進めます。</span></aside>{!canUploadReview && <aside className="admin-operation-note warning"><strong>確認映像を公開できません。</strong><span>{order.payment_status !== "paid" ? "先に入金確認を保存してください。" : !consentCurrent ? "お客様による現在版の同意記録が必要です。" : "コンセプト選択後、進行状況を「約1分の映画を制作しています」へ進めてください。"}</span></aside>}</> : <><div className="admin-form-grid"><label><span>映画タイトル</span><input value={deliveryTitle} onChange={(event) => setDeliveryTitle(event.target.value)} /></label><label className="wide"><span>お客様へのメッセージ</span><textarea rows={3} value={deliveryMessage} onChange={(event) => setDeliveryMessage(event.target.value)} /></label></div>{!canUploadFinal && <aside className="admin-operation-note warning"><strong>まだ最終納品できません。</strong><span>{order.payment_status !== "paid" ? "入金確認が必要です。" : !consentCurrent ? "現在版の同意記録が必要です。" : openRevisions.length ? "未対応の修正依頼をすべて解決してください。" : !order.customer_approved_at ? "お客様が確認映像の「この映像で確定する」を押すまでお待ちください。" : "お客様が承認した映像と制作工程を確認してください。"}</span></aside>}</>}<label className={saving || (videoMode === "review" ? !canUploadReview : !canUploadFinal) ? "admin-video-upload disabled" : "admin-video-upload"}><input key={videoInputKey} type="file" accept="video/mp4,video/quicktime,video/webm" disabled={saving || (videoMode === "review" ? !canUploadReview : !canUploadFinal)} onChange={selectVideo} /><strong>{videoFile ? "別の映像を選ぶ" : videoMode === "review" ? "確認映像を選ぶ" : "完成映像を選ぶ"}</strong><small>選択しただけでは公開・納品されません。次の確認欄で確定します。</small></label>{videoFile && <div className="admin-delivery-review" role="group" aria-label="映像アップロードの最終確認"><p className="eyebrow">UPLOAD CHECK</p><h4>{videoMode === "review" ? "まだ顧客へ公開されていません" : "まだ納品されていません"}</h4><dl><div><dt>お客様</dt><dd>{order.pet_name}ちゃん · {customer?.full_name || customer?.email || "登録ユーザー"}</dd></div><div><dt>ファイル</dt><dd>{videoFile.name}</dd></div><div><dt>サイズ</dt><dd>{(videoFile.size / 1024 / 1024).toFixed(1)} MB</dd></div><div><dt>用途</dt><dd>{videoMode === "review" ? "完成前の顧客確認" : "最終納品"}</dd></div></dl><label className="admin-delivery-check"><input type="checkbox" checked={videoChecked} onChange={(event) => setVideoChecked(event.target.checked)} /><span>お客様名・ファイル名・用途を確認しました</span></label><div><button className="button button-outline" type="button" disabled={saving} onClick={clearVideo}>選び直す</button><button className="button button-primary" type="button" disabled={saving || !videoChecked || (videoMode === "review" ? !canUploadReview : !canUploadFinal)} onClick={uploadVideo}>{saving ? "アップロード中…" : videoMode === "review" ? "確認映像として公開する →" : "確認した内容で納品する →"}</button></div></div>}{reviewVideos.length > 0 && <div className="admin-video-history"><strong>公開済みの確認映像</strong>{reviewVideos.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" key={asset.id}>{asset.original_filename}<small>{formatDate(asset.created_at)}</small></a>)}</div>}{videoMode === "final" && finalVideos.length > 0 && <div className="admin-video-history"><strong>登録済みの完成映像</strong>{finalVideos.map((asset) => <div className="admin-video-retry" key={asset.id}><a href={assetUrls[asset.id]} target="_blank" rel="noreferrer">{asset.original_filename}<small>{formatDate(asset.created_at)}</small></a><button className="button button-outline" type="button" disabled={saving || !canUploadFinal} onClick={() => retryDelivery(asset)}>この映像で納品を再試行</button></div>)}</div>}</section>
 

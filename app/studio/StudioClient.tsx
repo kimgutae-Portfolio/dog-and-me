@@ -173,6 +173,7 @@ export function StudioClient() {
   const canAddPhotos = canOperateOrder && order?.status !== "cancelled";
   const revisionsRemaining = order ? Math.max(order.revision_limit - order.revision_used, 0) : 0;
   const stillsChangesRemaining = order ? Math.max(order.stills_revision_limit - order.stills_revision_used, 0) : 0;
+  const hasOpenStillsChange = Boolean(order?.stills_change_open);
   const hasOpenRevisions = revisions.some((revision) => revision.status === "open");
   const hasPendingConceptChange = Boolean(canEditConcept && pendingConcept && effectiveConceptSlot !== order?.selected_concept_slot);
   const nextAction = useMemo(() => {
@@ -329,7 +330,7 @@ export function StudioClient() {
     setError("");
     const { error: approvalError } = await getSupabaseBrowserClient().rpc("customer_approve_scene_stills", { p_order_id: order.id });
     if (approvalError) {
-      setError(approvalError.message.includes("payment") ? "入金確認が完了していません。担当者へご確認ください。" : "場面イメージを確定できませんでした。もう一度お試しください。");
+      setError(approvalError.message.includes("open stills change") ? "調整のご希望をお預かりしています。新しい場面イメージが公開されるまでお待ちください。" : approvalError.message.includes("payment") ? "入金確認が完了していません。担当者へご確認ください。" : "場面イメージを確定できませんでした。もう一度お試しください。");
     } else {
       setStillsApprovalChecked(false);
       setNotice("場面イメージを確定しました。この内容で映像制作を開始します。");
@@ -345,7 +346,9 @@ export function StudioClient() {
     setError("");
     const { error: changeError } = await getSupabaseBrowserClient().rpc("request_stills_change", { p_order_id: order.id, p_body: stillsChangeBody.trim() });
     if (changeError) {
-      setError(changeError.message.includes("stills revision limit reached")
+      setError(changeError.message.includes("previous stills change")
+        ? "前回の調整内容を反映しています。新しい場面イメージが届くまでお待ちください。"
+        : changeError.message.includes("stills revision limit reached")
         ? "場面イメージの調整2回を使い切っています。追加のご希望はメッセージでご相談ください。"
         : "調整のご希望を送信できませんでした。もう一度お試しください。");
     } else {
@@ -407,13 +410,13 @@ export function StudioClient() {
             {order.status === "stills_review" && canOperateOrder && <div className="review-approval-panel">
               <p className="eyebrow">SCENE APPROVAL</p>
               <h3>この場面イメージで映像制作へ進めますか？</h3>
-              <label><input type="checkbox" checked={stillsApprovalChecked} onChange={(event) => setStillsApprovalChecked(event.target.checked)} /><span>表示されている場面イメージを確認し、この内容で映像制作へ進むことに同意します。</span></label>
-              <button className="button button-cream" type="button" disabled={!stillsApprovalChecked || approvingStills} onClick={approveSceneStills}>{approvingStills ? "確定中…" : "この場面イメージで映像を制作する →"}</button>
-              {stillsChangesRemaining > 0 ? <form className="revision-form stills-change-form" onSubmit={requestStillsChange}>
+              {hasOpenStillsChange ? <aside className="revision-limit-note"><strong>調整のご希望をお預かりしています。</strong><span>担当者が新しい場面イメージを準備中です。公開後にもう一度ご確認ください。</span></aside> : <><label><input type="checkbox" checked={stillsApprovalChecked} onChange={(event) => setStillsApprovalChecked(event.target.checked)} /><span>表示されている場面イメージを確認し、この内容で映像制作へ進むことに同意します。</span></label>
+              <button className="button button-cream" type="button" disabled={!stillsApprovalChecked || approvingStills} onClick={approveSceneStills}>{approvingStills ? "確定中…" : "この場面イメージで映像を制作する →"}</button></>}
+              {!hasOpenStillsChange && (stillsChangesRemaining > 0 ? <form className="revision-form stills-change-form" onSubmit={requestStillsChange}>
                 <p className="stills-change-lead"><strong>調整をご希望の場合</strong><small>気になる場面と直したい内容を教えてください。担当者が作り直してもう一度お見せします（残り{stillsChangesRemaining}回）。</small></p>
                 <textarea required rows={3} maxLength={3000} value={stillsChangeBody} onChange={(event) => setStillsChangeBody(event.target.value)} placeholder="例：2場面目の背景を、いつもの公園の芝生に近づけてください。" />
                 <button className="button button-outline" type="submit" disabled={sendingStillsChange || !stillsChangeBody.trim()}>{sendingStillsChange ? "送信中…" : "調整を依頼する →"}</button>
-              </form> : <aside className="revision-limit-note"><strong>場面イメージの調整{order.stills_revision_limit}回を使用しました。</strong><span>追加のご希望は、担当者とのメッセージからご相談ください。</span></aside>}
+              </form> : <aside className="revision-limit-note"><strong>場面イメージの調整{order.stills_revision_limit}回を使用しました。</strong><span>追加のご希望は、担当者とのメッセージからご相談ください。</span></aside>)}
             </div>}
             {order.status === "stills_review" && readOnlyPreview && <div className="review-approval-panel readonly"><strong>顧客画面ではここに「この場面イメージで映像を制作する」が表示されます。</strong><span>運営プレビューからは承認できません。</span></div>}
           </section>}

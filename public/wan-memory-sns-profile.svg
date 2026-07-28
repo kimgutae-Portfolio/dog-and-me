@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" role="img" aria-labelledby="title description">
+  <title id="title">WAN MEMORY</title>
+  <desc id="description">Dark forest green square with a warm beige frame and the initials WM.</desc>
+  <rect width="1080" height="1080" fill="#d8c6a7"/>
+  <rect x="51" y="51" width="978" height="978" fill="#303a31"/>
+  <text
+    x="540"
+    y="540"
+    fill="#f8f5ed"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="376"
+    letter-spacing="17"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >WM</text>
+</svg>
