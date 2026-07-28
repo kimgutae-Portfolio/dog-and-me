@@ -726,7 +726,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .admin-empty-copy { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.8; }
 .admin-concepts { margin-bottom: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .admin-concepts > div { padding: 20px; display: grid; gap: 14px; border: 1px solid var(--line); }
-.admin-concepts > div > strong { color: var(--rust); font-size: 9px; letter-spacing: .14em; }
+.admin-concepts > div.selected { border-color: var(--sage); background: #eef3ea; }
+.admin-concepts > div > strong { display: flex; align-items: center; gap: 8px; color: var(--rust); font-size: 9px; letter-spacing: .14em; }
+.admin-concept-selected-badge { padding: 3px 6px; color: white; background: #5c7a52; font-size: 7px; letter-spacing: 0; }
 .admin-video-upload { min-height: 110px; padding: 28px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 9px; border: 1px dashed #a49d91; cursor: pointer; background: #eee9df; }
 .admin-video-upload strong { color: var(--rust); font-size: 11px; }
 .admin-video-upload small { color: var(--muted); font-size: 8px; }
