@@ -6,8 +6,6 @@ import {
   BUSINESS_NAME,
   BUSINESS_OPERATOR,
   SUPPORT_EMAIL,
-  SUPPORT_PHONE,
-  SUPPORT_PHONE_E164,
 } from "../lib/site";
 
 export const metadata: Metadata = {
@@ -31,10 +29,9 @@ export default function ContactPage() {
       </section>
       <section>
         <h2>お問い合わせ窓口</h2>
-        <p>サービス内容、制作のご相談、納品、キャンセルについては、メールまたは電話でご連絡ください。制作中のご連絡は、注文履歴が残る制作室のメッセージをご利用いただくとスムーズです。</p>
+        <p>サービス内容、制作のご相談、納品、キャンセルについては、メールでご連絡ください。制作中のご連絡は、注文履歴が残る制作室のメッセージをご利用いただくとスムーズです。</p>
         <div className="info-actions">
           <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL} →</a>
-          <a className="button button-outline" href={`tel:${SUPPORT_PHONE_E164}`}>{SUPPORT_PHONE} →</a>
         </div>
         <p><small>運営：{BUSINESS_OPERATOR}（屋号：{BUSINESS_NAME}）</small></p>
       </section>

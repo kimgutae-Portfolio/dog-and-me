@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import { InfoPage } from "../components/InfoPage";
 import {
-  BUSINESS_ADDRESS,
   BUSINESS_NAME,
   BUSINESS_OPERATOR,
-  BUSINESS_POSTAL_CODE,
   SUPPORT_EMAIL,
-  SUPPORT_PHONE,
-  SUPPORT_PHONE_E164,
 } from "../lib/site";
 
 export const metadata: Metadata = {
@@ -20,8 +16,8 @@ const rows = [
   ["販売事業者", BUSINESS_OPERATOR],
   ["屋号", BUSINESS_NAME],
   ["運営統括責任者", BUSINESS_OPERATOR],
-  ["所在地", `〒${BUSINESS_POSTAL_CODE} ${BUSINESS_ADDRESS}`],
-  ["電話番号", SUPPORT_PHONE],
+  ["所在地", "ご請求に応じて、お申し込みの意思決定に先立って遅滞なく電子メールで開示します。"],
+  ["電話番号", "ご請求に応じて、お申し込みの意思決定に先立って遅滞なく電子メールで開示します。"],
   ["お問い合わせ", SUPPORT_EMAIL],
   ["サービス名", "WAN MEMORY メモリーフィルム"],
   ["サービス内容", "お客様からお預かりした愛犬の写真と3つのエピソードをもとに、映像構成案2案、場面イメージ、約1分の実写風映像、専用メモリーサイトを制作します。"],
@@ -40,7 +36,7 @@ const rows = [
 export default function LegalPage() {
   return (
     <InfoPage eyebrow="LEGAL NOTICE" title="特定商取引法に基づく表記" lead="WAN MEMORYの販売事業者、料金、お支払い、納品およびキャンセル条件をご案内します。">
-      <dl className="legal-table">{rows.map(([term, description]) => <div key={term}><dt>{term}</dt><dd>{term === "電話番号" ? <a href={`tel:${SUPPORT_PHONE_E164}`}>{description}</a> : term === "お問い合わせ" ? <a href={`mailto:${SUPPORT_EMAIL}`}>{description}</a> : description}</dd></div>)}</dl>
+      <dl className="legal-table">{rows.map(([term, description]) => <div key={term}><dt>{term}</dt><dd>{term === "お問い合わせ" ? <a href={`mailto:${SUPPORT_EMAIL}`}>{description}</a> : description}</dd></div>)}</dl>
       <aside className="info-note"><strong>お支払い前に必ずご確認ください</strong><p>お客様ごとの確定料金、予定納期、制作内容、キャンセル条件は、カード決済へ進む前に制作室で改めて表示します。内容に同意しない限り決済は行われません。</p></aside>
       <p className="info-updated">最終更新日：2026年7月29日</p>
     </InfoPage>

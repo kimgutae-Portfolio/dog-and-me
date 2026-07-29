@@ -14,12 +14,9 @@ import {
   PRELAUNCH_TITLE,
   SITE_DESCRIPTION,
   SITE_NAME,
-  BUSINESS_ADDRESS,
   BUSINESS_NAME,
   BUSINESS_OPERATOR,
-  BUSINESS_POSTAL_CODE,
   SUPPORT_EMAIL,
-  SUPPORT_PHONE_E164,
 } from "./lib/site";
 import { getRequestOrigin } from "./lib/site-server";
 
@@ -69,15 +66,6 @@ export default async function Home() {
       legalName: BUSINESS_OPERATOR,
       url: origin,
       email: SUPPORT_EMAIL,
-      telephone: SUPPORT_PHONE_E164,
-      address: {
-        "@type": "PostalAddress",
-        postalCode: BUSINESS_POSTAL_CODE,
-        addressRegion: "大阪府",
-        addressLocality: "堺市中区",
-        streetAddress: BUSINESS_ADDRESS.replace("大阪府堺市中区", ""),
-        addressCountry: "JP",
-      },
       description: SITE_DESCRIPTION,
     },
     {

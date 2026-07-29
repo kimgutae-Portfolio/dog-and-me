@@ -135,9 +135,9 @@ test("server-renders public support and legal pages", async () => {
   const legalHtml = await legalResponse.text();
   assert.match(legalHtml, /<dt>販売事業者<\/dt><dd>金具泰<\/dd>/);
   assert.match(legalHtml, /<dt>屋号<\/dt><dd>WAN MEMORY<\/dd>/);
-  assert.match(legalHtml, /〒599-8272 大阪府堺市中区深井中町327-47/);
-  assert.match(legalHtml, /href="tel:\+818085307568"/);
-  assert.match(legalHtml, /080-8530-7568/);
+  assert.doesNotMatch(legalHtml, /〒\d{3}-\d{4}/);
+  assert.doesNotMatch(legalHtml, /href="tel:/);
+  assert.match(legalHtml, /お申し込みの意思決定に先立って遅滞なく電子メールで開示/);
   assert.match(legalHtml, /相談フォームの送信だけでは料金は発生しません/);
   assert.match(legalHtml, /クレジットカード決済（Stripe）/);
   assert.match(legalHtml, /決済後、制作着手前.*全額返金/);
@@ -148,7 +148,7 @@ test("server-renders public support and legal pages", async () => {
   assert.match(contactHtml, /info@wanmemory\.com/);
   assert.match(contactHtml, /mailto:info@wanmemory\.com/);
   assert.doesNotMatch(contactHtml, /ggutae0@gmail\.com/);
-  assert.match(contactHtml, /href="tel:\+818085307568"/);
+  assert.doesNotMatch(contactHtml, /href="tel:/);
   assert.match(contactHtml, /運営：/);
   assert.match(contactHtml, /金具泰/);
   assert.match(contactHtml, /屋号：/);
