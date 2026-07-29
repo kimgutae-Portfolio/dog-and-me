@@ -154,7 +154,15 @@ export type OrderAsset = {
   order_id: string;
   user_id: string;
   memory_id: string | null;
-  category: "source_image" | "source_video" | "scene_still" | "review_video" | "final_video" | "thumbnail";
+  category:
+    | "source_image"
+    | "source_video"
+    | "scene_still"
+    | "render_clip"
+    | "assembled_film"
+    | "review_video"
+    | "final_video"
+    | "thumbnail";
   storage_path: string;
   original_filename: string;
   mime_type: string;
@@ -164,8 +172,35 @@ export type OrderAsset = {
   album_sort_order: number;
   scene_title: string | null;
   scene_sort_order: number;
+  source_still_asset_id: string | null;
   created_at: string;
 };
+
+export type RenderClipRole = "intro" | "memory" | "ending";
+
+/** One clip in an assembly request, sent to /api/admin/render. */
+export type RenderRequestItem = {
+  clipAssetId: string;
+  role: RenderClipRole;
+};
+
+export type RenderRequest = {
+  orderId: string;
+  items: RenderRequestItem[];
+  title: string;
+  kicker: string;
+  endingText: string;
+  endingMark: string;
+  bgmFile: string | null;
+  letterboxPct: number;
+  filmLook: boolean;
+};
+
+/** Newline-delimited JSON streamed back while the film is being assembled. */
+export type RenderProgressEvent =
+  | { type: "progress"; step: string; message: string }
+  | { type: "done"; assetId: string; durationSeconds: number; fileSize: number }
+  | { type: "error"; message: string };
 
 export type StoryDraftRecord = {
   id: string;

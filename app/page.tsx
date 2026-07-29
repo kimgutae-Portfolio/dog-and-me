@@ -124,7 +124,7 @@ export default async function Home() {
           <h1 id="hero-title">
             一緒に過ごした時間を、
             <br />
-            一本の映画に。
+            一本のメモリーフィルムに。
           </h1>
           <p className="hero-copy">
             愛犬の写真とエピソードをもとに、思い出のワンシーンを
@@ -215,19 +215,23 @@ export default async function Home() {
             </p>
           </div>
           <div className="film-grid">
-            <article className="film-card film-card-main">
-              <div className="film-still still-warm" aria-hidden="true">
+            <Link className="film-card film-card-main" href="/film/momo-demo">
+              <div
+                className="film-still still-warm"
+                aria-hidden="true"
+                style={{ backgroundImage: "url('/film/hinata/card-poster.jpg')", backgroundPosition: "center" }}
+              >
                 <span className="play-mark">▶</span>
-                <span className="film-time">01:02</span>
+                <span className="film-time">00:48</span>
               </div>
               <div className="film-meta">
                 <div>
-                  <p>モモと歩いた季節</p>
+                  <p>ひなたと歩いた、いつもの季節</p>
                   <span>Warm daily film</span>
                 </div>
-                <span>柴犬・12歳</span>
+                <span>柴犬・4歳</span>
               </div>
-            </article>
+            </Link>
             <article className="film-card">
               <div className="film-still still-spring" aria-hidden="true">
                 <span className="play-mark">▶</span>
@@ -264,13 +268,13 @@ export default async function Home() {
           <div className="demo-teaser-copy">
             <p className="eyebrow">CUSTOMER SITE DEMO</p>
             <h2>完成後のページを、<br />そのまま体験。</h2>
-            <p>映画が完成したら、WAN MEMORYのドメイン内にその子だけのページを制作します。映像、写真、物語、ご家族からの言葉が実際にどう見えるか、モモのデモサイトでご覧ください。</p>
-            <Link className="button button-primary" href="/film/momo-demo">モモの完成デモを見る <span aria-hidden="true">→</span></Link>
+            <p>映画が完成したら、WAN MEMORYのドメイン内にその子だけのページを制作します。映像、写真、物語、ご家族からの言葉が実際にどう見えるか、実際の制作事例でご覧ください。</p>
+            <Link className="button button-primary" href="/film/momo-demo">ひなたの完成デモを見る <span aria-hidden="true">→</span></Link>
           </div>
           <div className="demo-browser-preview" aria-hidden="true">
             <div className="demo-browser-bar"><span /><span /><span /><p>WAN MEMORY / FILM / MOMO</p></div>
-            <div className="demo-browser-image"><span>PLAY SAMPLE</span></div>
-            <div className="demo-browser-copy"><small>MEMORY FILM · SHIBA INU</small><strong>モモと歩いた季節</strong><p>家族になった春から、いつもの帰り道まで。</p></div>
+            <div className="demo-browser-image" style={{ backgroundImage: "linear-gradient(180deg, rgba(20,25,21,.05), rgba(20,25,21,.5)), url('/film/hinata/demo-poster.jpg')", backgroundPosition: "center" }}><span>PLAY SAMPLE</span></div>
+            <div className="demo-browser-copy"><small>MEMORY FILM · SHIBA INU</small><strong>ひなたと歩いた、いつもの季節</strong><p>桜の花びらを追いかけた春から、いつもの帰り道まで。</p></div>
           </div>
         </div>
       </section>

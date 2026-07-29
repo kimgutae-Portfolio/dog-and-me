@@ -42,7 +42,7 @@ const chapters = [
     emphasis: "思い出を話すだけ。",
     copy: "映像AIの使い方を覚える必要はありません。コンセプト提案から約1分の映画、専用サイトの仕上げまでお任せください。大切な時間を、何度でも会いにいけるかたちにします。",
     scene: "A FILM FOR YOUR FAMILY",
-    sceneTitle: "モモと歩いた季節",
+    sceneTitle: "ひなたと歩いた季節",
     sceneNote: "愛犬との時間を、いつまでも動く記憶に。",
   },
 ] as const;

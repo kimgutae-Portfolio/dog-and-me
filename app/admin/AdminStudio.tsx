@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { hasCurrentConsent } from "../lib/consent";
-import type { AppearancePolicy, FilmConcept, MemoryOrder, OrderAsset, OrderMemory, OrderMessage, PhotoAnalysisStatus, Profile, RevisionRequest } from "../lib/supabase/types";
+import type { AppearancePolicy, FilmConcept, MemoryOrder, OrderAsset, OrderMemory, OrderMessage, PhotoAnalysisStatus, Profile, RenderProgressEvent, RevisionRequest } from "../lib/supabase/types";
 import { getProductionFields, ORDER_STATUS_LABELS, type OrderStatus } from "../lib/supabase/types";
 
 type ConceptDraft = { title: string; tone: string; summary: string; scenes: string };
@@ -172,6 +172,21 @@ export function AdminStudio() {
   const [stillFile, setStillFile] = useState<File | null>(null);
   const [stillTitle, setStillTitle] = useState("");
   const [stillInputKey, setStillInputKey] = useState(0);
+  const [clipInputKey, setClipInputKey] = useState(0);
+  const [bgmTracks, setBgmTracks] = useState<string[]>([]);
+  const [renderAvailable, setRenderAvailable] = useState(false);
+  const [filmTitle, setFilmTitle] = useState("");
+  const [filmKicker, setFilmKicker] = useState("A MEMORY FILM");
+  const [filmEndingText, setFilmEndingText] = useState("");
+  const [filmEndingMark, setFilmEndingMark] = useState("WAN MEMORY");
+  const [filmBgm, setFilmBgm] = useState("");
+  const [filmLetterbox, setFilmLetterbox] = useState(true);
+  const [filmLetterboxPct, setFilmLetterboxPct] = useState(6);
+  const [filmLook, setFilmLook] = useState(true);
+  // Kept out of the shared `saving` flag so a multi-minute render never freezes
+  // the message composer or the status form (same reasoning as exportProgress).
+  const [rendering, setRendering] = useState(false);
+  const [renderProgress, setRenderProgress] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exportingBundle, setExportingBundle] = useState(false);
@@ -187,6 +202,22 @@ export function AdminStudio() {
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?next=/admin");
   }, [authLoading, router, user]);
+
+  // The render endpoint only answers in the operator's local environment; this
+  // is also how the UI knows whether to offer assembly at all.
+  useEffect(() => {
+    if (profile?.role !== "admin") return;
+    let cancelled = false;
+    fetch("/api/admin/render")
+      .then((response) => response.json() as Promise<{ available?: boolean; tracks?: string[] }>)
+      .then((result) => {
+        if (cancelled) return;
+        setRenderAvailable(Boolean(result.available));
+        setBgmTracks(result.tracks ?? []);
+      })
+      .catch(() => { if (!cancelled) setRenderAvailable(false); });
+    return () => { cancelled = true; };
+  }, [profile?.role]);
 
   const loadOrders = useCallback(async () => {
     if (!user || profile?.role !== "admin") return;
@@ -234,7 +265,7 @@ export function AdminStudio() {
     setConceptA(toDraft(loadedConcepts.find((concept) => concept.slot === "A")));
     setConceptB(toDraft(loadedConcepts.find((concept) => concept.slot === "B")));
 
-    const signable = loadedAssets.filter((asset) => asset.category === "source_image" || asset.category === "scene_still" || asset.category === "review_video" || asset.category === "final_video");
+    const signable = loadedAssets.filter((asset) => asset.category === "source_image" || asset.category === "scene_still" || asset.category === "render_clip" || asset.category === "assembled_film" || asset.category === "review_video" || asset.category === "final_video");
     const signed = await Promise.all(signable.map(async (asset) => {
       const { data } = await supabase.storage.from("order-assets").createSignedUrl(asset.storage_path, 3600);
       return [asset.id, data?.signedUrl ?? ""] as const;
@@ -263,6 +294,14 @@ export function AdminStudio() {
   const sceneStills = useMemo(() => assets.filter((asset) => asset.category === "scene_still").sort((a, b) => a.scene_sort_order - b.scene_sort_order || a.created_at.localeCompare(b.created_at)), [assets]);
   const reviewVideos = useMemo(() => assets.filter((asset) => asset.category === "review_video"), [assets]);
   const finalVideos = useMemo(() => assets.filter((asset) => asset.category === "final_video"), [assets]);
+  const renderClips = useMemo(() => assets.filter((asset) => asset.category === "render_clip").sort((a, b) => a.scene_sort_order - b.scene_sort_order || a.created_at.localeCompare(b.created_at)), [assets]);
+  const assembledFilms = useMemo(() => assets.filter((asset) => asset.category === "assembled_film").sort((a, b) => b.created_at.localeCompare(a.created_at)), [assets]);
+  const clipByStillId = useMemo(() => new Map(renderClips.map((clip) => [clip.source_still_asset_id ?? "", clip])), [renderClips]);
+  // Mirrors the script's own arithmetic: intro card + n×(photo hold + clip)
+  // + ending card, minus one crossfade per join.
+  const estimatedSeconds = renderClips.length
+    ? 3.0 + renderClips.length * 6.5 + 7.0 - 0.5 * (2 * renderClips.length + 1)
+    : 0;
   const openMessages = useMemo(() => messages.filter((message) => message.sender_id === order?.user_id && message.status === "open"), [messages, order?.user_id]);
   const openRevisions = useMemo(() => revisions.filter((revision) => revision.status === "open"), [revisions]);
   const selectableStatuses = order ? statusOptions.filter(([value]) => {
@@ -277,6 +316,7 @@ export function AdminStudio() {
   const canPrepareStills = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && order.status === "concept_selected");
   const canUploadReview = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && ["production", "revision_requested", "customer_review"].includes(order.status));
   const canUploadFinal = Boolean(order && photoAnalysisApproved && order.status === "quality_check" && order.payment_status === "paid" && consentCurrent && order.customer_approved_at && order.customer_approved_review_asset_id && openRevisions.length === 0);
+  const canRenderFilm = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && order.stills_approved_at && ["production", "revision_requested"].includes(order.status));
 
   useEffect(() => {
     if (!order) return;
@@ -299,6 +339,13 @@ export function AdminStudio() {
       setStillFile(null);
       setStillTitle("");
       setStillInputKey((current) => current + 1);
+      setClipInputKey((current) => current + 1);
+      setFilmTitle(`${order.pet_name}と歩いた、いつもの季節`);
+      // The customer's own words to their dog are the right starting point for
+      // the ending card; the operator edits from there.
+      setFilmEndingText(order.message_to_pet ?? "");
+      setFilmBgm("");
+      setRenderProgress("");
       setCustomerInputPending(false);
       loadDetails(order.id);
     }, 0);
@@ -859,6 +906,170 @@ export function AdminStudio() {
     setSaving(false);
   };
 
+  const uploadRenderClip = async (still: OrderAsset, file: File) => {
+    if (!order || !canRenderFilm) return;
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
+    // Operator namespace, never the customer's uid folder — see the note at the
+    // top of supabase/migrations/202607280001_render_clips.sql.
+    const path = `admin/${order.id}/clips/render_clip-${crypto.randomUUID()}.${extension}`;
+    const mimeType = file.type || "video/mp4";
+    const { error: uploadError } = await supabase.storage.from("order-assets").upload(path, file, { contentType: mimeType, upsert: false });
+    if (uploadError) {
+      setError("クリップをアップロードできませんでした。");
+      setSaving(false);
+      return;
+    }
+    const { error: registerError } = await supabase.rpc("admin_register_render_clip", {
+      p_order_id: order.id,
+      p_storage_path: path,
+      p_original_filename: file.name,
+      p_mime_type: mimeType,
+      p_file_size: file.size,
+      p_still_asset_id: still.id,
+    });
+    if (registerError) {
+      await supabase.storage.from("order-assets").remove([path]);
+      setError("クリップを登録できませんでした。お客様が承認した場面イメージかどうかご確認ください。");
+      setSaving(false);
+      return;
+    }
+    setClipInputKey((current) => current + 1);
+    setNotice(`「${still.scene_title ?? "場面"}」のクリップを追加しました。`);
+    await loadDetails(order.id);
+    setSaving(false);
+  };
+
+  const deleteRenderClip = async (asset: OrderAsset) => {
+    if (!order || !canRenderFilm) return;
+    if (!window.confirm(`「${asset.scene_title ?? asset.original_filename}」のクリップを削除しますか？`)) return;
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const { data: storagePath, error: deleteError } = await supabase.rpc("admin_delete_render_clip", { p_asset_id: asset.id });
+    if (deleteError) {
+      setError("クリップを削除できませんでした。");
+    } else {
+      if (storagePath) await supabase.storage.from("order-assets").remove([storagePath as string]);
+      setNotice("クリップを削除しました。");
+      await loadDetails(order.id);
+    }
+    setSaving(false);
+  };
+
+  const startRender = async () => {
+    if (!order || !canRenderFilm || rendering) return;
+    if (renderClips.length < 3) {
+      setError("編集にはクリップが3本以上必要です。");
+      return;
+    }
+    if (!filmTitle.trim()) { setError("映像のタイトルを入力してください。"); return; }
+    if (!filmEndingText.trim()) { setError("エンディングの文章を入力してください。"); return; }
+
+    setRendering(true);
+    setError("");
+    setRenderProgress("編集を準備しています…");
+    const supabase = getSupabaseBrowserClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const items = renderClips.map((clip, index) => ({
+      clipAssetId: clip.id,
+      role: index === 0 ? "intro" : index === renderClips.length - 1 ? "ending" : "memory",
+    }));
+
+    try {
+      const response = await fetch("/api/admin/render", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionData.session?.access_token ?? ""}`,
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          items,
+          title: filmTitle.trim(),
+          kicker: filmKicker.trim(),
+          endingText: filmEndingText.trim(),
+          endingMark: filmEndingMark.trim(),
+          bgmFile: filmBgm || null,
+          letterboxPct: filmLetterbox ? filmLetterboxPct : 0,
+          filmLook,
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        const detail = await response.json().catch(() => null) as { message?: string } | null;
+        setError(detail?.message ?? "編集を開始できませんでした。");
+        setRenderProgress("");
+        setRendering(false);
+        return;
+      }
+
+      // The route streams newline-delimited JSON so the operator sees real
+      // progress instead of a frozen button for several minutes.
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let failed = false;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const event = JSON.parse(line) as RenderProgressEvent;
+          if (event.type === "progress") setRenderProgress(event.message);
+          else if (event.type === "done") {
+            setRenderProgress("");
+            setNotice(`編集が完了しました（約${Math.round(event.durationSeconds)}秒 · ${(event.fileSize / 1024 / 1024).toFixed(1)} MB）。内容を確認してから公開してください。`);
+          } else if (event.type === "error") {
+            failed = true;
+            setError(event.message);
+            setRenderProgress("");
+          }
+        }
+      }
+      if (!failed) await loadDetails(order.id);
+    } catch {
+      setError("編集中に接続が切れました。もう一度お試しください。");
+      setRenderProgress("");
+    }
+    setRendering(false);
+  };
+
+  const promoteAssembledFilm = async (asset: OrderAsset) => {
+    if (!order || !canUploadReview) return;
+    if (!window.confirm(`${order.pet_name}ちゃんの確認映像としてお客様に公開します。よろしいですか？`)) return;
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const previousPath = asset.storage_path;
+    const newPath = `${order.user_id}/${order.id}/review/review_video-${crypto.randomUUID()}.mp4`;
+    // Must physically leave the admin namespace before the customer can read it.
+    const { error: moveError } = await supabase.storage.from("order-assets").move(previousPath, newPath);
+    if (moveError) {
+      setError("映像を公開用の場所へ移動できませんでした。");
+      setSaving(false);
+      return;
+    }
+    const { error: promoteError } = await supabase.rpc("admin_promote_assembled_film", {
+      p_asset_id: asset.id,
+      p_storage_path: newPath,
+    });
+    if (promoteError) {
+      await supabase.storage.from("order-assets").move(newPath, previousPath);
+      setError("確認映像として公開できませんでした。入金・同意・現在の工程をご確認ください。");
+      setSaving(false);
+      return;
+    }
+    setNotice("確認映像としてお客様へ公開しました。");
+    await Promise.all([loadOrders(), loadDetails(order.id)]);
+    setSaving(false);
+  };
+
   const resolveMessage = async (messageId: string) => {
     if (!order) return;
     setSaving(true);
@@ -956,7 +1167,7 @@ export function AdminStudio() {
 
             <aside className="admin-attention-summary" aria-label="未対応項目"><div><strong>{sourceAssets.length}</strong><span>お預かり写真</span></div><div className={openMessages.length ? "needs-action" : ""}><strong>{openMessages.length}</strong><span>未対応メッセージ</span></div><div className={openRevisions.length ? "needs-action" : ""}><strong>{openRevisions.length}</strong><span>未対応の修正</span></div><div><strong>{order.revision_used}/{order.revision_limit}</strong><span>使用済み修正回数</span></div></aside>
 
-            <nav className="admin-mobile-sections" aria-label="管理項目"><a href="#admin-progress">進行</a><a href="#admin-story">内容</a><a href="#admin-photos">写真</a><a href="#admin-concepts">2案</a><a href="#admin-stills">場面</a><a href="#admin-revisions">修正</a><a href="#admin-video">映像</a><a href="#admin-message">連絡</a></nav>
+            <nav className="admin-mobile-sections" aria-label="管理項目"><a href="#admin-progress">進行</a><a href="#admin-story">内容</a><a href="#admin-photos">写真</a><a href="#admin-concepts">2案</a><a href="#admin-stills">場面</a><a href="#admin-render">編集</a><a href="#admin-revisions">修正</a><a href="#admin-video">映像</a><a href="#admin-message">連絡</a></nav>
 
             <section className="admin-card" id="admin-progress"><div className="card-head"><div><p className="eyebrow">PRODUCTION STATUS</p><h3>進行状況・入金・納期</h3></div><span>許可された次の工程だけを表示</span></div>{order.payment_status !== "paid" && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>入金確認前です。</strong><span>「入金確認済み」を一度保存するまで、映像制作・確認映像公開・納品には進めません。</span></aside>}{!consentCurrent && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>現在版の同意記録が揃っていません。</strong><span>お客様が制作室で利用規約・写真使用権限（人物の了解を含む）・外部制作サービスでの処理を確認するまで制作を開始できません。</span></aside>}{order.customer_approved_at && <aside className="admin-operation-note strong"><strong>お客様が確認映像を確定済みです。</strong><span>{formatDateTime(order.customer_approved_at)} · 承認した確認映像ID {order.customer_approved_review_asset_id}</span></aside>}<div className="admin-form-grid"><label><span>現在の状態</span><select value={status} onChange={(event) => setStatus(event.target.value as OrderStatus)}>{selectableStatuses.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label><span>入金状態</span><select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as MemoryOrder["payment_status"])}><option value="pending">ご案内前</option><option value="invoice_sent">お支払い待ち</option><option value="paid">入金確認済み</option><option value="refunded">返金済み</option></select></label><label><span>予定完成日</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label><label className="wide"><span>運営メモ（顧客には非表示）</span><textarea rows={3} value={adminNotes} onChange={(event) => setAdminNotes(event.target.value)} /></label></div><button className="button button-primary" type="button" disabled={saving} onClick={saveOrder}>進行状況を保存</button></section>
 
@@ -981,6 +1192,58 @@ export function AdminStudio() {
                 <button className="button button-primary" type="button" disabled={saving || sceneStills.length === 0} onClick={publishSceneStills}>場面イメージを公開する →</button>
               </div>}
               <p className="admin-operation-note">お客様の調整依頼は再公開するまで承認を止めます。公開後にメッセージを「対応済み」にし、確認版ごとに承認記録を残します。</p>
+            </section>
+
+            <section className="admin-card" id="admin-render">
+              <div className="card-head"><div><p className="eyebrow">FILM ASSEMBLY</p><h3>映像の自動編集</h3></div><span>{renderClips.length}/{sceneStills.length}本{estimatedSeconds > 0 ? ` · 約${Math.round(estimatedSeconds)}秒` : ""}</span></div>
+
+              {!renderAvailable && <aside className="admin-operation-note warning"><strong>この環境では編集を実行できません。</strong><span>映像の編集はローカルの制作環境でのみ動作します。ターミナルで <code>npm run dev:operator</code> を実行し、localhost の管理画面から操作してください。</span></aside>}
+
+              {renderAvailable && <aside className="admin-operation-note strong"><strong>お客様が承認した場面イメージごとに、Runwayのクリップを1本ずつ追加します。</strong><span>編集は自動で行われ、完成した映像はこの画面でのみ再生できます。公開ボタンを押すまでお客様には表示されません。</span></aside>}
+
+              {renderAvailable && !canRenderFilm && <aside className="admin-operation-note warning"><strong>まだ編集を開始できません。</strong><span>{!photoAnalysisApproved ? "先に写真分析を承認してください。" : order.payment_status !== "paid" ? "先に入金確認を保存してください。" : !consentCurrent ? "お客様による現在版の同意記録が必要です。" : !order.stills_approved_at ? "お客様が場面イメージを承認するまで編集できません。" : "進行状況を「約1分の映画を制作しています」へ進めてください。"}</span></aside>}
+
+              {renderAvailable && sceneStills.length > 0 && <div className="admin-render-clips">{sceneStills.map((still) => {
+                const clip = clipByStillId.get(still.id);
+                return (
+                  <article key={still.id} className={clip ? "admin-render-clip ready" : "admin-render-clip"}>
+                    {assetUrls[still.id] ? <span className="admin-photo-thumb" role="img" aria-label={still.scene_title ?? "場面イメージ"} style={{ backgroundImage: `url(${assetUrls[still.id]})` }} /> : <span className="admin-photo-thumb">読み込み中</span>}
+                    <div>
+                      <strong>{String(still.scene_sort_order + 1).padStart(2, "0")} · {still.scene_title ?? "場面"}</strong>
+                      {clip
+                        ? <>{assetUrls[clip.id] && <video className="admin-render-preview" src={assetUrls[clip.id]} controls preload="metadata" />}<button className="button button-outline" type="button" disabled={saving || rendering || !canRenderFilm} onClick={() => deleteRenderClip(clip)}>クリップを削除</button></>
+                        : <label className={saving || rendering || !canRenderFilm ? "admin-render-upload disabled" : "admin-render-upload"}><input key={clipInputKey} type="file" accept="video/mp4,video/quicktime,video/webm" disabled={saving || rendering || !canRenderFilm} onChange={(event) => { const file = event.target.files?.[0]; if (file) uploadRenderClip(still, file); }} /><span>クリップを選ぶ</span></label>}
+                    </div>
+                  </article>
+                );
+              })}</div>}
+
+              {renderAvailable && sceneStills.length === 0 && <p className="admin-empty-copy">先に場面イメージを登録し、お客様の承認を受けてください。</p>}
+
+              {renderAvailable && canRenderFilm && <>
+                <div className="admin-form-grid">
+                  <label><span>映像のタイトル</span><input value={filmTitle} onChange={(event) => setFilmTitle(event.target.value)} maxLength={80} disabled={rendering} /></label>
+                  <label><span>小見出し</span><input value={filmKicker} onChange={(event) => setFilmKicker(event.target.value)} maxLength={40} disabled={rendering} /></label>
+                  <label className="wide"><span>エンディングの文章 <small>改行がそのまま行になります</small></span><textarea rows={4} value={filmEndingText} onChange={(event) => setFilmEndingText(event.target.value)} maxLength={600} disabled={rendering} /></label>
+                  <label><span>エンディングの署名</span><input value={filmEndingMark} onChange={(event) => setFilmEndingMark(event.target.value)} maxLength={40} disabled={rendering} /></label>
+                  <label><span>BGM</span><select value={filmBgm} onChange={(event) => setFilmBgm(event.target.value)} disabled={rendering}><option value="">BGMなし</option>{bgmTracks.map((track) => <option key={track} value={track}>{track}</option>)}</select></label>
+                </div>
+                <div className="admin-render-options">
+                  <label><input type="checkbox" checked={filmLetterbox} onChange={(event) => setFilmLetterbox(event.target.checked)} disabled={rendering} /><span>シネマスコープの黒帯</span></label>
+                  {filmLetterbox && <label className="admin-render-pct"><span>帯の高さ</span><input type="number" min={0} max={15} step={1} value={filmLetterboxPct} onChange={(event) => setFilmLetterboxPct(Number(event.target.value))} disabled={rendering} /><span>%</span></label>}
+                  <label><input type="checkbox" checked={filmLook} onChange={(event) => setFilmLook(event.target.checked)} disabled={rendering} /><span>フィルム調の色味と粒子</span></label>
+                </div>
+                <div className="admin-still-actions">
+                  <button className="button button-primary" type="button" disabled={saving || rendering || renderClips.length < 3} onClick={startRender}>{rendering ? "編集中…" : "編集を開始する →"}</button>
+                </div>
+                {renderClips.length > 0 && renderClips.length < 3 && <p className="admin-operation-note">クリップが3本以上になると編集を開始できます。</p>}
+                {renderProgress && <p className="admin-export-progress" role="status">{renderProgress}</p>}
+                {rendering && <p className="admin-operation-note">編集中はこのタブを閉じないでください。数分かかります。</p>}
+              </>}
+
+              {assembledFilms.length > 0 && <div className="admin-video-history"><strong>編集された映像</strong>{assembledFilms.map((asset) => <div className="admin-render-result" key={asset.id}>{assetUrls[asset.id] ? <video src={assetUrls[asset.id]} controls preload="metadata" /> : <span>読み込み中</span>}<div><small>{formatDate(asset.created_at)} · {(asset.file_size / 1024 / 1024).toFixed(1)} MB</small><button className="button button-primary" type="button" disabled={saving || rendering || !canUploadReview} onClick={() => promoteAssembledFilm(asset)}>確認映像として公開する →</button></div></div>)}</div>}
+
+              <p className="admin-operation-note">編集された映像はお客様には表示されません。内容を確認したうえで「確認映像として公開する」を押すと、お客様の制作室に表示され、進行状況が「完成前の映像をご確認ください」へ進みます。</p>
             </section>
 
             <section className="admin-card" id="admin-revisions"><div className="card-head"><div><p className="eyebrow">REVISION REQUESTS</p><h3>修正依頼</h3></div><span>{order.revision_used}/{order.revision_limit}回使用</span></div>{revisions.length ? <div className="admin-work-list">{revisions.map((revision) => <article key={revision.id}><div><span className={revision.status === "open" ? "work-status open" : "work-status"}>{revision.status === "open" ? "対応が必要" : "対応済み"}</span><small>{formatDate(revision.created_at)}</small></div><strong>{revision.category}</strong><p>{revision.body}</p>{revision.status === "open" && <button className="button button-outline" type="button" disabled={saving} onClick={() => resolveRevision(revision.id)}>対応完了にする</button>}</article>)}</div> : <p className="admin-empty-copy">修正依頼はまだありません。</p>}<p className="admin-operation-note">修正版を「完成前の確認映像」として公開してから、該当依頼を対応完了にしてください。上限はDBでも{order.revision_limit}回に制限されています。</p></section>
