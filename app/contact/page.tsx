@@ -2,15 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "../components/InfoPage";
 import { StartStoryLink } from "../components/StartStoryLink";
-import { SUPPORT_EMAIL } from "../lib/site";
+import {
+  BUSINESS_NAME,
+  BUSINESS_OPERATOR,
+  SUPPORT_EMAIL,
+  SUPPORT_PHONE,
+  SUPPORT_PHONE_E164,
+} from "../lib/site";
 
 export const metadata: Metadata = {
   title: "お問い合わせ",
   description: "WAN MEMORYへのご相談・お問い合わせ方法をご案内します。",
   alternates: { canonical: "/contact" },
 };
-
-const disclosureSubject = encodeURIComponent("WAN MEMORY 特定商取引法に基づく表示事項の開示希望");
 
 export default function ContactPage() {
   return (
@@ -26,14 +30,13 @@ export default function ContactPage() {
         <Link className="button button-outline" href="/studio">制作室を開く →</Link>
       </section>
       <section>
-        <h2>メールでのお問い合わせ</h2>
-        <p>サービス内容、制作のご相談、納品やキャンセルについては、下記のメールアドレスへご連絡ください。</p>
-        <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL} →</a>
-      </section>
-      <section>
-        <h2>販売事業者情報の開示をご希望の方</h2>
-        <p>販売事業者名、運営責任者名、所在地および電話番号は、ご請求に応じて、お申し込みの意思決定に先立って遅滞なく電子メールで開示します。</p>
-        <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}?subject=${disclosureSubject}`}>表示事項の開示を請求する →</a>
+        <h2>お問い合わせ窓口</h2>
+        <p>サービス内容、制作のご相談、納品、キャンセルについては、メールまたは電話でご連絡ください。制作中のご連絡は、注文履歴が残る制作室のメッセージをご利用いただくとスムーズです。</p>
+        <div className="info-actions">
+          <a className="button button-outline" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL} →</a>
+          <a className="button button-outline" href={`tel:${SUPPORT_PHONE_E164}`}>{SUPPORT_PHONE} →</a>
+        </div>
+        <p><small>運営：{BUSINESS_OPERATOR}（屋号：{BUSINESS_NAME}）</small></p>
       </section>
     </InfoPage>
   );

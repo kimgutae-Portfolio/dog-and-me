@@ -34,13 +34,13 @@ test("server-renders the Japanese landing page", async () => {
   assert.ok(jsonLdMatch, "JSON-LD should be present");
   const structuredData = JSON.parse(jsonLdMatch[1]);
   assert.deepEqual(structuredData.map((entry) => entry["@type"]), ["WebSite", "Organization", "Service", "FAQPage"]);
-  assert.equal(structuredData.at(-1).mainEntity.length, 14);
+  assert.equal(structuredData.at(-1).mainEntity.length, 16);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.doesNotMatch(html, /お申し込み受付は準備中/);
   assert.match(html, /写真は、残っている/);
-  assert.match(html, /A MEMORY BECOMES A FILM/);
+  assert.match(html, /A MEMORY BECOMES A STORY/);
   assert.match(html, /ご登録からお届けまで、8つのステップ/);
-  assert.match(html, /映画を受け取ったあとも、思い出へ帰れる場所/);
+  assert.match(html, /映像を受け取ったあとも、思い出へ帰れる場所/);
   assert.match(html, /専用メモリーサイトの使い方/);
   assert.match(html, /専用メモリーサイト/);
   assert.doesNotMatch(html, /家族共有URL|家族へ共有する|ご家族にはログイン不要/);
@@ -55,7 +55,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /モニター価格とは何ですか/);
   assert.match(html, /人と一緒に写った写真も提出できますか/);
   assert.match(html, /人物のお顔は映像に使用・生成せず/);
-  assert.match(html, /映像コンセプト2案/);
+  assert.match(html, /映像構成案2案/);
   assert.match(html, /いまを残す思い出フィルム/);
   assert.match(html, /いまを残す、一つのかたち/);
   assert.doesNotMatch(html, /虹の橋|メモリアル|Gentle memorial|先に旅立|空へ続く/);
@@ -83,7 +83,7 @@ test("serves crawl controls and an absolute public sitemap", async () => {
   assert.match(sitemapResponse.headers.get("content-type") ?? "", /^application\/xml\b/i);
   const sitemap = await sitemapResponse.text();
   assert.match(sitemap, /<loc>http:\/\/localhost<\/loc>/);
-  assert.match(sitemap, /<loc>http:\/\/localhost\/film\/momo-demo<\/loc>/);
+  assert.match(sitemap, /<loc>http:\/\/localhost\/film\/hinata-demo<\/loc>/);
   for (const path of ["contact", "terms", "privacy", "legal"]) {
     assert.match(sitemap, new RegExp(`<loc>http:\\/\\/localhost\\/${path}<\\/loc>`));
   }
@@ -131,24 +131,30 @@ test("server-renders public support and legal pages", async () => {
 
   const legalResponse = await render("/legal");
   const legalHtml = await legalResponse.text();
-  assert.doesNotMatch(legalHtml, /<dt>販売事業者<\/dt><dd>/);
-  assert.doesNotMatch(legalHtml, /〒\d{3}-\d{4}/);
-  assert.match(legalHtml, /販売事業者名、運営責任者名、所在地および電話番号/);
-  assert.match(legalHtml, /お申し込みの意思決定に先立って遅滞なく電子メールで開示/);
-  assert.doesNotMatch(legalHtml, /href="tel:/);
-  assert.match(legalHtml, /送信時点では料金は発生しません/);
-  assert.match(legalHtml, /クレジットカード（Stripe）/);
-  assert.doesNotMatch(legalHtml, /正式な個人事業者情報.*掲載/);
+  assert.match(legalHtml, /<dt>販売事業者<\/dt><dd>金具泰<\/dd>/);
+  assert.match(legalHtml, /<dt>屋号<\/dt><dd>WAN MEMORY<\/dd>/);
+  assert.match(legalHtml, /〒599-8272 大阪府堺市中区深井中町327-47/);
+  assert.match(legalHtml, /href="tel:\+818085307568"/);
+  assert.match(legalHtml, /080-8530-7568/);
+  assert.match(legalHtml, /相談フォームの送信だけでは料金は発生しません/);
+  assert.match(legalHtml, /クレジットカード決済（Stripe）/);
+  assert.match(legalHtml, /決済後、制作着手前.*全額返金/);
+  assert.match(legalHtml, /通常3〜5週間/);
 
   const contactResponse = await render("/contact");
   const contactHtml = await contactResponse.text();
   assert.match(contactHtml, /info@wanmemory\.com/);
   assert.match(contactHtml, /mailto:info@wanmemory\.com/);
   assert.doesNotMatch(contactHtml, /ggutae0@gmail\.com/);
-  assert.doesNotMatch(contactHtml, /〒\d{3}-\d{4}/);
-  assert.match(contactHtml, /販売事業者情報の開示をご希望の方/);
-  assert.match(contactHtml, /表示事項の開示を請求する/);
-  assert.doesNotMatch(contactHtml, /href="tel:/);
+  assert.match(contactHtml, /href="tel:\+818085307568"/);
+  assert.match(contactHtml, /運営：/);
+  assert.match(contactHtml, /金具泰/);
+  assert.match(contactHtml, /屋号：/);
+
+  const privacyResponse = await render("/privacy");
+  const privacyHtml = await privacyResponse.text();
+  assert.match(privacyHtml, /カード決済にはStripeを利用/);
+  assert.match(privacyHtml, /WAN MEMORYのサーバーには保存されません/);
 });
 
 test("keeps private product routes out of search results", async () => {
@@ -165,15 +171,15 @@ test("keeps private product routes out of search results", async () => {
   assert.doesNotMatch(memoryHtml, /<link rel="canonical"/i);
   assert.match(memoryHtml, /<meta property="og:title" content="専用メモリーサイト"/i);
   assert.match(memoryHtml, /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/api\/memory\/share-demo\/og"/i);
-  const demoResponse = await render("/film/momo-demo");
+  const demoResponse = await render("/film/hinata-demo");
   const demoHtml = await demoResponse.text();
   assert.doesNotMatch(demoHtml, /<meta name="robots" content="noindex/i);
-  assert.match(demoHtml, /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/film\/momo-demo"/);
+  assert.match(demoHtml, /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/film\/hinata-demo"/);
   assert.match(demoHtml, /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/og\.png"/);
 });
 
 test("server-renders the connected MVP routes", async () => {
-  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo", "/film/momo-demo", "/memory/share-demo"]) {
+  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo", "/film/hinata-demo", "/memory/share-demo"]) {
     const response = await render(path);
     assert.equal(response.status, 200, `${path} should render`);
   }
@@ -217,9 +223,9 @@ test("uses the default social image when a memory URL is unavailable", async () 
 });
 
 test("renders the customer memory site demo", async () => {
-  const response = await render("/film/momo-demo");
+  const response = await render("/film/hinata-demo");
   const html = await response.text();
-  assert.match(html, /モモと歩いた季節/);
+  assert.match(html, /ひなたと歩いた、いつもの季節/);
   assert.match(html, /CUSTOMER DEMO/);
   assert.match(html, /WHEN A MEMORY RETURNS/);
   assert.match(html, /あの日の光まで戻ってくる/);
@@ -296,7 +302,7 @@ test("concept selection requires an explicit send and stays editable before prod
   assert.match(studio, /setPendingConceptSlot\(concept\.slot\)/);
   assert.match(studio, /この案で制作希望を送る/);
   assert.match(studio, /concept-receipt-dialog/);
-  assert.match(studio, /コンセプトをお預かりしました/);
+  assert.match(studio, /映像構成案をお預かりしました/);
   assert.match(studio, /映像制作へ進む前なら、何度でも変更できます/);
   assert.doesNotMatch(studio, /onClick=\{\(\) => selectConcept\(concept\.slot\)\}/);
   assert.match(css, /\.concept-receipt-backdrop/);
@@ -455,8 +461,8 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
   assert.match(consent, /terms: "2026-07-27"/);
   assert.match(consent, /privacy: "2026-07-27"/);
   assert.match(consent, /aiNotice: "2026-07-27"/);
-  assert.match(terms, /2026年7月27日/);
-  assert.match(privacy, /基本版 2026-07-27/);
+  assert.match(terms, /決済・キャンセル案内更新：2026年7月29日（同意版 2026-07-27）/);
+  assert.match(privacy, /決済情報の取り扱いに関する案内更新：2026年7月29日（同意版 2026-07-27/);
   assert.match(migration, /o\.terms_version = '2026-07-27'/);
   assert.match(migration, /current policy versions required/);
 });
@@ -520,7 +526,8 @@ test("stores three guided memory entries with optional matching photos", async (
   assert.match(upgrade, /v_photo_count >= 5/);
   assert.match(upgrade, /having count\(a\.id\) not between 1 and 5/);
   assert.match(story, /const FIXED_MEMORY_COUNT = 3/);
-  assert.match(story, /約1分の映画は、\{FIXED_MEMORY_COUNT\}つの思い出で構成します/);
+  assert.match(story, /3つの思い出をお聞かせください/);
+  assert.match(story, /それぞれの内容から複数の場面を組み立て/);
   assert.match(story, /その子の動きや表情も一緒に書く/);
   assert.match(story, /この思い出と同じ場面の写真/);
   assert.match(story, /save_order_memory_entry/);
@@ -571,7 +578,7 @@ test("stores appearance references and requires operator photo approval", async 
   assert.match(story, /横向き・しっぽの写真/);
   assert.match(story, /FIXED_FILM_STYLE/);
   assert.match(story, /referencePhotosComplete/);
-  assert.match(story, /映画的な再構成について確認しました/);
+  assert.match(story, /映像としての再構成について確認しました/);
   assert.match(story, /save_order_production_fields/);
   assert.match(story, /assign_memory_photos/);
   assert.doesNotMatch(story, /Runway|ChatGPT|OpenAI|GPT|prompt|credit/i);

@@ -66,21 +66,21 @@ export function CustomerFilmSite() {
     load();
   }, [params.orderId, user]);
 
-  if (authLoading || loading || !user) return <div className="wizard-loading">大切な映画を準備しています…</div>;
-  if (error || !order) return <main className="film-private-error"><p>{error || "映画が見つかりません。"}</p><Link href="/studio">制作室へ戻る</Link></main>;
+  if (authLoading || loading || !user) return <div className="wizard-loading">大切な映像を準備しています…</div>;
+  if (error || !order) return <main className="film-private-error"><p>{error || "映像が見つかりません。"}</p><Link href="/studio">制作室へ戻る</Link></main>;
 
   return (
     <main className="private-film-page">
       <header className="private-film-nav"><Link className="brand" href="/"><span className="brand-mark">WM</span><span className="brand-type">WAN MEMORY<small>PRIVATE MEMORY SITE</small></span></Link><Link href={`/studio?order=${order.id}`}>制作室へ戻る</Link></header>
-      <section className="private-film-hero"><div className="private-film-glow" /><div><p>PRIVATE MEMORY FILM · {order.order_number}</p><h1>{delivery?.title || `${order.pet_name}との映画`}</h1><span>{order.breed} · {order.purpose}</span></div></section>
+      <section className="private-film-hero"><div className="private-film-glow" /><div><p>PRIVATE MEMORY FILM · {order.order_number}</p><h1>{delivery?.title || `${order.pet_name}とのメモリーフィルム`}</h1><span>{order.breed} · {order.purpose}</span></div></section>
 
-      <section className="private-film-section"><div className="private-film-heading"><div><p>YOUR FILM</p><h2>一緒に過ごした時間を、<br />一本の映画に。</h2></div><span>閲覧専用 · 有効期限付き表示</span></div><div className="private-video-frame">{videoUrl ? <video src={videoUrl} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline onContextMenu={(event) => event.preventDefault()} /> : <div>完成映像を準備しています</div>}</div><p className="private-video-note">ダウンロード操作は提供していません。画面録画などを技術的に完全に防ぐことはできません。</p></section>
+      <section className="private-film-section"><div className="private-film-heading"><div><p>YOUR MEMORY FILM</p><h2>一緒に過ごした時間を、<br />一本のメモリーフィルムに。</h2></div><span>閲覧専用 · 有効期限付き表示</span></div><div className="private-video-frame">{videoUrl ? <video src={videoUrl} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline onContextMenu={(event) => event.preventDefault()} /> : <div>完成映像を準備しています</div>}</div><p className="private-video-note">ダウンロード操作は提供していません。画面録画などを技術的に完全に防ぐことはできません。</p></section>
 
       <section className="private-film-quote"><p>FOR {order.pet_name.toUpperCase()}</p><blockquote>「{order.message_to_pet || delivery?.customer_message || "これからも、思い出の中で一緒に。"}」</blockquote></section>
 
       {concept && <section className="private-film-section private-film-story"><div className="private-film-heading"><div><p>THE STORY</p><h2>{concept.title}</h2></div><span>{concept.tone}</span></div><p className="private-film-summary">{concept.summary}</p><ol>{concept.scenes.map((scene, index) => <li key={`${concept.id}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><strong>{scene}</strong></li>)}</ol></section>}
 
-      {images.length > 0 && <section className="private-film-section private-film-gallery"><div className="private-film-heading"><div><p>PHOTO MEMORIES</p><h2>映画になる前の、<br />大切な一枚一枚。</h2></div><span>{images.length} PHOTOS</span></div><div>{images.map((image) => <figure key={image.id}><img src={image.url} alt={`${order.pet_name}の思い出写真`} draggable={false} onContextMenu={(event) => event.preventDefault()} /><figcaption>{image.caption || `${order.pet_name}との思い出`}</figcaption></figure>)}</div></section>}
+      {images.length > 0 && <section className="private-film-section private-film-gallery"><div className="private-film-heading"><div><p>PHOTO MEMORIES</p><h2>映像になる前の、<br />大切な一枚一枚。</h2></div><span>{images.length} PHOTOS</span></div><div>{images.map((image) => <figure key={image.id}><img src={image.url} alt={`${order.pet_name}の思い出写真`} draggable={false} onContextMenu={(event) => event.preventDefault()} /><figcaption>{image.caption || `${order.pet_name}との思い出`}</figcaption></figure>)}</div></section>}
 
       <footer className="private-film-footer"><div><span className="brand-mark">WM</span><p>WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></p></div><span>{order.pet_name} · {new Date(order.created_at).getFullYear()}</span></footer>
     </main>

@@ -27,10 +27,10 @@ const chapters = [
   },
   {
     number: "03",
-    kicker: "TWO FILM CONCEPTS",
+    kicker: "TWO STORY DIRECTIONS",
     title: "物語を、まずは",
-    emphasis: "2つのコンセプトに。",
-    copy: "同じ思い出から、切り口の異なる2つの映像コンセプトをご提案します。心に近い1案を選んでいただき、場面や言葉を整えながら約1分の映画へ仕立てます。",
+    emphasis: "2つの映像構成案に。",
+    copy: "3つの思い出をそれぞれ複数の場面へ広げ、切り口の異なる2つの映像構成案をご提案します。心に近い1案を選んでいただき、場面や言葉を整えながら約1分のメモリーフィルムへ仕上げます。",
     scene: "CONCEPT A / THE WAY HOME",
     sceneTitle: "四季を歩いた、いつもの帰り道。",
     sceneNote: "2案を比べてから、制作する物語を選べます",
@@ -40,8 +40,8 @@ const chapters = [
     kicker: "WAN MEMORY",
     title: "あなたは、",
     emphasis: "思い出を話すだけ。",
-    copy: "映像AIの使い方を覚える必要はありません。コンセプト提案から約1分の映画、専用サイトの仕上げまでお任せください。大切な時間を、何度でも会いにいけるかたちにします。",
-    scene: "A FILM FOR YOUR FAMILY",
+    copy: "映像AIの使い方を覚える必要はありません。映像構成案のご提案から約1分の完成映像、専用サイトの仕上げまでお任せください。大切な時間を、何度でも会いにいけるかたちにします。",
+    scene: "A MEMORY FOR YOUR FAMILY",
     sceneTitle: "ひなたと歩いた季節",
     sceneNote: "愛犬との時間を、いつまでも動く記憶に。",
   },
@@ -183,7 +183,7 @@ export function ScrollMemoryStory() {
 
         <div className="shell story-screen">
           <div className="story-copy" key={`copy-${active}`}>
-            <p className="eyebrow light">A MEMORY BECOMES A FILM</p>
+            <p className="eyebrow light">A MEMORY BECOMES A STORY</p>
             <p className="story-kicker">
               <span>{chapter.number}</span>
               {chapter.kicker}

@@ -14,12 +14,12 @@ import { MemoryShareManager } from "./MemoryShareManager";
 const journeySteps = [
   ["受付", "写真とお話をお預かり"],
   ["素材確認", "担当者が内容を確認"],
-  ["2案提案", "異なる物語をご提案"],
+  ["構成案の提案", "異なる映像構成を2案ご提案"],
   ["1案選択", "お客様が方向性を決定"],
   ["場面確認", "場面イメージをご確認"],
-  ["映像制作", "約1分の映画を制作"],
+  ["映像制作", "約1分の映像を制作"],
   ["確認・修正", "完成前の最終確認"],
-  ["お届け", "映画と専用サイトを納品"],
+  ["お届け", "完成映像と専用サイトを納品"],
 ] as const;
 
 const statusStep: Record<MemoryOrder["status"], number> = {
@@ -185,7 +185,7 @@ export function StudioClient() {
       case "reviewing_materials":
         return { title: "担当者が写真とお話を確認中", copy: "確認が終わるまでお待ちください。伝え忘れたことはメッセージで送れます。", href: "#messages", label: "担当者へ連絡する" };
       case "concepts_ready":
-        return { title: "2つの物語から1案を選択", copy: "気になる案を選び、制作希望を送信してください。", href: "#concepts", label: "コンセプトを選ぶ" };
+        return { title: "2つの映像構成案から1案を選択", copy: "気になる案を選び、制作希望を送信してください。", href: "#concepts", label: "映像構成案を選ぶ" };
       case "concept_selected":
         return { title: "選んだ物語を確認", copy: "映像制作へ進む前なら、もう一方の案へ変更できます。", href: "#concepts", label: "選択した案を見る" };
       case "stills_review":
@@ -201,7 +201,7 @@ export function StudioClient() {
             : { title: order.status === "revision_requested" ? "修正内容を反映しています" : "完成前の映像を確認", copy: order.status === "revision_requested" ? "修正版の公開まで、現在の映像を確認できます。" : "映像を見て、修正を依頼するか、この映像で確定してください。", href: "#review-video", label: "確認映像を見る" }
           : { title: "仕上がりを確認中", copy: "最終確認が終わり次第、この制作室でお知らせします。", href: "#messages", label: "担当者へ連絡する" };
       case "delivered":
-        return { title: "映画とメモリーサイトが完成", copy: "完成映像と写真アルバムを、いつでも見返せます。", href: "#delivery", label: "完成した映画を見る" };
+        return { title: "完成映像とメモリーサイトをお届け", copy: "完成映像と写真アルバムを、いつでも見返せます。", href: "#delivery", label: "完成映像を見る" };
       case "cancelled":
         return { title: "このご相談は停止中です", copy: "再開や確認をご希望の場合は、担当者へメッセージをお送りください。", href: "#messages", label: "担当者へ連絡する" };
     }
@@ -225,7 +225,7 @@ export function StudioClient() {
     setConfirmingConcept(true);
     const { error: selectError } = await getSupabaseBrowserClient().rpc("select_memory_concept", { p_order_id: order.id, p_slot: slot });
     if (selectError) {
-      setError("コンセプトを送信できませんでした。もう一度お試しください。");
+      setError("映像構成案を送信できませんでした。もう一度お試しください。");
       setConfirmingConcept(false);
       return;
     }
@@ -367,17 +367,17 @@ export function StudioClient() {
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">WM</span><span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span></Link>
         <nav><Link href="/">ホーム</Link>{!readOnlyPreview && <Link href="/story">新しい相談</Link>}{profile?.role === "admin" && <Link href="/admin">運営管理</Link>}<button type="button" onClick={async () => { await signOut(); router.push("/"); }}>ログアウト</button><span className="avatar">{(profile?.full_name || user.email || "U").slice(0, 1).toUpperCase()}</span></nav>
       </header>
-      {received && <div className="received-banner"><span aria-hidden="true">✓</span><div><strong>ご相談と写真を受け付けました。</strong><p>ここから追加写真、コンセプト選択、映像確認、お届けまで進められます。</p></div></div>}
-      {conceptReceipt && <div className="concept-receipt-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setConceptReceipt(null); }}><section className="concept-receipt-dialog" role="alertdialog" aria-modal="true" aria-labelledby="concept-receipt-title" aria-describedby="concept-receipt-copy"><div className="concept-receipt-film" aria-hidden="true"><i /><i /><span>WM</span><i /><i /></div><p className="eyebrow">SELECTION RECEIVED · CONCEPT {conceptReceipt.slot}</p><h2 id="concept-receipt-title">コンセプトをお預かりしました。</h2><p id="concept-receipt-copy">「{conceptReceipt.title}」で制作希望を送信しました。担当者が内容を確認し、次の準備を進めますので、少しお待ちください。</p><aside><strong>制作が始まる前なら変更できます</strong><span>制作室が「映像制作」へ進む前は、もう一方の案を選んで再送信できます。</span></aside><button autoFocus className="button button-primary" type="button" onClick={() => setConceptReceipt(null)}>制作室に戻る →</button></section></div>}
+      {received && <div className="received-banner"><span aria-hidden="true">✓</span><div><strong>ご相談と写真を受け付けました。</strong><p>ここから追加写真、映像構成案の選択、映像確認、お届けまで進められます。</p></div></div>}
+      {conceptReceipt && <div className="concept-receipt-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setConceptReceipt(null); }}><section className="concept-receipt-dialog" role="alertdialog" aria-modal="true" aria-labelledby="concept-receipt-title" aria-describedby="concept-receipt-copy"><div className="concept-receipt-film" aria-hidden="true"><i /><i /><span>WM</span><i /><i /></div><p className="eyebrow">SELECTION RECEIVED · PROPOSAL {conceptReceipt.slot}</p><h2 id="concept-receipt-title">映像構成案をお預かりしました。</h2><p id="concept-receipt-copy">「{conceptReceipt.title}」で制作希望を送信しました。担当者が内容を確認し、次の準備を進めますので、少しお待ちください。</p><aside><strong>制作が始まる前なら変更できます</strong><span>制作室が「映像制作」へ進む前は、もう一方の案を選んで再送信できます。</span></aside><button autoFocus className="button button-primary" type="button" onClick={() => setConceptReceipt(null)}>制作室に戻る →</button></section></div>}
       <div className="studio-shell">
-        <div className="studio-account-bar"><div><small>ACCOUNT</small><strong>{profile?.full_name || user.email}</strong></div>{orders.length > 1 && <label><span>制作中の映画</span><select value={selectedOrderId} onChange={(event) => { setSelectedOrderId(event.target.value); setPendingConceptSlot(null); setConceptReceipt(null); setApprovalChecked(false); setStillsApprovalChecked(false); setStillsChangeBody(""); setConsentTermsChecked(false); setConsentPhotoRightsChecked(false); setConsentAiChecked(false); }}>{orders.map((item) => <option value={item.id} key={item.id}>{item.pet_name} · {item.order_number}</option>)}</select></label>}</div>
+        <div className="studio-account-bar"><div><small>ACCOUNT</small><strong>{profile?.full_name || user.email}</strong></div>{orders.length > 1 && <label><span>制作中の映像</span><select value={selectedOrderId} onChange={(event) => { setSelectedOrderId(event.target.value); setPendingConceptSlot(null); setConceptReceipt(null); setApprovalChecked(false); setStillsApprovalChecked(false); setStillsChangeBody(""); setConsentTermsChecked(false); setConsentPhotoRightsChecked(false); setConsentAiChecked(false); }}>{orders.map((item) => <option value={item.id} key={item.id}>{item.pet_name} · {item.order_number}</option>)}</select></label>}</div>
 
-        {readOnlyPreview && <aside className="studio-preview-banner" role="status"><strong>運営用・顧客画面プレビュー</strong><span>閲覧専用です。コンセプト選択、写真追加、メッセージ、修正、承認、共有設定は操作できません。</span><Link href="/admin">運営管理へ戻る</Link></aside>}
+        {readOnlyPreview && <aside className="studio-preview-banner" role="status"><strong>運営用・顧客画面プレビュー</strong><span>閲覧専用です。映像構成案の選択、写真追加、メッセージ、修正、承認、共有設定は操作できません。</span><Link href="/admin">運営管理へ戻る</Link></aside>}
         {error && <p className="studio-alert error" role="alert">{error}</p>}
         {notice && <p className="studio-alert" role="status">{notice}<button type="button" onClick={() => setNotice("")}>×</button></p>}
 
-        {!order ? <section className="studio-empty"><p className="eyebrow">YOUR FILM STUDIO</p><h1>{profile?.primary_pet_name ? `${profile.primary_pet_name}ちゃんの思い出を` : "最初の思い出を"}<br />聞かせてください。</h1><p>お申し込み後、写真の追加から完成した映画のお届けまで、この制作室でご案内します。</p><Link className="button button-primary" href="/story">思い出づくりを始める →</Link></section> : <>
-          <div className="studio-top"><div><p className="eyebrow">YOUR FILM STUDIO</p><h1>{order.pet_name}ちゃんの制作室</h1><p>写真の追加から完成まで、ひとつずつ進めます。</p></div><div className="order-meta"><span>ORDER</span><strong>{order.order_number}</strong><small>受付 {formatDate(order.created_at)}</small><small>料金 ¥{new Intl.NumberFormat("ja-JP").format(order.quoted_price)}（税込）</small><small>お支払い {order.payment_status === "paid" ? "入金確認済み" : order.payment_status === "invoice_sent" ? "ご案内済み" : order.payment_status === "refunded" ? "返金済み" : "内容確認後にご案内"}</small></div></div>
+        {!order ? <section className="studio-empty"><p className="eyebrow">YOUR MEMORY STUDIO</p><h1>{profile?.primary_pet_name ? `${profile.primary_pet_name}ちゃんの思い出を` : "最初の思い出を"}<br />聞かせてください。</h1><p>お申し込み後、写真の追加から完成映像のお届けまで、この制作室でご案内します。</p><Link className="button button-primary" href="/story">思い出づくりを始める →</Link></section> : <>
+          <div className="studio-top"><div><p className="eyebrow">YOUR MEMORY STUDIO</p><h1>{order.pet_name}ちゃんの制作室</h1><p>写真の追加から完成まで、ひとつずつ進めます。</p></div><div className="order-meta"><span>ORDER</span><strong>{order.order_number}</strong><small>受付 {formatDate(order.created_at)}</small><small>料金 ¥{new Intl.NumberFormat("ja-JP").format(order.quoted_price)}（税込）</small><small>お支払い {order.payment_status === "paid" ? "入金確認済み" : order.payment_status === "invoice_sent" ? "ご案内済み" : order.payment_status === "refunded" ? "返金済み" : "内容確認後にご案内"}</small></div></div>
 
           {!consentCurrent && !["delivered", "cancelled"].includes(order.status) && <aside className="studio-consent-renewal" id="consent-renewal">
             <div><p className="eyebrow">CONSENT RECORD</p><h2>制作を続けるため、現在の内容をご確認ください。</h2><p>人物の写り込みと写真の利用条件を確認し、外部制作サービスで処理する前に、選択内容・同意日時・確認文のバージョンを注文へ記録します。</p></div>
@@ -392,15 +392,15 @@ export function StudioClient() {
 
           {nextAction && <aside className="studio-next-action" aria-label="今やること"><div><p className="eyebrow">NEXT ACTION · 今やること</p><h2>{nextAction.title}</h2><span>{nextAction.copy}</span></div><a className="button button-primary" href={nextAction.href}>{nextAction.label} →</a></aside>}
 
-          <section className="studio-status"><div className="status-copy"><span className="status-badge">現在のステップ {currentStep + 1} / {journeySteps.length}</span><h2>{ORDER_STATUS_LABELS[order.status]}</h2><p>{order.status === "delivered" ? "大切な映画をいつでもこちらでご覧いただけます。" : order.status === "concepts_ready" ? "方向性の異なる2つの物語から、その子らしい1案を選んでください。" : order.status === "stills_review" ? "映像にする前の場面イメージをご用意しました。内容をご確認ください。" : "進行が変わると、この制作室でお知らせします。追加したい思い出や写真はいつでもお送りください。"}</p><span className="estimate">予定完成日：{formatDate(order.due_date)}</span></div><div className="status-visual" aria-hidden="true"><div className="reel-circle"><span>WM</span></div><i /><i /><i /></div></section>
+          <section className="studio-status"><div className="status-copy"><span className="status-badge">現在のステップ {currentStep + 1} / {journeySteps.length}</span><h2>{ORDER_STATUS_LABELS[order.status]}</h2><p>{order.status === "delivered" ? "大切な完成映像をいつでもこちらでご覧いただけます。" : order.status === "concepts_ready" ? "3つの思い出から広げた2つの映像構成案から、その子らしい1案を選んでください。" : order.status === "stills_review" ? "映像にする前の場面イメージをご用意しました。内容をご確認ください。" : "進行が変わると、この制作室でお知らせします。追加したい思い出や写真はいつでもお送りください。"}</p><span className="estimate">予定完成日：{formatDate(order.due_date)}</span></div><div className="status-visual" aria-hidden="true"><div className="reel-circle"><span>WM</span></div><i /><i /><i /></div></section>
 
           <section className="timeline-card desktop-studio-timeline"><div className="card-head"><div><p className="eyebrow">PRODUCTION JOURNEY</p><h2>受付からお届けまで</h2></div><span>{ORDER_STATUS_LABELS[order.status]}</span></div><ol className="studio-timeline studio-timeline-eight">{journeySteps.map(([title, copy], index) => <li className={index <= currentStep ? "active" : ""} key={title}><span>{index < currentStep ? "✓" : String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{copy}</small></div></li>)}</ol></section>
           <details className="timeline-card mobile-studio-timeline"><summary><span><small>PRODUCTION JOURNEY</small><strong>受付からお届けまで</strong></span><i>8つの工程を見る</i></summary><ol className="studio-timeline studio-timeline-eight">{journeySteps.map(([title, copy], index) => <li className={index <= currentStep ? "active" : ""} key={title}><span>{index < currentStep ? "✓" : String(index + 1).padStart(2, "0")}</span><div><strong>{title}</strong><small>{copy}</small></div></li>)}</ol></details>
 
           {concepts.length > 0 && currentStep >= 2 && <section className="concept-section studio-card" id="concepts">
-            <div className="card-head"><div><p className="eyebrow">CHOOSE YOUR FILM CONCEPT</p><h2>2つの物語から、1つを選ぶ</h2></div><span>{canEditConcept ? "案を選んだあと、下のボタンで送信します" : "制作が始まったため選択は確定しています"}</span></div>
+            <div className="card-head"><div><p className="eyebrow">CHOOSE YOUR STORY DIRECTION</p><h2>2つの映像構成案から、1つを選ぶ</h2></div><span>{canEditConcept ? "案を選んだあと、下のボタンで送信します" : "制作が始まったため選択は確定しています"}</span></div>
             <div className="concept-grid">{concepts.map((concept) => <button type="button" disabled={!canEditConcept} aria-pressed={effectiveConceptSlot === concept.slot} className={effectiveConceptSlot === concept.slot ? "concept-option selected" : "concept-option"} onClick={() => { setPendingConceptSlot(concept.slot); setError(""); }} key={concept.id}><span className="concept-card-top"><span className="concept-label">CONCEPT {concept.slot}</span>{order.selected_concept_slot === concept.slot && <span className="concept-sent-tag">送信済み</span>}</span><strong>{concept.title}</strong><small>{concept.tone}</small><p>{concept.summary}</p><ol>{concept.scenes.map((scene, index) => <li key={`${concept.id}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span>{scene}</li>)}</ol><i aria-hidden="true">{effectiveConceptSlot === concept.slot ? "✓" : ""}</i></button>)}</div>
-            <div className="concept-confirm"><p><span>{pendingConcept ? order.selected_concept_slot === pendingConcept.slot ? "送信済みの物語" : order.selected_concept_slot ? "変更する物語" : "選択中の物語" : "コンセプトを選択してください"}</span><strong>{pendingConcept?.title ?? "A・Bどちらかの案を選んでください"}</strong><small>{canEditConcept ? order.selected_concept_slot ? "映像制作へ進む前なら、何度でも変更できます。" : "カードを選んだだけでは送信されません。" : "映像制作へ進んだため、現在の案から変更できません。"}</small></p><button className="button button-cream" type="button" disabled={!canEditConcept || !pendingConcept || confirmingConcept || effectiveConceptSlot === order.selected_concept_slot} onClick={confirmConcept}>{confirmingConcept ? "送信中…" : !canEditConcept ? "選択は確定しています" : !pendingConcept ? "案を選んでください" : effectiveConceptSlot === order.selected_concept_slot ? "この案は送信済みです" : order.selected_concept_slot ? "この案に変更して送る →" : "この案で制作希望を送る →"}</button></div>
+            <div className="concept-confirm"><p><span>{pendingConcept ? order.selected_concept_slot === pendingConcept.slot ? "送信済みの構成案" : order.selected_concept_slot ? "変更する構成案" : "選択中の構成案" : "映像構成案を選択してください"}</span><strong>{pendingConcept?.title ?? "A・Bどちらかの案を選んでください"}</strong><small>{canEditConcept ? order.selected_concept_slot ? "映像制作へ進む前なら、何度でも変更できます。" : "カードを選んだだけでは送信されません。" : "映像制作へ進んだため、現在の案から変更できません。"}</small></p><button className="button button-cream" type="button" disabled={!canEditConcept || !pendingConcept || confirmingConcept || effectiveConceptSlot === order.selected_concept_slot} onClick={confirmConcept}>{confirmingConcept ? "送信中…" : !canEditConcept ? "選択は確定しています" : !pendingConcept ? "案を選んでください" : effectiveConceptSlot === order.selected_concept_slot ? "この案は送信済みです" : order.selected_concept_slot ? "この案に変更して送る →" : "この案で制作希望を送る →"}</button></div>
           </section>}
 
           {sceneStills.length > 0 && (order.status === "stills_review" || order.stills_approved_at) && <section className="studio-card stills-review-card" id="stills">
@@ -425,7 +425,7 @@ export function StudioClient() {
 
           {reviewAsset && order.status !== "delivered" && <section className="review-video-card" id="review-video"><div><p className="eyebrow">PRE-DELIVERY REVIEW</p><h2>{order.customer_approved_at ? "この映像で確定しました。" : "完成前の映像をご確認ください。"}</h2><p>{order.status === "revision_requested" ? "お送りいただいた修正内容を反映しています。新しい確認映像が届くまで、こちらが現在の版です。" : order.customer_approved_at ? `確定受付 ${formatDateTime(order.customer_approved_at)}。担当者が最終納品の準備を進めています。` : "この映像は確認用です。修正を依頼するか、問題がなければ「この映像で確定する」を押してください。"}</p><div className="revision-allowance"><strong>プラン内の修正</strong><span>残り {revisionsRemaining}回 / 全{order.revision_limit}回</span></div></div><div className="delivery-player">{reviewVideoUrl ? <video src={reviewVideoUrl} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline onContextMenu={(event) => event.preventDefault()} /> : <span>確認映像を準備しています…</span>}<small>確認専用 · この時点では最終納品ではありません</small></div>{order.status === "customer_review" && canOperateOrder && <div className="review-approval-panel"><p className="eyebrow">FINAL APPROVAL</p><h3>この映像で確定しますか？</h3>{hasOpenRevisions ? <aside className="revision-limit-note"><strong>対応中の修正依頼があります。</strong><span>修正版が公開され、対応完了になるまで確定できません。</span></aside> : <><label><input type="checkbox" checked={approvalChecked} disabled={!reviewVideoUrl} onChange={(event) => setApprovalChecked(event.target.checked)} /><span>現在表示されている確認映像を見て、この内容で最終納品へ進むことに同意します。</span></label><button className="button button-cream" type="button" disabled={!approvalChecked || approvingReview || !reviewVideoUrl || !consentCurrent || order.payment_status !== "paid"} onClick={approveReview}>{approvingReview ? "確定中…" : "この映像で確定する →"}</button>{!reviewVideoUrl && <small>確認映像の読み込み完了後に確定できます。</small>}{order.payment_status !== "paid" && <small>入金確認後に確定できます。担当者へご確認ください。</small>}{!consentCurrent && <small>上の同意内容を先に注文へ記録してください。</small>}</>}</div>}{order.status === "customer_review" && readOnlyPreview && <div className="review-approval-panel readonly"><strong>顧客画面ではここに「この映像で確定する」が表示されます。</strong><span>運営プレビューからは承認できません。</span></div>}</section>}
 
-          {delivery && <section className="delivery-card" id="delivery"><div><p className="eyebrow light">YOUR FILM IS READY</p><h2>{delivery.title}</h2><p>{delivery.customer_message || `${order.pet_name}ちゃんとの時間を、一本の映画に仕上げました。`}</p><Link className="button button-cream" href={`/film/${order.id}`}>専用メモリーサイトを見る →</Link></div><div className="delivery-player">{videoUrl ? <video src={videoUrl} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline onContextMenu={(event) => event.preventDefault()} /> : <span>映像を準備しています…</span>}<small>閲覧専用 · ダウンロードボタンは表示されません</small></div></section>}
+          {delivery && <section className="delivery-card" id="delivery"><div><p className="eyebrow light">YOUR MEMORY FILM IS READY</p><h2>{delivery.title}</h2><p>{delivery.customer_message || `${order.pet_name}ちゃんとの時間を、大切なメモリーフィルムに仕上げました。`}</p><Link className="button button-cream" href={`/film/${order.id}`}>専用メモリーサイトを見る →</Link></div><div className="delivery-player">{videoUrl ? <video src={videoUrl} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline onContextMenu={(event) => event.preventDefault()} /> : <span>映像を準備しています…</span>}<small>閲覧専用 · ダウンロードボタンは表示されません</small></div></section>}
 
           <div className="studio-grid">
             <section className="studio-card" id="materials">

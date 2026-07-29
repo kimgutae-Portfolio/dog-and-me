@@ -99,7 +99,7 @@ export function AuthPanel() {
         <span className="auth-success-mark">✓</span>
         <p className="eyebrow">WELCOME TO WAN MEMORY</p>
         <h1>ログインできました。</h1>
-        <p>{registeredPetName ? `${registeredPetName}ちゃんの映画づくりを始めましょう。` : `${profile?.full_name || user.email}さまの制作室をご用意しています。`}</p>
+        <p>{registeredPetName ? `${registeredPetName}ちゃんの思い出映像づくりを始めましょう。` : `${profile?.full_name || user.email}さまの制作室をご用意しています。`}</p>
         <Link className="button button-primary" href={nextPath}>制作室へ進む →</Link>
       </section></main>
     );
@@ -112,11 +112,11 @@ export function AuthPanel() {
         <Link className="brand" href="/"><span className="brand-mark">WM</span><span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span></Link>
         <p className="eyebrow">YOUR PRIVATE STUDIO</p>
         <h1>{mode === "signup" ? "はじめての方へ" : mode === "reset" ? "パスワードを再設定" : "おかえりなさい"}</h1>
-        <p className="auth-lead">{mode === "signup" ? "制作状況と完成した映画を、ひとつの制作室で大切にお預かりします。" : mode === "reset" ? "登録したメールアドレスへ再設定リンクをお送りします。" : "写真の追加から映画のお届けまで、こちらでご確認いただけます。"}</p>
+        <p className="auth-lead">{mode === "signup" ? "制作状況と完成映像を、ひとつの制作室で大切にお預かりします。" : mode === "reset" ? "登録したメールアドレスへ再設定リンクをお送りします。" : "写真の追加から完成映像のお届けまで、こちらでご確認いただけます。"}</p>
         {mode !== "reset" && <div className="auth-tabs"><button className={mode === "login" ? "active" : ""} type="button" onClick={() => setMode("login")}>ログイン</button><button className={mode === "signup" ? "active" : ""} type="button" onClick={() => setMode("signup")}>会員登録</button></div>}
         <form className="auth-form" onSubmit={submit}>
           {mode === "signup" && <>
-            <label><span>愛犬のお名前 <em>必須</em></span><input required value={petName} onChange={(event) => setPetName(event.target.value)} autoComplete="off" placeholder="例：モモ" /></label>
+            <label><span>愛犬のお名前 <em>必須</em></span><input required value={petName} onChange={(event) => setPetName(event.target.value)} autoComplete="off" placeholder="例：ひなた" /></label>
             <label><span>飼い主さまのお名前 <small>任意</small></span><input value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="例：山田 花子" /></label>
             <p className="auth-prefill-note">愛犬のお名前は、次の申込フォームへ自動で引き継がれます。</p>
           </>}

@@ -234,6 +234,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .price-card-featured li::before { color: #d8b59b; }
 .price-card .button { width: 100%; }
 .price-card-featured .button-primary { background: #e7d8c4; color: var(--ink); }
+.price-payment-note { margin: 18px 0 0; color: rgba(255,255,255,.65); font-size: 9px; line-height: 1.8; }
+.price-payment-note a { margin-left: .5em; color: #ead4c2; text-decoration: underline; text-underline-offset: 3px; }
 .review-monitor-price strong, .review-monitor-price small { display: block; }
 .review-monitor-price strong { color: var(--rust); font-family: var(--font-serif); font-size: 16px; font-weight: 400; }
 .review-monitor-price small { margin-top: 3px; color: var(--muted); font-size: 8px; }
@@ -296,6 +298,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .info-note p { margin: 0; }
 .info-updated { margin: 0; color: var(--muted); font-size: 10px; }
 .info-actions { margin-top: 52px; display: flex; flex-wrap: wrap; gap: 12px; }
+.info-content > section .info-actions { margin-top: 22px; }
+.legal-table a { color: var(--rust); text-decoration: underline; text-underline-offset: 3px; }
 .seo-breadcrumb { margin-top: -18px; display: flex; align-items: center; gap: 10px; color: #858277; font-size: 10px; line-height: 1.7; }
 .seo-breadcrumb a { color: var(--rust); text-decoration: underline; text-underline-offset: 3px; }
 .seo-lead-panel { padding: 28px 30px; border: 1px solid rgba(37,37,31,.15); background: #ece5d8; }
@@ -1054,6 +1058,11 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .review-memory-list strong { font-family: var(--font-serif); font-size: 13px; font-weight: 400; }
 .review-memory-list p { margin: 6px 0; color: var(--muted); font-size: 9px; line-height: 1.7; white-space: pre-wrap; }
 .review-memory-list small { color: #8a857b; font-size: 8px; }
+.review-payment-summary { margin-top: 18px; padding: 20px; border: 1px solid #c8b9a8; background: #f1eadf; }
+.review-payment-summary strong { display: block; font-family: var(--font-serif); font-size: 16px; font-weight: 400; }
+.review-payment-summary p { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.8; }
+.review-payment-summary div { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.review-payment-summary a { color: var(--rust); font-size: 9px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .consent-box { margin-top: 16px; padding: 18px; display: flex; align-items: flex-start; gap: 14px; border: 1px solid var(--line); cursor: pointer; }
 .consent-box input { width: 18px; height: 18px; accent-color: var(--rust); }
 .consent-box strong, .consent-box small { display: block; }
@@ -1377,7 +1386,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .memory-site-demo-link { min-height: 44px; display: inline-flex; align-items: center; font-size: 11px; }
   .memory-site-note { flex-direction: column; gap: 6px; }
   .price-card { padding: 38px 26px; }
-  .price-card li, .price-caption, .monitor-price-note { font-size: 12px; line-height: 1.75; }
+  .price-card li, .price-caption, .monitor-price-note, .price-payment-note { font-size: 12px; line-height: 1.75; }
   .faq-grid { gap: 42px; }
   .faq-lead, .faq-list details p { font-size: 13px; line-height: 1.9; }
   .faq-list summary { min-height: 70px; padding: 22px 0; align-items: center; font-size: 16px; line-height: 1.55; }
@@ -1764,8 +1773,10 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .wizard-page .memory-entry-fields textarea { font-size: 16px; }
 .wizard-page .field-count,
 .wizard-page .memory-photo-count { font-size: 12px; }
-.wizard-page .consent-box strong { font-size: 14px; line-height: 1.6; }
-.wizard-page .consent-box small { font-size: 12px; line-height: 1.75; }
+  .wizard-page .consent-box strong { font-size: 14px; line-height: 1.6; }
+  .wizard-page .consent-box small { font-size: 12px; line-height: 1.75; }
+  .wizard-page .review-payment-summary strong { font-size: 18px; }
+  .wizard-page .review-payment-summary p, .wizard-page .review-payment-summary a { font-size: 12px; }
 .wizard-page .step-required-panel strong,
 .wizard-page .step-ready-panel strong { font-size: 14px; }
 .wizard-page .step-required-panel > span,

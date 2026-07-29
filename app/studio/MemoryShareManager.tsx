@@ -172,7 +172,7 @@ export function MemoryShareManager({ order, delivery, assets, onChanged }: Props
 
       <div className="family-share-panel">
         <div><p className="eyebrow">FAMILY SHARE LINK</p><h3>家族はログインせずに閲覧できます。</h3><p>共有URLを知っている方だけが、完成映像と選んだ写真を閲覧できます。ページは検索結果に表示されません。</p></div>
-        {!delivery ? <div className="family-share-waiting"><strong>映画の納品後に利用できます</strong><small>完成映像が届くと共有URLを発行できます。</small></div> : <div className="family-share-controls">
+        {!delivery ? <div className="family-share-waiting"><strong>完成映像の納品後に利用できます</strong><small>完成映像が届くと共有URLを発行できます。</small></div> : <div className="family-share-controls">
           <div className="share-status"><span className={share?.active ? "active" : ""}>{share?.active ? "共有中" : "停止中"}</span><code>{shareUrl || "共有URLを準備しています…"}</code></div>
           <div><button className="button button-primary" type="button" disabled={working || !share} onClick={() => changeShare(share?.active ? "disable" : "enable")}>{share?.active ? "共有を停止する" : "家族共有を始める"}</button><button className="button button-outline" type="button" disabled={working || !share?.active} onClick={copyShareUrl}>URLをコピー</button><button className="button button-outline" type="button" disabled={working || !share?.active} onClick={openShareSheet}>LINEなどで共有</button></div>
           <button className="share-rotate" type="button" disabled={working || !share} onClick={() => changeShare("rotate")}>共有URLを新しく発行する</button>

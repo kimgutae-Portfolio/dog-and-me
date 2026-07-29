@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../lib/site";
@@ -44,14 +45,15 @@ export function LivePriceCard() {
       <h3>メモリーフィルム</h3>
       {pricing.campaign_active && <p className="regular-price">通常価格 <del>¥{formatYen(pricing.regular_price)}</del></p>}
       <p className="price"><span>¥</span>{formatYen(pricing.current_price)}<small>税込</small></p>
-      <p className="price-caption">選んだコンセプトを、約1分の映画に。</p>
+      <p className="price-caption">選んだ映像構成案を、約1分のメモリーフィルムに。</p>
       <p className="monitor-price-note">{pricing.campaign_active ? `初期${pricing.launch_limit}組の受付終了後は、通常価格 ¥${formatYen(pricing.regular_price)}（税込）になります。` : "受付時に内容と納期をご確認いただき、制作を開始します。"}</p>
-      <ul><li>映像コンセプト2案</li><li>映画タイプ別の共通エンディング</li><li>選んだ1案の詳細構成</li><li>場面イメージの事前確認・調整2回</li><li>約1分の実写風映像</li><li>BGM・短い字幕</li><li>映像の修正2回</li><li>専用メモリーサイト</li></ul>
+      <ul><li>3つのエピソードから映像構成案2案</li><li>複数の場面で組み立てる約1分構成</li><li>選んだ1案の詳細構成</li><li>場面イメージの事前確認・調整2回</li><li>約1分の実写風映像</li><li>BGM・短い字幕</li><li>映像の修正2回</li><li>専用メモリーサイト</li></ul>
       {APPLICATIONS_OPEN ? (
         <StartStoryLink className="button button-primary">{pricing.campaign_active ? "モニター価格で相談する" : "このプランで相談する"}</StartStoryLink>
       ) : (
         <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
       )}
+      <p className="price-payment-note">相談時点では料金は発生しません。内容・納期・キャンセル条件をご確認後、制作開始前にStripeでカード決済となります。通常3〜5週間でオンライン納品します。<Link href="/legal">販売条件を確認する</Link></p>
     </article>
   );
 }

@@ -8,12 +8,12 @@ import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../../lib/site";
 export const metadata: Metadata = {
   title: "愛犬メモリーフィルム完成例｜ひなたと歩いた、いつもの季節",
   description: "愛犬の写真とエピソードから制作する約1分の思い出動画と、家族専用メモリーサイトの完成イメージをご覧いただけます。",
-  alternates: { canonical: "/film/momo-demo" },
+  alternates: { canonical: "/film/hinata-demo" },
   robots: { index: true, follow: true },
   openGraph: {
     title: "愛犬メモリーフィルム完成例｜ひなたと歩いた、いつもの季節",
-    description: "写真の向こうにある時間まで、実写映画のような映像へ。WAN MEMORYの完成デモです。",
-    url: "/film/momo-demo",
+    description: "写真の向こうにある時間まで、あたたかな実写風映像へ。WAN MEMORYの完成デモです。",
+    url: "/film/hinata-demo",
     siteName: "WAN MEMORY",
     locale: "ja_JP",
     type: "website",
@@ -51,7 +51,7 @@ export default function MomoDemoPage() {
 
       <section className="memory-demo-film" data-memory-page data-memory-reveal>
         <div className="memory-demo-shell">
-          <div className="memory-demo-section-head"><div><p>01 / THE FILM</p><h2>いつでも、思い出せる映画。</h2></div><span>閲覧専用 · ダウンロード非対応</span></div>
+          <div className="memory-demo-section-head"><div><p>01 / MEMORY FILM</p><h2>いつでも、思い出せる映像。</h2></div><span>閲覧専用 · ダウンロード非対応</span></div>
           <DemoFilmPlayer />
           <p className="demo-film-note">※ デモ用に画面遷移を再現しています。実際のお客様ページでは完成した動画を再生できますが、ダウンロード機能は提供しません。画面録画などを完全に防止するものではありません。</p>
         </div>
@@ -97,7 +97,7 @@ export default function MomoDemoPage() {
 
       <footer className="memory-demo-footer" data-memory-reveal>
         <div><span className="brand-mark" aria-hidden="true">WM</span><p>THIS MEMORY PAGE WAS MADE FOR HINATA<br /><small>© WAN MEMORY</small></p></div>
-        {APPLICATIONS_OPEN ? <StartStoryLink className="button button-cream">うちの子の映画を相談する →</StartStoryLink> : <span className="button button-prelaunch button-prelaunch-light" aria-disabled="true">{PRELAUNCH_CTA}</span>}
+        {APPLICATIONS_OPEN ? <StartStoryLink className="button button-cream">うちの子の映像を相談する →</StartStoryLink> : <span className="button button-prelaunch button-prelaunch-light" aria-disabled="true">{PRELAUNCH_CTA}</span>}
       </footer>
       </div>
       </div>

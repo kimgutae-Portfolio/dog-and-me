@@ -36,7 +36,7 @@ export default function UchinokoKinenbiPage() {
 
       <section><h2>用意すると伝わりやすい写真</h2><div className="seo-card-grid"><article><strong>初期の写真</strong><p>家族になった頃の顔や身体の大きさが分かる写真。</p></article><article><strong>その子らしい場面</strong><p>好きな場所、服、おもちゃ、しぐさが写っている写真。</p></article><article><strong>現在の基準写真</strong><p>最近の顔・全身・横向きが鮮明に分かる写真。</p></article></div><Link className="text-link" href="/dog-photo-guide">写真準備ガイドを見る →</Link></section>
 
-      <section><h2>完成映像と専用ページ</h2><p>完成した約1分の動画だけでなく、選んだ写真やメッセージをまとめる専用メモリーサイトもプランに含まれます。ページは検索結果に表示されず、専用URLから何度でも見返せます。</p><Link className="text-link" href="/film/momo-demo">完成ページのデモを体験する →</Link></section>
+      <section><h2>完成映像と専用ページ</h2><p>完成した約1分の動画だけでなく、選んだ写真やメッセージをまとめる専用メモリーサイトもプランに含まれます。ページは検索結果に表示されず、専用URLから何度でも見返せます。</p><Link className="text-link" href="/film/hinata-demo">完成ページのデモを体験する →</Link></section>
 
       <section className="seo-faq"><h2>うちの子記念日動画についてよくある質問</h2>{faqs.map(([question, answer]) => <details key={question}><summary>{question}<span aria-hidden="true">＋</span></summary><p>{answer}</p></details>)}</section>
 

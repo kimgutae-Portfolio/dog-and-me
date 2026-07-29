@@ -51,7 +51,7 @@ export default function AikenOmoideDougaPage() {
 
       <section className="seo-faq"><h2>愛犬の思い出動画についてよくある質問</h2>{faqs.map(([question, answer]) => <details key={question}><summary>{question}<span aria-hidden="true">＋</span></summary><p>{answer}</p></details>)}</section>
 
-      <aside className="seo-cta"><p>写真が揃っているか分からなくても大丈夫です。</p><h2>まずは、その子のことを聞かせてください。</h2><div><StartStoryLink className="button button-primary">制作を相談する →</StartStoryLink><Link className="button button-outline" href="/film/momo-demo">完成デモを見る</Link></div></aside>
+      <aside className="seo-cta"><p>写真が揃っているか分からなくても大丈夫です。</p><h2>まずは、その子のことを聞かせてください。</h2><div><StartStoryLink className="button button-primary">制作を相談する →</StartStoryLink><Link className="button button-outline" href="/film/hinata-demo">完成デモを見る</Link></div></aside>
       <SeoGuideLinks currentPath="/aiken-omoide-douga" />
     </InfoPage>
   );

@@ -14,7 +14,7 @@ export function GET(request: Request) {
     `${origin}/aiken-omoide-douga`,
     `${origin}/uchinoko-kinenbi-douga`,
     `${origin}/dog-photo-guide`,
-    `${origin}/film/momo-demo`,
+    `${origin}/film/hinata-demo`,
     `${origin}/contact`,
     `${origin}/terms`,
     `${origin}/privacy`,
