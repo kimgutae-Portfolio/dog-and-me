@@ -43,7 +43,7 @@ export function LivePriceCard() {
         <span>{APPLICATIONS_OPEN ? (pricing.campaign_active ? `先着${pricing.launch_limit}組 · 残り${pricing.launch_remaining}組` : "通常受付") : "正式公開準備中"}</span>
       </div>
       <h3>メモリーフィルム</h3>
-      {pricing.campaign_active && <p className="regular-price">通常価格 <del>¥{formatYen(pricing.regular_price)}</del></p>}
+      {pricing.campaign_active && <p className="regular-price">通常価格 <del>¥{formatYen(pricing.regular_price)}（税込）</del></p>}
       <p className="price"><span>¥</span>{formatYen(pricing.current_price)}<small>税込</small></p>
       <p className="price-caption">選んだ映像構成案を、約1分のメモリーフィルムに。</p>
       <p className="monitor-price-note">{pricing.campaign_active ? `初期${pricing.launch_limit}組の受付終了後は、通常価格 ¥${formatYen(pricing.regular_price)}（税込）になります。` : "受付時に内容と納期をご確認いただき、制作を開始します。"}</p>
@@ -53,7 +53,7 @@ export function LivePriceCard() {
       ) : (
         <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
       )}
-      <p className="price-payment-note">相談時点では料金は発生しません。内容・納期・キャンセル条件をご確認後、制作開始前にStripeでカード決済となります。通常3〜5週間でオンライン納品します。<Link href="/legal">販売条件を確認する</Link></p>
+      <p className="price-payment-note">相談時点では料金は発生しません。内容・納期・キャンセル条件をご確認後、制作開始前にStripeでカード決済となります。通常10〜14営業日でオンライン納品します。<Link href="/legal">販売条件を確認する</Link></p>
     </article>
   );
 }

@@ -34,6 +34,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.ok(jsonLdMatch, "JSON-LD should be present");
   const structuredData = JSON.parse(jsonLdMatch[1]);
   assert.deepEqual(structuredData.map((entry) => entry["@type"]), ["WebSite", "Organization", "Service", "FAQPage"]);
+  assert.equal(structuredData.find((entry) => entry["@type"] === "Service").offers.priceSpecification.valueAddedTaxIncluded, true);
   assert.equal(structuredData.at(-1).mainEntity.length, 16);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.doesNotMatch(html, /お申し込み受付は準備中/);
@@ -52,6 +53,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /24,800/);
   assert.match(html, /通常価格/);
   assert.match(html, /29,800/);
+  assert.match(html, /税込/);
   assert.match(html, /モニター価格とは何ですか/);
   assert.match(html, /人と一緒に写った写真も提出できますか/);
   assert.match(html, /人物のお顔は映像に使用・生成せず/);
@@ -139,7 +141,7 @@ test("server-renders public support and legal pages", async () => {
   assert.match(legalHtml, /相談フォームの送信だけでは料金は発生しません/);
   assert.match(legalHtml, /クレジットカード決済（Stripe）/);
   assert.match(legalHtml, /決済後、制作着手前.*全額返金/);
-  assert.match(legalHtml, /通常3〜5週間/);
+  assert.match(legalHtml, /通常10〜14営業日/);
 
   const contactResponse = await render("/contact");
   const contactHtml = await contactResponse.text();
