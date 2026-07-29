@@ -1,7 +1,7 @@
 export const CONSENT_VERSIONS = {
-  terms: "2026-07-27",
+  terms: "2026-07-29-style-v2",
   privacy: "2026-07-27",
-  aiNotice: "2026-07-27",
+  aiNotice: "2026-07-29-style-v2",
   photoRights: "2026-07-25-photo-people-v2",
   peoplePolicy: "2026-07-25-people-policy-v2",
 } as const;

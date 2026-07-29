@@ -11,7 +11,7 @@ export function SiteFooter() {
             <span className="brand-mark" aria-hidden="true">WM</span>
             <span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span>
           </Link>
-          <p>愛犬との時間を、あたたかな実写風映像に。</p>
+          <p>愛犬との時間を、記憶を描く映像に。</p>
         </div>
         <div className="footer-links">
           <div><p>SERVICE</p><Link href="/aiken-omoide-douga">愛犬の思い出動画</Link><Link href="/uchinoko-kinenbi-douga">うちの子記念日動画</Link><Link href="/film/hinata-demo">完成デモ</Link><Link href="/#plans">プラン</Link>{APPLICATIONS_OPEN ? <StartStoryLink>お申し込み</StartStoryLink> : <span>お申し込み受付は準備中</span>}</div>

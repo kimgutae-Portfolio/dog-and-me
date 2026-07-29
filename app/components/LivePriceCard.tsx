@@ -45,9 +45,10 @@ export function LivePriceCard() {
       <h3>メモリーフィルム</h3>
       {pricing.campaign_active && <p className="regular-price">通常価格 <del>¥{formatYen(pricing.regular_price)}（税込）</del></p>}
       <p className="price"><span>¥</span>{formatYen(pricing.current_price)}<small>税込</small></p>
-      <p className="price-caption">選んだ映像構成案を、約1分のメモリーフィルムに。</p>
+      <p className="price-caption">選んだ映像構成案を、記憶を描く約1分のメモリーフィルムに。</p>
       <p className="monitor-price-note">{pricing.campaign_active ? `初期${pricing.launch_limit}組の受付終了後は、通常価格 ¥${formatYen(pricing.regular_price)}（税込）になります。` : "受付時に内容と納期をご確認いただき、制作を開始します。"}</p>
-      <ul><li>3つのエピソードから映像構成案2案</li><li>複数の場面で組み立てる約1分構成</li><li>選んだ1案の詳細構成</li><li>場面イメージの事前確認・調整2回</li><li>約1分の実写風映像</li><li>BGM・短い字幕</li><li>映像の修正2回</li><li>専用メモリーサイト</li></ul>
+      <ul><li>3つのエピソードから映像構成案2案</li><li>複数の場面で組み立てる約1分構成</li><li>選んだ1案の詳細構成</li><li>場面イメージの事前確認・調整2回</li><li>実写に近い愛犬と、絵画表現の背景・光</li><li>約1分の思い出映像</li><li>BGM・短い字幕</li><li>映像の修正2回</li><li>専用メモリーサイト</li></ul>
+      <p className="price-style-note">完全な実写再現ではありません。AIで新しく制作する場面には、元写真と細部が異なる場合があります。場面イメージをご確認いただいてから映像化します。</p>
       {APPLICATIONS_OPEN ? (
         <StartStoryLink className="button button-primary">{pricing.campaign_active ? "モニター価格で相談する" : "このプランで相談する"}</StartStoryLink>
       ) : (

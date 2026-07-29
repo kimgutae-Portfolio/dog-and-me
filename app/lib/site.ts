@@ -1,6 +1,6 @@
 export const SITE_NAME = "WAN MEMORY";
 export const SITE_DESCRIPTION =
-  "愛犬の写真とエピソードから、今を残す約1分の思い出動画を制作。実写を中心に、その子らしさを大切に仕上げるオーダーメイドのメモリーフィルムです。";
+  "愛犬の写真とエピソードをもとに、実写に近い愛犬の質感と、やわらかな絵画表現の背景・光を組み合わせて約1分の思い出動画を制作するオーダーメイドサービスです。";
 export const DEFAULT_SITE_ORIGIN = "https://www.wanmemory.com";
 export const SUPPORT_EMAIL = "info@wanmemory.com";
 export const BUSINESS_NAME = "WAN MEMORY";

@@ -35,10 +35,13 @@ test("server-renders the Japanese landing page", async () => {
   const structuredData = JSON.parse(jsonLdMatch[1]);
   assert.deepEqual(structuredData.map((entry) => entry["@type"]), ["WebSite", "Organization", "Service", "FAQPage"]);
   assert.equal(structuredData.find((entry) => entry["@type"] === "Service").offers.priceSpecification.valueAddedTaxIncluded, true);
-  assert.equal(structuredData.at(-1).mainEntity.length, 16);
+  assert.equal(structuredData.at(-1).mainEntity.length, 17);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.doesNotMatch(html, /お申し込み受付は準備中/);
   assert.match(html, /写真は、残っている/);
+  assert.match(html, /完全な実写再現ではありません/);
+  assert.match(html, /愛犬は実写に近い質感/);
+  assert.match(html, /背景や光はやわらかな絵画表現/);
   assert.match(html, /A MEMORY BECOMES A STORY/);
   assert.match(html, /ご登録からお届けまで、8つのステップ/);
   assert.match(html, /映像を受け取ったあとも、思い出へ帰れる場所/);
@@ -460,10 +463,10 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
     readFile(new URL("app/privacy/page.tsx", root), "utf8"),
     readFile(new URL("supabase/migrations/202607270002_consent_version_alignment.sql", root), "utf8"),
   ]);
-  assert.match(consent, /terms: "2026-07-27"/);
+  assert.match(consent, /terms: "2026-07-29-style-v2"/);
   assert.match(consent, /privacy: "2026-07-27"/);
-  assert.match(consent, /aiNotice: "2026-07-27"/);
-  assert.match(terms, /決済・キャンセル案内更新：2026年7月29日（同意版 2026-07-27）/);
+  assert.match(consent, /aiNotice: "2026-07-29-style-v2"/);
+  assert.match(terms, /仕上がり・決済・キャンセル案内更新：2026年7月29日（同意版 2026-07-29-style-v2）/);
   assert.match(privacy, /決済情報の取り扱いに関する案内更新：2026年7月29日（同意版 2026-07-27/);
   assert.match(migration, /o\.terms_version = '2026-07-27'/);
   assert.match(migration, /current policy versions required/);
@@ -580,7 +583,7 @@ test("stores appearance references and requires operator photo approval", async 
   assert.match(story, /横向き・しっぽの写真/);
   assert.match(story, /FIXED_FILM_STYLE/);
   assert.match(story, /referencePhotosComplete/);
-  assert.match(story, /映像としての再構成について確認しました/);
+  assert.match(story, /仕上がりの表現について確認しました/);
   assert.match(story, /save_order_production_fields/);
   assert.match(story, /assign_memory_photos/);
   assert.doesNotMatch(story, /Runway|ChatGPT|OpenAI|GPT|prompt|credit/i);

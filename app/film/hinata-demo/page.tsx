@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     title: "愛犬メモリーフィルム完成例｜ひなたと歩いた、いつもの季節",
-    description: "写真の向こうにある時間まで、あたたかな実写風映像へ。WAN MEMORYの完成デモです。",
+    description: "実写に近い愛犬の質感と、やわらかな絵画表現の背景・光を組み合わせたWAN MEMORYの完成デモです。",
     url: "/film/hinata-demo",
     siteName: "WAN MEMORY",
     locale: "ja_JP",
@@ -53,7 +53,7 @@ export default function MomoDemoPage() {
         <div className="memory-demo-shell">
           <div className="memory-demo-section-head"><div><p>01 / MEMORY FILM</p><h2>いつでも、思い出せる映像。</h2></div><span>閲覧専用 · ダウンロード非対応</span></div>
           <DemoFilmPlayer />
-          <p className="demo-film-note">※ デモ用に画面遷移を再現しています。実際のお客様ページでは完成した動画を再生できますが、ダウンロード機能は提供しません。画面録画などを完全に防止するものではありません。</p>
+          <p className="demo-film-note">※ このデモは、愛犬を実写に近い質感で、背景や光をやわらかな絵画表現で仕上げるWAN MEMORYの完成イメージです。元写真をそのまま動かす完全な実写再現ではありません。実際のお客様ページでは完成した動画を再生できますが、ダウンロード機能は提供しません。画面録画などを完全に防止するものではありません。</p>
         </div>
       </section>
 

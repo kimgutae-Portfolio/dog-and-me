@@ -176,6 +176,26 @@ export type OrderAsset = {
   created_at: string;
 };
 
+export type SecurityEvent = {
+  id: number;
+  actor_id: string | null;
+  target_user_id: string | null;
+  event_type: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+};
+
+/** Japanese labels for the audit log shown in the admin security section. */
+export const SECURITY_EVENT_LABELS: Record<string, string> = {
+  login_succeeded: "ログイン成功",
+  login_failed: "ログイン失敗",
+  login_locked: "アカウントをロック",
+  login_rejected_locked: "ロック中のログイン試行",
+  profile_role_changed: "権限の変更",
+  mfa_enrolled: "二段階認証を登録",
+  mfa_unenrolled: "二段階認証を解除",
+};
+
 export type RenderClipRole = "intro" | "memory" | "ending";
 
 /** One clip in an assembly request, sent to /api/admin/render. */

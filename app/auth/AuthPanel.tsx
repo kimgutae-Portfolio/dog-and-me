@@ -17,11 +17,17 @@ function safeNext(value: string | null) {
 }
 
 function friendlyError(message: string) {
+  // The lockout hook rejects with a Japanese message of its own; surface it as-is
+  // so the user learns the account is locked rather than seeing "wrong password".
+  if (/ロック/.test(message)) return message;
   if (/invalid login credentials/i.test(message)) return "メールアドレスまたはパスワードをご確認ください。";
   if (/already registered|already been registered/i.test(message)) return "このメールアドレスはすでに登録されています。";
   if (/password/i.test(message) && /least/i.test(message)) return "パスワードは8文字以上で入力してください。";
+  if (/rate limit|too many requests/i.test(message)) return "試行回数が多すぎます。しばらく時間をおいてからお試しください。";
+  if (/invalid.*(totp|code)|mfa/i.test(message)) return "認証コードをご確認ください。";
   return "処理を完了できませんでした。少し時間をおいてお試しください。";
 }
+
 
 export function AuthPanel() {
   const router = useRouter();
@@ -37,6 +43,8 @@ export function AuthPanel() {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [mfaPending, setMfaPending] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
 
   useEffect(() => {
     if (!loading && user && !searchParams.get("confirmed")) router.replace(nextPath);
@@ -78,8 +86,37 @@ export function AuthPanel() {
         return;
       }
 
-      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-      if (loginError) throw loginError;
+      // Sign-in goes through the server so failed attempts are counted and the
+      // account can be locked; see app/api/auth/login/route.ts.
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const result = await response.json().catch(() => null) as
+        { access_token?: string; refresh_token?: string; error?: string } | null;
+
+      if (!response.ok || !result?.access_token || !result.refresh_token) {
+        setError(result?.error === "account_locked"
+          ? "ログインの失敗が続いたため、アカウントを一時的にロックしています。30分ほどおいてから、もう一度お試しください。"
+          : "メールアドレスまたはパスワードをご確認ください。");
+        return;
+      }
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+      });
+      if (sessionError) throw sessionError;
+
+      // Second factor, when this account has one enrolled.
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal && aal.nextLevel === "aal2" && aal.nextLevel !== aal.currentLevel) {
+        setMfaPending(true);
+        setPending(false);
+        return;
+      }
+
       router.replace(nextPath);
     } catch (caught) {
       setError(friendlyError(caught instanceof Error ? caught.message : ""));
@@ -87,6 +124,80 @@ export function AuthPanel() {
       setPending(false);
     }
   };
+
+  const submitMfa = async (event: FormEvent) => {
+    event.preventDefault();
+    setPending(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    try {
+      const { data: factors, error: factorError } = await supabase.auth.mfa.listFactors();
+      if (factorError) throw factorError;
+      const factor = factors?.totp?.[0];
+      if (!factor) throw new Error("mfa factor not found");
+
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: factor.id });
+      if (challengeError) throw challengeError;
+
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: factor.id,
+        challengeId: challenge.id,
+        code: mfaCode.trim(),
+      });
+      if (verifyError) throw verifyError;
+
+      // The notification was already sent when the password was accepted — that
+      // is the moment worth telling the owner about, even if MFA then fails.
+      router.replace(nextPath);
+    } catch (caught) {
+      setError(friendlyError(caught instanceof Error ? caught.message : ""));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  if (mfaPending) {
+    return (
+      <main className="auth-page">
+        <section className="auth-card">
+          <Link className="brand" href="/"><span className="brand-mark">WM</span><span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span></Link>
+          <p className="eyebrow">TWO-FACTOR AUTHENTICATION</p>
+          <h1>認証コードを入力してください。</h1>
+          <p className="auth-lead">認証アプリに表示されている 6 桁のコードを入力してください。</p>
+          <form onSubmit={submitMfa} className="auth-form">
+            <label>
+              <span>認証コード</span>
+              <input
+                required
+                value={mfaCode}
+                onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="000000"
+                maxLength={6}
+              />
+            </label>
+            {error && <p className="form-error" role="alert">{error}</p>}
+            <button className="button button-primary" type="submit" disabled={pending || mfaCode.length !== 6}>
+              {pending ? "確認中…" : "ログインする"}
+            </button>
+          </form>
+          <button
+            type="button"
+            className="auth-text-button"
+            onClick={async () => {
+              await getSupabaseBrowserClient().auth.signOut();
+              setMfaPending(false);
+              setMfaCode("");
+              setError("");
+            }}
+          >
+            ← 別のアカウントでログインする
+          </button>
+        </section>
+      </main>
+    );
+  }
 
   if (loading || (user && !searchParams.get("confirmed"))) {
     return <div className="wizard-loading">思い出づくりを準備しています…</div>;

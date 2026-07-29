@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { hasCurrentConsent } from "../lib/consent";
-import type { AppearancePolicy, FilmConcept, MemoryOrder, OrderAsset, OrderMemory, OrderMessage, PhotoAnalysisStatus, Profile, RenderProgressEvent, RevisionRequest } from "../lib/supabase/types";
-import { getProductionFields, ORDER_STATUS_LABELS, type OrderStatus } from "../lib/supabase/types";
+import type { AppearancePolicy, FilmConcept, MemoryOrder, OrderAsset, OrderMemory, OrderMessage, PhotoAnalysisStatus, Profile, RenderProgressEvent, RevisionRequest, SecurityEvent } from "../lib/supabase/types";
+import { getProductionFields, ORDER_STATUS_LABELS, SECURITY_EVENT_LABELS, type OrderStatus } from "../lib/supabase/types";
 
 type ConceptDraft = { title: string; tone: string; summary: string; scenes: string };
 type VideoMode = "review" | "final";
@@ -187,6 +187,10 @@ export function AdminStudio() {
   // the message composer or the status form (same reasoning as exportProgress).
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState("");
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
+  const [mfaFactors, setMfaFactors] = useState<{ id: string; friendly_name?: string; status: string }[]>([]);
+  const [mfaEnrollment, setMfaEnrollment] = useState<{ factorId: string; qr: string; secret: string } | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exportingBundle, setExportingBundle] = useState(false);
@@ -202,6 +206,74 @@ export function AdminStudio() {
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?next=/admin");
   }, [authLoading, router, user]);
+
+  const loadSecurity = useCallback(async () => {
+    if (profile?.role !== "admin") return;
+    const supabase = getSupabaseBrowserClient();
+    const [eventsResult, factorsResult] = await Promise.all([
+      supabase.from("security_events").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.auth.mfa.listFactors(),
+    ]);
+    setSecurityEvents((eventsResult.data ?? []) as SecurityEvent[]);
+    setMfaFactors(factorsResult.data?.totp ?? []);
+  }, [profile?.role]);
+
+  // Deferred to a macrotask for the same reason as the order-detail effect
+  // below: loading synchronously inside the effect trips the cascading-render rule.
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void loadSecurity(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadSecurity]);
+
+  const startMfaEnrollment = async () => {
+    setSaving(true);
+    setError("");
+    const { data, error: enrollError } = await getSupabaseBrowserClient().auth.mfa.enroll({ factorType: "totp" });
+    if (enrollError || !data) setError("二段階認証の登録を開始できませんでした。");
+    else setMfaEnrollment({ factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret });
+    setSaving(false);
+  };
+
+  const confirmMfaEnrollment = async () => {
+    if (!mfaEnrollment) return;
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mfaEnrollment.factorId });
+    if (challengeError || !challenge) {
+      setError("認証コードを確認できませんでした。");
+      setSaving(false);
+      return;
+    }
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId: mfaEnrollment.factorId,
+      challengeId: challenge.id,
+      code: mfaCode.trim(),
+    });
+    if (verifyError) {
+      setError("認証コードが正しくありません。アプリの表示をご確認ください。");
+      setSaving(false);
+      return;
+    }
+    setMfaEnrollment(null);
+    setMfaCode("");
+    setNotice("二段階認証を有効にしました。次回のログインから認証コードが必要になります。");
+    await loadSecurity();
+    setSaving(false);
+  };
+
+  const removeMfaFactor = async (factorId: string) => {
+    if (!window.confirm("二段階認証を解除しますか？ 管理画面の保護が弱くなります。")) return;
+    setSaving(true);
+    setError("");
+    const { error: unenrollError } = await getSupabaseBrowserClient().auth.mfa.unenroll({ factorId });
+    if (unenrollError) setError("二段階認証を解除できませんでした。");
+    else {
+      setNotice("二段階認証を解除しました。");
+      await loadSecurity();
+    }
+    setSaving(false);
+  };
 
   // The render endpoint only answers in the operator's local environment; this
   // is also how the UI knows whether to offer assembly at all.
@@ -1146,6 +1218,77 @@ export function AdminStudio() {
         <section className="admin-main">
           {notice && <p className="studio-alert" role="status">{notice}<button type="button" onClick={() => setNotice("")}>×</button></p>}
           {error && <p className="studio-alert error" role="alert">{error}<button type="button" onClick={() => setError("")}>×</button></p>}
+
+          <details className="admin-security" id="admin-security">
+            <summary>
+              <span className="eyebrow">ACCOUNT SECURITY</span>
+              <strong>アカウントの保護と操作ログ</strong>
+              <span className={mfaFactors.length ? "admin-security-badge on" : "admin-security-badge"}>
+                {mfaFactors.length ? "二段階認証 有効" : "二段階認証 未設定"}
+              </span>
+            </summary>
+
+            <div className="admin-security-body">
+              <section>
+                <h4>二段階認証（TOTP）</h4>
+                {mfaFactors.length > 0 ? (
+                  <>
+                    <p className="admin-operation-note">この管理アカウントは認証アプリで保護されています。</p>
+                    <ul className="admin-security-factors">
+                      {mfaFactors.map((factor) => (
+                        <li key={factor.id}>
+                          <span>{factor.friendly_name || "認証アプリ"}（{factor.status === "verified" ? "有効" : "未確認"}）</span>
+                          <button className="button button-outline" type="button" disabled={saving} onClick={() => removeMfaFactor(factor.id)}>解除する</button>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : mfaEnrollment ? (
+                  <>
+                    <p className="admin-operation-note strong">認証アプリ（Google Authenticator など）でこの QR コードを読み取り、表示された 6 桁のコードを入力してください。</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className="admin-security-qr" src={mfaEnrollment.qr} alt="二段階認証の QR コード" />
+                    <p className="admin-security-secret">QR を読み取れない場合の設定キー：<code>{mfaEnrollment.secret}</code></p>
+                    <div className="admin-form-grid">
+                      <label>
+                        <span>認証コード</span>
+                        <input value={mfaCode} onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder="000000" maxLength={6} />
+                      </label>
+                    </div>
+                    <div className="admin-still-actions">
+                      <button className="button button-primary" type="button" disabled={saving || mfaCode.length !== 6} onClick={confirmMfaEnrollment}>登録を完了する →</button>
+                      <button className="button button-outline" type="button" disabled={saving} onClick={() => { setMfaEnrollment(null); setMfaCode(""); }}>やめる</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="admin-operation-note warning">二段階認証が未設定です。管理画面はお客様の個人情報を扱うため、有効化を強くおすすめします。</p>
+                    <div className="admin-still-actions">
+                      <button className="button button-primary" type="button" disabled={saving} onClick={startMfaEnrollment}>二段階認証を設定する →</button>
+                    </div>
+                  </>
+                )}
+              </section>
+
+              <section>
+                <h4>操作ログ（直近100件）</h4>
+                {securityEvents.length === 0 ? (
+                  <p className="admin-empty-copy">記録された操作はまだありません。</p>
+                ) : (
+                  <div className="admin-security-log">
+                    {securityEvents.map((event) => (
+                      <article key={event.id}>
+                        <span>{SECURITY_EVENT_LABELS[event.event_type] ?? event.event_type}</span>
+                        <small>{formatDateTime(event.created_at)}</small>
+                      </article>
+                    ))}
+                  </div>
+                )}
+                <p className="admin-operation-note">ログイン成功・失敗、アカウントロック、権限変更を記録しています。10 回連続で失敗したアカウントは 30 分間ロックされます。</p>
+              </section>
+            </div>
+          </details>
+
           {!order ? <div className="admin-empty"><h2>注文はまだありません。</h2><p>新しい相談が入るとこちらに表示されます。</p></div> : <>
             <div className="admin-title"><div><p className="eyebrow">{order.order_number}</p><h2>{order.pet_name}ちゃんのメモリーフィルム</h2><span>{customer?.full_name || customer?.email || order.user_id}</span></div><Link className="button button-outline" href={`/studio?order=${order.id}&preview=1`} target="_blank" rel="noreferrer">顧客画面を閲覧</Link></div>
 
@@ -1175,7 +1318,7 @@ export function AdminStudio() {
 
             <section className="admin-card" id="admin-photos"><div className="card-head"><div><p className="eyebrow">CUSTOMER PHOTOS</p><h3>写真一覧</h3></div><span>{sourceAssets.length}枚</span></div>{sourceAssets.length ? <><div className="admin-photo-grid">{sourceAssets.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" aria-label={`${asset.original_filename}を大きく表示`} key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${order.pet_name}ちゃんの提出写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}{asset.memory_id ? " · 思い出に紐付け済み" : " · 追加写真"}</small></a>)}</div><p className="admin-operation-note">基準写真3枚と、思い出ごとの参考写真（任意）がすべて含まれます。どの思い出の場面かは、上の「思い出と写真の組み合わせ」で確認できます。</p></> : <p className="admin-empty-copy">写真はまだ登録されていません。基準写真3枚（お顔・全身・横向き）が必須で、思い出ごとの場面写真は任意です。</p>}</section>
 
-            <section className="admin-card" id="admin-concepts"><div className="card-head"><div><p className="eyebrow">STORY DIRECTION DELIVERY</p><h3>映像構成案2案</h3></div><span>{concepts.length}/2 保存済み</span></div>{order.selected_concept_slot ? <aside className="admin-operation-note strong"><strong>お客様が構成案 {order.selected_concept_slot}を選択しました。</strong><span>{concepts.find((concept) => concept.slot === order.selected_concept_slot)?.title ?? ""}</span></aside> : concepts.length === 2 && <aside className="admin-operation-note">まだお客様の選択待ちです。選択されるとここに表示されます。</aside>}{order.status === "materials_submitted" && photoAnalysisApproved && <aside className="admin-operation-note strong"><strong>公開時に確認工程を自動で開始します。</strong><span>映像構成案を公開すると、進行状況を「写真とお話を確認しています」から「映像構成案2案をご確認ください」へ順番に記録します。</span></aside>}{!conceptPublishingStatusValid && <aside className="admin-operation-note warning"><strong>現在の工程では公開できません。</strong><span>進行状況「{ORDER_STATUS_LABELS[order.status]}」を確認してください。制作開始後に内容を変更する場合は、先に適切な工程へ戻す必要があります。</span></aside>}<div className="admin-concepts">{([['A', conceptA, setConceptA], ['B', conceptB, setConceptB]] as const).map(([slot, value, setter]) => <div className={order.selected_concept_slot === slot ? "selected" : ""} key={slot}><strong>構成案 {slot}{order.selected_concept_slot === slot && <span className="admin-concept-selected-badge">お客様が選択</span>}</strong><label><span>タイトル</span><input value={value.title} onChange={(event) => setter({ ...value, title: event.target.value })} placeholder={`${order.pet_name}と歩いた季節`} /></label><label><span>トーン</span><input value={value.tone} onChange={(event) => setter({ ...value, tone: event.target.value })} placeholder="やさしく、あたたかな実写風に" /></label><label><span>概要</span><textarea rows={4} value={value.summary} onChange={(event) => setter({ ...value, summary: event.target.value })} /></label><label><span>シーン（1行に1つ）</span><textarea rows={7} value={value.scenes} onChange={(event) => setter({ ...value, scenes: event.target.value })} placeholder={"思い出1から広げる場面\n思い出1から広げる別の場面\n思い出2から広げる場面\n思い出3から広げる場面\nおわりの場面"} /></label></div>)}</div><button className="button button-primary" type="button" disabled={saving || !photoAnalysisApproved || !conceptPublishingStatusValid} onClick={saveConcepts}>映像構成案2案を顧客へ公開する →</button></section>
+            <section className="admin-card" id="admin-concepts"><div className="card-head"><div><p className="eyebrow">STORY DIRECTION DELIVERY</p><h3>映像構成案2案</h3></div><span>{concepts.length}/2 保存済み</span></div>{order.selected_concept_slot ? <aside className="admin-operation-note strong"><strong>お客様が構成案 {order.selected_concept_slot}を選択しました。</strong><span>{concepts.find((concept) => concept.slot === order.selected_concept_slot)?.title ?? ""}</span></aside> : concepts.length === 2 && <aside className="admin-operation-note">まだお客様の選択待ちです。選択されるとここに表示されます。</aside>}{order.status === "materials_submitted" && photoAnalysisApproved && <aside className="admin-operation-note strong"><strong>公開時に確認工程を自動で開始します。</strong><span>映像構成案を公開すると、進行状況を「写真とお話を確認しています」から「映像構成案2案をご確認ください」へ順番に記録します。</span></aside>}{!conceptPublishingStatusValid && <aside className="admin-operation-note warning"><strong>現在の工程では公開できません。</strong><span>進行状況「{ORDER_STATUS_LABELS[order.status]}」を確認してください。制作開始後に内容を変更する場合は、先に適切な工程へ戻す必要があります。</span></aside>}<div className="admin-concepts">{([['A', conceptA, setConceptA], ['B', conceptB, setConceptB]] as const).map(([slot, value, setter]) => <div className={order.selected_concept_slot === slot ? "selected" : ""} key={slot}><strong>構成案 {slot}{order.selected_concept_slot === slot && <span className="admin-concept-selected-badge">お客様が選択</span>}</strong><label><span>タイトル</span><input value={value.title} onChange={(event) => setter({ ...value, title: event.target.value })} placeholder={`${order.pet_name}と歩いた季節`} /></label><label><span>トーン</span><input value={value.tone} onChange={(event) => setter({ ...value, tone: event.target.value })} placeholder="愛犬は実写に近く、背景と光はやわらかな絵画表現で" /></label><label><span>概要</span><textarea rows={4} value={value.summary} onChange={(event) => setter({ ...value, summary: event.target.value })} /></label><label><span>シーン（1行に1つ）</span><textarea rows={7} value={value.scenes} onChange={(event) => setter({ ...value, scenes: event.target.value })} placeholder={"思い出1から広げる場面\n思い出1から広げる別の場面\n思い出2から広げる場面\n思い出3から広げる場面\nおわりの場面"} /></label></div>)}</div><button className="button button-primary" type="button" disabled={saving || !photoAnalysisApproved || !conceptPublishingStatusValid} onClick={saveConcepts}>映像構成案2案を顧客へ公開する →</button></section>
 
             <section className="admin-card" id="admin-stills">
               <div className="card-head"><div><p className="eyebrow">SCENE STILLS</p><h3>場面イメージの確認依頼</h3></div><span>{sceneStills.length}枚 · 確認版 {order.stills_review_version} · 調整 {order.stills_revision_used}/{order.stills_revision_limit}回</span></div>
