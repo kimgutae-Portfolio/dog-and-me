@@ -91,7 +91,7 @@ VercelのCronは毎日03:00（JST）に未完了相談を整理します。`SUPA
 
 Stripe DashboardでWebhook送信先を`https://www.wanmemory.com/api/webhooks/stripe`に設定し、`checkout.session.completed`、`checkout.session.async_payment_succeeded`、`checkout.session.async_payment_failed`、`checkout.session.expired`、`charge.refunded`を購読します。署名シークレットを`STRIPE_WEBHOOK_SECRET`、制限付きでないサーバー用シークレットキーを`STRIPE_SECRET_KEY`としてVercelに登録します。どちらにも`NEXT_PUBLIC_`を付けません。
 
-運営者が構成案の選択と現在版の同意記録を確認し、入金状態を「Stripe決済をご案内」にすると、お客様の制作室に決済ボタンが表示され、Resendで案内メールを送ります。金額はブラウザから受け取らず、注文DBの`quoted_price`からCheckout Sessionを作成します。`paid`と`refunded`は管理画面で手動変更できず、署名検証済みWebhookだけが更新します。
+運営者が構成案の選択と現在版の同意記録を確認し、入金状態を「お支払いをご案内」にすると、お客様の制作室に決済ボタンが表示され、Resendで案内メールを送ります。金額はブラウザから受け取らず、注文DBの`quoted_price`からCheckout Sessionを作成します。`paid`と`refunded`は管理画面で手動変更できず、署名検証済みWebhookだけが更新します。
 
 ## 1次運用で手動の部分
 

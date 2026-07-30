@@ -54,7 +54,7 @@ export function LivePriceCard() {
       ) : (
         <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
       )}
-      <p className="price-payment-note">相談時点では料金は発生しません。内容・納期・キャンセル条件をご確認後、制作開始前にStripeでカード決済となります。通常10〜14営業日でオンライン納品します。<Link href="/legal">販売条件を確認する</Link></p>
+      <p className="price-payment-note">相談時点では料金は発生しません。内容・納期・キャンセル条件をご確認後、制作開始前にカードでお支払いいただきます。通常10〜14営業日でオンライン納品します。<Link href="/legal">販売条件を確認する</Link></p>
     </article>
   );
 }

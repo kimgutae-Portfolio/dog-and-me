@@ -457,11 +457,12 @@ test("requires a fresh scene-stills publication before video production", async 
 
 test("keeps displayed policy dates and stored consent versions aligned", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [consent, terms, privacy, migration] = await Promise.all([
+  const [consent, terms, privacy, migration, styleMigration] = await Promise.all([
     readFile(new URL("app/lib/consent.ts", root), "utf8"),
     readFile(new URL("app/terms/page.tsx", root), "utf8"),
     readFile(new URL("app/privacy/page.tsx", root), "utf8"),
     readFile(new URL("supabase/migrations/202607270002_consent_version_alignment.sql", root), "utf8"),
+    readFile(new URL("supabase/migrations/202607300002_consent_style_version_alignment.sql", root), "utf8"),
   ]);
   assert.match(consent, /terms: "2026-07-29-style-v2"/);
   assert.match(consent, /privacy: "2026-07-27"/);
@@ -470,6 +471,12 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
   assert.match(privacy, /決済情報の取り扱いに関する案内更新：2026年7月29日（同意版 2026-07-27/);
   assert.match(migration, /o\.terms_version = '2026-07-27'/);
   assert.match(migration, /current policy versions required/);
+  assert.match(styleMigration, /o\.terms_version = '2026-07-29-style-v2'/);
+  assert.match(styleMigration, /o\.privacy_version = '2026-07-27'/);
+  assert.match(styleMigration, /o\.ai_notice_version = '2026-07-29-style-v2'/);
+  assert.match(styleMigration, /create or replace function public\.accept_order_consents/);
+  assert.match(styleMigration, /create or replace function public\.create_memory_order/);
+  assert.match(styleMigration, /create or replace function public\.save_memory_order_draft/);
 });
 
 test("records first-ten production metrics through an admin-only RPC", async () => {
@@ -708,8 +715,11 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
   assert.match(migration, /create unique index if not exists stripe_checkout_one_active_order_idx/);
   assert.match(migration, /payment completion and refunds are managed by Stripe/);
   assert.match(migration, /grant execute on function public\.process_stripe_checkout_completed/);
-  assert.match(studio, /Stripeで安全に支払う/);
-  assert.match(admin, /Stripe決済をご案内/);
+  assert.match(studio, /カードで支払う/);
+  assert.match(studio, /お支払いはStripeの決済画面で行われます/);
+  assert.doesNotMatch(studio, /Stripeで安全に支払う/);
+  assert.match(admin, /お支払いをご案内/);
+  assert.doesNotMatch(admin, /Stripe決済をご案内/);
   assert.match(admin, /\/api\/admin\/payment-request/);
   assert.match(envExample, /STRIPE_SECRET_KEY=/);
   assert.match(envExample, /STRIPE_WEBHOOK_SECRET=/);
