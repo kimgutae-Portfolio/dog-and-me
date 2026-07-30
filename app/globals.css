@@ -542,6 +542,21 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .studio-consent-question > div.vertical { grid-template-columns: 1fr; }
 .studio-consent-question label { margin: 0; }
 .studio-people-consent-details { padding: 16px; display: grid; gap: 16px; border: 1px solid #dcc8b5; background: rgba(255,255,255,.45); }
+.studio-payment-card { margin-bottom: 20px; padding: 30px 34px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(250px, .75fr); gap: 24px 40px; color: white; background: #303a31; box-shadow: 0 18px 45px rgba(34,45,36,.14); }
+.studio-payment-card.paid { background: #4f6250; }
+.studio-payment-card h2 { margin: -7px 0 0; font-family: var(--font-serif); font-size: 27px; font-weight: 400; }
+.studio-payment-card > div:first-child > p:last-child { margin: 12px 0 0; color: rgba(255,255,255,.68); font-size: 10px; line-height: 1.85; }
+.studio-payment-card dl { margin: 0; padding: 19px 22px; display: grid; align-content: center; gap: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); }
+.studio-payment-card dl div { display: flex; justify-content: space-between; gap: 18px; }
+.studio-payment-card dt { color: rgba(255,255,255,.52); font-size: 9px; }
+.studio-payment-card dd { margin: 0; font-size: 10px; text-align: right; }
+.studio-payment-card dd small { color: rgba(255,255,255,.55); font-size: 8px; }
+.studio-payment-action { grid-column: 1 / -1; padding-top: 20px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px 28px; border-top: 1px solid rgba(255,255,255,.14); }
+.studio-payment-action > p { margin: 0; color: rgba(255,255,255,.58); font-size: 9px; line-height: 1.75; }
+.studio-payment-action > div { grid-column: 1; display: flex; flex-wrap: wrap; gap: 7px 16px; }
+.studio-payment-action a { color: #ead7bd; font-size: 8px; text-decoration: underline; text-underline-offset: 3px; }
+.studio-payment-action .button { min-width: 230px; grid-column: 2; grid-row: 1 / span 2; }
+.studio-payment-action > small { grid-column: 1 / -1; color: #f2c5ad; font-size: 8px; }
 .studio-empty { min-height: 590px; display: grid; place-content: center; justify-items: start; }
 .studio-empty h1 { margin: 0; font-family: var(--font-serif); font-size: 52px; font-weight: 400; line-height: 1.55; }
 .studio-empty > p:not(.eyebrow) { max-width: 520px; margin: 20px 0 34px; color: var(--muted); font-size: 12px; line-height: 2; }
@@ -872,6 +887,15 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .studio-consent-renewal { margin-inline: -4px; padding: 22px 18px; }
   .studio-consent-question > div { grid-template-columns: 1fr; }
   .studio-consent-renewal .button, .review-approval-panel .button { width: 100%; }
+  .studio-payment-card { padding: 26px 22px; grid-template-columns: 1fr; gap: 20px; }
+  .studio-payment-card h2 { font-size: 24px; }
+  .studio-payment-card > div:first-child > p:last-child { font-size: 12px; }
+  .studio-payment-card dt, .studio-payment-card dd { font-size: 11px; }
+  .studio-payment-action { grid-template-columns: 1fr; }
+  .studio-payment-action > p, .studio-payment-action > div, .studio-payment-action .button, .studio-payment-action > small { grid-column: 1; grid-row: auto; }
+  .studio-payment-action > p { font-size: 11px; }
+  .studio-payment-action a, .studio-payment-action > small { font-size: 10px; line-height: 1.7; }
+  .studio-payment-action .button { width: 100%; min-width: 0; }
   .private-film-nav { height: 70px; padding-inline: 18px; }
   .private-film-nav .brand-type { display: none; }
   .private-film-hero > div:last-child, .private-film-section { width: calc(100% - 36px); }

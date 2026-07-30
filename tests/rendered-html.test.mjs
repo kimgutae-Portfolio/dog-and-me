@@ -680,3 +680,38 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(envExample, /RESEND_API_KEY=/);
   assert.match(envExample, /RESEND_FROM_EMAIL=/);
 });
+
+test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [checkout, webhook, migration, studio, admin, envExample, packageSource] = await Promise.all([
+    readFile(new URL("app/api/payments/checkout/route.ts", root), "utf8"),
+    readFile(new URL("app/api/webhooks/stripe/route.ts", root), "utf8"),
+    readFile(new URL("supabase/migrations/202607300001_stripe_checkout.sql", root), "utf8"),
+    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+    readFile(new URL(".env.example", root), "utf8"),
+    readFile(new URL("package.json", root), "utf8"),
+  ]);
+
+  assert.match(checkout, /\.from\("orders"\)/);
+  assert.match(checkout, /unit_amount: order\.quoted_price/);
+  assert.match(checkout, /payment_method_types: \["card"\]/);
+  assert.match(checkout, /idempotencyKey: `wm-checkout-/);
+  assert.match(checkout, /order\.payment_status !== "invoice_sent"/);
+  assert.match(checkout, /existing\.status === "complete"/);
+  assert.match(checkout, /processing: true/);
+  assert.doesNotMatch(checkout, /payload\.(amount|price)/);
+  assert.match(webhook, /constructEvent\(rawBody, signature, webhookSecret\)/);
+  assert.match(webhook, /process_stripe_checkout_completed/);
+  assert.match(webhook, /charge\.refunded/);
+  assert.match(migration, /create table if not exists public\.stripe_checkout_sessions/);
+  assert.match(migration, /create unique index if not exists stripe_checkout_one_active_order_idx/);
+  assert.match(migration, /payment completion and refunds are managed by Stripe/);
+  assert.match(migration, /grant execute on function public\.process_stripe_checkout_completed/);
+  assert.match(studio, /Stripeで安全に支払う/);
+  assert.match(admin, /Stripe決済をご案内/);
+  assert.match(admin, /\/api\/admin\/payment-request/);
+  assert.match(envExample, /STRIPE_SECRET_KEY=/);
+  assert.match(envExample, /STRIPE_WEBHOOK_SECRET=/);
+  assert.ok(JSON.parse(packageSource).dependencies.stripe);
+});

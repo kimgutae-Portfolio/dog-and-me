@@ -14,6 +14,7 @@
 - private Storageへの写真アップロード（HEICはJPGへ変換）
 - 制作中も継続できる写真追加
 - 顧客専用制作室と運営管理画面
+- Stripe Checkoutによるカード決済とWebhookによる入金・返金状態の自動反映
 - 完成映像の手動アップロードと専用メモリーサイトへの納品
 - 写真使用権限、人物写真の固定取扱方針、外部制作サービス処理を注文ごとに記録
 - 場面イメージの公開版・調整依頼・お客様承認の対象画像IDを監査記録として保存
@@ -59,6 +60,8 @@ npm test
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
 CRON_SECRET=
 RESEND_API_KEY=
 RESEND_FROM_EMAIL="WAN MEMORY <info@wanmemory.com>"
@@ -86,11 +89,14 @@ VercelのCronは毎日03:00（JST）に未完了相談を整理します。`SUPA
 
 運営者が制作管理画面からメッセージを送ると、Resendを使ってお客様の登録メールアドレスへ通知します。メール本文には制作メッセージや写真の内容を載せず、ログインが必要な制作室へのリンクだけを送ります。お客様から運営者へのメッセージではメールを送信しません。`RESEND_API_KEY`はサーバー環境変数としてのみ登録してください。
 
+Stripe DashboardでWebhook送信先を`https://www.wanmemory.com/api/webhooks/stripe`に設定し、`checkout.session.completed`、`checkout.session.async_payment_succeeded`、`checkout.session.async_payment_failed`、`checkout.session.expired`、`charge.refunded`を購読します。署名シークレットを`STRIPE_WEBHOOK_SECRET`、制限付きでないサーバー用シークレットキーを`STRIPE_SECRET_KEY`としてVercelに登録します。どちらにも`NEXT_PUBLIC_`を付けません。
+
+運営者が構成案の選択と現在版の同意記録を確認し、入金状態を「Stripe決済をご案内」にすると、お客様の制作室に決済ボタンが表示され、Resendで案内メールを送ります。金額はブラウザから受け取らず、注文DBの`quoted_price`からCheckout Sessionを作成します。`paid`と`refunded`は管理画面で手動変更できず、署名検証済みWebhookだけが更新します。
+
 ## 1次運用で手動の部分
 
 - Runwayでの映像制作（使用量は管理画面に手動記録）
-- 料金案内と入金確認
 - 完成映像の管理画面アップロード
 - お客様から運営者へのメール通知
 
-Stripe決済とAI生成APIの自動化は、初期10件の実制作時間と原価を確認した後に接続します。
+AI生成APIの自動化は、初期10件の実制作時間と原価を確認した後に接続します。

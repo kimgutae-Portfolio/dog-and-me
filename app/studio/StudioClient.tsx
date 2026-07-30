@@ -82,7 +82,9 @@ export function StudioClient() {
   const [consentTermsChecked, setConsentTermsChecked] = useState(false);
   const [consentPhotoRightsChecked, setConsentPhotoRightsChecked] = useState(false);
   const [consentAiChecked, setConsentAiChecked] = useState(false);
+  const [startingPayment, setStartingPayment] = useState(false);
   const received = searchParams.get("received") === "1";
+  const paymentResult = searchParams.get("payment");
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?next=/studio");
@@ -136,6 +138,17 @@ export function StudioClient() {
     return () => { if (timer) window.clearTimeout(timer); };
   }, [loadDetails, selectedOrderId]);
 
+  useEffect(() => {
+    if (paymentResult !== "success" || !user) return;
+    let attempts = 0;
+    const interval = window.setInterval(() => {
+      attempts += 1;
+      void loadOrders();
+      if (attempts >= 10) window.clearInterval(interval);
+    }, 2000);
+    return () => window.clearInterval(interval);
+  }, [loadOrders, paymentResult, user]);
+
   const order = useMemo(() => orders.find((item) => item.id === selectedOrderId) ?? null, [orders, selectedOrderId]);
   const finalAsset = useMemo(() => delivery ? assets.find((asset) => asset.id === delivery.final_asset_id) ?? null : null, [assets, delivery]);
   const reviewAsset = useMemo(() => assets.filter((asset) => asset.category === "review_video").at(-1) ?? null, [assets]);
@@ -178,6 +191,9 @@ export function StudioClient() {
   const hasPendingConceptChange = Boolean(canEditConcept && pendingConcept && effectiveConceptSlot !== order?.selected_concept_slot);
   const nextAction = useMemo(() => {
     if (!order) return null;
+    if (order.payment_status === "invoice_sent") {
+      return { title: "制作料金のお支払い", copy: "内容・料金・キャンセル条件をご確認のうえ、Stripeの安全な決済画面へお進みください。", href: "#payment", label: "お支払い内容を確認する" };
+    }
     switch (order.status) {
       case "awaiting_materials":
       case "materials_submitted":
@@ -309,6 +325,52 @@ export function StudioClient() {
     setAcceptingConsent(false);
   };
 
+  const startStripeCheckout = async () => {
+    if (!order || !canOperateOrder || order.payment_status !== "invoice_sent" || !consentCurrent || startingPayment) return;
+    setStartingPayment(true);
+    setError("");
+    setNotice("");
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        setError("ログイン情報を確認できませんでした。もう一度ログインしてください。");
+        return;
+      }
+      const response = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+      const result = await response.json().catch(() => ({})) as { url?: string; paid?: boolean; processing?: boolean; error?: string };
+      if (result.paid) {
+        await loadOrders();
+        setNotice("お支払いは確認済みです。");
+        return;
+      }
+      if (result.processing) {
+        setNotice("Stripeから入金結果を確認しています。数秒後に自動で反映されます。");
+        window.setTimeout(() => void loadOrders(), 3000);
+        return;
+      }
+      if (!response.ok || !result.url) {
+        setError(result.error === "consent_required"
+          ? "上の同意内容を注文へ記録してから、お支払いへお進みください。"
+          : result.error === "checkout_is_being_prepared"
+            ? "決済画面を準備しています。数秒待ってから、もう一度お試しください。"
+            : "決済画面を開けませんでした。時間をおいてもう一度お試しください。");
+        return;
+      }
+      window.location.assign(result.url);
+    } finally {
+      setStartingPayment(false);
+    }
+  };
+
   const approveReview = async () => {
     if (!order || !canOperateOrder || !approvalChecked || !reviewVideoUrl || hasOpenRevisions || !consentCurrent || order.payment_status !== "paid") return;
     setApprovingReview(true);
@@ -389,6 +451,12 @@ export function StudioClient() {
               <button className="button button-primary" type="button" disabled={acceptingConsent || !consentTermsChecked || !consentPhotoRightsChecked || !consentAiChecked} onClick={acceptCurrentConsents}>{acceptingConsent ? "記録中…" : "同意内容を注文に記録する →"}</button>
             </> : <span>この表示は顧客画面でのみ操作できます。</span>}
           </aside>}
+
+          {(order.payment_status === "invoice_sent" || paymentResult === "success" || paymentResult === "cancelled") && <section className={`studio-payment-card ${order.payment_status === "paid" ? "paid" : ""}`} id="payment">
+            <div><p className="eyebrow">SECURE PAYMENT · STRIPE</p><h2>{order.payment_status === "paid" ? "お支払いを確認しました。" : "制作料金のお支払い"}</h2><p>{order.payment_status === "paid" ? "ありがとうございます。担当者が制作準備を進めます。入金状態はStripeから自動で記録されています。" : paymentResult === "success" ? "Stripeから入金結果を確認しています。通常は数秒で反映されます。" : paymentResult === "cancelled" ? "お支払いは完了していません。内容をご確認のうえ、準備ができましたらもう一度お進みください。" : "ご案内した内容と料金をご確認のうえ、Stripeの安全な決済画面からお支払いください。"}</p></div>
+            <dl><div><dt>ご注文</dt><dd>{order.order_number}</dd></div><div><dt>制作内容</dt><dd>{order.pet_name}ちゃんのメモリーフィルム</dd></div><div><dt>お支払い金額</dt><dd>¥{new Intl.NumberFormat("ja-JP").format(order.quoted_price)} <small>税込</small></dd></div><div><dt>お支払い方法</dt><dd>クレジットカード（Stripe）</dd></div></dl>
+            {order.payment_status !== "paid" && <div className="studio-payment-action"><p>カード番号・セキュリティコードはStripeの画面へ直接入力され、WAN MEMORYでは保存しません。</p><div><Link href="/legal" target="_blank">販売条件・キャンセルについて</Link><Link href="/terms" target="_blank">利用規約</Link><Link href="/privacy" target="_blank">プライバシーポリシー</Link></div><button className="button button-cream" type="button" disabled={startingPayment || !canOperateOrder || !consentCurrent} onClick={startStripeCheckout}>{startingPayment ? "決済画面を準備中…" : "Stripeで安全に支払う →"}</button>{!consentCurrent && <small>先に上の同意内容を注文へ記録してください。</small>}{readOnlyPreview && <small>運営プレビューからは決済できません。</small>}</div>}
+          </section>}
 
           {nextAction && <aside className="studio-next-action" aria-label="今やること"><div><p className="eyebrow">NEXT ACTION · 今やること</p><h2>{nextAction.title}</h2><span>{nextAction.copy}</span></div><a className="button button-primary" href={nextAction.href}>{nextAction.label} →</a></aside>}
 

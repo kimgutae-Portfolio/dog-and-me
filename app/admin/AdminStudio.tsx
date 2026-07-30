@@ -385,6 +385,7 @@ export function AdminStudio() {
   const consentCurrent = Boolean(order && hasCurrentConsent(order));
   const photoAnalysisApproved = productionFields.photoAnalysisStatus === "approved";
   const conceptPublishingStatusValid = Boolean(order && ["materials_submitted", "reviewing_materials", "concepts_ready"].includes(order.status));
+  const canRequestPayment = Boolean(order && order.status === "concept_selected" && order.selected_concept_slot && consentCurrent && order.payment_status !== "paid" && order.payment_status !== "refunded");
   const canPrepareStills = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && order.status === "concept_selected");
   const canUploadReview = Boolean(order && photoAnalysisApproved && order.payment_status === "paid" && consentCurrent && ["production", "revision_requested", "customer_review"].includes(order.status));
   const canUploadFinal = Boolean(order && photoAnalysisApproved && order.status === "quality_check" && order.payment_status === "paid" && consentCurrent && order.customer_approved_at && order.customer_approved_review_asset_id && openRevisions.length === 0);
@@ -454,15 +455,50 @@ export function AdminStudio() {
     if (!order) return;
     setSaving(true);
     setError("");
-    const { error: updateError } = await getSupabaseBrowserClient().rpc("admin_update_order", {
+    const supabase = getSupabaseBrowserClient();
+    const requestingPayment = order.payment_status !== "invoice_sent" && paymentStatus === "invoice_sent";
+    const { error: updateError } = await supabase.rpc("admin_update_order", {
       p_order_id: order.id,
       p_status: status,
       p_payment_status: paymentStatus,
       p_due_date: dueDate || null,
       p_admin_notes: adminNotes || null,
     });
-    if (updateError) setError(`進行状況を保存できませんでした。${updateError.message.includes("invalid order status transition") ? "許可されていない工程への移動です。" : ""}`);
-    else { setNotice("進行状況を保存し、履歴へ記録しました。"); await loadOrders(); }
+    if (updateError) {
+      setError(`進行状況を保存できませんでした。${
+        updateError.message.includes("invalid order status transition")
+          ? "許可されていない工程への移動です。"
+          : updateError.message.includes("concept selection and current consent")
+            ? "構成案の選択と現在版の同意記録を確認してから、お支払いをご案内してください。"
+            : updateError.message.includes("managed by Stripe")
+              ? "入金・返金状態はStripeから自動で反映されます。"
+              : ""
+      }`);
+    } else {
+      let paymentEmailSent = false;
+      if (requestingPayment) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (accessToken) {
+          const response = await fetch("/api/admin/payment-request", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ orderId: order.id }),
+          });
+          const result = await response.json().catch(() => ({})) as { sent?: boolean };
+          paymentEmailSent = response.ok && result.sent === true;
+        }
+      }
+      setNotice(requestingPayment
+        ? paymentEmailSent
+          ? "制作室へお支払いボタンを表示し、案内メールを送りました。"
+          : "制作室へお支払いボタンを表示しました。メール通知は送信できなかったため、メッセージでもお知らせください。"
+        : "進行状況を保存し、履歴へ記録しました。");
+      await loadOrders();
+    }
     setSaving(false);
   };
 
@@ -1312,7 +1348,7 @@ export function AdminStudio() {
 
             <nav className="admin-mobile-sections" aria-label="管理項目"><a href="#admin-progress">進行</a><a href="#admin-story">内容</a><a href="#admin-photos">写真</a><a href="#admin-concepts">2案</a><a href="#admin-stills">場面</a><a href="#admin-render">編集</a><a href="#admin-revisions">修正</a><a href="#admin-video">映像</a><a href="#admin-message">連絡</a></nav>
 
-            <section className="admin-card" id="admin-progress"><div className="card-head"><div><p className="eyebrow">PRODUCTION STATUS</p><h3>進行状況・入金・納期</h3></div><span>許可された次の工程だけを表示</span></div>{order.payment_status !== "paid" && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>入金確認前です。</strong><span>「入金確認済み」を一度保存するまで、映像制作・確認映像公開・納品には進めません。</span></aside>}{!consentCurrent && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>現在版の同意記録が揃っていません。</strong><span>お客様が制作室で利用規約・写真使用権限（人物の了解を含む）・外部制作サービスでの処理を確認するまで制作を開始できません。</span></aside>}{order.customer_approved_at && <aside className="admin-operation-note strong"><strong>お客様が確認映像を確定済みです。</strong><span>{formatDateTime(order.customer_approved_at)} · 承認した確認映像ID {order.customer_approved_review_asset_id}</span></aside>}<div className="admin-form-grid"><label><span>現在の状態</span><select value={status} onChange={(event) => setStatus(event.target.value as OrderStatus)}>{selectableStatuses.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label><span>入金状態</span><select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as MemoryOrder["payment_status"])}><option value="pending">ご案内前</option><option value="invoice_sent">お支払い待ち</option><option value="paid">入金確認済み</option><option value="refunded">返金済み</option></select></label><label><span>予定完成日</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label><label className="wide"><span>運営メモ（顧客には非表示）</span><textarea rows={3} value={adminNotes} onChange={(event) => setAdminNotes(event.target.value)} /></label></div><button className="button button-primary" type="button" disabled={saving} onClick={saveOrder}>進行状況を保存</button></section>
+            <section className="admin-card" id="admin-progress"><div className="card-head"><div><p className="eyebrow">PRODUCTION STATUS</p><h3>進行状況・入金・納期</h3></div><span>許可された次の工程だけを表示</span></div>{order.payment_status === "pending" && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>お支払いはまだご案内していません。</strong><span>お客様が構成案を選び、現在版の同意記録が揃ったら、入金状態を「Stripe決済をご案内」にして保存してください。</span></aside>}{order.payment_status === "invoice_sent" && <aside className="admin-operation-note strong"><strong>Stripeでのお支払い待ちです。</strong><span>お客様の制作室に決済ボタンが表示されています。入金完了はStripe Webhookから自動で反映されます。</span></aside>}{order.payment_status === "paid" && <aside className="admin-operation-note strong"><strong>Stripeでの入金を確認しました。</strong><span>管理画面から手動変更せず、制作工程へ進めてください。</span></aside>}{order.payment_status === "refunded" && <aside className="admin-operation-note warning"><strong>Stripeで返金済みです。</strong><span>返金状態はStripeから自動で反映されています。</span></aside>}{!consentCurrent && !["delivered", "cancelled"].includes(order.status) && <aside className="admin-operation-note warning"><strong>現在版の同意記録が揃っていません。</strong><span>お客様が制作室で利用規約・写真使用権限（人物の了解を含む）・外部制作サービスでの処理を確認するまで制作を開始できません。</span></aside>}{order.customer_approved_at && <aside className="admin-operation-note strong"><strong>お客様が確認映像を確定済みです。</strong><span>{formatDateTime(order.customer_approved_at)} · 承認した確認映像ID {order.customer_approved_review_asset_id}</span></aside>}<div className="admin-form-grid"><label><span>現在の状態</span><select value={status} onChange={(event) => setStatus(event.target.value as OrderStatus)}>{selectableStatuses.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label><span>入金状態</span><select value={paymentStatus} disabled={order.payment_status === "paid" || order.payment_status === "refunded"} onChange={(event) => setPaymentStatus(event.target.value as MemoryOrder["payment_status"])}><option value="pending">ご案内前</option><option value="invoice_sent" disabled={!canRequestPayment && order.payment_status !== "invoice_sent"}>Stripe決済をご案内</option>{order.payment_status === "paid" && <option value="paid">入金確認済み（Stripe）</option>}{order.payment_status === "refunded" && <option value="refunded">返金済み（Stripe）</option>}</select><small>{order.payment_status === "pending" && !canRequestPayment ? "構成案の選択と現在版の同意記録が揃うとご案内できます。" : "入金・返金はStripeから自動反映されます。"}</small></label><label><span>予定完成日</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label><label className="wide"><span>運営メモ（顧客には非表示）</span><textarea rows={3} value={adminNotes} onChange={(event) => setAdminNotes(event.target.value)} /></label></div><button className="button button-primary" type="button" disabled={saving || (paymentStatus === "invoice_sent" && !canRequestPayment && order.payment_status !== "invoice_sent")} onClick={saveOrder}>{saving ? "保存中…" : paymentStatus === "invoice_sent" && order.payment_status !== "invoice_sent" ? "お支払いを案内して保存する →" : "進行状況を保存"}</button></section>
 
             <section className="admin-card" id="admin-story"><div className="card-head"><div><p className="eyebrow">CUSTOMER STORY</p><h3>思い出と写真の組み合わせ</h3></div><div className="admin-export-actions"><button className="button button-outline admin-json-copy" type="button" disabled={saving || exportingBundle || sourceAssets.length === 0} onClick={copyProductionJson}>JSONだけコピー</button><button className="button button-primary admin-bundle-download" type="button" disabled={saving || exportingBundle || sourceAssets.length === 0} onClick={downloadProductionBundle}>{exportingBundle ? "準備中…" : "GPT・Runway制作用データをダウンロード"}</button></div></div>{exportProgress && <p className="admin-export-progress" role="status"><span aria-hidden="true" />{exportProgress}</p>}<aside className="admin-operation-note strong"><strong>元写真と16:9制作写真を一緒に準備します。</strong><span>ZIPのphotosには分析用の元写真、photos_16x9にはRunway・横長編集用の1920×1080 JPGが入ります。縦写真も切り取らず、余白を同じ写真のぼかし背景で自然に補います。</span></aside><dl className="admin-story"><div><dt>映像の目的</dt><dd>{order.purpose}</dd></div><div><dt>犬種・年齢</dt><dd>{order.breed} · {order.age_text || "未入力"}</dd></div><div><dt>性格</dt><dd>{order.personality.join("、") || "未入力"}</dd></div><div><dt>思い出の項目</dt><dd>{memories.length ? `${memories.length}件` : "旧形式の受付"}</dd></div>{memories.length === 0 && <><div><dt>はじめて会った日</dt><dd>{order.first_meeting || "未入力"}</dd></div><div><dt>いちばんの思い出</dt><dd>{order.favorite_memory || "未入力"}</dd></div></>}<div><dt>伝えたい言葉</dt><dd>{order.message_to_pet || "未入力"}</dd></div>{order.avoid_notes && <div><dt>入れたくないこと（旧形式）</dt><dd>{order.avoid_notes}</dd></div>}<div><dt>人物写真の取り扱い</dt><dd>{order.contains_people === null ? "固定ポリシー：お顔は使用せず、後ろ姿などのみ" : `旧形式の記録：${order.contains_people ? "人物あり" : "人物なし"} · ${peopleHandlingLabel(order.people_handling)} · 未成年者${order.contains_minors ? "あり" : "なし"}`}</dd></div><div><dt>規約・Privacy同意</dt><dd>{order.consented_at ? `${formatDateTime(order.consented_at)} · 規約 ${order.terms_version} / Privacy ${order.privacy_version}` : "同意記録なし"}</dd></div><div><dt>写真使用権限・人物の了解</dt><dd>{order.photo_rights_consented_at ? `${formatDateTime(order.photo_rights_consented_at)} · ${order.photo_rights_consent_version}` : "同意記録なし"}</dd></div><div><dt>外部AI処理同意</dt><dd>{order.external_ai_consent_at ? `${formatDateTime(order.external_ai_consent_at)} · Notice ${order.ai_notice_version}` : "同意記録なし"}</dd></div></dl>{memories.length > 0 && <div className="admin-memory-list">{memories.map((memory) => { const memoryPhotos = sourceAssets.filter((asset) => asset.memory_id === memory.id); return <article key={memory.id}><header><span>MEMORY {String(memory.sort_order).padStart(2, "0")}</span><strong>{memory.title}</strong><small>{memoryPhotos.length}枚</small></header><dl><div><dt>時期</dt><dd>{memory.when_text || "指定なし"}</dd></div><div><dt>場所</dt><dd>{memory.location || "指定なし"}</dd></div><div><dt>詳しい内容</dt><dd>{memory.description}</dd></div>{memory.dog_behavior && <div><dt>表情・動き（旧形式）</dt><dd>{memory.dog_behavior}</dd></div>}</dl><div className="admin-memory-photos">{memoryPhotos.map((asset) => <a href={assetUrls[asset.id]} target="_blank" rel="noreferrer" key={asset.id}>{assetUrls[asset.id] ? <span className="admin-photo-thumb" role="img" aria-label={`${memory.title}の写真`} style={{ backgroundImage: `url(${assetUrls[asset.id]})` }} /> : <span>読み込み中</span>}<small>{asset.original_filename}</small></a>)}</div><p className="admin-memory-check">内容と写真が同じ場面か、服・場所・季節が一致するか確認してください。</p></article>; })}</div>}</section>
 

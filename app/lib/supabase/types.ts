@@ -77,6 +77,7 @@ export type MemoryOrder = {
   payment_status: "pending" | "invoice_sent" | "paid" | "refunded";
   quoted_price: number;
   regular_price: number;
+  currency: string;
   campaign_id: string | null;
   selected_concept_slot: "A" | "B" | null;
   due_date: string | null;
