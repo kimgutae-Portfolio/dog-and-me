@@ -1,0 +1,27 @@
+name: Monthly Security ZAP Scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 1 * *"
+      timezone: "Asia/Tokyo"
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline:
+    name: OWASP ZAP Baseline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Scan WAN MEMORY
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: "https://www.wanmemory.com"
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: "wanmemory-zap-report"
