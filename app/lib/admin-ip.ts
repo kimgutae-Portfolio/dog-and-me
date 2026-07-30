@@ -142,6 +142,42 @@ export function isAdminIpAllowed(ip: string): boolean {
   return allowlist.some((rule) => ipMatchesRule(ip, rule));
 }
 
+/**
+ * CIDR ranges the observed address falls into, widest last.
+ *
+ * Consumer connections rotate: IPv6 privacy extensions change the host part
+ * every few hours while the prefix stays put, and dynamic IPv4 changes on
+ * reconnect. Registering a single address therefore locks the operator out
+ * within a day; registering the right prefix does not.
+ */
+export function suggestedRanges(raw: string): { cidr: string; note: string }[] {
+  const parsed = parseIp(raw);
+  if (!parsed) return [];
+  const ip = normaliseIp(raw);
+
+  if (parsed.version === 4) {
+    const octets = ip.split(".");
+    return [
+      { cidr: ip, note: "この住所のみ（固定 IP 契約のとき）" },
+      { cidr: `${octets[0]}.${octets[1]}.${octets[2]}.0/24`, note: "末尾だけが変わる場合" },
+      { cidr: `${octets[0]}.${octets[1]}.0.0/16`, note: "さらに広い範囲（かなり緩くなる）" },
+    ];
+  }
+
+  // Rebuild from the parsed value so compressed forms expand consistently.
+  // i counts down from the most significant group, so push (not unshift) keeps
+  // left-to-right order.
+  const groups: string[] = [];
+  for (let i = 7; i >= 0; i -= 1) {
+    groups.push(((parsed.value >> BigInt(i * 16)) & MASK_16).toString(16));
+  }
+  return [
+    { cidr: `${groups.slice(0, 4).join(":")}::/64`, note: "末尾だけが変わる場合（まずこれを試す）" },
+    { cidr: `${groups.slice(0, 3).join(":")}::/48`, note: "4 番目のかたまりも変わる場合" },
+    { cidr: `${groups.slice(0, 2).join(":")}::/32`, note: "ISP 全体。かなり緩くなるので最後の手段" },
+  ];
+}
+
 export function clientIp(request: { headers: { get(name: string): string | null } }): string {
   // On Vercel the left-most x-forwarded-for entry is the real client.
   const forwarded = request.headers.get("x-forwarded-for");

@@ -7,14 +7,12 @@ import { clientIp, isAdminIpAllowed } from "./app/lib/admin-ip";
 // and the security-definer RPCs remain the real boundary — this only stops the
 // /admin bundle from being served to arbitrary clients.
 //
-// FAIL-OPEN BY DESIGN: with ADMIN_ALLOWED_IPS unset, every request passes. A
-// solo operator on a dynamic home IP must never be able to permanently lock
-// themselves out of their own admin screen; clearing the env var in Vercel is
-// the documented recovery path.
+// FAIL-OPEN BY DESIGN: with ADMIN_ALLOWED_IPS unset, every request passes, so a
+// mistake here can never permanently lock the operator out. Clearing the env var
+// in Vercel is the documented recovery path.
 //
-// Matching logic lives in app/lib/admin-ip.ts so that /api/whoami reports
-// exactly what this enforces. Use /api/whoami to find the address Vercel
-// actually sees — it is often IPv6 even when `curl api.ipify.org` shows IPv4.
+// Matching lives in app/lib/admin-ip.ts so that /api/whoami reports exactly what
+// this enforces. Use /api/whoami to confirm the address Vercel actually sees.
 export const config = { matcher: ["/admin/:path*"] };
 
 export function middleware(request: NextRequest) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { clientIp, isAdminIpAllowed } from "../../lib/admin-ip";
+import { clientIp, isAdminIpAllowed, suggestedRanges } from "../../lib/admin-ip";
 
 export const runtime = "nodejs";
 
@@ -21,7 +21,10 @@ export async function GET(request: NextRequest) {
       ip,
       allowed: isAdminIpAllowed(ip),
       restrictionActive: Boolean((process.env.ADMIN_ALLOWED_IPS ?? "").trim()),
-      hint: "ADMIN_ALLOWED_IPS にこの ip を追加してください（カンマ区切り、CIDR 可）。空にすると制限は無効になります。",
+      // Consumer IPs rotate, so a single address is usually the wrong thing to
+      // register. These are the ranges this address belongs to, narrowest first.
+      suggestedRanges: suggestedRanges(ip),
+      hint: "IP が変わり続ける場合は、ip ではなく suggestedRanges の cidr を ADMIN_ALLOWED_IPS に登録してください（カンマ区切り）。空にすると制限は無効になります。",
     },
     { headers: { "Cache-Control": "no-store" } },
   );
