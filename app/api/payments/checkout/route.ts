@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: activeSession } = await admin
+  const { data: activeSession, error: activeSessionError } = await admin
     .from("stripe_checkout_sessions")
     .select("*")
     .eq("order_id", order.id)
@@ -101,6 +101,15 @@ export async function POST(request: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (activeSessionError) {
+    console.error("Checkout session lookup failed", {
+      code: activeSessionError.code,
+      message: activeSessionError.message,
+      orderId: order.id,
+    });
+    return NextResponse.json({ error: "checkout_storage_unavailable" }, { status: 500 });
+  }
 
   const stripe = getStripeServerClient();
   if (activeSession?.stripe_session_id) {
@@ -139,7 +148,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (reservationError || !reservation) {
-    const { data: concurrentSession } = await admin
+    const { data: concurrentSession, error: concurrentSessionError } = await admin
       .from("stripe_checkout_sessions")
       .select("stripe_session_id,status")
       .eq("order_id", order.id)
@@ -147,11 +156,27 @@ export async function POST(request: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (concurrentSessionError) {
+      console.error("Concurrent checkout lookup failed", {
+        code: concurrentSessionError.code,
+        message: concurrentSessionError.message,
+        orderId: order.id,
+      });
+      return NextResponse.json({ error: "checkout_storage_unavailable" }, { status: 500 });
+    }
     if (concurrentSession?.stripe_session_id) {
       const existing = await stripe.checkout.sessions.retrieve(concurrentSession.stripe_session_id);
       if (existing.status === "open" && existing.url) return NextResponse.json({ url: existing.url });
     }
-    return NextResponse.json({ error: "checkout_is_being_prepared" }, { status: 409 });
+    if (concurrentSession) {
+      return NextResponse.json({ error: "checkout_is_being_prepared" }, { status: 409 });
+    }
+    console.error("Checkout session reservation failed", {
+      code: reservationError?.code,
+      message: reservationError?.message,
+      orderId: order.id,
+    });
+    return NextResponse.json({ error: "checkout_storage_unavailable" }, { status: 500 });
   }
 
   const origin = (process.env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN).replace(/\/+$/, "");

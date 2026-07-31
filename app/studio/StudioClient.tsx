@@ -364,7 +364,9 @@ export function StudioClient() {
             ? "この注文を現在のアカウントで確認できませんでした。お申し込み時のアカウントでログインしているかご確認ください。"
             : result.error === "order_lookup_failed"
               ? "注文情報を確認できませんでした。時間をおいてもう一度お試しください。"
-          : result.error === "checkout_is_being_prepared"
+            : result.error === "checkout_storage_unavailable"
+              ? "決済情報を準備できませんでした。担当者へお問い合わせください。"
+              : result.error === "checkout_is_being_prepared"
               ? "決済画面を準備しています。数秒待ってから、もう一度お試しください。"
               : "決済画面を開けませんでした。時間をおいてもう一度お試しください。");
         return;

@@ -707,6 +707,7 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
   assert.match(checkout, /\.from\("orders"\)/);
   assert.match(checkout, /await userClient[\s\S]*?\.from\("orders"\)/);
   assert.match(checkout, /order_lookup_failed/);
+  assert.match(checkout, /checkout_storage_unavailable/);
   assert.match(checkout, /unit_amount: order\.quoted_price/);
   assert.match(checkout, /payment_method_types: \["card"\]/);
   assert.match(checkout, /idempotencyKey: `wm-checkout-/);
@@ -724,6 +725,7 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
   assert.match(studio, /カードで支払う/);
   assert.match(studio, /お支払いはStripeの決済画面で行われます/);
   assert.match(studio, /この注文を現在のアカウントで確認できませんでした/);
+  assert.match(studio, /決済情報を準備できませんでした/);
   assert.doesNotMatch(studio, /Stripeで安全に支払う/);
   assert.match(admin, /お支払いをご案内/);
   assert.doesNotMatch(admin, /Stripe決済をご案内/);
