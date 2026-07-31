@@ -506,6 +506,18 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .auth-text-button { margin: 22px auto 0; padding: 5px; display: block; border: 0; border-bottom: 1px solid currentColor; color: var(--muted); background: transparent; cursor: pointer; font-size: 10px; }
 .auth-privacy { margin: 34px 0 0; padding-top: 20px; border-top: 1px solid var(--line); color: #969187; font-size: 9px; line-height: 1.8; text-align: center; }
 .form-success { margin: 0; padding: 13px; color: #405241; background: #e3eadf; font-size: 10px; line-height: 1.7; }
+.auth-confirmation-backdrop { position: fixed; z-index: 200; inset: 0; padding: 24px; display: grid; place-items: center; background: rgba(25,31,26,.74); backdrop-filter: blur(8px); animation: concept-receipt-fade .25s ease both; }
+.auth-confirmation-dialog { width: min(500px, 100%); max-height: calc(100svh - 48px); padding: 44px 46px 38px; overflow-y: auto; color: var(--ink); border: 1px solid #cfc6b8; background: #f8f5ed; box-shadow: 0 30px 80px rgba(12,18,14,.34); text-align: center; animation: concept-receipt-rise .35s ease both; }
+.auth-confirmation-mark { width: 64px; height: 64px; margin: 0 auto 26px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--sage); font-size: 24px; }
+.auth-confirmation-dialog > .eyebrow { margin: 0 0 13px; color: var(--rust); }
+.auth-confirmation-dialog h2 { margin: 0; font-family: var(--font-serif); font-size: 28px; font-weight: 400; line-height: 1.55; }
+.auth-confirmation-dialog > p:not(.eyebrow) { margin: 18px auto 0; color: var(--muted); font-size: 13px; line-height: 1.9; }
+.auth-confirmation-dialog > p strong { color: var(--ink); overflow-wrap: anywhere; }
+.auth-confirmation-dialog aside { margin: 24px 0; padding: 17px 18px; border: 1px solid #c7d0c3; background: #e7ece3; text-align: left; }
+.auth-confirmation-dialog aside strong, .auth-confirmation-dialog aside span { display: block; }
+.auth-confirmation-dialog aside strong { color: #4f5f4c; font-size: 12px; }
+.auth-confirmation-dialog aside span { margin-top: 6px; color: #687064; font-size: 11px; line-height: 1.75; }
+.auth-confirmation-dialog .button { width: 100%; min-height: 52px; }
 .auth-complete { text-align: center; }
 .auth-complete .auth-success-mark { width: 64px; height: 64px; margin: 0 auto 34px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--sage); font-size: 22px; }
 .auth-complete p:not(.eyebrow) { margin: 18px 0 30px; color: var(--muted); font-size: 11px; }
@@ -1608,6 +1620,9 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .auth-page { padding: 84px 20px 44px; align-items: start; }
   .auth-back { left: 20px; top: 24px; }
   .auth-card { width: 100%; padding: 38px 26px; }
+  .auth-confirmation-backdrop { padding: 18px; }
+  .auth-confirmation-dialog { padding: 34px 24px 28px; }
+  .auth-confirmation-dialog h2 { font-size: 24px; }
   .private-film-hero > div:last-child, .private-film-section { width: calc(100% - 40px); }
   .private-film-gallery { padding-inline: 20px; }
   .info-header { height: 72px; }

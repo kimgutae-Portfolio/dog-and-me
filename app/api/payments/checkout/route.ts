@@ -48,17 +48,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data: orderData, error: orderError } = await admin
+  // Resolve the order with the customer's authenticated client. The orders RLS
+  // policy already limits this query to the owner, so a customer who can see
+  // the order in Studio can use that same order to begin checkout.
+  const { data: orderData, error: orderError } = await userClient
     .from("orders")
     .select("*")
     .eq("id", orderId)
-    .eq("user_id", authData.user.id)
     .maybeSingle();
 
-  if (orderError || !orderData) {
+  if (orderError) {
+    console.error("Checkout order lookup failed", {
+      code: orderError.code,
+      message: orderError.message,
+      orderId,
+      userId: authData.user.id,
+    });
+    return NextResponse.json({ error: "order_lookup_failed" }, { status: 500 });
+  }
+  if (!orderData) {
     return NextResponse.json({ error: "order_not_found" }, { status: 404 });
   }
 
@@ -82,6 +90,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "unsupported_currency" }, { status: 400 });
   }
 
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
   const { data: activeSession } = await admin
     .from("stripe_checkout_sessions")
     .select("*")

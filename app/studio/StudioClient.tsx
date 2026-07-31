@@ -360,9 +360,13 @@ export function StudioClient() {
       if (!response.ok || !result.url) {
         setError(result.error === "consent_required"
           ? "上の同意内容を注文へ記録してから、お支払いへお進みください。"
+          : result.error === "order_not_found"
+            ? "この注文を現在のアカウントで確認できませんでした。お申し込み時のアカウントでログインしているかご確認ください。"
+            : result.error === "order_lookup_failed"
+              ? "注文情報を確認できませんでした。時間をおいてもう一度お試しください。"
           : result.error === "checkout_is_being_prepared"
-            ? "決済画面を準備しています。数秒待ってから、もう一度お試しください。"
-            : "決済画面を開けませんでした。時間をおいてもう一度お試しください。");
+              ? "決済画面を準備しています。数秒待ってから、もう一度お試しください。"
+              : "決済画面を開けませんでした。時間をおいてもう一度お試しください。");
         return;
       }
       window.location.assign(result.url);

@@ -43,12 +43,27 @@ export function AuthPanel() {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [signupConfirmationEmail, setSignupConfirmationEmail] = useState("");
   const [mfaPending, setMfaPending] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
 
   useEffect(() => {
     if (!loading && user && !searchParams.get("confirmed")) router.replace(nextPath);
   }, [loading, nextPath, router, searchParams, user]);
+
+  useEffect(() => {
+    if (!signupConfirmationEmail) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSignupConfirmationEmail("");
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [signupConfirmationEmail]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -82,7 +97,7 @@ export function AuthPanel() {
         });
         if (signupError) throw signupError;
         if (data.session) router.replace(signupNextPath);
-        else setMessage("確認メールをお送りしました。メール内のリンクを開いて登録を完了してください。");
+        else setSignupConfirmationEmail(email.trim());
         return;
       }
 
@@ -241,6 +256,23 @@ export function AuthPanel() {
         {mode === "reset" && <button className="auth-text-button" type="button" onClick={() => { setMode("login"); setError(""); setMessage(""); }}>ログインへ戻る</button>}
         <p className="auth-privacy">お預かりした写真とお話は、制作目的以外には使用しません。</p>
       </section>
+      {signupConfirmationEmail && <div className="auth-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setSignupConfirmationEmail(""); }}>
+        <section
+          className="auth-confirmation-dialog"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="auth-confirmation-title"
+          aria-describedby="auth-confirmation-description"
+          onKeyDown={(event) => { if (event.key === "Tab") event.preventDefault(); }}
+        >
+          <span className="auth-confirmation-mark" aria-hidden="true">✉</span>
+          <p className="eyebrow">CHECK YOUR EMAIL</p>
+          <h2 id="auth-confirmation-title">確認メールを送信しました。</h2>
+          <p id="auth-confirmation-description"><strong>{signupConfirmationEmail}</strong> 宛てにメールをお送りしました。メール内の「メールアドレスを確認」を押すと、会員登録が完了します。</p>
+          <aside><strong>メールが見つからない場合</strong><span>迷惑メールフォルダをご確認ください。届くまで数分かかる場合があります。</span></aside>
+          <button autoFocus className="button button-primary" type="button" onClick={() => setSignupConfirmationEmail("")}>わかりました</button>
+        </section>
+      </div>}
     </main>
   );
 }
