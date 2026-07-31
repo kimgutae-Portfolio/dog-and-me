@@ -62,6 +62,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
+STRIPE_TEST_WEBHOOK_SECRET=
 CRON_SECRET=
 RESEND_API_KEY=
 RESEND_FROM_EMAIL="WAN MEMORY <info@wanmemory.com>"
@@ -89,7 +90,7 @@ VercelのCronは毎日03:00（JST）に未完了相談を整理します。`SUPA
 
 運営者が制作管理画面からメッセージを送ると、Resendを使ってお客様の登録メールアドレスへ通知します。メール本文には制作メッセージや写真の内容を載せず、ログインが必要な制作室へのリンクだけを送ります。お客様から運営者へのメッセージではメールを送信しません。`RESEND_API_KEY`はサーバー環境変数としてのみ登録してください。
 
-Stripe DashboardでWebhook送信先を`https://www.wanmemory.com/api/webhooks/stripe`に設定し、`checkout.session.completed`、`checkout.session.async_payment_succeeded`、`checkout.session.async_payment_failed`、`checkout.session.expired`、`charge.refunded`を購読します。署名シークレットを`STRIPE_WEBHOOK_SECRET`、制限付きでないサーバー用シークレットキーを`STRIPE_SECRET_KEY`としてVercelに登録します。どちらにも`NEXT_PUBLIC_`を付けません。
+Stripe Dashboardの本番環境とテスト環境でWebhook送信先を`https://www.wanmemory.com/api/webhooks/stripe`に設定し、`checkout.session.completed`、`checkout.session.async_payment_succeeded`、`checkout.session.async_payment_failed`、`checkout.session.expired`、`charge.refunded`を購読します。本番の署名シークレットを`STRIPE_WEBHOOK_SECRET`、テスト環境の署名シークレットを`STRIPE_TEST_WEBHOOK_SECRET`、制限付きでないサーバー用シークレットキーを`STRIPE_SECRET_KEY`としてVercelに登録します。`STRIPE_SECRET_KEY`はProductionに本番キー、Previewにテストキーを分けて設定し、どのキーにも`NEXT_PUBLIC_`を付けません。
 
 運営者が構成案の選択と現在版の同意記録を確認し、入金状態を「お支払いをご案内」にすると、お客様の制作室に決済ボタンが表示され、Resendで案内メールを送ります。金額はブラウザから受け取らず、注文DBの`quoted_price`からCheckout Sessionを作成します。`paid`と`refunded`は管理画面で手動変更できず、署名検証済みWebhookだけが更新します。
 

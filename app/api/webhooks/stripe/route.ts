@@ -7,17 +7,29 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+  const webhookSecrets = [
+    process.env.STRIPE_WEBHOOK_SECRET,
+    process.env.STRIPE_TEST_WEBHOOK_SECRET,
+  ].map((value) => value?.trim()).filter((value): value is string => Boolean(value));
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!signature || !webhookSecret || !supabaseUrl || !serviceRoleKey || !process.env.STRIPE_SECRET_KEY) {
+  if (!signature || webhookSecrets.length === 0 || !supabaseUrl || !serviceRoleKey || !process.env.STRIPE_SECRET_KEY) {
     return NextResponse.json({ error: "server_not_configured" }, { status: 500 });
   }
 
   let event: Stripe.Event;
   try {
     const rawBody = await request.text();
-    event = getStripeServerClient().webhooks.constructEvent(rawBody, signature, webhookSecret);
+    const verifiedEvent = webhookSecrets.reduce<Stripe.Event | null>((result, webhookSecret) => {
+      if (result) return result;
+      try {
+        return getStripeServerClient().webhooks.constructEvent(rawBody, signature, webhookSecret);
+      } catch {
+        return null;
+      }
+    }, null);
+    if (!verifiedEvent) throw new Error("invalid_signature");
+    event = verifiedEvent;
   } catch {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
@@ -71,4 +83,3 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ received: true });
 }
-

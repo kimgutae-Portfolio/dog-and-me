@@ -716,6 +716,7 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
   assert.match(checkout, /processing: true/);
   assert.doesNotMatch(checkout, /payload\.(amount|price)/);
   assert.match(webhook, /constructEvent\(rawBody, signature, webhookSecret\)/);
+  assert.match(webhook, /STRIPE_TEST_WEBHOOK_SECRET/);
   assert.match(webhook, /process_stripe_checkout_completed/);
   assert.match(webhook, /charge\.refunded/);
   assert.match(migration, /create table if not exists public\.stripe_checkout_sessions/);
