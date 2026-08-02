@@ -3,7 +3,7 @@ import Link from "next/link";
 const guides = [
   [
     "愛犬の動く絵本",
-    "写真と三つの思い出からつくる物語の特徴と制作の流れ",
+    "3〜5つの物語と場面写真からつくる制作の流れ",
     "/aiken-omoide-douga",
   ],
   [
@@ -13,7 +13,7 @@ const guides = [
   ],
   [
     "絵本の写真選び",
-    "お気に入りの代表写真と思い出写真の準備方法",
+    "物語ごとの基準写真と補助写真の準備方法",
     "/dog-photo-guide",
   ],
 ] as const;

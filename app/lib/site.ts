@@ -1,6 +1,6 @@
 export const SITE_NAME = "WAN MEMORY";
 export const SITE_DESCRIPTION =
-  "愛犬の写真と三つの思い出から、水彩とガッシュで描く約1分の『動く絵本』を制作するオーダーメイドサービスです。物語案、絵本ページ、短い文章、BGM、専用ページまで一つに仕上げます。";
+  "愛犬の3〜5つの思い出と場面写真から、水彩とガッシュで描く約1分の『動く絵本』を制作するオーダーメイドサービスです。物語案、絵本ページ、短い文章、BGM、専用ページまで一つに仕上げます。";
 export const DEFAULT_SITE_ORIGIN = "https://www.wanmemory.com";
 export const SUPPORT_EMAIL = "info@wanmemory.com";
 export const BUSINESS_NAME = "WAN MEMORY";

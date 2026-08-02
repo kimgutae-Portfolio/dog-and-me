@@ -15,7 +15,6 @@ import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { hasCurrentConsent } from "../lib/consent";
 import type {
-  AppearancePolicy,
   FilmConcept,
   MemoryOrder,
   OrderAsset,
@@ -225,14 +224,6 @@ function peopleHandlingLabel(value: MemoryOrder["people_handling"]) {
     consult: "担当者へ相談",
   };
   return value ? labels[value] : "未確認";
-}
-
-function appearancePolicyLabel(value: AppearancePolicy | null) {
-  if (value === "photo_era_by_scene")
-    return "写真を撮った当時の姿を、場面ごとに残す";
-  if (value === "current_appearance") return "現在の姿で全編を統一";
-  if (value === "selected_period") return "特定の時期の姿で全編を統一";
-  return "未確認（既存注文）";
 }
 
 function photoAnalysisStatusLabel(value: PhotoAnalysisStatus) {
@@ -587,36 +578,6 @@ export function AdminStudio() {
   const sourceAssets = useMemo(
     () => assets.filter((asset) => asset.category === "source_image"),
     [assets],
-  );
-  const appearanceReferenceCards = useMemo(() => {
-    const uniqueIds = [
-      productionFields.primaryFacePhotoId,
-      productionFields.primaryBodyPhotoId,
-      productionFields.sideTailPhotoId,
-    ].filter(
-      (assetId, index, entries): assetId is string =>
-        Boolean(assetId) && entries.indexOf(assetId) === index,
-    );
-    return uniqueIds.map((assetId, index) => ({
-      label:
-        uniqueIds.length === 1
-          ? "その子らしい代表写真"
-          : `外見参考 ${index + 1}`,
-      assetId,
-      asset: sourceAssets.find((item) => item.id === assetId) ?? null,
-    }));
-  }, [
-    productionFields.primaryBodyPhotoId,
-    productionFields.primaryFacePhotoId,
-    productionFields.sideTailPhotoId,
-    sourceAssets,
-  ]);
-  const selectedAppearanceAssets = useMemo(
-    () =>
-      sourceAssets.filter((asset) =>
-        productionFields.selectedAppearancePhotoIds.includes(asset.id),
-      ),
-    [productionFields.selectedAppearancePhotoIds, sourceAssets],
   );
   const sceneStills = useMemo(
     () =>
@@ -1017,33 +978,45 @@ export function AdminStudio() {
       concepts.find(
         (concept) => concept.slot === order.selected_concept_slot,
       ) ?? null;
-    const archivePhotos = sourceAssets.map((asset, index) => {
+    const orderedSourceAssets = [...sourceAssets].sort((a, b) => {
+      const aMemory = memories.find((item) => item.id === a.memory_id);
+      const bMemory = memories.find((item) => item.id === b.memory_id);
+      return (
+        (aMemory?.sort_order ?? 99) - (bMemory?.sort_order ?? 99) ||
+        (a.memory_photo_sort_order ?? 99) -
+          (b.memory_photo_sort_order ?? 99) ||
+        a.album_sort_order - b.album_sort_order
+      );
+    });
+    const archivePhotos = orderedSourceAssets.map((asset, index) => {
       const memory =
         memories.find((item) => item.id === asset.memory_id) ?? null;
-      const roles: string[] = [];
-      if (asset.id === productionFields.primaryFacePhotoId)
-        roles.push("face_reference");
-      if (asset.id === productionFields.primaryBodyPhotoId)
-        roles.push("body_reference");
-      if (asset.id === productionFields.sideTailPhotoId)
-        roles.push("side_tail_reference");
-      if (productionFields.selectedAppearancePhotoIds.includes(asset.id))
-        roles.push("selected_appearance_reference");
-      if (memory) roles.push("memory_scene");
-      if (roles.length === 0) roles.push("additional_photo");
+      const photoPosition = asset.memory_photo_sort_order ?? 1;
+      const roles = memory
+        ? [
+            "story_scene",
+            photoPosition === 1 ? "primary_scene_source" : "supporting_reference",
+          ]
+        : ["additional_photo"];
       const archiveRole = memory
-        ? `memory_${String(memory.sort_order).padStart(2, "0")}`
+        ? `story_${String(memory.sort_order).padStart(2, "0")}_${
+            photoPosition === 1 ? "primary" : `support_${photoPosition - 1}`
+          }`
         : roles[0];
       const archiveFilename = archivePhotoName(asset, index, archiveRole);
       const runwayFilename = landscapePhotoName(asset, index, archiveRole);
+      const storyFolder = memory
+        ? `stories/${String(memory.sort_order).padStart(2, "0")}-${safeArchiveSegment(memory.title)}`
+        : "additional";
       return {
         asset,
         archiveFilename,
-        archivePath: `photos/${archiveFilename}`,
+        archivePath: `${storyFolder}/original/${archiveFilename}`,
         runwayFilename,
-        runwayPath: `photos_16x9/${runwayFilename}`,
+        runwayPath: `${storyFolder}/runway_16x9/${runwayFilename}`,
         roles,
         memory,
+        photoPosition,
       };
     });
     const sourcePhotos = archivePhotos.map(
@@ -1055,6 +1028,7 @@ export function AdminStudio() {
         runwayPath,
         roles,
         memory,
+        photoPosition,
       }) => ({
         asset_id: asset.id,
         archive_filename: archiveFilename,
@@ -1067,6 +1041,8 @@ export function AdminStudio() {
         mime_type: asset.mime_type,
         file_size: asset.file_size,
         roles,
+        story_photo_position: memory ? photoPosition : null,
+        is_primary_scene_source: Boolean(memory && photoPosition === 1),
         memory: memory
           ? {
               number: memory.sort_order,
@@ -1076,15 +1052,15 @@ export function AdminStudio() {
       }),
     );
     const productionData = {
-      schema_version: "wan-memory-production-export-1.0",
+      schema_version: "wan-memory-storybook-production-export-2.0",
       exported_at: new Date().toISOString(),
       production_ref: order.order_number,
       privacy_notice:
         "Account email, phone number, postal address, and customer profile name are not included. Customer-written story text may still contain personal information and must be handled only for this order.",
       workflow_stage:
         productionFields.photoAnalysisStatus === "approved"
-          ? "photo_analysis_approved"
-          : "photo_analysis_input",
+          ? "story_sources_approved"
+          : "story_sources_review",
       film: {
         purpose: order.purpose,
         duration_seconds: 60,
@@ -1100,16 +1076,14 @@ export function AdminStudio() {
         age: order.age_text,
         personality: order.personality,
       },
-      appearance_references: {
-        primary_face_photo_id: productionFields.primaryFacePhotoId,
-        primary_body_photo_id: productionFields.primaryBodyPhotoId,
-        side_tail_photo_id: productionFields.sideTailPhotoId,
-        appearance_policy: productionFields.appearancePolicy,
-        selected_appearance_description:
-          productionFields.selectedAppearanceDescription,
-        selected_appearance_photo_ids:
-          productionFields.selectedAppearancePhotoIds,
-        owner_locked_traits: productionFields.ownerLockedTraits,
+      story_source_rules: {
+        story_count: memories.length,
+        photos_per_story: "1-3",
+        primary_source_rule:
+          "The first photo in every story is the required composition and identity anchor for that story only.",
+        supporting_source_rule:
+          "Photos 2-3 are optional supporting references. Do not combine details that conflict with the primary source.",
+        global_appearance_reference: false,
         operator_approved_at: productionFields.photoAnalysisApprovedAt,
       },
       source_photos: sourcePhotos,
@@ -1131,8 +1105,17 @@ export function AdminStudio() {
         dog_behavior: memory.dog_behavior,
         photos: sourcePhotos
           .filter((photo) => photo.memory?.number === memory.sort_order)
+          .sort(
+            (a, b) =>
+              (a.story_photo_position ?? 99) -
+              (b.story_photo_position ?? 99),
+          )
           .map((photo) => ({
             asset_id: photo.asset_id,
+            role: photo.is_primary_scene_source
+              ? "primary_scene_source"
+              : "supporting_reference",
+            position: photo.story_photo_position,
             archive_path: photo.archive_path,
             runway_16x9_archive_path: photo.runway_16x9_archive_path,
             original_filename: photo.original_filename,
@@ -1152,23 +1135,22 @@ export function AdminStudio() {
         .map((message) => message.body),
       requested_gpt_output: {
         current_stage:
-          "Analyze the submitted photos and application only. Do not create concepts or Runway prompts yet.",
+          "Review each story together with its own primary scene source and optional supporting references. Keep story sources separate.",
         required_sections: [
-          "observed_facts",
-          "unknown_or_uncertain",
-          "photo_roles",
-          "representative_reference_photos",
-          "identity_profile",
-          "production_risks",
-          "customer_questions",
-          "can_proceed",
+          "story_source_checklist",
+          "primary_source_observations",
+          "supporting_reference_observations",
+          "story_to_image_plan",
+          "runway_motion_constraints",
+          "missing_information_only_if_blocking",
           "people_photo_assessment",
         ],
       },
     };
     const manifest = {
-      schema_version: "wan-memory-photo-manifest-1.0",
+      schema_version: "wan-memory-story-source-manifest-2.0",
       production_ref: order.order_number,
+      story_count: memories.length,
       photo_count: sourcePhotos.length,
       photos: sourcePhotos,
     };
@@ -1212,15 +1194,17 @@ export function AdminStudio() {
         ),
         [`${root}/GPT_INSTRUCTIONS.txt`]: strToU8(
           [
-            "Attach order.json and every file in the photos folder to GPT.",
-            "Analyze only the application and original photos at this stage.",
-            "Do not create concept proposals or Runway prompts yet.",
+            "Each folder under stories/ is one independent story and one Runway production unit.",
+            "Attach order.json and only one story folder at a time when preparing that scene.",
+            "Use the file containing primary in its name as the story's composition and identity anchor.",
+            "Use support files only when they clarify details; never overwrite the primary photo's visible facts.",
+            "Do not mix locations, clothing, seasons, or poses between different story folders.",
             "Return the sections listed in requested_gpt_output inside order.json.",
             "Use asset_id and archive_path when referring to each photo.",
             "",
             "FOLDER GUIDE",
-            "- photos/: original customer photos for identity and detail analysis.",
-            "- photos_16x9/: automatically prepared 1920x1080 JPG files for Runway and 16:9 editing.",
+            "- stories/01-title/original/: original customer photos for that story only.",
+            "- stories/01-title/runway_16x9/: prepared 1920x1080 JPG files for that story's Runway work.",
             "- The 16:9 files preserve the entire original photo and fill unused space with a blurred background; they are not AI outpainting.",
           ].join("\n"),
         ),
@@ -1267,7 +1251,7 @@ export function AdminStudio() {
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
       setNotice(
-        `制作用データをダウンロードしました。元写真${sourceAssets.length}枚と、16:9制作写真${sourceAssets.length}枚を同梱しています。`,
+        `${memories.length}つの物語を制作フォルダに分けました。元写真${sourceAssets.length}枚と16:9制作写真を同梱しています。`,
       );
     } catch (bundleError) {
       console.error(bundleError);
@@ -1300,8 +1284,8 @@ export function AdminStudio() {
     } else {
       setNotice(
         nextStatus === "approved"
-          ? "写真と外見の基準を承認しました。次の制作工程へ進めます。"
-          : "写真確認の状態を更新し、操作履歴へ記録しました。",
+          ? "物語ごとの基準写真を承認しました。次の制作工程へ進めます。"
+          : "制作素材の確認状態を更新し、操作履歴へ記録しました。",
       );
       await loadOrders();
     }
@@ -2272,8 +2256,8 @@ export function AdminStudio() {
                   >
                     <div className="card-head">
                       <div>
-                        <p className="eyebrow">APPEARANCE REVIEW</p>
-                        <h3>主人公の基準と写真確認</h3>
+                        <p className="eyebrow">STORY SOURCE REVIEW</p>
+                        <h3>物語ごとの制作素材チェック</h3>
                       </div>
                       <span
                         className={`photo-analysis-status ${productionFields.photoAnalysisStatus}`}
@@ -2283,82 +2267,57 @@ export function AdminStudio() {
                         )}
                       </span>
                     </div>
-                    {productionFields.appearancePolicy === null && (
-                      <aside className="admin-operation-note warning">
-                        <strong>既存形式の注文です。</strong>
-                        <span>
-                          代表写真が未入力のため、お客様への追加確認が必要です。
-                        </span>
-                      </aside>
-                    )}
                     <div className="admin-reference-photo-grid">
-                      {appearanceReferenceCards.map(
-                        ({ label, assetId, asset }) => (
-                          <article key={label}>
-                            <strong>{label}</strong>
-                            {asset && assetUrls[asset.id] ? (
+                      {memories.map((memory) => {
+                        const storyPhotos = sourceAssets
+                          .filter((asset) => asset.memory_id === memory.id)
+                          .sort(
+                            (a, b) =>
+                              (a.memory_photo_sort_order ?? 99) -
+                              (b.memory_photo_sort_order ?? 99),
+                          );
+                        const primaryPhoto = storyPhotos[0] ?? null;
+                        return (
+                          <article key={memory.id}>
+                            <strong>
+                              STORY {String(memory.sort_order).padStart(2, "0")}
+                            </strong>
+                            {primaryPhoto && assetUrls[primaryPhoto.id] ? (
                               <a
-                                href={assetUrls[asset.id]}
+                                href={assetUrls[primaryPhoto.id]}
                                 target="_blank"
                                 rel="noreferrer"
                               >
                                 <span
                                   className="admin-photo-thumb"
                                   role="img"
-                                  aria-label={`${label}写真`}
+                                  aria-label={`${memory.title}の基準写真`}
                                   style={{
-                                    backgroundImage: `url(${assetUrls[asset.id]})`,
+                                    backgroundImage: `url(${assetUrls[primaryPhoto.id]})`,
                                   }}
                                 />
                               </a>
                             ) : (
                               <span className="admin-reference-empty">
-                                {assetId ? "読み込み中" : "未選択"}
+                                基準写真なし
                               </span>
                             )}
-                            <small>{asset?.original_filename ?? "—"}</small>
+                            <small>
+                              {memory.title} · 基準1枚 + 補助
+                              {Math.max(0, storyPhotos.length - 1)}枚
+                            </small>
                           </article>
-                        ),
-                      )}
+                        );
+                      })}
                     </div>
                     <dl className="admin-story">
                       <div>
-                        <dt>外見の適用方法</dt>
-                        <dd>
-                          {appearancePolicyLabel(
-                            productionFields.appearancePolicy,
-                          )}
-                        </dd>
+                        <dt>制作単位</dt>
+                        <dd>{memories.length}物語 · 物語ごとにRunway 1クリップ</dd>
                       </div>
-                      {productionFields.appearancePolicy ===
-                        "selected_period" && (
-                        <>
-                          <div>
-                            <dt>選んだ時期</dt>
-                            <dd>
-                              {productionFields.selectedAppearanceDescription ||
-                                "説明なし"}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>時期の基準写真</dt>
-                            <dd>
-                              {selectedAppearanceAssets.length
-                                ? selectedAppearanceAssets
-                                    .map((asset) => asset.original_filename)
-                                    .join("、")
-                                : "未選択"}
-                            </dd>
-                          </div>
-                        </>
-                      )}
                       <div>
-                        <dt>変わってほしくない特徴</dt>
-                        <dd>
-                          {productionFields.ownerLockedTraits.length
-                            ? productionFields.ownerLockedTraits.join("、")
-                            : "指定なし"}
-                        </dd>
+                        <dt>写真の使い方</dt>
+                        <dd>各物語の1枚目を基準にし、2〜3枚目は補助だけに使用</dd>
                       </div>
                       <div>
                         <dt>映像としての再構成の確認</dt>
@@ -2400,7 +2359,7 @@ export function AdminStudio() {
                               changePhotoAnalysisStatus("approved")
                             }
                           >
-                            写真分析を承認する →
+                            物語と写真を承認する →
                           </button>
                           <button
                             className="button button-outline"
@@ -2448,8 +2407,7 @@ export function AdminStudio() {
                       <aside className="admin-operation-note warning">
                         <strong>次の制作工程は停止中です。</strong>
                         <span>
-                          사진 분석에 대한 운영자 승인이 필요합니다. 승인 후
-                          다음 제작 단계로 진행할 수 있습니다.
+                          すべての物語に基準写真があることを確認し、承認すると次の制作工程へ進めます。
                         </span>
                       </aside>
                     )}
@@ -2647,7 +2605,7 @@ export function AdminStudio() {
                     <div className="card-head">
                       <div>
                         <p className="eyebrow">CUSTOMER STORY</p>
-                        <h3>思い出と写真の組み合わせ</h3>
+                        <h3>物語別 Runway 制作セット</h3>
                       </div>
                       <div className="admin-export-actions">
                         <button
@@ -2674,7 +2632,7 @@ export function AdminStudio() {
                         >
                           {exportingBundle
                             ? "準備中…"
-                            : "GPT・Runway制作用データをダウンロード"}
+                            : "物語別の制作用データをダウンロード"}
                         </button>
                       </div>
                     </div>
@@ -2685,10 +2643,9 @@ export function AdminStudio() {
                       </p>
                     )}
                     <aside className="admin-operation-note strong">
-                      <strong>元写真と16:9制作写真を一緒に準備します。</strong>
+                      <strong>物語ごとに、そのまま作業できるフォルダを作ります。</strong>
                       <span>
-                        ZIPのphotosには分析用の元写真、photos_16x9にはRunway・横長編集用の1920×1080
-                        JPGが入ります。縦写真も切り取らず、余白を同じ写真のぼかし背景で自然に補います。
+                        各フォルダに基準写真、補助写真、Runway用の1920×1080画像、物語文をまとめます。別の物語の写真が混ざりません。
                       </span>
                     </aside>
                     <dl className="admin-story">
@@ -2707,7 +2664,7 @@ export function AdminStudio() {
                         <dd>{order.personality.join("、") || "未入力"}</dd>
                       </div>
                       <div>
-                        <dt>思い出の項目</dt>
+                          <dt>物語の数</dt>
                         <dd>
                           {memories.length
                             ? `${memories.length}件`
@@ -2772,9 +2729,13 @@ export function AdminStudio() {
                     {memories.length > 0 && (
                       <div className="admin-memory-list">
                         {memories.map((memory) => {
-                          const memoryPhotos = sourceAssets.filter(
-                            (asset) => asset.memory_id === memory.id,
-                          );
+                          const memoryPhotos = sourceAssets
+                            .filter((asset) => asset.memory_id === memory.id)
+                            .sort(
+                              (a, b) =>
+                                (a.memory_photo_sort_order ?? 99) -
+                                (b.memory_photo_sort_order ?? 99),
+                            );
                           return (
                             <article key={memory.id}>
                               <header>
@@ -2825,12 +2786,16 @@ export function AdminStudio() {
                                     ) : (
                                       <span>読み込み中</span>
                                     )}
-                                    <small>{asset.original_filename}</small>
+                                    <small>
+                                      {asset.memory_photo_sort_order === 1
+                                        ? "基準写真"
+                                        : `補助写真 ${(asset.memory_photo_sort_order ?? 2) - 1}`} · {asset.original_filename}
+                                    </small>
                                   </a>
                                 ))}
                               </div>
                               <p className="admin-memory-check">
-                                内容と写真が同じ場面か、服・場所・季節が一致するか確認してください。
+                                1枚目だけでこの物語の構図・季節・場所が分かるか確認します。補助写真は不足する特徴だけを見るために使います。
                               </p>
                             </article>
                           );
@@ -2880,12 +2845,12 @@ export function AdminStudio() {
                           ))}
                         </div>
                         <p className="admin-operation-note">
-                          代表写真と、思い出ごとの参考写真がすべて含まれます。必要な角度が足りない場合だけ、制作室のメッセージから追加写真をお願いします。
+                          すべての写真は物語に紐づいています。追加をお願いするのは、その物語の制作に本当に必要な情報が足りない場合だけです。
                         </p>
                       </>
                     ) : (
                       <p className="admin-empty-copy">
-                        写真はまだ登録されていません。最初に必要なのは、その子らしい代表写真1枚と3つの思い出です。
+                        写真はまだ登録されていません。各物語に最低1枚の場面写真が必要です。
                       </p>
                     )}
                   </section>
@@ -3001,7 +2966,7 @@ export function AdminStudio() {
                                 setter({ ...value, scenes: event.target.value })
                               }
                               placeholder={
-                                "思い出1から広げる場面\n思い出1から広げる別の場面\n思い出2から広げる場面\n思い出3から広げる場面\nおわりの場面"
+                                "物語1の場面\n物語2の場面\n物語3の場面\n必要に応じて物語4・5の場面\nおわりの場面"
                               }
                             />
                           </label>
@@ -3074,7 +3039,7 @@ export function AdminStudio() {
                           <strong>絵本ページを管理できません。</strong>
                           <span>
                             {!photoAnalysisApproved
-                              ? "先に写真分析を承認してください。"
+                              ? "先に物語ごとの制作素材を承認してください。"
                               : order.payment_status !== "paid"
                                 ? "先に入金確認を保存してください。"
                                 : !consentCurrent
@@ -3288,7 +3253,7 @@ export function AdminStudio() {
                         <strong>まだ編集を開始できません。</strong>
                         <span>
                           {!photoAnalysisApproved
-                            ? "先に写真分析を承認してください。"
+                            ? "先に物語ごとの制作素材を承認してください。"
                             : order.payment_status !== "paid"
                               ? "先に入金確認を保存してください。"
                               : !consentCurrent

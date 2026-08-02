@@ -1068,6 +1068,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .memory-entry-chevron { display: block; font-size: 18px; line-height: 1; text-align: center; transition: transform .2s ease; }
 .memory-entry-chevron.open { transform: rotate(180deg); }
 .memory-entry-content { animation: memory-entry-open .24s ease both; }
+.memory-entry-remove-row { padding: 14px 22px 0; display: flex; justify-content: flex-end; }
+.memory-entry-remove-row button { padding: 6px 0; border: 0; border-bottom: 1px solid var(--rust); color: var(--rust); background: transparent; cursor: pointer; font-size: 9px; }
 @keyframes memory-entry-open { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 .memory-entry-fields { padding: 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .memory-entry-fields label { min-width: 0; display: flex; flex-direction: column; gap: 9px; }
@@ -1091,6 +1093,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .memory-photo-files button { margin-left: auto; padding: 5px 0; border: 0; border-bottom: 1px solid var(--rust); color: var(--rust); background: transparent; cursor: pointer; font-size: 8px; }
 .memory-entry-add { margin-top: 18px; padding: 18px; border: 1px solid var(--line); background: rgba(255,255,255,.35); }
 .memory-entry-add p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.9; }
+.memory-entry-add .button { margin-top: 14px; }
 .memory-ending-fields { margin-top: 28px; padding-top: 26px; border-top: 1px solid var(--line); }
 .photo-quality-guide, .people-photo-policy { margin-top: 28px; padding: 22px; border: 1px solid var(--line); background: rgba(255,255,255,.5); }
 .photo-quality-guide .eyebrow, .people-photo-policy .eyebrow { margin: 0 0 9px; }
@@ -1129,6 +1132,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .review-memory-list strong { font-family: var(--font-serif); font-size: 13px; font-weight: 400; }
 .review-memory-list p { margin: 6px 0; color: var(--muted); font-size: 9px; line-height: 1.7; white-space: pre-wrap; }
 .review-memory-list small { color: #8a857b; font-size: 8px; }
+.review-memory-primary-photo { width: 84px; height: 62px; margin-top: 9px; display: block; object-fit: cover; border: 1px solid var(--line); }
 .review-payment-summary { margin-top: 18px; padding: 20px; border: 1px solid #c8b9a8; background: #f1eadf; }
 .review-payment-summary strong { display: block; font-family: var(--font-serif); font-size: 16px; font-weight: 400; }
 .review-payment-summary p { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.8; }
@@ -1290,6 +1294,11 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .studio-memory-list strong { font-family: var(--font-serif); font-size: 13px; font-weight: 400; }
 .studio-memory-list p { margin: 6px 0; color: var(--muted); font-size: 9px; line-height: 1.7; }
 .studio-memory-list small { color: #8f897e; font-size: 8px; }
+.studio-story-photo-add { margin-top: 10px; padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px dashed #aaa69c; color: var(--rust); background: rgba(255,255,255,.55); cursor: pointer; }
+.studio-story-photo-add input { position: absolute; opacity: 0; pointer-events: none; }
+.studio-story-photo-add span { font-size: 9px; font-weight: 700; }
+.studio-story-photo-add small { white-space: nowrap; }
+.studio-story-photo-add.disabled { opacity: .55; cursor: wait; }
 .studio-card blockquote { margin: 22px 0 0; padding: 16px 20px; color: #5b554c; background: #ebe6dc; font-family: var(--font-serif); font-size: 12px; }
 .message-card .director { margin: 26px 0 20px; display: flex; gap: 13px; align-items: center; }
 .director > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: white; background: #9c978c; font-family: var(--font-serif); }
@@ -1892,6 +1901,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .memory-photo-thumb img { width: 100%; aspect-ratio: 1; display: block; object-fit: cover; }
 .memory-photo-thumb span { padding: 4px; position: absolute; left: 0; right: 0; bottom: 0; color: white; background: rgba(31,34,29,.72); font-size: 7px; text-align: center; }
 .memory-photo-item > div { padding: 7px 7px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.memory-photo-role { width: 100%; color: var(--forest); font-size: 8px; }
 .memory-photo-item > div > button { min-height: 32px; margin-left: auto; padding: 0 6px; border: 0; color: var(--rust); background: transparent; cursor: pointer; font-size: 8px; }
 .memory-photo-item .photo-save-state { color: #79684e; font-size: 8px; font-style: normal; }
 .memory-photo-item .photo-save-state.saved { color: #52715a; }

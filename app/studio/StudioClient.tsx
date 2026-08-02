@@ -477,23 +477,49 @@ export function StudioClient() {
     setConfirmingConcept(false);
   };
 
-  const addPhotos = async (event: ChangeEvent<HTMLInputElement>) => {
+  const addPhotos = async (
+    event: ChangeEvent<HTMLInputElement>,
+    memory: OrderMemory,
+  ) => {
     if (!user || !order || !canAddPhotos) return;
-    const files = Array.from(event.target.files ?? []).slice(0, 20);
+    const existingPhotos = sourceAssets
+      .filter((asset) => asset.memory_id === memory.id)
+      .sort(
+        (a, b) =>
+          (a.memory_photo_sort_order ?? 99) -
+          (b.memory_photo_sort_order ?? 99),
+      );
+    const files = Array.from(event.target.files ?? []).slice(
+      0,
+      Math.max(0, 3 - existingPhotos.length),
+    );
     if (!files.length) return;
     setUploading(true);
     setUploadProgress(0);
     setError("");
     try {
-      await uploadOrderImages(
+      const uploaded = await uploadOrderImages(
         getSupabaseBrowserClient(),
         user.id,
         order.id,
         files,
         (completed, total) =>
           setUploadProgress(Math.round((completed / total) * 100)),
+        memory.id,
       );
-      setNotice(`${files.length}枚の写真を追加しました。`);
+      const { error: linkError } = await getSupabaseBrowserClient().rpc(
+        "assign_memory_photos",
+        {
+          p_order_id: order.id,
+          p_memory_id: memory.id,
+          p_asset_ids: [
+            ...existingPhotos.map((asset) => asset.id),
+            ...uploaded.map((asset) => asset.id),
+          ],
+        },
+      );
+      if (linkError) throw linkError;
+      setNotice(`「${memory.title}」に写真を${files.length}枚追加しました。`);
       await loadDetails(order.id);
     } catch (caught) {
       console.error(caught);
@@ -1160,7 +1186,7 @@ export function StudioClient() {
                   {order.status === "delivered"
                     ? "完成した動く絵本をいつでもこちらでご覧いただけます。"
                     : order.status === "concepts_ready"
-                      ? "3つの思い出をつなぐ2つの物語案から、心に近い1案を選んでください。"
+                      ? "お預かりした3〜5つの物語をつなぐ2案から、心に近い1案を選んでください。"
                       : order.status === "stills_review"
                         ? "動画にする前の絵本ページと物語文をご用意しました。内容をご確認ください。"
                         : "進行が変わると、この制作室でお知らせします。追加したい思い出や写真はいつでもお送りください。"}
@@ -1671,7 +1697,7 @@ export function StudioClient() {
                         <dd>{order.style}</dd>
                       </div>
                       <div>
-                        <dt>思い出・写真</dt>
+                        <dt>物語・写真</dt>
                         <dd>
                           {memories.length}件 · {sourceAssets.length}枚
                         </dd>
@@ -1681,7 +1707,15 @@ export function StudioClient() {
                 </div>
                 {memories.length > 0 && (
                   <div className="studio-memory-list">
-                    {memories.map((memory) => (
+                    {memories.map((memory) => {
+                      const memoryPhotos = sourceAssets
+                        .filter((asset) => asset.memory_id === memory.id)
+                        .sort(
+                          (a, b) =>
+                            (a.memory_photo_sort_order ?? 99) -
+                            (b.memory_photo_sort_order ?? 99),
+                        );
+                      return (
                       <article key={memory.id}>
                         <span>
                           {String(memory.sort_order).padStart(2, "0")}
@@ -1692,16 +1726,35 @@ export function StudioClient() {
                           <small>
                             {memory.when_text || "時期指定なし"} ·{" "}
                             {memory.location || "場所指定なし"} · 写真
-                            {
-                              sourceAssets.filter(
-                                (asset) => asset.memory_id === memory.id,
-                              ).length
-                            }
-                            枚
+                            {memoryPhotos.length}枚
                           </small>
+                          {canAddPhotos && memoryPhotos.length < 3 && (
+                            <label
+                              className={
+                                uploading
+                                  ? "studio-story-photo-add disabled"
+                                  : "studio-story-photo-add"
+                              }
+                            >
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                                multiple
+                                disabled={uploading}
+                                onChange={(event) => addPhotos(event, memory)}
+                              />
+                              <span>＋ この物語に写真を追加</span>
+                              <small>
+                                {uploading
+                                  ? `送信中 ${uploadProgress}%`
+                                  : `${memoryPhotos.length} / 3枚`}
+                              </small>
+                            </label>
+                          )}
                         </div>
                       </article>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
                 {order.message_to_pet && (
@@ -1710,7 +1763,7 @@ export function StudioClient() {
                 {order.status === "awaiting_materials" && canOperateOrder ? (
                   <aside className="pending-order-submit">
                     <div>
-                      <strong>思い出と写真の入力が途中です。</strong>
+                      <strong>物語と写真の入力が途中です。</strong>
                       <span>
                         項目ごとの写真が分かるように、申込フォームから続きを入力してください。
                       </span>
@@ -1719,29 +1772,7 @@ export function StudioClient() {
                       入力の続きを開く →
                     </Link>
                   </aside>
-                ) : canAddPhotos ? (
-                  <label
-                    className={
-                      uploading
-                        ? "studio-upload-button disabled"
-                        : "studio-upload-button"
-                    }
-                  >
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                      multiple
-                      disabled={uploading}
-                      onChange={addPhotos}
-                    />
-                    <span>＋ 補足写真を追加する</span>
-                    <small>
-                      {uploading
-                        ? `送信中 ${uploadProgress}%`
-                        : "思い出に紐付かない追加資料としてお預かりします · 最大20枚"}
-                    </small>
-                  </label>
-                ) : (
+                ) : !canAddPhotos && (
                   <p className="readonly-preview-note">
                     {readOnlyPreview
                       ? "閲覧専用プレビューでは写真を追加できません。"

@@ -164,6 +164,7 @@ export type OrderAsset = {
   order_id: string;
   user_id: string;
   memory_id: string | null;
+  memory_photo_sort_order: number | null;
   category:
     | "source_image"
     | "source_video"

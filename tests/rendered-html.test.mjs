@@ -149,7 +149,7 @@ test("renders focused Japanese SEO guide pages", async () => {
     ],
     [
       "/dog-photo-guide",
-      ["完璧な資料より", "愛犬の動く絵本に使う写真の選び方"],
+      ["物語ひとつに、その日の一枚を", "愛犬の動く絵本に使う写真の選び方"],
     ],
   ]);
 
@@ -407,7 +407,7 @@ test("signup stores the dog name and the story form reuses it", async () => {
   );
   assert.match(
     storyWizard,
-    /const steps = \["愛犬のこと", "お写真", "思い出", "確認"\]/,
+    /const steps = \["愛犬のこと", "物語と写真", "確認"\]/,
   );
   assert.match(storyWizard, /purpose: FIXED_FILM_PURPOSE/);
   assert.doesNotMatch(
@@ -416,33 +416,25 @@ test("signup stores the dog name and the story form reuses it", async () => {
   );
   assert.doesNotMatch(storyWizard, /<span>ナレーション<\/span>/);
   assert.match(storyWizard, /const missingFields = useMemo<MissingField\[\]>/);
-  assert.match(storyWizard, /referencePhotosComplete/);
   assert.match(
     storyWizard,
     /const \[photoFiles, setPhotoFiles\] = useState<PhotoDraft\[\]>/,
   );
-  assert.match(storyWizard, /primaryFacePhotoKey/);
-  assert.match(storyWizard, /写真選びガイドを見る/);
-  assert.match(storyWizard, /その子らしいお気に入りの写真/);
-  assert.match(
-    storyWizard,
-    /正面・全身・横向きを別々に用意する必要はありません/,
-  );
-  assert.match(storyWizard, /photo-guide-photo-types/);
-  assert.match(storyWizard, /photo-guide-upload-head/);
-  assert.match(storyWizard, /referenceSlots\.map/);
-  assert.doesNotMatch(storyWizard, /photo-needs-card|ご用意いただきたい写真/);
-  assert.match(storyWizard, /referencePhotoCount === 1/);
+  assert.match(storyWizard, /const MIN_MEMORY_COUNT = 3/);
+  assert.match(storyWizard, /const MAX_MEMORY_COUNT = 5/);
+  assert.match(storyWizard, /MAX_PHOTOS_PER_MEMORY = 3/);
+  assert.match(storyWizard, /memory\.photoKeys\.length >= 1/);
+  assert.match(storyWizard, /物語にしたい日と、その日の一枚/);
+  assert.match(storyWizard, /この物語を削除/);
+  assert.match(storyWizard, /物語をもう1つ追加する/);
   assert.doesNotMatch(
     storyWizard,
     /photoRestoreNotice|wan-memory-had-selected-photos|写真をもう一度選んでください/,
   );
-  assert.match(storyWizard, /wan-memory-photo-guide-seen-v1/);
-  assert.match(storyWizard, /closePhotoGuideAndShowUploader/);
-  assert.match(storyWizard, /photoGuideDialogRef/);
+  assert.doesNotMatch(storyWizard, /photoGuideDialogRef|referenceSlots\.map/);
   assert.match(storyWizard, /未入力\$\{missingFields\.length\}項目を確認する/);
   assert.match(storyWizard, /onClick=\{\(\) => goToStep\(item\.step\)\}/);
-  assert.doesNotMatch(storyWizard, /if \(step === 1 &&/);
+  assert.match(storyWizard, /if \(step === 1\) \{/);
   assert.match(migration, /add column if not exists primary_pet_name text/);
 });
 
@@ -510,14 +502,14 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /disabled=\{\s*saving \|\|\s*!videoChecked/);
   assert.match(admin, /onChange=\{selectVideo\}/);
   assert.match(admin, /id="admin-photos"/);
-  assert.match(admin, /GPT・Runway制作用データをダウンロード/);
+  assert.match(admin, /物語別の制作用データをダウンロード/);
   assert.match(admin, /storage\s*\.from\("order-assets"\)\s*\.download/);
   assert.match(admin, /import\("fflate"\)/);
   assert.match(admin, /photo-manifest\.json/);
   assert.match(admin, /GPT_INSTRUCTIONS\.txt/);
   assert.match(admin, /createLandscape16x9/);
   assert.match(admin, /canvas\.toBlob/);
-  assert.match(admin, /photos_16x9/);
+  assert.match(admin, /stories\/01-title\/runway_16x9/);
   assert.match(admin, /runway_16x9_archive_path/);
   assert.match(admin, /1920x1080/);
   assert.match(admin, /requested_gpt_output/);
@@ -567,7 +559,7 @@ test("enforces operational workflow rules in the database boundary", async () =>
   assert.match(migration, /'review_video'/);
   assert.match(migration, /insert into public\.order_events/);
   assert.match(lockdown, /drop policy if exists orders_admin_update/);
-  assert.match(story, /referencePhotosComplete/);
+  assert.match(story, /memory\.photoKeys\.length >= 1/);
   assert.match(story, /beforeunload/);
   assert.match(story, /photo-selection-feedback/);
   assert.match(studio, /revisionsRemaining/);
@@ -761,7 +753,7 @@ test("records and enforces consolidated photo-rights and external-service consen
   assert.doesNotMatch(story, /広告利用や当社のAI学習には使用しません/);
 });
 
-test("stores three guided memory entries with optional matching photos", async () => {
+test("stores three to five stories with required scene photos", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, upgrade, story, uploads, admin, studio, css] =
     await Promise.all([
@@ -771,7 +763,7 @@ test("stores three guided memory entries with optional matching photos", async (
       ),
       readFile(
         new URL(
-          "supabase/migrations/202607210006_memory_photo_limit_five.sql",
+          "supabase/migrations/202608020002_story_scene_sources.sql",
           root,
         ),
         "utf8",
@@ -784,19 +776,19 @@ test("stores three guided memory entries with optional matching photos", async (
     ]);
   assert.match(migration, /create table if not exists public\.order_memories/);
   assert.match(migration, /add column if not exists memory_id uuid/);
-  assert.match(migration, /each memory requires 1 to 5 photos/);
-  assert.match(upgrade, /v_photo_count >= 5/);
-  assert.match(upgrade, /having count\(a\.id\) not between 1 and 5/);
-  assert.match(story, /const FIXED_MEMORY_COUNT = 3/);
-  assert.match(story, /3つの思い出をお聞かせください/);
-  assert.match(story, /一つのモチーフでつなぎ/);
+  assert.match(upgrade, /memory_photo_sort_order smallint/);
+  assert.match(upgrade, /not between 3 and 5/);
+  assert.match(upgrade, /not between 1 and 3/);
+  assert.match(story, /const MIN_MEMORY_COUNT = 3/);
+  assert.match(story, /const MAX_MEMORY_COUNT = 5/);
+  assert.match(story, /まず3つの思い出/);
   assert.match(story, /その子らしい反応を書く/);
-  assert.match(story, /この思い出と同じ場面の写真/);
+  assert.match(story, /この物語の場面写真/);
   assert.match(story, /save_order_memory_entry/);
-  assert.match(story, /MAX_PHOTOS_PER_MEMORY = 5/);
+  assert.match(story, /MAX_PHOTOS_PER_MEMORY = 3/);
   assert.match(story, /memory\.photoKeys\.length\s*<\s*MAX_PHOTOS_PER_MEMORY/);
   assert.match(story, /createMemoryDraft\("memory-3"\)/);
-  assert.match(story, /while \(memories\.length < FIXED_MEMORY_COUNT\)/);
+  assert.match(story, /while \(memories\.length < MIN_MEMORY_COUNT\)/);
   assert.match(story, /className="memory-entry-toggle"/);
   assert.match(story, /aria-expanded=\{expanded\}/);
   assert.match(story, /入力完了 ✓/);
@@ -807,22 +799,25 @@ test("stores three guided memory entries with optional matching photos", async (
   assert.match(story, /if \(currentStepMissingFields\.length > 0\)/);
   assert.match(story, /このステップの必須項目をすべて入力してください/);
   assert.match(story, /assign_memory_photos/);
+  assert.match(story, /prune_order_memories/);
   assert.match(story, /save_order_production_fields/);
   assert.match(uploads, /const fileKey = `\$\{file\.name\}:\$\{file\.size\}`/);
   assert.match(admin, /制作用JSONをコピー/);
-  assert.match(admin, /内容と写真が同じ場面か/);
+  assert.match(admin, /物語別 Runway 制作セット/);
+  assert.match(admin, /primary_scene_source/);
   assert.match(studio, /studio-memory-list/);
+  assert.match(studio, /studio-story-photo-add/);
   assert.match(css, /\.memory-entry-card/);
   assert.match(css, /\.memory-entry-toggle/);
   assert.match(css, /\.step-required-panel/);
 });
 
-test("stores appearance references and requires operator photo approval", async () => {
+test("uses story-specific photo sources and requires operator approval", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, story, admin, types, css] = await Promise.all([
     readFile(
       new URL(
-        "supabase/migrations/202607220001_appearance_photo_review.sql",
+        "supabase/migrations/202608020002_story_scene_sources.sql",
         root,
       ),
       "utf8",
@@ -833,12 +828,12 @@ test("stores appearance references and requires operator photo approval", async 
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
 
-  assert.match(types, /type AppearancePolicy/);
+  assert.match(types, /memory_photo_sort_order: number \| null/);
   assert.match(
     types,
     /photoAnalysisStatus: order\.photo_analysis_status \?\? "needs_customer_input"/,
   );
-  assert.match(migration, /primary_face_photo_id uuid/);
+  assert.match(migration, /memory_photo_sort_order smallint/);
   assert.match(
     migration,
     /create or replace function public\.save_order_production_fields/,
@@ -849,20 +844,12 @@ test("stores appearance references and requires operator photo approval", async 
   );
   assert.match(migration, /category = 'source_image'/);
   assert.match(migration, /photo_analysis_status = 'pending_operator_review'/);
-  assert.match(
-    migration,
-    /photo_analysis_approved_by = case when p_status = 'approved' then auth\.uid\(\)/,
-  );
-  assert.match(migration, /enforce_photo_analysis_before_production/);
-  assert.match(
-    migration,
-    /create or replace function public\.admin_publish_concepts/,
-  );
+  assert.match(migration, /create or replace function public\.prune_order_memories/);
+  assert.match(migration, /global_appearance_references', false/);
 
-  assert.match(story, /その子らしいお気に入りの写真/);
-  assert.match(story, /正面・全身・横向きを別々に用意する必要はありません/);
+  assert.match(story, /各物語には、その日の写真を1枚/);
   assert.match(story, /FIXED_FILM_STYLE/);
-  assert.match(story, /referencePhotosComplete/);
+  assert.doesNotMatch(story, /referencePhotosComplete/);
   assert.match(story, /仕上がりの表現について確認しました/);
   assert.match(story, /save_order_production_fields/);
   assert.match(story, /assign_memory_photos/);
@@ -871,10 +858,9 @@ test("stores appearance references and requires operator photo approval", async 
   assert.match(admin, /admin_set_photo_analysis_status/);
   assert.match(admin, /order\.status === "materials_submitted"/);
   assert.match(admin, /p_status: "reviewing_materials"/);
-  assert.match(admin, /写真分析を承認する/);
-  assert.match(admin, /主人公の基準と写真確認/);
-  assert.match(css, /\.reference-slot/);
-  assert.match(css, /\.reference-slot-empty/);
+  assert.match(admin, /物語と写真を承認する/);
+  assert.match(admin, /物語ごとの制作素材チェック/);
+  assert.match(css, /\.memory-photo-role/);
 });
 
 test("stores storybook page sentences and burns them into the final video", async () => {
