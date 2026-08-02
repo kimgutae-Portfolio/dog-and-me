@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
@@ -154,17 +155,15 @@ export default async function Home() {
       <MobileStickyCta />
 
       <section className="storybook-hero" aria-labelledby="hero-title">
-        <video
-          className="storybook-hero-video"
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/film/miru/01-spring-letter.jpg"
+        <Image
+          className="storybook-hero-image"
+          src="/film/miru/01-spring-letter.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
           aria-hidden="true"
-        >
-          <source src="/film/miru/spring-letter.mp4" type="video/mp4" />
-        </video>
+        />
         <div className="storybook-hero-wash" aria-hidden="true" />
         <div className="shell storybook-hero-copy">
           <p className="eyebrow">A MOVING STORYBOOK FOR YOUR DOG</p>
