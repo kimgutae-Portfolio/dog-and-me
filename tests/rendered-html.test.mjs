@@ -420,13 +420,14 @@ test("signup stores the dog name and the story form reuses it", async () => {
     storyWizard,
     /const \[photoFiles, setPhotoFiles\] = useState<PhotoDraft\[\]>/,
   );
-  assert.match(storyWizard, /const MIN_MEMORY_COUNT = 3/);
+  assert.match(storyWizard, /const MIN_MEMORY_COUNT = 5/);
   assert.match(storyWizard, /const MAX_MEMORY_COUNT = 5/);
   assert.match(storyWizard, /MAX_PHOTOS_PER_MEMORY = 3/);
   assert.match(storyWizard, /memory\.photoKeys\.length >= 1/);
   assert.match(storyWizard, /物語にしたい日と、その日の一枚/);
-  assert.match(storyWizard, /この物語を削除/);
-  assert.match(storyWizard, /物語をもう1つ追加する/);
+  assert.match(storyWizard, /createMemoryDraft\("memory-5"\)/);
+  assert.match(storyWizard, /基準写真にする/);
+  assert.doesNotMatch(storyWizard, /この物語を削除|物語をもう1つ追加する/);
   assert.doesNotMatch(
     storyWizard,
     /photoRestoreNotice|wan-memory-had-selected-photos|写真をもう一度選んでください/,
@@ -753,9 +754,9 @@ test("records and enforces consolidated photo-rights and external-service consen
   assert.doesNotMatch(story, /広告利用や当社のAI学習には使用しません/);
 });
 
-test("stores three to five stories with required scene photos", async () => {
+test("stores exactly five stories with required scene photos", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, upgrade, story, uploads, admin, studio, css] =
+  const [migration, upgrade, rules, story, uploads, admin, studio, css] =
     await Promise.all([
       readFile(
         new URL("supabase/migrations/202607210005_memory_entries.sql", root),
@@ -764,6 +765,13 @@ test("stores three to five stories with required scene photos", async () => {
       readFile(
         new URL(
           "supabase/migrations/202608020002_story_scene_sources.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(
+        new URL(
+          "supabase/migrations/202608020003_five_story_source_lock.sql",
           root,
         ),
         "utf8",
@@ -777,17 +785,18 @@ test("stores three to five stories with required scene photos", async () => {
   assert.match(migration, /create table if not exists public\.order_memories/);
   assert.match(migration, /add column if not exists memory_id uuid/);
   assert.match(upgrade, /memory_photo_sort_order smallint/);
-  assert.match(upgrade, /not between 3 and 5/);
   assert.match(upgrade, /not between 1 and 3/);
-  assert.match(story, /const MIN_MEMORY_COUNT = 3/);
+  assert.match(rules, /v_memory_count <> 5/);
+  assert.match(rules, /cardinality\(coalesce\(p_client_keys/);
+  assert.match(story, /const MIN_MEMORY_COUNT = 5/);
   assert.match(story, /const MAX_MEMORY_COUNT = 5/);
-  assert.match(story, /まず3つの思い出/);
+  assert.match(story, /5つの思い出を教えてください/);
   assert.match(story, /その子らしい反応を書く/);
   assert.match(story, /この物語の場面写真/);
   assert.match(story, /save_order_memory_entry/);
   assert.match(story, /MAX_PHOTOS_PER_MEMORY = 3/);
   assert.match(story, /memory\.photoKeys\.length\s*<\s*MAX_PHOTOS_PER_MEMORY/);
-  assert.match(story, /createMemoryDraft\("memory-3"\)/);
+  assert.match(story, /createMemoryDraft\("memory-5"\)/);
   assert.match(story, /while \(memories\.length < MIN_MEMORY_COUNT\)/);
   assert.match(story, /className="memory-entry-toggle"/);
   assert.match(story, /aria-expanded=\{expanded\}/);
@@ -807,6 +816,13 @@ test("stores three to five stories with required scene photos", async () => {
   assert.match(admin, /primary_scene_source/);
   assert.match(studio, /studio-memory-list/);
   assert.match(studio, /studio-story-photo-add/);
+  assert.match(studio, /makeStoryPhotoPrimary/);
+  assert.match(studio, /order\.photo_analysis_status !== "approved"/);
+  assert.match(admin, /storyScenes/);
+  assert.match(admin, /5つすべての物語の場面/);
+  assert.match(rules, /admin_set_memory_primary_photo/);
+  assert.match(rules, /enforce_source_photo_edit_window_trigger/);
+  assert.match(rules, /each story must appear exactly once in every concept/);
   assert.match(css, /\.memory-entry-card/);
   assert.match(css, /\.memory-entry-toggle/);
   assert.match(css, /\.step-required-panel/);
@@ -814,10 +830,17 @@ test("stores three to five stories with required scene photos", async () => {
 
 test("uses story-specific photo sources and requires operator approval", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, story, admin, types, css] = await Promise.all([
+  const [migration, sourceLock, story, admin, types, css] = await Promise.all([
     readFile(
       new URL(
         "supabase/migrations/202608020002_story_scene_sources.sql",
+        root,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "supabase/migrations/202608020003_five_story_source_lock.sql",
         root,
       ),
       "utf8",
@@ -846,6 +869,8 @@ test("uses story-specific photo sources and requires operator approval", async (
   assert.match(migration, /photo_analysis_status = 'pending_operator_review'/);
   assert.match(migration, /create or replace function public\.prune_order_memories/);
   assert.match(migration, /global_appearance_references', false/);
+  assert.match(sourceLock, /確認済みの写真は変更できません/);
+  assert.match(sourceLock, /five stories are required before source approval/);
 
   assert.match(story, /各物語には、その日の写真を1枚/);
   assert.match(story, /FIXED_FILM_STYLE/);

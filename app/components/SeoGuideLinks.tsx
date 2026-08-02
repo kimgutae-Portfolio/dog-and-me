@@ -3,7 +3,7 @@ import Link from "next/link";
 const guides = [
   [
     "愛犬の動く絵本",
-    "3〜5つの物語と場面写真からつくる制作の流れ",
+    "5つの物語と場面写真からつくる制作の流れ",
     "/aiken-omoide-douga",
   ],
   [

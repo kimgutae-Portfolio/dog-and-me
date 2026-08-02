@@ -794,15 +794,22 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-memory-list dt { margin-bottom: 5px; color: var(--rust); font-size: 7px; font-weight: 700; }
 .admin-memory-list dd { margin: 0; font-size: 9px; line-height: 1.75; white-space: pre-wrap; }
 .admin-memory-photos { margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.admin-memory-photos a { min-width: 0; color: inherit; background: white; }
+.admin-memory-photos article { min-width: 0; padding: 6px; color: inherit; background: white; }
+.admin-memory-photos article.primary { box-shadow: inset 0 0 0 1px var(--rust); }
+.admin-memory-photos a { min-width: 0; display: block; color: inherit; }
 .admin-memory-photos a > span { width: 100%; aspect-ratio: 1.35; display: block; background-color: #ded8cc; }
 .admin-memory-photos small { padding: 7px; display: block; overflow: hidden; color: var(--muted); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.admin-memory-photos article > button { width: 100%; min-height: 34px; border: 1px solid var(--rust); color: var(--rust); background: transparent; cursor: pointer; font-size: 8px; }
 .admin-memory-check { margin: 12px 0 0; padding: 10px 12px; color: #6c5e4f; background: #eadfce; font-size: 8px; line-height: 1.7; }
 .admin-photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .admin-photo-grid a { min-width: 0; color: inherit; background: #ebe7dd; }
 .admin-photo-grid a > span { width: 100%; aspect-ratio: 1; display: grid; place-items: center; background: #ded8cc; }
 .admin-photo-thumb { background-position: center; background-size: cover; }
 .admin-photo-grid small { padding: 8px; display: block; overflow: hidden; color: var(--muted); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.admin-concept-story-scenes { display: grid; gap: 9px; }
+.admin-concept-story-scenes label { padding: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.5); }
+.admin-concept-story-scenes label > span { display: block; color: var(--rust); font-size: 8px; font-weight: 700; line-height: 1.6; }
+.admin-concept-story-scenes textarea { margin-top: 6px; }
 .admin-empty-copy { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.8; }
 .admin-concepts { margin-bottom: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .admin-concepts > div { padding: 20px; display: grid; gap: 14px; border: 1px solid var(--line); }
@@ -1299,6 +1306,14 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .studio-story-photo-add span { font-size: 9px; font-weight: 700; }
 .studio-story-photo-add small { white-space: nowrap; }
 .studio-story-photo-add.disabled { opacity: .55; cursor: wait; }
+.studio-story-photo-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.studio-story-photo-grid article { min-width: 0; padding: 7px; border: 1px solid var(--line); background: rgba(255,255,255,.62); }
+.studio-story-photo-grid article.primary { border-color: rgba(157,92,62,.58); background: #fff8ef; }
+.studio-story-photo-grid a, .studio-story-photo-grid a img, .studio-story-photo-grid article > span { width: 100%; aspect-ratio: 1; display: block; }
+.studio-story-photo-grid a img { object-fit: cover; }
+.studio-story-photo-grid article > span { display: grid; place-items: center; color: var(--muted); background: #e5e0d6; font-size: 8px; }
+.studio-story-photo-grid small { margin-top: 6px; display: block; color: var(--muted); font-size: 8px; }
+.studio-story-photo-grid button { width: 100%; min-height: 34px; margin-top: 6px; padding: 4px 6px; border: 1px solid var(--rust); color: var(--rust); background: transparent; cursor: pointer; font-size: 8px; }
 .studio-card blockquote { margin: 22px 0 0; padding: 16px 20px; color: #5b554c; background: #ebe6dc; font-family: var(--font-serif); font-size: 12px; }
 .message-card .director { margin: 26px 0 20px; display: flex; gap: 13px; align-items: center; }
 .director > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: white; background: #9c978c; font-family: var(--font-serif); }
@@ -1747,6 +1762,18 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .miru-book-cover p, .miru-book-heading p, .miru-book-letter > p { margin: 0 0 20px; color: #a16f70; font-size: 8px; font-weight: 700; letter-spacing: .22em; }
 .miru-book-cover h1 { margin: 0 0 24px; font-family: var(--font-serif); font-size: clamp(58px,7.5vw,98px); font-weight: 400; line-height: 1.42; letter-spacing: .07em; }
 .miru-book-cover span { color: #6c655d; font-size: 10px; letter-spacing: .1em; }
+.miru-book-source-archive { padding: 124px 0; background: #f8f3ea; }
+.miru-book-source-intro { max-width: 760px; margin: -12px 0 38px auto; color: #6b645b; font-size: 11px; line-height: 2; }
+.miru-book-source-grid { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; list-style: none; }
+.miru-book-source-grid li { min-width: 0; padding: 9px; border: 1px solid rgba(64,59,53,.15); background: #fffaf2; box-shadow: 0 13px 34px rgba(70,55,45,.08); }
+.miru-book-source-photo { width: 100%; aspect-ratio: 3/4; display: block; background-image: url('/film/miru/customer-upload-archive.jpg'); background-repeat: no-repeat; background-size: 500% auto; }
+.miru-book-source-grid li > div { padding: 12px 5px 5px; }
+.miru-book-source-grid li > div > span { display: block; color: #a16f70; font-size: 7px; font-weight: 700; letter-spacing: .16em; }
+.miru-book-source-grid strong { min-height: 42px; margin-top: 8px; display: block; font-family: var(--font-serif); font-size: 13px; font-weight: 400; line-height: 1.55; }
+.miru-book-source-grid small { margin-top: 8px; display: block; color: #777067; font-size: 8px; }
+.miru-book-source-rule { margin-top: 28px; padding: 18px 20px; display: flex; gap: 24px; color: #5b554e; background: #e9e0d2; }
+.miru-book-source-rule strong { flex: 0 0 auto; font-family: var(--font-serif); font-size: 14px; font-weight: 400; }
+.miru-book-source-rule span { font-size: 9px; line-height: 1.9; }
 .miru-book-motion { padding: 124px 0; background: #e8dfd1; }
 .miru-book-shell { width: min(1160px,calc(100% - 80px)); margin: 0 auto; }
 .miru-book-heading { margin-bottom: 46px; display: flex; align-items: end; justify-content: space-between; gap: 40px; }
@@ -1816,7 +1843,11 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .miru-book-cover > div:last-child { width: calc(100% - 36px); padding-bottom: 58px; }
   .miru-book-cover h1 { font-size: 48px; }
   .miru-book-shell { width: calc(100% - 36px); }
-  .miru-book-motion, .miru-book-chapters { padding: 82px 0; }
+  .miru-book-source-archive, .miru-book-motion, .miru-book-chapters { padding: 82px 0; }
+  .miru-book-source-intro { margin: 0 0 28px; font-size: 10px; }
+  .miru-book-source-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .miru-book-source-grid li:last-child { grid-column: 1 / -1; width: calc(50% - 5px); }
+  .miru-book-source-rule { align-items: flex-start; flex-direction: column; gap: 8px; }
   .miru-book-heading { align-items: start; flex-direction: column; gap: 15px; }
   .miru-book-player p { max-width: calc(100% - 30px); bottom: 7%; font-size: 14px; white-space: normal; }
   .miru-book-player button { width: 48px; height: 48px; }
@@ -1906,6 +1937,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .memory-photo-item .photo-save-state { color: #79684e; font-size: 8px; font-style: normal; }
 .memory-photo-item .photo-save-state.saved { color: #52715a; }
 .memory-photo-item > div > button.photo-retry-button { margin-left: 0; color: #8a3e35; font-weight: 700; text-decoration: underline; }
+.memory-photo-item > div > button.photo-primary-button { width: 100%; min-height: 30px; margin: 2px 0 0; border: 1px solid rgba(47,58,49,.28); color: var(--forest); }
 .memory-photo-add { min-height: 118px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed #98978e; background: rgba(255,255,255,.45); cursor: pointer; text-align: center; }
 .memory-photo-add strong { font-size: 10px; font-weight: 700; }
 .memory-photo-add small { margin-top: 4px; color: var(--muted); font-size: 7px; }

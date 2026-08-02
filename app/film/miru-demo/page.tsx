@@ -10,13 +10,21 @@ export const metadata: Metadata = {
   alternates: { canonical: "/film/miru-demo" },
   openGraph: {
     title: "ミルと、ひとひらの春｜WAN MEMORY",
-    description: "一枚の花びらが三つの記憶をつなぐ、愛犬の動く絵本。",
+    description: "一枚の花びらが五つの記憶をつなぐ、愛犬の動く絵本。",
     url: "/film/miru-demo",
     images: [
       { url: "/og.png", width: 1200, height: 630, alt: "ミルと、ひとひらの春" },
     ],
   },
 };
+
+const sourceArchive = [
+  ["01", "桜道ではじめての春", "基準写真", "0%"],
+  ["02", "窓辺の午後", "基準写真", "25%"],
+  ["03", "青い毛布のピクニック", "基準写真", "50%"],
+  ["04", "はじめての海", "基準写真", "75%"],
+  ["05", "金色の帰り道", "基準写真", "100%"],
+] as const;
 
 const chapters = [
   [
@@ -66,11 +74,52 @@ export default function MiruDemoPage() {
           <span>マルチーズ · はじめての春とはじめての海</span>
         </div>
       </section>
+      <section className="miru-book-source-archive">
+        <div className="miru-book-shell">
+          <div className="miru-book-heading">
+            <div>
+              <p>01 / CUSTOMER PHOTO ARCHIVE</p>
+              <h2>
+                五つの記憶を、
+                <br />
+                物語ごとに預かる。
+              </h2>
+            </div>
+            <span>デモ用に登録したお客様写真</span>
+          </div>
+          <p className="miru-book-source-intro">
+            お客様の制作室では、送った写真を物語ごとの保管箱としていつでも確認できます。最初の1枚が絵本ページの基準写真になり、必要な物語だけ補助写真を2枚まで追加できます。
+          </p>
+          <ol className="miru-book-source-grid">
+            {sourceArchive.map(([number, title, role, position]) => (
+              <li key={number}>
+                <span
+                  className="miru-book-source-photo"
+                  role="img"
+                  aria-label={`${title}のデモ用お客様写真`}
+                  style={{ backgroundPosition: `${position} center` }}
+                />
+                <div>
+                  <span>STORY {number}</span>
+                  <strong>{title}</strong>
+                  <small>{role} · 1 / 3枚</small>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <aside className="miru-book-source-rule">
+            <strong>写真確認後は固定されます</strong>
+            <span>
+              担当者が承認する前までは写真追加と基準写真の変更ができます。承認後に変更が必要な場合は、制作室のメッセージから担当者へご連絡ください。
+            </span>
+          </aside>
+        </div>
+      </section>
       <section className="miru-book-motion">
         <div className="miru-book-shell">
           <div className="miru-book-heading">
             <div>
-              <p>01 / A PAGE COMES ALIVE</p>
+              <p>02 / A PAGE COMES ALIVE</p>
               <h2>
                 絵本の一ページが、
                 <br />
@@ -89,7 +138,7 @@ export default function MiruDemoPage() {
         <div className="miru-book-shell">
           <div className="miru-book-heading">
             <div>
-              <p>02 / STORY PAGES</p>
+              <p>03 / STORY PAGES · SELECTED PAGES</p>
               <h2>
                 ひとひらが、
                 <br />
@@ -113,7 +162,7 @@ export default function MiruDemoPage() {
         </div>
       </section>
       <section className="miru-book-letter">
-        <p>03 / A LETTER FOR MIRU</p>
+        <p>04 / A LETTER FOR MIRU</p>
         <blockquote>
           ミルへ。
           <br />

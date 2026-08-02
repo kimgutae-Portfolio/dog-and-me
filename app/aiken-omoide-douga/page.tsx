@@ -7,7 +7,7 @@ import { createGuideStructuredData } from "../lib/seo";
 
 const title = "愛犬の写真からつくる動く絵本";
 const description =
-  "愛犬の3〜5つのエピソードと場面写真から、水彩とガッシュで描く約1分の動く絵本をオーダーメイド制作します。";
+  "愛犬の5つのエピソードと場面写真から、水彩とガッシュで描く約1分の動く絵本をオーダーメイド制作します。";
 export const metadata: Metadata = {
   title,
   description,
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 const faqs = [
   [
     "写真は何枚から相談できますか？",
-    "物語にしたい出来事を最低3つ選び、それぞれに同じ場面の写真を1枚添えてください。各物語には最大3枚まで追加できます。",
+    "物語にしたい出来事を5つ選び、それぞれに同じ場面の写真を1枚添えてください。各物語には最大3枚まで追加できます。",
   ],
   [
     "写真スライドショーとの違いは？",
@@ -79,7 +79,7 @@ export default function AikenOmoideDougaPage() {
         </p>
         <ul>
           <li>水彩とガッシュで統一した絵本ページ</li>
-          <li>3〜5つの物語と場面写真から物語案を2案</li>
+          <li>5つの物語と場面写真から物語案を2案</li>
           <li>動画化の前に全ページと文章を確認</li>
           <li>約1分・BGMと物語字幕つき</li>
         </ul>
@@ -92,7 +92,7 @@ export default function AikenOmoideDougaPage() {
             <div>
               <strong>物語にしたい日を選ぶ</strong>
               <p>
-                写真が残っている出来事から、まず3つ、最大5つまで選びます。
+                写真が残っている出来事から、5つを選びます。
               </p>
             </div>
           </li>

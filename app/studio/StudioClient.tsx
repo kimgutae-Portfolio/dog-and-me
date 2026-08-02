@@ -96,6 +96,9 @@ export function StudioClient() {
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [sourcePhotoUrls, setSourcePhotoUrls] = useState<
+    Record<string, string>
+  >({});
   const [messageBody, setMessageBody] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [revisionCategory, setRevisionCategory] = useState("絵の動き");
@@ -313,7 +316,37 @@ export function StudioClient() {
   const sourceAssets = assets.filter(
     (asset) => asset.category === "source_image",
   );
-  const canAddPhotos = canOperateOrder && order?.status !== "cancelled";
+  const canManageSourcePhotos = Boolean(
+    canOperateOrder &&
+      order &&
+      ["materials_submitted", "reviewing_materials"].includes(order.status) &&
+      order.photo_analysis_status !== "approved",
+  );
+  const canAddPhotos = canManageSourcePhotos;
+
+  useEffect(() => {
+    let cancelled = false;
+    const photos = assets.filter((asset) => asset.category === "source_image");
+    if (!photos.length) {
+      setSourcePhotoUrls({});
+      return () => {
+        cancelled = true;
+      };
+    }
+    void Promise.all(
+      photos.map(async (asset) => {
+        const { data } = await getSupabaseBrowserClient()
+          .storage.from("order-assets")
+          .createSignedUrl(asset.storage_path, 3600);
+        return [asset.id, data?.signedUrl ?? ""] as const;
+      }),
+    ).then((entries) => {
+      if (!cancelled) setSourcePhotoUrls(Object.fromEntries(entries));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [assets]);
   const revisionsRemaining = order
     ? Math.max(order.revision_limit - order.revision_used, 0)
     : 0;
@@ -520,7 +553,7 @@ export function StudioClient() {
       );
       if (linkError) throw linkError;
       setNotice(`「${memory.title}」に写真を${files.length}枚追加しました。`);
-      await loadDetails(order.id);
+      await Promise.all([loadDetails(order.id), loadOrders()]);
     } catch (caught) {
       console.error(caught);
       setError("写真を追加できませんでした。形式と通信状態をご確認ください。");
@@ -528,6 +561,44 @@ export function StudioClient() {
       setUploading(false);
       event.target.value = "";
     }
+  };
+
+  const makeStoryPhotoPrimary = async (
+    memory: OrderMemory,
+    assetId: string,
+  ) => {
+    if (!order || !canManageSourcePhotos || uploading) return;
+    const orderedIds = sourceAssets
+      .filter((asset) => asset.memory_id === memory.id)
+      .sort(
+        (a, b) =>
+          (a.memory_photo_sort_order ?? 99) -
+          (b.memory_photo_sort_order ?? 99),
+      )
+      .map((asset) => asset.id);
+    if (orderedIds[0] === assetId) return;
+    setUploading(true);
+    setError("");
+    const { error: primaryError } = await getSupabaseBrowserClient().rpc(
+      "assign_memory_photos",
+      {
+        p_order_id: order.id,
+        p_memory_id: memory.id,
+        p_asset_ids: [
+          assetId,
+          ...orderedIds.filter((id) => id !== assetId),
+        ],
+      },
+    );
+    if (primaryError) {
+      setError(
+        "基準写真を変更できませんでした。写真確認の状態をご確認ください。",
+      );
+    } else {
+      setNotice(`「${memory.title}」の基準写真を変更しました。`);
+      await Promise.all([loadDetails(order.id), loadOrders()]);
+    }
+    setUploading(false);
   };
 
   const sendMessage = async (event: FormEvent) => {
@@ -1186,10 +1257,10 @@ export function StudioClient() {
                   {order.status === "delivered"
                     ? "完成した動く絵本をいつでもこちらでご覧いただけます。"
                     : order.status === "concepts_ready"
-                      ? "お預かりした3〜5つの物語をつなぐ2案から、心に近い1案を選んでください。"
+                      ? "お預かりした5つの物語をつなぐ2案から、心に近い1案を選んでください。"
                       : order.status === "stills_review"
                         ? "動画にする前の絵本ページと物語文をご用意しました。内容をご確認ください。"
-                        : "進行が変わると、この制作室でお知らせします。追加したい思い出や写真はいつでもお送りください。"}
+                        : "進行が変わると、この制作室でお知らせします。写真の追加や基準写真の変更は、担当者の素材確認が終わる前まで行えます。"}
                 </p>
                 <span className="estimate">
                   予定完成日：{formatDate(order.due_date)}
@@ -1728,6 +1799,54 @@ export function StudioClient() {
                             {memory.location || "場所指定なし"} · 写真
                             {memoryPhotos.length}枚
                           </small>
+                          <div className="studio-story-photo-grid">
+                            {memoryPhotos.map((asset) => (
+                              <article
+                                className={
+                                  asset.memory_photo_sort_order === 1
+                                    ? "primary"
+                                    : ""
+                                }
+                                key={asset.id}
+                              >
+                                {sourcePhotoUrls[asset.id] ? (
+                                  <a
+                                    href={sourcePhotoUrls[asset.id]}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    aria-label={`${memory.title}の写真を大きく表示`}
+                                  >
+                                    <img
+                                      src={sourcePhotoUrls[asset.id]}
+                                      alt={`${memory.title}の${asset.memory_photo_sort_order === 1 ? "基準写真" : "補助写真"}`}
+                                    />
+                                  </a>
+                                ) : (
+                                  <span>読み込み中</span>
+                                )}
+                                <small>
+                                  {asset.memory_photo_sort_order === 1
+                                    ? "基準写真"
+                                    : `補助写真 ${(asset.memory_photo_sort_order ?? 2) - 1}`}
+                                </small>
+                                {canManageSourcePhotos &&
+                                  asset.memory_photo_sort_order !== 1 && (
+                                    <button
+                                      type="button"
+                                      disabled={uploading}
+                                      onClick={() =>
+                                        void makeStoryPhotoPrimary(
+                                          memory,
+                                          asset.id,
+                                        )
+                                      }
+                                    >
+                                      基準写真に変更
+                                    </button>
+                                  )}
+                              </article>
+                            ))}
+                          </div>
                           {canAddPhotos && memoryPhotos.length < 3 && (
                             <label
                               className={
@@ -1776,7 +1895,9 @@ export function StudioClient() {
                   <p className="readonly-preview-note">
                     {readOnlyPreview
                       ? "閲覧専用プレビューでは写真を追加できません。"
-                      : "停止中のご相談には写真を追加できません。"}
+                      : order.photo_analysis_status === "approved"
+                        ? "写真は担当者確認済みのため固定されています。変更が必要な場合は、メッセージで担当者へご連絡ください。"
+                        : "現在の制作工程では写真を変更できません。"}
                   </p>
                 )}
               </section>

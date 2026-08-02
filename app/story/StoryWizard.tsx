@@ -53,11 +53,9 @@ type Draft = {
   aiReconstructionAcknowledged: boolean;
 };
 
-// Each story is also a production unit: customers provide one indispensable
-// scene photo and may add two supporting references. Three stories keep the
-// intake light; two optional additions give the director enough room when the
-// family has more moments they want to include.
-const MIN_MEMORY_COUNT = 3;
+// Each story is also a production unit: every order has the same five-story
+// rhythm, with one indispensable scene photo and up to two supporting photos.
+const MIN_MEMORY_COUNT = 5;
 const MAX_MEMORY_COUNT = 5;
 const MAX_TOTAL_PHOTOS = MAX_MEMORY_COUNT * 3;
 const MAX_PHOTOS_PER_MEMORY = 3;
@@ -95,6 +93,8 @@ const emptyDraft: Draft = {
     createMemoryDraft("memory-1"),
     createMemoryDraft("memory-2"),
     createMemoryDraft("memory-3"),
+    createMemoryDraft("memory-4"),
+    createMemoryDraft("memory-5"),
   ],
   message: "",
   termsConsent: false,
@@ -610,53 +610,16 @@ export function StoryWizard() {
     );
   };
 
-  const addMemory = () => {
-    if (draft.memories.length >= MAX_MEMORY_COUNT) return;
-    const clientKey = `memory-${crypto.randomUUID()}`;
-    setDraft((current) => ({
-      ...current,
-      memories: [...current.memories, createMemoryDraft(clientKey)],
-    }));
-    setActiveMemoryKey(clientKey);
-  };
-
-  const removeMemory = async (memoryKey: string) => {
-    if (draft.memories.length <= MIN_MEMORY_COUNT) return;
+  const makePrimaryPhoto = (memoryKey: string, photoKey: string) => {
     const memory = draft.memories.find((item) => item.clientKey === memoryKey);
-    if (!memory) return;
-    const targets = photoFiles.filter((photo) =>
-      memory.photoKeys.includes(photo.clientKey),
+    if (!memory || memory.photoKeys[0] === photoKey) return;
+    updateMemory(memoryKey, "photoKeys", [
+      photoKey,
+      ...memory.photoKeys.filter((key) => key !== photoKey),
+    ]);
+    setPhotoSelectionNotice(
+      "基準写真を変更しました。確認画面にも新しい基準写真が表示されます。",
     );
-    try {
-      for (const target of targets) {
-        if (target.persistedAsset) {
-          await deleteStoryDraftImage(
-            getSupabaseBrowserClient(),
-            target.persistedAsset,
-          );
-        }
-        URL.revokeObjectURL(target.previewUrl);
-      }
-    } catch (caught) {
-      console.error(caught);
-      setPhotoSelectionNotice(
-        "物語を削除できませんでした。通信状態をご確認のうえ、もう一度お試しください。",
-      );
-      return;
-    }
-    const removedKeys = new Set(memory.photoKeys);
-    setPhotoFiles((current) =>
-      current.filter((photo) => !removedKeys.has(photo.clientKey)),
-    );
-    setDraft((current) => ({
-      ...current,
-      memories: current.memories.filter((item) => item.clientKey !== memoryKey),
-    }));
-    setActiveMemoryKey(
-      draft.memories.find((item) => item.clientKey !== memoryKey)?.clientKey ??
-        "",
-    );
-    setPhotoSelectionNotice("物語と、その物語に添えた写真を削除しました。");
   };
 
   const photoByKey = useMemo(
@@ -702,7 +665,7 @@ export function StoryWizard() {
     )
       missing.push({
         key: "memories",
-        label: `物語の数（${MIN_MEMORY_COUNT}〜${MAX_MEMORY_COUNT}つ）`,
+        label: `物語の数（${MAX_MEMORY_COUNT}つ）`,
         step: 1,
       });
     draft.memories.forEach((memory, index) => {
@@ -1149,7 +1112,7 @@ export function StoryWizard() {
               <p className="eyebrow">STORIES & PHOTOS</p>
               <h1 id="step-title">物語にしたい日と、その日の一枚。</h1>
               <p className="step-lead">
-                まず3つの思い出を教えてください。残したい出来事が多ければ、最大5つまで追加できます。各物語には、その日の写真を1枚だけ添えれば受付できます。
+                映像の長さと読みやすさを揃えるため、5つの思い出を教えてください。各物語には、その日の写真を1枚だけ添えれば受付できます。
               </p>
               {photoSelectionNotice && (
                 <aside className="photo-selection-feedback" role="status">
@@ -1252,16 +1215,6 @@ export function StoryWizard() {
                           className="memory-entry-content"
                           id={`memory-entry-content-${memory.clientKey}`}
                         >
-                          {draft.memories.length > MIN_MEMORY_COUNT && (
-                            <div className="memory-entry-remove-row">
-                              <button
-                                type="button"
-                                onClick={() => void removeMemory(memory.clientKey)}
-                              >
-                                この物語を削除
-                              </button>
-                            </div>
-                          )}
                           <div className="memory-entry-fields">
                             <label className="wide">
                               <span>
@@ -1400,6 +1353,21 @@ export function StoryWizard() {
                                           再試行
                                         </button>
                                       )}
+                                      {photoIndex > 0 && (
+                                        <button
+                                          type="button"
+                                          className="photo-primary-button"
+                                          disabled={photo.status === "uploading"}
+                                          onClick={() =>
+                                            makePrimaryPhoto(
+                                              memory.clientKey,
+                                              photoKey,
+                                            )
+                                          }
+                                        >
+                                          基準写真にする
+                                        </button>
+                                      )}
                                       <button
                                         type="button"
                                         disabled={photo.status === "uploading"}
@@ -1457,7 +1425,7 @@ export function StoryWizard() {
               </div>
               <div className="memory-entry-add">
                 <p>
-                  完成映像は、はじまり・{draft.memories.length}つの物語・おわりのメッセージで構成します。
+                  完成映像は、はじまり・5つの物語・おわりのメッセージで構成します。
                   <br />
                   入力できた物語：
                   {draft.memories.filter(isMemoryReady).length} /{" "}
@@ -1467,15 +1435,6 @@ export function StoryWizard() {
                     ? "すべて入力できました。このまま確認へ進めます。"
                     : "各物語の文章と写真1枚がそろうと入力完了になります。書きやすいものから進めてください。"}
                 </p>
-                {draft.memories.length < MAX_MEMORY_COUNT && (
-                  <button
-                    type="button"
-                    className="button button-outline"
-                    onClick={addMemory}
-                  >
-                    ＋ 物語をもう1つ追加する（最大{MAX_MEMORY_COUNT}つ）
-                  </button>
-                )}
               </div>
               <div className="stacked-fields memory-ending-fields">
                 <label>

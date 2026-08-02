@@ -286,6 +286,12 @@ export type FilmConcept = {
   tone: string;
   summary: string;
   scenes: string[];
+  story_scenes: Array<{
+    memory_id: string;
+    memory_number: number;
+    memory_title: string;
+    text: string;
+  }>;
   status: "draft" | "published";
   created_at: string;
   updated_at: string;

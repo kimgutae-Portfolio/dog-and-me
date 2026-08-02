@@ -37,7 +37,7 @@ type ConceptDraft = {
   title: string;
   tone: string;
   summary: string;
-  scenes: string;
+  storyScenes: Record<string, string>;
 };
 type VideoMode = "review" | "final";
 type AttentionCount = { messages: number; revisions: number };
@@ -46,7 +46,7 @@ const emptyConcept: ConceptDraft = {
   title: "",
   tone: "",
   summary: "",
-  scenes: "",
+  storyScenes: {},
 };
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
@@ -516,7 +516,8 @@ export function AdminStudio() {
           .map((asset) => [asset.id, asset.story_caption ?? ""]),
       ),
     );
-    setMemories((memoryResult.data ?? []) as OrderMemory[]);
+    const loadedMemories = (memoryResult.data ?? []) as OrderMemory[];
+    setMemories(loadedMemories);
     setMessages((messageResult.data ?? []) as OrderMessage[]);
     setRevisions((revisionResult.data ?? []) as RevisionRequest[]);
     const toDraft = (concept?: FilmConcept): ConceptDraft =>
@@ -525,9 +526,21 @@ export function AdminStudio() {
             title: concept.title,
             tone: concept.tone,
             summary: concept.summary,
-            scenes: concept.scenes.join("\n"),
+            storyScenes: Object.fromEntries(
+              loadedMemories.map((memory, index) => [
+                memory.id,
+                concept.story_scenes?.find(
+                  (scene) => scene.memory_id === memory.id,
+                )?.text ?? concept.scenes[index] ?? "",
+              ]),
+            ),
           }
-        : emptyConcept;
+        : {
+            ...emptyConcept,
+            storyScenes: Object.fromEntries(
+              loadedMemories.map((memory) => [memory.id, ""]),
+            ),
+          };
     setConceptA(
       toDraft(loadedConcepts.find((concept) => concept.slot === "A")),
     );
@@ -678,6 +691,11 @@ export function AdminStudio() {
   const consentCurrent = Boolean(order && hasCurrentConsent(order));
   const photoAnalysisApproved =
     productionFields.photoAnalysisStatus === "approved";
+  const canManageStorySources = Boolean(
+    order &&
+      ["materials_submitted", "reviewing_materials"].includes(order.status) &&
+      !photoAnalysisApproved,
+  );
   const conceptPublishingStatusValid = Boolean(
     order &&
       ["materials_submitted", "reviewing_materials", "concepts_ready"].includes(
@@ -912,6 +930,17 @@ export function AdminStudio() {
       setError("物語案A・Bのタイトルと概要を入力してください。");
       return;
     }
+    if (
+      memories.length !== 5 ||
+      [conceptA, conceptB].some((concept) =>
+        memories.some((memory) => !concept.storyScenes[memory.id]?.trim()),
+      )
+    ) {
+      setError(
+        "構成案A・Bそれぞれに、5つすべての物語の場面を入力してください。",
+      );
+      return;
+    }
     if (!conceptPublishingStatusValid) {
       setError(
         `現在の工程「${ORDER_STATUS_LABELS[order.status]}」では物語案を公開できません。注文の進行状況をご確認ください。`,
@@ -950,10 +979,10 @@ export function AdminStudio() {
       title: value.title.trim(),
       tone: value.tone.trim(),
       summary: value.summary.trim(),
-      scenes: value.scenes
-        .split("\n")
-        .map((scene) => scene.trim())
-        .filter(Boolean),
+      story_scenes: memories.map((memory) => ({
+        memory_id: memory.id,
+        text: value.storyScenes[memory.id].trim(),
+      })),
     }));
     const { error: conceptError } = await supabase.rpc(
       "admin_publish_concepts",
@@ -1094,6 +1123,7 @@ export function AdminStudio() {
             tone: selectedConcept.tone,
             summary: selectedConcept.summary,
             scenes: selectedConcept.scenes,
+            story_scenes: selectedConcept.story_scenes,
           }
         : null,
       memories: memories.map((memory) => ({
@@ -1291,6 +1321,32 @@ export function AdminStudio() {
     }
     setSaving(false);
     return true;
+  };
+
+  const makeAdminStoryPhotoPrimary = async (
+    memory: OrderMemory,
+    asset: OrderAsset,
+  ) => {
+    if (!order || !canManageStorySources || saving) return;
+    setSaving(true);
+    setError("");
+    const { error: primaryError } = await getSupabaseBrowserClient().rpc(
+      "admin_set_memory_primary_photo",
+      {
+        p_order_id: order.id,
+        p_memory_id: memory.id,
+        p_asset_id: asset.id,
+      },
+    );
+    if (primaryError) {
+      setError(
+        "基準写真を変更できませんでした。写真確認の承認状態をご確認ください。",
+      );
+    } else {
+      setNotice(`「${memory.title}」の基準写真を変更しました。`);
+      await Promise.all([loadOrders(), loadDetails(order.id)]);
+    }
+    setSaving(false);
   };
 
   // The status only moves to needs_customer_input when the message is actually
@@ -2768,30 +2824,53 @@ export function AdminStudio() {
                               </dl>
                               <div className="admin-memory-photos">
                                 {memoryPhotos.map((asset) => (
-                                  <a
-                                    href={assetUrls[asset.id]}
-                                    target="_blank"
-                                    rel="noreferrer"
+                                  <article
+                                    className={
+                                      asset.memory_photo_sort_order === 1
+                                        ? "primary"
+                                        : ""
+                                    }
                                     key={asset.id}
                                   >
-                                    {assetUrls[asset.id] ? (
-                                      <span
-                                        className="admin-photo-thumb"
-                                        role="img"
-                                        aria-label={`${memory.title}の写真`}
-                                        style={{
-                                          backgroundImage: `url(${assetUrls[asset.id]})`,
-                                        }}
-                                      />
-                                    ) : (
-                                      <span>読み込み中</span>
-                                    )}
-                                    <small>
-                                      {asset.memory_photo_sort_order === 1
-                                        ? "基準写真"
-                                        : `補助写真 ${(asset.memory_photo_sort_order ?? 2) - 1}`} · {asset.original_filename}
-                                    </small>
-                                  </a>
+                                    <a
+                                      href={assetUrls[asset.id]}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      {assetUrls[asset.id] ? (
+                                        <span
+                                          className="admin-photo-thumb"
+                                          role="img"
+                                          aria-label={`${memory.title}の写真`}
+                                          style={{
+                                            backgroundImage: `url(${assetUrls[asset.id]})`,
+                                          }}
+                                        />
+                                      ) : (
+                                        <span>読み込み中</span>
+                                      )}
+                                      <small>
+                                        {asset.memory_photo_sort_order === 1
+                                          ? "基準写真"
+                                          : `補助写真 ${(asset.memory_photo_sort_order ?? 2) - 1}`} · {asset.original_filename}
+                                      </small>
+                                    </a>
+                                    {canManageStorySources &&
+                                      asset.memory_photo_sort_order !== 1 && (
+                                        <button
+                                          type="button"
+                                          disabled={saving}
+                                          onClick={() =>
+                                            void makeAdminStoryPhotoPrimary(
+                                              memory,
+                                              asset,
+                                            )
+                                          }
+                                        >
+                                          基準写真に変更
+                                        </button>
+                                      )}
+                                  </article>
                                 ))}
                               </div>
                               <p className="admin-memory-check">
@@ -2958,18 +3037,36 @@ export function AdminStudio() {
                             />
                           </label>
                           <label>
-                            <span>シーン（1行に1つ）</span>
-                            <textarea
-                              rows={7}
-                              value={value.scenes}
-                              onChange={(event) =>
-                                setter({ ...value, scenes: event.target.value })
-                              }
-                              placeholder={
-                                "物語1の場面\n物語2の場面\n物語3の場面\n必要に応じて物語4・5の場面\nおわりの場面"
-                              }
-                            />
+                            <span>5つの物語の場面</span>
+                            <small>
+                              すべて入力すると公開できます。顧客が送った物語と必ず1対1で紐づきます。
+                            </small>
                           </label>
+                          <div className="admin-concept-story-scenes">
+                            {memories.map((memory) => (
+                              <label key={`${slot}-${memory.id}`}>
+                                <span>
+                                  MEMORY{" "}
+                                  {String(memory.sort_order).padStart(2, "0")} ·{" "}
+                                  {memory.title}
+                                </span>
+                                <textarea
+                                  rows={3}
+                                  value={value.storyScenes[memory.id] ?? ""}
+                                  onChange={(event) =>
+                                    setter({
+                                      ...value,
+                                      storyScenes: {
+                                        ...value.storyScenes,
+                                        [memory.id]: event.target.value,
+                                      },
+                                    })
+                                  }
+                                  placeholder="この物語をどのような絵本場面としてつなぐか入力"
+                                />
+                              </label>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
