@@ -20,22 +20,31 @@ function friendlyError(message: string) {
   // The lockout hook rejects with a Japanese message of its own; surface it as-is
   // so the user learns the account is locked rather than seeing "wrong password".
   if (/ロック/.test(message)) return message;
-  if (/invalid login credentials/i.test(message)) return "メールアドレスまたはパスワードをご確認ください。";
-  if (/already registered|already been registered/i.test(message)) return "このメールアドレスはすでに登録されています。";
-  if (/password/i.test(message) && /least/i.test(message)) return "パスワードは8文字以上で入力してください。";
-  if (/rate limit|too many requests/i.test(message)) return "試行回数が多すぎます。しばらく時間をおいてからお試しください。";
-  if (/invalid.*(totp|code)|mfa/i.test(message)) return "認証コードをご確認ください。";
+  if (/invalid login credentials/i.test(message))
+    return "メールアドレスまたはパスワードをご確認ください。";
+  if (/already registered|already been registered/i.test(message))
+    return "このメールアドレスはすでに登録されています。";
+  if (/password/i.test(message) && /least/i.test(message))
+    return "パスワードは8文字以上で入力してください。";
+  if (/rate limit|too many requests/i.test(message))
+    return "試行回数が多すぎます。しばらく時間をおいてからお試しください。";
+  if (/invalid.*(totp|code)|mfa/i.test(message))
+    return "認証コードをご確認ください。";
   return "処理を完了できませんでした。少し時間をおいてお試しください。";
 }
-
 
 export function AuthPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading, profile } = useAuth();
-  const nextPath = useMemo(() => safeNext(searchParams.get("next")), [searchParams]);
+  const nextPath = useMemo(
+    () => safeNext(searchParams.get("next")),
+    [searchParams],
+  );
   const signupNextPath = nextPath === "/studio" ? "/story" : nextPath;
-  const [mode, setMode] = useState<AuthMode>(() => requestedMode(searchParams.get("mode")));
+  const [mode, setMode] = useState<AuthMode>(() =>
+    requestedMode(searchParams.get("mode")),
+  );
   const [petName, setPetName] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -48,7 +57,8 @@ export function AuthPanel() {
   const [mfaCode, setMfaCode] = useState("");
 
   useEffect(() => {
-    if (!loading && user && !searchParams.get("confirmed")) router.replace(nextPath);
+    if (!loading && user && !searchParams.get("confirmed"))
+      router.replace(nextPath);
   }, [loading, nextPath, router, searchParams, user]);
 
   useEffect(() => {
@@ -74,9 +84,12 @@ export function AuthPanel() {
 
     try {
       if (mode === "reset") {
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth?confirmed=1&next=${encodeURIComponent("/studio")}`,
-        });
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+          email,
+          {
+            redirectTo: `${window.location.origin}/auth?confirmed=1&next=${encodeURIComponent("/studio")}`,
+          },
+        );
         if (resetError) throw resetError;
         setMessage("パスワード再設定用のメールをお送りしました。");
         return;
@@ -91,7 +104,10 @@ export function AuthPanel() {
           email,
           password,
           options: {
-            data: { full_name: fullName.trim() || null, pet_name: petName.trim() },
+            data: {
+              full_name: fullName.trim() || null,
+              pet_name: petName.trim(),
+            },
             emailRedirectTo: `${window.location.origin}/auth?confirmed=1&next=${encodeURIComponent(signupNextPath)}`,
           },
         });
@@ -108,13 +124,18 @@ export function AuthPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const result = await response.json().catch(() => null) as
-        { access_token?: string; refresh_token?: string; error?: string } | null;
+      const result = (await response.json().catch(() => null)) as {
+        access_token?: string;
+        refresh_token?: string;
+        error?: string;
+      } | null;
 
       if (!response.ok || !result?.access_token || !result.refresh_token) {
-        setError(result?.error === "account_locked"
-          ? "ログインの失敗が続いたため、アカウントを一時的にロックしています。30分ほどおいてから、もう一度お試しください。"
-          : "メールアドレスまたはパスワードをご確認ください。");
+        setError(
+          result?.error === "account_locked"
+            ? "ログインの失敗が続いたため、アカウントを一時的にロックしています。30分ほどおいてから、もう一度お試しください。"
+            : "メールアドレスまたはパスワードをご確認ください。",
+        );
         return;
       }
 
@@ -125,8 +146,13 @@ export function AuthPanel() {
       if (sessionError) throw sessionError;
 
       // Second factor, when this account has one enrolled.
-      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aal && aal.nextLevel === "aal2" && aal.nextLevel !== aal.currentLevel) {
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (
+        aal &&
+        aal.nextLevel === "aal2" &&
+        aal.nextLevel !== aal.currentLevel
+      ) {
         setMfaPending(true);
         setPending(false);
         return;
@@ -146,12 +172,14 @@ export function AuthPanel() {
     setError("");
     const supabase = getSupabaseBrowserClient();
     try {
-      const { data: factors, error: factorError } = await supabase.auth.mfa.listFactors();
+      const { data: factors, error: factorError } =
+        await supabase.auth.mfa.listFactors();
       if (factorError) throw factorError;
       const factor = factors?.totp?.[0];
       if (!factor) throw new Error("mfa factor not found");
 
-      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: factor.id });
+      const { data: challenge, error: challengeError } =
+        await supabase.auth.mfa.challenge({ factorId: factor.id });
       if (challengeError) throw challengeError;
 
       const { error: verifyError } = await supabase.auth.mfa.verify({
@@ -175,25 +203,42 @@ export function AuthPanel() {
     return (
       <main className="auth-page">
         <section className="auth-card">
-          <Link className="brand" href="/"><span className="brand-mark">WM</span><span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span></Link>
+          <Link className="brand" href="/">
+            <span className="brand-mark">WM</span>
+            <span className="brand-type">
+              WAN MEMORY<small>MOVING STORYBOOKS FOR YOUR DOG</small>
+            </span>
+          </Link>
           <p className="eyebrow">TWO-FACTOR AUTHENTICATION</p>
           <h1>認証コードを入力してください。</h1>
-          <p className="auth-lead">認証アプリに表示されている 6 桁のコードを入力してください。</p>
+          <p className="auth-lead">
+            認証アプリに表示されている 6 桁のコードを入力してください。
+          </p>
           <form onSubmit={submitMfa} className="auth-form">
             <label>
               <span>認証コード</span>
               <input
                 required
                 value={mfaCode}
-                onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(event) =>
+                  setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                }
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 placeholder="000000"
                 maxLength={6}
               />
             </label>
-            {error && <p className="form-error" role="alert">{error}</p>}
-            <button className="button button-primary" type="submit" disabled={pending || mfaCode.length !== 6}>
+            {error && (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
+            <button
+              className="button button-primary"
+              type="submit"
+              disabled={pending || mfaCode.length !== 6}
+            >
               {pending ? "確認中…" : "ログインする"}
             </button>
           </form>
@@ -219,60 +264,229 @@ export function AuthPanel() {
   }
 
   if (user && searchParams.get("confirmed")) {
-    const registeredPetName = profile?.primary_pet_name || user.user_metadata?.pet_name;
+    const registeredPetName =
+      profile?.primary_pet_name || user.user_metadata?.pet_name;
     return (
-      <main className="auth-page"><section className="auth-card auth-complete">
-        <span className="auth-success-mark">✓</span>
-        <p className="eyebrow">WELCOME TO WAN MEMORY</p>
-        <h1>ログインできました。</h1>
-        <p>{registeredPetName ? `${registeredPetName}ちゃんの思い出映像づくりを始めましょう。` : `${profile?.full_name || user.email}さまの制作室をご用意しています。`}</p>
-        <Link className="button button-primary" href={nextPath}>制作室へ進む →</Link>
-      </section></main>
+      <main className="auth-page">
+        <section className="auth-card auth-complete">
+          <span className="auth-success-mark">✓</span>
+          <p className="eyebrow">WELCOME TO WAN MEMORY</p>
+          <h1>ログインできました。</h1>
+          <p>
+            {registeredPetName
+              ? `${registeredPetName}ちゃんの動く絵本づくりを始めましょう。`
+              : `${profile?.full_name || user.email}さまの制作室をご用意しています。`}
+          </p>
+          <Link className="button button-primary" href={nextPath}>
+            制作室へ進む →
+          </Link>
+        </section>
+      </main>
     );
   }
 
   return (
     <main className="auth-page">
-      <Link className="auth-back" href="/">← トップへ戻る</Link>
+      <Link className="auth-back" href="/">
+        ← トップへ戻る
+      </Link>
       <section className="auth-card">
-        <Link className="brand" href="/"><span className="brand-mark">WM</span><span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span></Link>
+        <Link className="brand" href="/">
+          <span className="brand-mark">WM</span>
+          <span className="brand-type">
+            WAN MEMORY<small>MOVING STORYBOOKS FOR YOUR DOG</small>
+          </span>
+        </Link>
         <p className="eyebrow">YOUR PRIVATE STUDIO</p>
-        <h1>{mode === "signup" ? "はじめての方へ" : mode === "reset" ? "パスワードを再設定" : "おかえりなさい"}</h1>
-        <p className="auth-lead">{mode === "signup" ? "制作状況と完成映像を、ひとつの制作室で大切にお預かりします。" : mode === "reset" ? "登録したメールアドレスへ再設定リンクをお送りします。" : "写真の追加から完成映像のお届けまで、こちらでご確認いただけます。"}</p>
-        {mode !== "reset" && <div className="auth-tabs"><button className={mode === "login" ? "active" : ""} type="button" onClick={() => setMode("login")}>ログイン</button><button className={mode === "signup" ? "active" : ""} type="button" onClick={() => setMode("signup")}>会員登録</button></div>}
+        <h1>
+          {mode === "signup"
+            ? "はじめての方へ"
+            : mode === "reset"
+              ? "パスワードを再設定"
+              : "おかえりなさい"}
+        </h1>
+        <p className="auth-lead">
+          {mode === "signup"
+            ? "制作状況と完成映像を、ひとつの制作室で大切にお預かりします。"
+            : mode === "reset"
+              ? "登録したメールアドレスへ再設定リンクをお送りします。"
+              : "写真の追加から完成映像のお届けまで、こちらでご確認いただけます。"}
+        </p>
+        {mode !== "reset" && (
+          <div className="auth-tabs">
+            <button
+              className={mode === "login" ? "active" : ""}
+              type="button"
+              onClick={() => setMode("login")}
+            >
+              ログイン
+            </button>
+            <button
+              className={mode === "signup" ? "active" : ""}
+              type="button"
+              onClick={() => setMode("signup")}
+            >
+              会員登録
+            </button>
+          </div>
+        )}
         <form className="auth-form" onSubmit={submit}>
-          {mode === "signup" && <>
-            <label><span>愛犬のお名前 <em>必須</em></span><input required value={petName} onChange={(event) => setPetName(event.target.value)} autoComplete="off" placeholder="例：ひなた" /></label>
-            <label><span>飼い主さまのお名前 <small>任意</small></span><input value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="例：山田 花子" /></label>
-            <p className="auth-prefill-note">愛犬のお名前は、次の申込フォームへ自動で引き継がれます。</p>
-          </>}
-          <label><span>メールアドレス</span><input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="you@example.com" /></label>
-          {mode !== "reset" && <label><span>パスワード</span><input required minLength={8} type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} placeholder="8文字以上" /></label>}
-          {error && <p className="form-error" role="alert">{error}</p>}
-          {message && <p className="form-success" role="status">{message}</p>}
-          <button className="button button-primary auth-submit" type="submit" disabled={pending}>{pending ? "送信しています…" : mode === "signup" ? "登録して制作を始める →" : mode === "reset" ? "再設定メールを送る →" : "ログイン →"}</button>
+          {mode === "signup" && (
+            <>
+              <label>
+                <span>
+                  愛犬のお名前 <em>必須</em>
+                </span>
+                <input
+                  required
+                  value={petName}
+                  onChange={(event) => setPetName(event.target.value)}
+                  autoComplete="off"
+                  placeholder="例：ひなた"
+                />
+              </label>
+              <label>
+                <span>
+                  飼い主さまのお名前 <small>任意</small>
+                </span>
+                <input
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  autoComplete="name"
+                  placeholder="例：山田 花子"
+                />
+              </label>
+              <p className="auth-prefill-note">
+                愛犬のお名前は、次の申込フォームへ自動で引き継がれます。
+              </p>
+            </>
+          )}
+          <label>
+            <span>メールアドレス</span>
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+          </label>
+          {mode !== "reset" && (
+            <label>
+              <span>パスワード</span>
+              <input
+                required
+                minLength={8}
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete={
+                  mode === "signup" ? "new-password" : "current-password"
+                }
+                placeholder="8文字以上"
+              />
+            </label>
+          )}
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className="form-success" role="status">
+              {message}
+            </p>
+          )}
+          <button
+            className="button button-primary auth-submit"
+            type="submit"
+            disabled={pending}
+          >
+            {pending
+              ? "送信しています…"
+              : mode === "signup"
+                ? "登録して制作を始める →"
+                : mode === "reset"
+                  ? "再設定メールを送る →"
+                  : "ログイン →"}
+          </button>
         </form>
-        {mode === "login" && <button className="auth-text-button" type="button" onClick={() => { setMode("reset"); setError(""); setMessage(""); }}>パスワードを忘れた方</button>}
-        {mode === "reset" && <button className="auth-text-button" type="button" onClick={() => { setMode("login"); setError(""); setMessage(""); }}>ログインへ戻る</button>}
-        <p className="auth-privacy">お預かりした写真とお話は、制作目的以外には使用しません。</p>
+        {mode === "login" && (
+          <button
+            className="auth-text-button"
+            type="button"
+            onClick={() => {
+              setMode("reset");
+              setError("");
+              setMessage("");
+            }}
+          >
+            パスワードを忘れた方
+          </button>
+        )}
+        {mode === "reset" && (
+          <button
+            className="auth-text-button"
+            type="button"
+            onClick={() => {
+              setMode("login");
+              setError("");
+              setMessage("");
+            }}
+          >
+            ログインへ戻る
+          </button>
+        )}
+        <p className="auth-privacy">
+          お預かりした写真とお話は、制作目的以外には使用しません。
+        </p>
       </section>
-      {signupConfirmationEmail && <div className="auth-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setSignupConfirmationEmail(""); }}>
-        <section
-          className="auth-confirmation-dialog"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="auth-confirmation-title"
-          aria-describedby="auth-confirmation-description"
-          onKeyDown={(event) => { if (event.key === "Tab") event.preventDefault(); }}
+      {signupConfirmationEmail && (
+        <div
+          className="auth-confirmation-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target)
+              setSignupConfirmationEmail("");
+          }}
         >
-          <span className="auth-confirmation-mark" aria-hidden="true">✉</span>
-          <p className="eyebrow">CHECK YOUR EMAIL</p>
-          <h2 id="auth-confirmation-title">確認メールを送信しました。</h2>
-          <p id="auth-confirmation-description"><strong>{signupConfirmationEmail}</strong> 宛てにメールをお送りしました。メール内の「メールアドレスを確認」を押すと、会員登録が完了します。</p>
-          <aside><strong>メールが見つからない場合</strong><span>迷惑メールフォルダをご確認ください。届くまで数分かかる場合があります。</span></aside>
-          <button autoFocus className="button button-primary" type="button" onClick={() => setSignupConfirmationEmail("")}>わかりました</button>
-        </section>
-      </div>}
+          <section
+            className="auth-confirmation-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="auth-confirmation-title"
+            aria-describedby="auth-confirmation-description"
+            onKeyDown={(event) => {
+              if (event.key === "Tab") event.preventDefault();
+            }}
+          >
+            <span className="auth-confirmation-mark" aria-hidden="true">
+              ✉
+            </span>
+            <p className="eyebrow">CHECK YOUR EMAIL</p>
+            <h2 id="auth-confirmation-title">確認メールを送信しました。</h2>
+            <p id="auth-confirmation-description">
+              <strong>{signupConfirmationEmail}</strong>{" "}
+              宛てにメールをお送りしました。メール内の「メールアドレスを確認」を押すと、会員登録が完了します。
+            </p>
+            <aside>
+              <strong>メールが見つからない場合</strong>
+              <span>
+                迷惑メールフォルダをご確認ください。届くまで数分かかる場合があります。
+              </span>
+            </aside>
+            <button
+              autoFocus
+              className="button button-primary"
+              type="button"
+              onClick={() => setSignupConfirmationEmail("")}
+            >
+              わかりました
+            </button>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

@@ -9,8 +9,12 @@ async function render(path = "/") {
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request(`http://localhost${path}`, { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
+    new Request(`http://localhost${path}`, {
+      headers: { accept: "text/html" },
+    }),
+    {
+      ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) },
+    },
     { waitUntil() {}, passThroughOnException() {} },
   );
 }
@@ -22,54 +26,73 @@ test("server-renders the Japanese landing page", async () => {
 
   const html = await response.text();
   assert.match(html, /<html lang="ja">/i);
-  assert.match(html, /一緒に過ごした時間を/);
+  assert.match(html, /うちの子が主人公になる/);
   assert.match(html, /WAN MEMORY/);
-  assert.match(html, /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/"/);
-  assert.match(html, /愛犬の思い出動画・メモリーフィルム制作/);
+  assert.match(
+    html,
+    /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/"/,
+  );
+  assert.match(html, /愛犬が主人公になる、動く絵本制作/);
   assert.match(html, /application\/ld\+json/);
   assert.match(html, /"@type":"Service"/);
   assert.match(html, /"@type":"FAQPage"/);
-  assert.match(html, /<link rel="icon" href="https:\/\/www\.wanmemory\.com\/icon/);
-  const jsonLdMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+  assert.match(
+    html,
+    /<link rel="icon" href="https:\/\/www\.wanmemory\.com\/icon/,
+  );
+  const jsonLdMatch = html.match(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+  );
   assert.ok(jsonLdMatch, "JSON-LD should be present");
   const structuredData = JSON.parse(jsonLdMatch[1]);
-  assert.deepEqual(structuredData.map((entry) => entry["@type"]), ["WebSite", "Organization", "Service", "FAQPage"]);
-  assert.equal(structuredData.find((entry) => entry["@type"] === "Service").offers.priceSpecification.valueAddedTaxIncluded, true);
-  assert.equal(structuredData.at(-1).mainEntity.length, 17);
+  assert.deepEqual(
+    structuredData.map((entry) => entry["@type"]),
+    ["WebSite", "Organization", "Service", "FAQPage"],
+  );
+  assert.equal(
+    structuredData.find((entry) => entry["@type"] === "Service").offers.price,
+    24800,
+  );
+  assert.equal(structuredData.at(-1).mainEntity.length, 10);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.doesNotMatch(html, /お申し込み受付は準備中/);
-  assert.match(html, /写真は、残っている/);
-  assert.match(html, /完全な実写再現ではありません/);
-  assert.match(html, /愛犬は実写に近い質感/);
-  assert.match(html, /背景や光はやわらかな絵画表現/);
-  assert.match(html, /A MEMORY BECOMES A STORY/);
-  assert.match(html, /ご登録からお届けまで、8つのステップ/);
-  assert.match(html, /映像を受け取ったあとも、思い出へ帰れる場所/);
-  assert.match(html, /専用メモリーサイトの使い方/);
-  assert.match(html, /専用メモリーサイト/);
-  assert.doesNotMatch(html, /家族共有URL|家族へ共有する|ご家族にはログイン不要/);
+  assert.match(html, /写真を再現するのではなく/);
+  assert.match(html, /水彩・ガッシュ/);
+  assert.match(html, /一枚の花びらが/);
+  assert.match(html, /二つの物語案/);
+  assert.match(html, /専用ページで受け取る/);
+  assert.match(html, /専用ものがたりサイト/);
+  assert.doesNotMatch(
+    html,
+    /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
+  );
   assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
-  assert.match(html, /実際の完成イメージを見る/);
-  assert.match(html, /画面録画などを技術的に完全に防ぐことはできません/);
-  assert.match(html, /メモリーフィルム/);
+  assert.match(html, /動くページを見る/);
+  assert.match(html, /ミルのテストストーリー/);
+  assert.match(html, /動く絵本/);
   assert.match(html, /初期(?:<!-- -->)?10(?:<!-- -->)?組/);
   assert.match(html, /24,800/);
   assert.match(html, /通常価格/);
   assert.match(html, /29,800/);
   assert.match(html, /税込/);
   assert.match(html, /モニター価格とは何ですか/);
-  assert.match(html, /人と一緒に写った写真も提出できますか/);
-  assert.match(html, /人物のお顔は映像に使用・生成せず/);
-  assert.match(html, /映像構成案2案/);
-  assert.match(html, /いまを残す思い出フィルム/);
-  assert.match(html, /いまを残す、一つのかたち/);
-  assert.doesNotMatch(html, /虹の橋|メモリアル|Gentle memorial|先に旅立|空へ続く/);
-  assert.match(html, /BGM・短い字幕/);
+  assert.match(html, /人が写っている写真も送れますか/);
+  assert.match(html, /人物のお顔は新しく生成せず/);
+  assert.match(html, /物語案2案/);
+  assert.match(html, /うちの子の動く絵本/);
+  assert.doesNotMatch(
+    html,
+    /虹の橋|メモリアル|Gentle memorial|先に旅立|空へ続く/,
+  );
+  assert.match(html, /BGM・場面ごとの物語字幕/);
   assert.doesNotMatch(html, /少し先で、待っているね|ナレーション・字幕/);
-  assert.match(html, /CUSTOMER SITE DEMO/);
+  assert.match(html, /MIRU AND A PETAL OF SPRING/);
   assert.doesNotMatch(html, /メモリーショート/);
   assert.doesNotMatch(html, /MEMORIAL SIGNATURE|49,800/);
-  assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
+  assert.doesNotMatch(
+    html,
+    /codex-preview|react-loading-skeleton|Your site is taking shape/,
+  );
 });
 
 test("serves crawl controls and an absolute public sitemap", async () => {
@@ -78,31 +101,56 @@ test("serves crawl controls and an absolute public sitemap", async () => {
     render("/sitemap.xml"),
   ]);
   assert.equal(robotsResponse.status, 200);
-  assert.match(robotsResponse.headers.get("content-type") ?? "", /^text\/plain\b/i);
+  assert.match(
+    robotsResponse.headers.get("content-type") ?? "",
+    /^text\/plain\b/i,
+  );
   const robots = await robotsResponse.text();
   assert.match(robots, /Allow: \//);
   assert.match(robots, /Disallow: \/api\//);
   assert.match(robots, /Sitemap: http:\/\/localhost\/sitemap\.xml/);
 
   assert.equal(sitemapResponse.status, 200);
-  assert.match(sitemapResponse.headers.get("content-type") ?? "", /^application\/xml\b/i);
+  assert.match(
+    sitemapResponse.headers.get("content-type") ?? "",
+    /^application\/xml\b/i,
+  );
   const sitemap = await sitemapResponse.text();
   assert.match(sitemap, /<loc>http:\/\/localhost<\/loc>/);
-  assert.match(sitemap, /<loc>http:\/\/localhost\/film\/hinata-demo<\/loc>/);
+  assert.match(sitemap, /<loc>http:\/\/localhost\/film\/miru-demo<\/loc>/);
   for (const path of ["contact", "terms", "privacy", "legal"]) {
-    assert.match(sitemap, new RegExp(`<loc>http:\\/\\/localhost\\/${path}<\\/loc>`));
+    assert.match(
+      sitemap,
+      new RegExp(`<loc>http:\\/\\/localhost\\/${path}<\\/loc>`),
+    );
   }
-  for (const path of ["aiken-omoide-douga", "uchinoko-kinenbi-douga", "dog-photo-guide"]) {
-    assert.match(sitemap, new RegExp(`<loc>http:\\/\\/localhost\\/${path}<\\/loc>`));
+  for (const path of [
+    "aiken-omoide-douga",
+    "uchinoko-kinenbi-douga",
+    "dog-photo-guide",
+  ]) {
+    assert.match(
+      sitemap,
+      new RegExp(`<loc>http:\\/\\/localhost\\/${path}<\\/loc>`),
+    );
   }
   assert.doesNotMatch(sitemap, /\/auth|\/story|\/studio|\/admin/);
 });
 
 test("renders focused Japanese SEO guide pages", async () => {
   const expected = new Map([
-    ["/aiken-omoide-douga", ["愛犬の写真から、思い出動画をつくる", "愛犬の思い出動画を写真から制作"]],
-    ["/uchinoko-kinenbi-douga", ["うちの子記念日を、これからも見返せる映像に", "うちの子記念日の動画を愛犬の写真から制作"]],
-    ["/dog-photo-guide", ["愛犬の動画制作に適した、写真の選び方", "愛犬のAI動画制作に適した写真の選び方"]],
+    [
+      "/aiken-omoide-douga",
+      ["愛犬の写真から、一冊のような物語を", "愛犬の写真からつくる動く絵本"],
+    ],
+    [
+      "/uchinoko-kinenbi-douga",
+      ["家族になった日を、物語のはじまりに", "うちの子記念日を動く絵本に"],
+    ],
+    [
+      "/dog-photo-guide",
+      ["完璧な資料より", "愛犬の動く絵本に使う写真の選び方"],
+    ],
   ]);
 
   for (const [path, [heading, metadataTitle]] of expected) {
@@ -111,7 +159,12 @@ test("renders focused Japanese SEO guide pages", async () => {
     const html = await response.text();
     assert.match(html, new RegExp(heading));
     assert.match(html, new RegExp(metadataTitle));
-    assert.match(html, new RegExp(`<link rel="canonical" href="https:\\/\\/www\\.wanmemory\\.com${path}`));
+    assert.match(
+      html,
+      new RegExp(
+        `<link rel="canonical" href="https:\\/\\/www\\.wanmemory\\.com${path}`,
+      ),
+    );
     assert.match(html, /"@type":"WebPage"/);
     assert.match(html, /"@type":"BreadcrumbList"/);
     assert.match(html, /"@type":"FAQPage"/);
@@ -131,7 +184,12 @@ test("server-renders public support and legal pages", async () => {
     assert.equal(response.status, 200, `${path} should render`);
     const html = await response.text();
     assert.match(html, new RegExp(title));
-    assert.match(html, new RegExp(`<link rel="canonical" href="https:\\/\\/www\\.wanmemory\\.com${path}`));
+    assert.match(
+      html,
+      new RegExp(
+        `<link rel="canonical" href="https:\\/\\/www\\.wanmemory\\.com${path}`,
+      ),
+    );
   }
 
   const legalResponse = await render("/legal");
@@ -140,7 +198,10 @@ test("server-renders public support and legal pages", async () => {
   assert.match(legalHtml, /<dt>屋号<\/dt><dd>WAN MEMORY<\/dd>/);
   assert.doesNotMatch(legalHtml, /〒\d{3}-\d{4}/);
   assert.doesNotMatch(legalHtml, /href="tel:/);
-  assert.match(legalHtml, /お申し込みの意思決定に先立って遅滞なく電子メールで開示/);
+  assert.match(
+    legalHtml,
+    /お申し込みの意思決定に先立って遅滞なく電子メールで開示/,
+  );
   assert.match(legalHtml, /相談フォームの送信だけでは料金は発生しません/);
   assert.match(legalHtml, /クレジットカード決済（Stripe）/);
   assert.match(legalHtml, /決済後、制作着手前.*全額返金/);
@@ -163,28 +224,68 @@ test("server-renders public support and legal pages", async () => {
 });
 
 test("keeps private product routes out of search results", async () => {
-  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo"]) {
+  for (const path of [
+    "/auth",
+    "/story",
+    "/studio",
+    "/admin",
+    "/film/order-demo",
+  ]) {
     const response = await render(path);
     const html = await response.text();
-    assert.match(html, /<meta name="robots" content="noindex, nofollow"\s*\/?\s*>/i, `${path} should be noindex`);
-    assert.doesNotMatch(html, /<link rel="canonical"/i, `${path} should not advertise a public canonical URL`);
+    assert.match(
+      html,
+      /<meta name="robots" content="noindex, nofollow"\s*\/?\s*>/i,
+      `${path} should be noindex`,
+    );
+    assert.doesNotMatch(
+      html,
+      /<link rel="canonical"/i,
+      `${path} should not advertise a public canonical URL`,
+    );
   }
   const memoryResponse = await render("/memory/share-demo");
   const memoryHtml = await memoryResponse.text();
-  assert.match(memoryHtml, /<meta name="robots" content="noindex, follow"\s*\/?\s*>/i);
-  assert.doesNotMatch(memoryHtml, /<meta name="robots" content="[^"]*nofollow/i);
+  assert.match(
+    memoryHtml,
+    /<meta name="robots" content="noindex, follow"\s*\/?\s*>/i,
+  );
+  assert.doesNotMatch(
+    memoryHtml,
+    /<meta name="robots" content="[^"]*nofollow/i,
+  );
   assert.doesNotMatch(memoryHtml, /<link rel="canonical"/i);
-  assert.match(memoryHtml, /<meta property="og:title" content="専用メモリーサイト"/i);
-  assert.match(memoryHtml, /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/api\/memory\/share-demo\/og"/i);
-  const demoResponse = await render("/film/hinata-demo");
+  assert.match(
+    memoryHtml,
+    /<meta property="og:title" content="専用ものがたりサイト"/i,
+  );
+  assert.match(
+    memoryHtml,
+    /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/api\/memory\/share-demo\/og"/i,
+  );
+  const demoResponse = await render("/film/miru-demo");
   const demoHtml = await demoResponse.text();
   assert.doesNotMatch(demoHtml, /<meta name="robots" content="noindex/i);
-  assert.match(demoHtml, /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/film\/hinata-demo"/);
-  assert.match(demoHtml, /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/og\.png"/);
+  assert.match(
+    demoHtml,
+    /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/film\/miru-demo"/,
+  );
+  assert.match(
+    demoHtml,
+    /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/og\.png"/,
+  );
 });
 
 test("server-renders the connected MVP routes", async () => {
-  for (const path of ["/auth", "/story", "/studio", "/admin", "/film/order-demo", "/film/hinata-demo", "/memory/share-demo"]) {
+  for (const path of [
+    "/auth",
+    "/story",
+    "/studio",
+    "/admin",
+    "/film/order-demo",
+    "/film/miru-demo",
+    "/memory/share-demo",
+  ]) {
     const response = await render(path);
     assert.equal(response.status, 200, `${path} should render`);
   }
@@ -192,13 +293,26 @@ test("server-renders the connected MVP routes", async () => {
 
 test("memory sharing keeps family links private and album access scoped", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [manager, sharedPage, metadataPage, publicMemory, socialImage, migration] = await Promise.all([
+  const [
+    manager,
+    sharedPage,
+    metadataPage,
+    publicMemory,
+    socialImage,
+    migration,
+  ] = await Promise.all([
     readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
-    readFile(new URL("app/memory/[shareId]/SharedMemorySite.tsx", root), "utf8"),
+    readFile(
+      new URL("app/memory/[shareId]/SharedMemorySite.tsx", root),
+      "utf8",
+    ),
     readFile(new URL("app/memory/[shareId]/page.tsx", root), "utf8"),
     readFile(new URL("app/lib/supabase/public-memory.ts", root), "utf8"),
     readFile(new URL("app/api/memory/[shareId]/og/route.ts", root), "utf8"),
-    readFile(new URL("supabase/migrations/202607170001_memory_sharing.sql", root), "utf8"),
+    readFile(
+      new URL("supabase/migrations/202607170001_memory_sharing.sql", root),
+      "utf8",
+    ),
   ]);
   assert.match(manager, /家族はログインせずに閲覧できます/);
   assert.match(manager, /LINEなどで共有/);
@@ -206,12 +320,15 @@ test("memory sharing keeps family links private and album access scoped", async 
   assert.match(manager, /30枚まで/);
   assert.match(sharedPage, /get_shared_memory/);
   assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
-  assert.match(sharedPage, /PRIVATE MEMORY SITE/);
+  assert.match(sharedPage, /PRIVATE STORYBOOK SITE/);
   assert.doesNotMatch(sharedPage, /家族共有ページ|FAMILY MEMORY SITE/);
   assert.match(metadataPage, /generateMetadata/);
   assert.match(metadataPage, /follow: true/);
-  assert.match(metadataPage, /\$\{memory\.order\.pet_name\}との思い出/);
-  assert.match(metadataPage, /\/api\/memory\/\$\{encodeURIComponent\(shareId\)\}\/og/);
+  assert.match(metadataPage, /\$\{memory\.order\.pet_name\}の動く絵本/);
+  assert.match(
+    metadataPage,
+    /\/api\/memory\/\$\{encodeURIComponent\(shareId\)\}\/og/,
+  );
   assert.match(publicMemory, /get_shared_memory/);
   assert.match(publicMemory, /createSignedUrl\(path, 90\)/);
   assert.match(socialImage, /Content-Type/);
@@ -227,15 +344,15 @@ test("uses the default social image when a memory URL is unavailable", async () 
   assert.equal(response.headers.get("location"), "http://localhost/og.png");
 });
 
-test("renders the customer memory site demo", async () => {
-  const response = await render("/film/hinata-demo");
+test("renders the moving storybook demo", async () => {
+  const response = await render("/film/miru-demo");
   const html = await response.text();
-  assert.match(html, /ひなたと歩いた、いつもの季節/);
-  assert.match(html, /CUSTOMER DEMO/);
-  assert.match(html, /WHEN A MEMORY RETURNS/);
-  assert.match(html, /あの日の光まで戻ってくる/);
-  assert.match(html, /家族専用メモリーサイトの完成イメージ/);
-  assert.match(html, /閲覧専用 · ダウンロード非対応/);
+  assert.match(html, /ミルと、ひとひらの春/);
+  assert.match(html, /STORYBOOK SAMPLE/);
+  assert.match(html, /A PAGE COMES ALIVE/);
+  assert.match(html, /春風から届いた手紙/);
+  assert.match(html, /ひとひらが/);
+  assert.match(html, /5秒の制作テスト/);
 });
 
 test("starter preview was removed", async () => {
@@ -253,16 +370,24 @@ test("starter preview was removed", async () => {
 
 test("signup stores the dog name and the story form reuses it", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [authPanel, storyWizard, migration, startStoryLink] = await Promise.all([
-    readFile(new URL("app/auth/AuthPanel.tsx", root), "utf8"),
-    readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
-    readFile(new URL("supabase/migrations/202607160002_profile_pet_name.sql", root), "utf8"),
-    readFile(new URL("app/components/StartStoryLink.tsx", root), "utf8"),
-  ]);
+  const [authPanel, storyWizard, migration, startStoryLink] = await Promise.all(
+    [
+      readFile(new URL("app/auth/AuthPanel.tsx", root), "utf8"),
+      readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
+      readFile(
+        new URL("supabase/migrations/202607160002_profile_pet_name.sql", root),
+        "utf8",
+      ),
+      readFile(new URL("app/components/StartStoryLink.tsx", root), "utf8"),
+    ],
+  );
   assert.match(authPanel, /愛犬のお名前/);
   assert.match(authPanel, /pet_name: petName\.trim\(\)/);
   assert.match(authPanel, /requestedMode\(searchParams\.get\("mode"\)\)/);
-  assert.match(authPanel, /loading \|\| \(user && !searchParams\.get\("confirmed"\)\)/);
+  assert.match(
+    authPanel,
+    /loading \|\| \(user && !searchParams\.get\("confirmed"\)\)/,
+  );
   assert.match(authPanel, /setSignupConfirmationEmail\(email\.trim\(\)\)/);
   assert.match(authPanel, /role="alertdialog"/);
   assert.match(authPanel, /確認メールを送信しました。/);
@@ -270,28 +395,48 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(startStoryLink, /user \? "\/story" : START_STORY_HREF/);
   assert.match(startStoryLink, /if \(!loading\) return/);
   assert.match(storyWizard, /profile\?\.primary_pet_name/);
-  assert.match(storyWizard, /petName: parsed\.petName\?\.trim\(\) \|\| preferredPetName/);
+  assert.match(
+    storyWizard,
+    /petName: parsed\.petName\?\.trim\(\) \|\| preferredPetName/,
+  );
   assert.match(storyWizard, /\/auth\?mode=signup&next=\/story/);
-  assert.match(storyWizard, /BGM chosen by the director/);
-  assert.match(storyWizard, /const FIXED_FILM_PURPOSE: FilmPurpose = "いまを残す"/);
-  assert.match(storyWizard, /const steps = \["愛犬のこと", "お写真", "思い出", "確認"\]/);
+  assert.match(storyWizard, /const FIXED_BGM = "物語に合わせておまかせ"/);
+  assert.match(
+    storyWizard,
+    /const FIXED_FILM_PURPOSE: FilmPurpose = "いまを残す"/,
+  );
+  assert.match(
+    storyWizard,
+    /const steps = \["愛犬のこと", "お写真", "思い出", "確認"\]/,
+  );
   assert.match(storyWizard, /purpose: FIXED_FILM_PURPOSE/);
-  assert.doesNotMatch(storyWizard, /filmPurposes|selectFilmPurpose|CHOOSE YOUR FILM|虹の橋|メモリアル/);
+  assert.doesNotMatch(
+    storyWizard,
+    /filmPurposes|selectFilmPurpose|CHOOSE YOUR FILM|虹の橋|メモリアル/,
+  );
   assert.doesNotMatch(storyWizard, /<span>ナレーション<\/span>/);
   assert.match(storyWizard, /const missingFields = useMemo<MissingField\[\]>/);
   assert.match(storyWizard, /referencePhotosComplete/);
-  assert.match(storyWizard, /const \[photoFiles, setPhotoFiles\] = useState<PhotoDraft\[\]>/);
+  assert.match(
+    storyWizard,
+    /const \[photoFiles, setPhotoFiles\] = useState<PhotoDraft\[\]>/,
+  );
   assert.match(storyWizard, /primaryFacePhotoKey/);
   assert.match(storyWizard, /写真選びガイドを見る/);
-  assert.match(storyWizard, /写真をアップロードしただけでは選択は完了していません/);
-  assert.match(storyWizard, /お顔がよく分かる写真/);
-  assert.match(storyWizard, /横向き・しっぽの写真/);
+  assert.match(storyWizard, /その子らしいお気に入りの写真/);
+  assert.match(
+    storyWizard,
+    /正面・全身・横向きを別々に用意する必要はありません/,
+  );
   assert.match(storyWizard, /photo-guide-photo-types/);
   assert.match(storyWizard, /photo-guide-upload-head/);
   assert.match(storyWizard, /referenceSlots\.map/);
   assert.doesNotMatch(storyWizard, /photo-needs-card|ご用意いただきたい写真/);
-  assert.match(storyWizard, /写真をアップロードしただけでは選択は完了していません/);
-  assert.doesNotMatch(storyWizard, /photoRestoreNotice|wan-memory-had-selected-photos|写真をもう一度選んでください/);
+  assert.match(storyWizard, /referencePhotoCount === 1/);
+  assert.doesNotMatch(
+    storyWizard,
+    /photoRestoreNotice|wan-memory-had-selected-photos|写真をもう一度選んでください/,
+  );
   assert.match(storyWizard, /wan-memory-photo-guide-seen-v1/);
   assert.match(storyWizard, /closePhotoGuideAndShowUploader/);
   assert.match(storyWizard, /photoGuideDialogRef/);
@@ -311,9 +456,12 @@ test("concept selection requires an explicit send and stays editable before prod
   assert.match(studio, /setPendingConceptSlot\(concept\.slot\)/);
   assert.match(studio, /この案で制作希望を送る/);
   assert.match(studio, /concept-receipt-dialog/);
-  assert.match(studio, /映像構成案をお預かりしました/);
-  assert.match(studio, /映像制作へ進む前なら、何度でも変更できます/);
-  assert.doesNotMatch(studio, /onClick=\{\(\) => selectConcept\(concept\.slot\)\}/);
+  assert.match(studio, /物語案をお預かりしました/);
+  assert.match(studio, /絵本ページの制作へ進む前なら、何度でも変更できます/);
+  assert.doesNotMatch(
+    studio,
+    /onClick=\{\(\) => selectConcept\(concept\.slot\)\}/,
+  );
   assert.match(css, /\.concept-receipt-backdrop/);
   assert.match(migration, /status in \('concepts_ready', 'concept_selected'\)/);
   assert.match(migration, /purpose in \('いまを残す', '虹の橋メモリアル'\)/);
@@ -346,7 +494,10 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(css, /\.studio-next-action/);
   assert.match(css, /\.mobile-concept-submit/);
   assert.match(css, /\.mobile-studio-timeline/);
-  assert.match(css, /\.form-grid input, \.form-grid select, \.stacked-fields textarea \{ font-size: 16px; \}/);
+  assert.match(
+    css,
+    /\.form-grid input, \.form-grid select, \.stacked-fields textarea \{ font-size: 16px; \}/,
+  );
   assert.match(css, /\.album-manager-actions button \{ min-height: 44px;/);
   assert.match(css, /\.admin-mobile-sections/);
   assert.match(studio, /NEXT ACTION · 今やること/);
@@ -356,11 +507,11 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(studio, /id="review-video"/);
   assert.match(admin, /まだ納品されていません/);
   assert.match(admin, /お客様名・ファイル名・用途を確認しました/);
-  assert.match(admin, /disabled=\{saving \|\| !videoChecked/);
+  assert.match(admin, /disabled=\{\s*saving \|\|\s*!videoChecked/);
   assert.match(admin, /onChange=\{selectVideo\}/);
   assert.match(admin, /id="admin-photos"/);
   assert.match(admin, /GPT・Runway制作用データをダウンロード/);
-  assert.match(admin, /storage\.from\("order-assets"\)\.download/);
+  assert.match(admin, /storage\s*\.from\("order-assets"\)\s*\.download/);
   assert.match(admin, /import\("fflate"\)/);
   assert.match(admin, /photo-manifest\.json/);
   assert.match(admin, /GPT_INSTRUCTIONS\.txt/);
@@ -381,17 +532,38 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
 test("enforces operational workflow rules in the database boundary", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, lockdown, story, studio, admin] = await Promise.all([
-    readFile(new URL("supabase/migrations/202607210001_operations_hardening.sql", root), "utf8"),
-    readFile(new URL("supabase/post_deploy/operations_lockdown_after_admin_deploy.sql", root), "utf8"),
+    readFile(
+      new URL(
+        "supabase/migrations/202607210001_operations_hardening.sql",
+        root,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "supabase/post_deploy/operations_lockdown_after_admin_deploy.sql",
+        root,
+      ),
+      "utf8",
+    ),
     readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
   ]);
   assert.match(migration, /at least 5 source images are required/);
   assert.match(migration, /revision_used >= v_order\.revision_limit/);
-  assert.match(migration, /status not in \('awaiting_materials', 'cancelled'\)/);
-  assert.match(migration, /create or replace function public\.admin_update_order/);
-  assert.match(migration, /create or replace function public\.admin_register_video_asset/);
+  assert.match(
+    migration,
+    /status not in \('awaiting_materials', 'cancelled'\)/,
+  );
+  assert.match(
+    migration,
+    /create or replace function public\.admin_update_order/,
+  );
+  assert.match(
+    migration,
+    /create or replace function public\.admin_register_video_asset/,
+  );
   assert.match(migration, /'review_video'/);
   assert.match(migration, /insert into public\.order_events/);
   assert.match(lockdown, /drop policy if exists orders_admin_update/);
@@ -405,28 +577,50 @@ test("enforces operational workflow rules in the database boundary", async () =>
 
 test("blocks launch-critical skips and records consent and customer approval", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [release, marker, story, studio, admin, cron, readme] = await Promise.all([
-    readFile(new URL("supabase/migrations/202607210003_release_readiness.sql", root), "utf8"),
-    readFile(new URL("supabase/migrations/202607210002_operations_lockdown.sql", root), "utf8"),
-    readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
-    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
-    readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
-    readFile(new URL("app/api/cron/cleanup-drafts/route.ts", root), "utf8"),
-    readFile(new URL("README.md", root), "utf8"),
-  ]);
+  const [release, marker, story, studio, admin, cron, readme] =
+    await Promise.all([
+      readFile(
+        new URL("supabase/migrations/202607210003_release_readiness.sql", root),
+        "utf8",
+      ),
+      readFile(
+        new URL(
+          "supabase/migrations/202607210002_operations_lockdown.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
+      readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+      readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+      readFile(new URL("app/api/cron/cleanup-drafts/route.ts", root), "utf8"),
+      readFile(new URL("README.md", root), "utf8"),
+    ]);
   assert.match(release, /customer_approved_at/);
-  assert.match(release, /create or replace function public\.customer_approve_review/);
+  assert.match(
+    release,
+    /create or replace function public\.customer_approve_review/,
+  );
   assert.match(release, /open revision must be resolved before delivery/);
   assert.match(release, /payment must be confirmed before production/);
-  assert.match(release, /current consent record required before video production/);
+  assert.match(
+    release,
+    /current consent record required before video production/,
+  );
   assert.match(release, /age required/);
   assert.match(release, /personality required/);
   assert.match(release, /favorite memory required/);
   assert.match(release, /message to pet required/);
-  assert.match(release, /create or replace function public\.bootstrap_first_admin/);
+  assert.match(
+    release,
+    /create or replace function public\.bootstrap_first_admin/,
+  );
   assert.doesNotMatch(release, /\('customer_review', 'quality_check'\)/);
   assert.doesNotMatch(marker, /drop policy if exists orders_admin_update/);
-  assert.match(marker, /post_deploy\/operations_lockdown_after_admin_deploy\.sql/);
+  assert.match(
+    marker,
+    /post_deploy\/operations_lockdown_after_admin_deploy\.sql/,
+  );
   assert.match(story, /externalAiConsent/);
   assert.match(story, /p_ai_notice_version|ai_notice_version/);
   assert.match(studio, /customer_approve_review/);
@@ -438,19 +632,31 @@ test("blocks launch-critical skips and records consent and customer approval", a
   assert.match(cron, /Bearer \$\{cronSecret\}/);
   assert.match(cron, /expire_memory_order_draft/);
   assert.match(readme, /bootstrap_first_admin/);
-  assert.match(readme, /supabase\/post_deploy\/operations_lockdown_after_admin_deploy\.sql/);
+  assert.match(
+    readme,
+    /supabase\/post_deploy\/operations_lockdown_after_admin_deploy\.sql/,
+  );
 });
 
 test("requires a fresh scene-stills publication before video production", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, studio, admin] = await Promise.all([
-    readFile(new URL("supabase/migrations/202607270001_stills_review_hardening.sql", root), "utf8"),
+    readFile(
+      new URL(
+        "supabase/migrations/202607270001_stills_review_hardening.sql",
+        root,
+      ),
+      "utf8",
+    ),
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
   ]);
   assert.match(migration, /\('concept_selected', 'stills_review'\)/);
   assert.doesNotMatch(migration, /\('concept_selected', 'production'\)/);
-  assert.match(migration, /open stills change request must be republished first/);
+  assert.match(
+    migration,
+    /open stills change request must be republished first/,
+  );
   assert.match(migration, /stills_approved_asset_ids/);
   assert.match(migration, /admin_begin_stills_revision/);
   assert.match(studio, /hasOpenStillsChange/);
@@ -461,32 +667,53 @@ test("requires a fresh scene-stills publication before video production", async 
 
 test("keeps displayed policy dates and stored consent versions aligned", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [consent, terms, privacy, migration, styleMigration] = await Promise.all([
-    readFile(new URL("app/lib/consent.ts", root), "utf8"),
-    readFile(new URL("app/terms/page.tsx", root), "utf8"),
-    readFile(new URL("app/privacy/page.tsx", root), "utf8"),
-    readFile(new URL("supabase/migrations/202607270002_consent_version_alignment.sql", root), "utf8"),
-    readFile(new URL("supabase/migrations/202607300002_consent_style_version_alignment.sql", root), "utf8"),
-  ]);
-  assert.match(consent, /terms: "2026-07-29-style-v2"/);
+  const [consent, terms, privacy, migration, storybookMigration] =
+    await Promise.all([
+      readFile(new URL("app/lib/consent.ts", root), "utf8"),
+      readFile(new URL("app/terms/page.tsx", root), "utf8"),
+      readFile(new URL("app/privacy/page.tsx", root), "utf8"),
+      readFile(
+        new URL(
+          "supabase/migrations/202607270002_consent_version_alignment.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(
+        new URL(
+          "supabase/migrations/202608020001_moving_storybook_captions.sql",
+          root,
+        ),
+        "utf8",
+      ),
+    ]);
+  assert.match(consent, /terms: "2026-08-02-storybook-v1"/);
   assert.match(consent, /privacy: "2026-07-27"/);
-  assert.match(consent, /aiNotice: "2026-07-29-style-v2"/);
-  assert.match(terms, /仕上がり・決済・キャンセル案内更新：2026年7月29日（同意版 2026-07-29-style-v2）/);
-  assert.match(privacy, /決済情報の取り扱いに関する案内更新：2026年7月29日（同意版 2026-07-27/);
+  assert.match(consent, /aiNotice: "2026-08-02-storybook-v1"/);
+  assert.match(
+    terms,
+    /動く絵本・決済・キャンセル案内更新：2026年8月2日（同意版\s*2026-08-02-storybook-v1）/,
+  );
+  assert.match(
+    privacy,
+    /決済情報の取り扱いに関する案内更新：2026年7月29日（同意版 2026-07-27/,
+  );
   assert.match(migration, /o\.terms_version = '2026-07-27'/);
   assert.match(migration, /current policy versions required/);
-  assert.match(styleMigration, /o\.terms_version = '2026-07-29-style-v2'/);
-  assert.match(styleMigration, /o\.privacy_version = '2026-07-27'/);
-  assert.match(styleMigration, /o\.ai_notice_version = '2026-07-29-style-v2'/);
-  assert.match(styleMigration, /create or replace function public\.accept_order_consents/);
-  assert.match(styleMigration, /create or replace function public\.create_memory_order/);
-  assert.match(styleMigration, /create or replace function public\.save_memory_order_draft/);
+  assert.match(storybookMigration, /2026-08-02-storybook-v1/);
+  assert.match(storybookMigration, /order_has_current_consents/);
+  assert.match(storybookMigration, /create_memory_order/);
+  assert.match(storybookMigration, /save_memory_order_draft/);
+  assert.match(storybookMigration, /accept_order_consents/);
 });
 
 test("records first-ten production metrics through an admin-only RPC", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, admin, types] = await Promise.all([
-    readFile(new URL("supabase/migrations/202607270003_production_metrics.sql", root), "utf8"),
+    readFile(
+      new URL("supabase/migrations/202607270003_production_metrics.sql", root),
+      "utf8",
+    ),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
     readFile(new URL("app/lib/supabase/types.ts", root), "utf8"),
   ]);
@@ -495,14 +722,20 @@ test("records first-ten production metrics through an admin-only RPC", async () 
   assert.match(migration, /production_metrics_saved/);
   assert.match(admin, /FIRST 10 METRICS/);
   assert.match(admin, /Runway使用クレジット/);
-  assert.match(admin, /rpc\("admin_save_production_metrics"/);
+  assert.match(admin, /rpc\(\s*"admin_save_production_metrics"/);
   assert.match(types, /runway_credits_used: number/);
 });
 
 test("records and enforces consolidated photo-rights and external-service consent", async () => {
   const { readFile } = await import("node:fs/promises");
   const [peopleConsent, story, studio, admin, privacy] = await Promise.all([
-    readFile(new URL("supabase/migrations/202607210004_people_photo_consent.sql", root), "utf8"),
+    readFile(
+      new URL(
+        "supabase/migrations/202607210004_people_photo_consent.sql",
+        root,
+      ),
+      "utf8",
+    ),
     readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
@@ -513,7 +746,10 @@ test("records and enforces consolidated photo-rights and external-service consen
   assert.match(peopleConsent, /depicted_people_consented_at/);
   assert.match(peopleConsent, /minor_guardian_consented_at/);
   assert.match(peopleConsent, /enforce_current_order_consents_trigger/);
-  assert.match(peopleConsent, /current photo, people, minor and external service consent records are required before video processing/);
+  assert.match(
+    peopleConsent,
+    /current photo, people, minor and external service consent records are required before video processing/,
+  );
   assert.match(story, /人物のお顔は映像に使用・生成せず/);
   assert.match(story, /外部AIサービス/);
   assert.doesNotMatch(story, /Runway|ChatGPT|OpenAI|GPT/);
@@ -527,15 +763,25 @@ test("records and enforces consolidated photo-rights and external-service consen
 
 test("stores three guided memory entries with optional matching photos", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, upgrade, story, uploads, admin, studio, css] = await Promise.all([
-    readFile(new URL("supabase/migrations/202607210005_memory_entries.sql", root), "utf8"),
-    readFile(new URL("supabase/migrations/202607210006_memory_photo_limit_five.sql", root), "utf8"),
-    readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
-    readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
-    readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
-    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
-    readFile(new URL("app/globals.css", root), "utf8"),
-  ]);
+  const [migration, upgrade, story, uploads, admin, studio, css] =
+    await Promise.all([
+      readFile(
+        new URL("supabase/migrations/202607210005_memory_entries.sql", root),
+        "utf8",
+      ),
+      readFile(
+        new URL(
+          "supabase/migrations/202607210006_memory_photo_limit_five.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
+      readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
+      readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+      readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+      readFile(new URL("app/globals.css", root), "utf8"),
+    ]);
   assert.match(migration, /create table if not exists public\.order_memories/);
   assert.match(migration, /add column if not exists memory_id uuid/);
   assert.match(migration, /each memory requires 1 to 5 photos/);
@@ -543,18 +789,21 @@ test("stores three guided memory entries with optional matching photos", async (
   assert.match(upgrade, /having count\(a\.id\) not between 1 and 5/);
   assert.match(story, /const FIXED_MEMORY_COUNT = 3/);
   assert.match(story, /3つの思い出をお聞かせください/);
-  assert.match(story, /それぞれの内容から複数の場面を組み立て/);
-  assert.match(story, /その子の動きや表情も一緒に書く/);
+  assert.match(story, /一つのモチーフでつなぎ/);
+  assert.match(story, /その子らしい反応を書く/);
   assert.match(story, /この思い出と同じ場面の写真/);
   assert.match(story, /save_order_memory_entry/);
   assert.match(story, /MAX_PHOTOS_PER_MEMORY = 5/);
-  assert.match(story, /memory\.photoKeys\.length < MAX_PHOTOS_PER_MEMORY/);
+  assert.match(story, /memory\.photoKeys\.length\s*<\s*MAX_PHOTOS_PER_MEMORY/);
   assert.match(story, /createMemoryDraft\("memory-3"\)/);
   assert.match(story, /while \(memories\.length < FIXED_MEMORY_COUNT\)/);
   assert.match(story, /className="memory-entry-toggle"/);
   assert.match(story, /aria-expanded=\{expanded\}/);
   assert.match(story, /入力完了 ✓/);
-  assert.match(story, /setActiveMemoryKey\(\(current\) => current === memory\.clientKey \? "" : memory\.clientKey\)/);
+  assert.match(
+    story,
+    /setActiveMemoryKey\([\s\S]*?current === memory\.clientKey[\s\S]*?memory\.clientKey/,
+  );
   assert.match(story, /if \(currentStepMissingFields\.length > 0\)/);
   assert.match(story, /このステップの必須項目をすべて入力してください/);
   assert.match(story, /assign_memory_photos/);
@@ -571,7 +820,13 @@ test("stores three guided memory entries with optional matching photos", async (
 test("stores appearance references and requires operator photo approval", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, story, admin, types, css] = await Promise.all([
-    readFile(new URL("supabase/migrations/202607220001_appearance_photo_review.sql", root), "utf8"),
+    readFile(
+      new URL(
+        "supabase/migrations/202607220001_appearance_photo_review.sql",
+        root,
+      ),
+      "utf8",
+    ),
     readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
     readFile(new URL("app/lib/supabase/types.ts", root), "utf8"),
@@ -579,19 +834,33 @@ test("stores appearance references and requires operator photo approval", async 
   ]);
 
   assert.match(types, /type AppearancePolicy/);
-  assert.match(types, /photoAnalysisStatus: order\.photo_analysis_status \?\? "needs_customer_input"/);
+  assert.match(
+    types,
+    /photoAnalysisStatus: order\.photo_analysis_status \?\? "needs_customer_input"/,
+  );
   assert.match(migration, /primary_face_photo_id uuid/);
-  assert.match(migration, /create or replace function public\.save_order_production_fields/);
-  assert.match(migration, /create or replace function public\.assign_memory_photos/);
+  assert.match(
+    migration,
+    /create or replace function public\.save_order_production_fields/,
+  );
+  assert.match(
+    migration,
+    /create or replace function public\.assign_memory_photos/,
+  );
   assert.match(migration, /category = 'source_image'/);
   assert.match(migration, /photo_analysis_status = 'pending_operator_review'/);
-  assert.match(migration, /photo_analysis_approved_by = case when p_status = 'approved' then auth\.uid\(\)/);
+  assert.match(
+    migration,
+    /photo_analysis_approved_by = case when p_status = 'approved' then auth\.uid\(\)/,
+  );
   assert.match(migration, /enforce_photo_analysis_before_production/);
-  assert.match(migration, /create or replace function public\.admin_publish_concepts/);
+  assert.match(
+    migration,
+    /create or replace function public\.admin_publish_concepts/,
+  );
 
-  assert.match(story, /お顔がよく分かる写真/);
-  assert.match(story, /立っている全身の写真/);
-  assert.match(story, /横向き・しっぽの写真/);
+  assert.match(story, /その子らしいお気に入りの写真/);
+  assert.match(story, /正面・全身・横向きを別々に用意する必要はありません/);
   assert.match(story, /FIXED_FILM_STYLE/);
   assert.match(story, /referencePhotosComplete/);
   assert.match(story, /仕上がりの表現について確認しました/);
@@ -602,25 +871,72 @@ test("stores appearance references and requires operator photo approval", async 
   assert.match(admin, /admin_set_photo_analysis_status/);
   assert.match(admin, /order\.status === "materials_submitted"/);
   assert.match(admin, /p_status: "reviewing_materials"/);
-  assert.match(admin, /사진 분석에 대한 운영자 승인이 필요합니다/);
-  assert.match(admin, /外見の基準と写真確認/);
+  assert.match(admin, /写真分析を承認する/);
+  assert.match(admin, /主人公の基準と写真確認/);
   assert.match(css, /\.reference-slot/);
   assert.match(css, /\.reference-slot-empty/);
+});
+
+test("stores storybook page sentences and burns them into the final video", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [migration, types, admin, studio, renderRoute, assembler, css] =
+    await Promise.all([
+      readFile(
+        new URL(
+          "supabase/migrations/202608020001_moving_storybook_captions.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(new URL("app/lib/supabase/types.ts", root), "utf8"),
+      readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+      readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+      readFile(new URL("app/api/admin/render/route.ts", root), "utf8"),
+      readFile(new URL("scripts/assemble_film.py", root), "utf8"),
+      readFile(new URL("app/globals.css", root), "utf8"),
+    ]);
+
+  assert.match(migration, /add column if not exists story_caption text/);
+  assert.match(migration, /admin_update_scene_caption/);
+  assert.match(migration, /every scene still requires a story caption/);
+  assert.match(types, /story_caption: string \| null/);
+  assert.match(admin, /p_story_caption: caption/);
+  assert.match(admin, /allSceneCaptionsReady/);
+  assert.match(studio, /stills-story-caption/);
+  assert.match(studio, /asset\.story_caption/);
+  assert.match(renderRoute, /captions\.json/);
+  assert.match(renderRoute, /--captions-json/);
+  assert.match(assembler, /make_story_caption_overlay/);
+  assert.match(assembler, /burn_story_captions/);
+  assert.match(assembler, /物語の文章を重ねています/);
+  assert.match(css, /\.stills-story-caption/);
 });
 
 test("autosaves all story steps and photos, then resumes the same account", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, uploads, story, cleanup] = await Promise.all([
-    readFile(new URL("supabase/migrations/202607240001_story_autosave.sql", root), "utf8"),
+    readFile(
+      new URL("supabase/migrations/202607240001_story_autosave.sql", root),
+      "utf8",
+    ),
     readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
     readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
     readFile(new URL("app/api/cron/cleanup-drafts/route.ts", root), "utf8"),
   ]);
   assert.match(migration, /create table if not exists public\.story_drafts/);
-  assert.match(migration, /create table if not exists public\.story_draft_assets/);
+  assert.match(
+    migration,
+    /create table if not exists public\.story_draft_assets/,
+  );
   assert.match(migration, /current_step smallint/);
-  assert.match(migration, /create or replace function public\.save_story_draft/);
-  assert.match(migration, /create or replace function public\.promote_story_draft_assets/);
+  assert.match(
+    migration,
+    /create or replace function public\.save_story_draft/,
+  );
+  assert.match(
+    migration,
+    /create or replace function public\.promote_story_draft_assets/,
+  );
   assert.match(uploads, /uploadStoryDraftImage/);
   assert.match(uploads, /story_draft_assets/);
   assert.match(story, /wan-memory-story-draft-/);
@@ -641,7 +957,10 @@ test("keeps Vercel and Sites build outputs separate", async () => {
   const packageJson = JSON.parse(packageSource);
   const vercel = JSON.parse(vercelSource);
   assert.equal(packageJson.engines.node, "22.x");
-  assert.equal(packageJson.scripts["build:sites"], "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build");
+  assert.equal(
+    packageJson.scripts["build:sites"],
+    "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
+  );
   assert.equal(packageJson.scripts["build:vercel"], "next build");
   assert.equal(vercel.framework, "nextjs");
   assert.equal(vercel.buildCommand, "npm run build:vercel");
@@ -683,21 +1002,35 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(notification, /内容はメールには記載していません/);
   assert.match(studio, /担当者からの確認やお願いはこちらに届きます/);
   assert.match(studio, /ご登録のメールアドレスにもお知らせします/);
-  assert.match(studio, /textarea required value=\{messageBody\}/);
+  assert.match(studio, /<textarea\s+required\s+value=\{messageBody\}/);
   assert.match(studio, /disabled=\{sendingMessage\}/);
   assert.doesNotMatch(studio, /disabled=\{!messageBody\.trim\(\)\}/);
   assert.doesNotMatch(notification, /p_body|messageBody/);
-  assert.doesNotMatch(studio, /sendCustomerMessageNotification|\/api\/admin\/messages/);
+  assert.doesNotMatch(
+    studio,
+    /sendCustomerMessageNotification|\/api\/admin\/messages/,
+  );
   assert.match(envExample, /RESEND_API_KEY=/);
   assert.match(envExample, /RESEND_FROM_EMAIL=/);
 });
 
 test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [checkout, webhook, migration, studio, admin, envExample, packageSource] = await Promise.all([
+  const [
+    checkout,
+    webhook,
+    migration,
+    studio,
+    admin,
+    envExample,
+    packageSource,
+  ] = await Promise.all([
     readFile(new URL("app/api/payments/checkout/route.ts", root), "utf8"),
     readFile(new URL("app/api/webhooks/stripe/route.ts", root), "utf8"),
-    readFile(new URL("supabase/migrations/202607300001_stripe_checkout.sql", root), "utf8"),
+    readFile(
+      new URL("supabase/migrations/202607300001_stripe_checkout.sql", root),
+      "utf8",
+    ),
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
     readFile(new URL(".env.example", root), "utf8"),
@@ -719,10 +1052,22 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
   assert.match(webhook, /STRIPE_TEST_WEBHOOK_SECRET/);
   assert.match(webhook, /process_stripe_checkout_completed/);
   assert.match(webhook, /charge\.refunded/);
-  assert.match(migration, /create table if not exists public\.stripe_checkout_sessions/);
-  assert.match(migration, /create unique index if not exists stripe_checkout_one_active_order_idx/);
-  assert.match(migration, /payment completion and refunds are managed by Stripe/);
-  assert.match(migration, /grant execute on function public\.process_stripe_checkout_completed/);
+  assert.match(
+    migration,
+    /create table if not exists public\.stripe_checkout_sessions/,
+  );
+  assert.match(
+    migration,
+    /create unique index if not exists stripe_checkout_one_active_order_idx/,
+  );
+  assert.match(
+    migration,
+    /payment completion and refunds are managed by Stripe/,
+  );
+  assert.match(
+    migration,
+    /grant execute on function public\.process_stripe_checkout_completed/,
+  );
   assert.match(studio, /カードで支払う/);
   assert.match(studio, /お支払いはStripeの決済画面で行われます/);
   assert.match(studio, /この注文を現在のアカウントで確認できませんでした/);

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ScrollMemoryStory } from "./components/ScrollMemoryStory";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
@@ -11,7 +10,6 @@ import {
   APPLICATIONS_OPEN,
   PRELAUNCH_COPY,
   PRELAUNCH_CTA,
-  PRELAUNCH_TITLE,
   SITE_DESCRIPTION,
   SITE_NAME,
   BUSINESS_NAME,
@@ -21,29 +19,73 @@ import {
 import { getRequestOrigin } from "./lib/site-server";
 
 export const metadata: Metadata = {
-  title: "愛犬の思い出動画・メモリーフィルム制作",
+  title: "愛犬が主人公になる、動く絵本制作",
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
 };
 
+const storyPages = [
+  {
+    number: "01",
+    label: "春風から届いた手紙",
+    sentence: "春の日、小さな手紙が届きました。",
+    image: "/film/miru/01-spring-letter.jpg",
+  },
+  {
+    number: "02",
+    label: "桜色の旅",
+    sentence: "ひとひらは、知らない青へ。",
+    image: "/film/miru/02-color-journey.jpg",
+  },
+  {
+    number: "03",
+    label: "はじめての波",
+    sentence: "その先で、はじめての波に出会いました。",
+    image: "/film/miru/03-first-wave.jpg",
+  },
+] as const;
+
 const homeFaqs = [
-  ["写真は何枚必要ですか？", "お顔・全身・横向きの基準写真3枚が必須です。思い出の場面写真は任意で、あれば参考としてお預かりします。写真は最大30枚までお送りいただけます。"],
-  ["モニター価格とは何ですか？", `サービス品質の確認と改善のため、初期${MEMORY_FILM_PRICING.launchLimit}組限定で ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）にて制作します。受付終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`],
-  ["写真がそのまま実写動画になるのですか？", "いいえ。元写真をそのまま動かしたり、現実の出来事を完全な実写として再現するサービスではありません。写真の特徴をもとに愛犬は実写に近い質感で、背景や光は記憶をたどるようなやわらかな絵画表現で、新しい場面イメージを制作します。"],
-  ["AI映像で顔が変わることはありますか？", "生成表現には、顔・体型・毛並みなど細部の揺らぎが生じる可能性があります。完全な同一性は保証できませんが、基準写真と照らして担当者が確認し、映像化の前にお客様にも場面イメージをご確認いただきます。"],
-  ["映像構成案2案とは何ですか？", "同じ写真と3つのエピソードから、切り口や場面の組み立てが異なる2案をご提案します。各エピソードを複数の場面へ広げ、お好きな1案を約1分の映像として詳しく仕上げます。"],
-  ["2案の最後もそれぞれ違いますか？", "途中の物語や場面構成は異なりますが、最後は『いまを残す』共通エンディングです。家族を振り返り、いつもの道を並んで歩き続ける場面で結びます。"],
-  ["すべての質問に答える必要がありますか？", "いいえ。答えにくい質問は飛ばせます。途中保存もできるので、準備ができた時に再開してください。"],
-  ["写真や動画はAIの学習に使われますか？", "WAN MEMORYが、お預かりした写真やエピソードを独自のAIモデル学習、広告、ポートフォリオ公開に使用することはありません。制作の一部で外部の生成AI・映像制作サービスを利用する場合があり、外部サービスでのデータの取り扱いは利用するサービスの条件に基づきます。必要な内容をご案内し、同意を確認してから処理します。"],
-  ["人と一緒に写った写真も提出できますか？", "はい。ご家族と一緒に写っている写真もお送りいただけます。人物のお顔は映像に使用・生成せず、後ろ姿・手元・足元・シルエットなど、お顔が分からない形でのみ表現します。"],
-  ["家族写真を映像に入れられますか？", "はい。後ろ姿など、お顔が分からないかたちであれば映像に使用できます。お顔がはっきり写る場面は使用しません。ご希望がある場合は、お申し込み後のメッセージでご相談ください。"],
-  ["子どもが写った写真も送れますか？", "保護者の同意を得た写真のみお送りください。未成年者のお顔もAIで生成・使用せず、愛犬だけを切り抜くか、後ろ姿などお顔が分からない形でのみ使用します。"],
-  ["映像の雰囲気やBGMは選べますか？", "約1分・16:9で、愛犬は実写に近い質感、背景や光はやわらかな絵画表現を基本に統一します。BGMと短い字幕は、いただいたエピソードに合わせて担当ディレクターがお選びします。ご希望があればお申し込み後のメッセージでご相談ください。"],
-  ["専用ウェブサイトとは何ですか？", "完成映像、写真、メッセージをまとめたお客様専用ページです。制作室で表示する写真を整え、専用URLからいつでも見返せます。検索結果には掲載しません。"],
-  ["ページの動画は保存できますか？", "動画はページ内での鑑賞専用で、ダウンロードボタンは設けず、元の動画ファイルも直接表示しません。ただし、端末の画面録画などを技術的に完全に防ぐことはできません。"],
-  ["完成までどのくらいかかりますか？", "必要な素材とお支払いの確認後、通常10〜14営業日を目安にしています。お客様の確認期間や修正内容により前後するため、受付時に予定日をご案内します。"],
-  ["支払いはいつ行いますか？", "相談フォームの送信時には料金は発生しません。写真と内容を確認した後、制作室で確定料金、予定納期、キャンセル条件をご案内します。内容に同意いただいた後、制作開始前にカードでお支払いいただきます。"],
-  ["キャンセルや返金はできますか？", "決済前のキャンセル料金はかかりません。決済後でも制作着手前は全額返金します。制作着手後は、発生済みの制作費・外部サービス費を差し引いて返金額をご案内します。詳しくは特定商取引法に基づく表記をご確認ください。"],
+  [
+    "どんな映像になりますか？",
+    "愛犬を写真そっくりの実写として再現するのではなく、その子の特徴や表情をやわらかな水彩・ガッシュで描き、花びら、光、水、しっぽなどに小さな動きを加えた約1分の『動く絵本』です。",
+  ],
+  [
+    "写真は何枚必要ですか？",
+    "その子らしさがよく分かるお気に入りの写真1枚と、3つの思い出それぞれの参考写真をご用意ください。思い出の写真がない場合も、文章からご相談いただけます。正面・全身・横向きの3枚セットは必須ではありません。",
+  ],
+  [
+    "写真がそのまま動くのですか？",
+    "いいえ。写真とエピソードをもとに、まず一冊分の絵本ページを新しく描きます。お客様に絵と文章をご確認いただいた後、その絵に控えめな動きをつけます。",
+  ],
+  [
+    "愛犬の顔が変わることはありますか？",
+    "イラストとして描き直すため、写真との完全な一致は保証できません。ただし、完成した全ページを動画化の前にお見せし、その子らしく感じられるかをご確認いただきます。",
+  ],
+  [
+    "物語案2案とは何ですか？",
+    "同じ3つの思い出から、出来事をつなぐモチーフや物語の運び方が異なる2つのあらすじをご提案します。お好きな1案を選んでから料金をご案内します。",
+  ],
+  [
+    "ナレーションは入りますか？",
+    "標準仕様はナレーションなしです。短い物語の文章を各場面に入れ、BGMと小さな環境音で、声に出しても静かに読んでも楽しめる作品に仕上げます。",
+  ],
+  [
+    "人が写っている写真も送れますか？",
+    "はい。人物のお顔は新しく生成せず、必要な場合だけ後ろ姿・手元・足元・シルエットなど、お顔が分からない形で表現します。",
+  ],
+  [
+    "支払いはいつですか？",
+    "相談フォームの送信時には料金は発生しません。写真とお話を確認し、2つの物語案から1案を選んでいただいた後、確定料金・納期・キャンセル条件とともにカード決済をご案内します。",
+  ],
+  [
+    "完成までどのくらいかかりますか？",
+    "必要な素材とお支払いの確認後、通常10〜14営業日が目安です。絵本ページの確認や修正期間によって前後する場合があります。",
+  ],
+  [
+    "モニター価格とは何ですか？",
+    `初期${MEMORY_FILM_PRICING.launchLimit}組限定で、動く絵本の制作工程と品質を確認するための価格 ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）です。終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`,
+  ],
 ] as const;
 
 export default async function Home() {
@@ -72,25 +114,19 @@ export default async function Home() {
     {
       "@context": "https://schema.org",
       "@type": "Service",
-      "@id": `${origin}/#memory-film-service`,
-      name: "愛犬メモリーフィルム制作",
-      serviceType: "愛犬の思い出動画・メモリーフィルム制作",
+      "@id": `${origin}/#moving-storybook-service`,
+      name: "愛犬の動く絵本制作",
+      serviceType: "愛犬の写真からつくるオーダーメイド動画絵本",
       description: SITE_DESCRIPTION,
       url: `${origin}/#plans`,
+      image: `${origin}/og.png`,
       provider: { "@id": `${origin}/#organization` },
       areaServed: { "@type": "Country", name: "日本" },
       availableLanguage: "日本語",
-      image: `${origin}/og.png`,
       offers: {
         "@type": "Offer",
         price: MEMORY_FILM_PRICING.launchPrice,
         priceCurrency: "JPY",
-        priceSpecification: {
-          "@type": "UnitPriceSpecification",
-          price: MEMORY_FILM_PRICING.launchPrice,
-          priceCurrency: "JPY",
-          valueAddedTaxIncluded: true,
-        },
         availability: "https://schema.org/InStock",
         url: `${origin}/#plans`,
       },
@@ -98,7 +134,6 @@ export default async function Home() {
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      "@id": `${origin}/#faq`,
       mainEntity: homeFaqs.map(([question, answer]) => ({
         "@type": "Question",
         name: question,
@@ -108,223 +143,264 @@ export default async function Home() {
   ];
 
   return (
-    <main>
+    <main className="storybook-home">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
       />
       <SiteHeader />
       <MobileStickyCta />
 
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-media" aria-hidden="true">
-          <div className="hero-film-grain" />
-          <div className="hero-caption">
-            <span>SCENE 07</span>
-            <span>いつもの帰り道</span>
-          </div>
-        </div>
-        <div className="shell hero-content">
-          {!APPLICATIONS_OPEN && (
-            <aside className="prelaunch-status" role="status" aria-label="サービス公開状況">
-              <span>PREPARING FOR LAUNCH</span>
-              <strong>{PRELAUNCH_TITLE}</strong>
-              <p>{PRELAUNCH_COPY}</p>
-            </aside>
-          )}
-          <p className="eyebrow light">YOUR DOG. YOUR DAYS. YOUR MEMORY.</p>
+      <section className="storybook-hero" aria-labelledby="hero-title">
+        <video
+          className="storybook-hero-video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/film/miru/01-spring-letter.jpg"
+          aria-hidden="true"
+        >
+          <source src="/film/miru/spring-letter.mp4" type="video/mp4" />
+        </video>
+        <div className="storybook-hero-wash" aria-hidden="true" />
+        <div className="shell storybook-hero-copy">
+          <p className="eyebrow">A MOVING STORYBOOK FOR YOUR DOG</p>
           <h1 id="hero-title">
-            一緒に過ごした時間を、
+            うちの子が主人公になる、
             <br />
-            一本のメモリーフィルムに。
+            動くものがたり。
           </h1>
-          <p className="hero-copy">
-            愛犬の写真とエピソードをもとに、その子らしさを大切にしながら
+          <p>
+            お気に入りの写真と、あなたが覚えている三つの出来事から。
             <br className="desktop-only" />
-            記憶の中の風景のような映像へ再構成します。
+            その子だけの絵を描き、小さな動きと文章を重ねて、一冊のような映像にします。
           </p>
-          <p className="hero-style-note">愛犬は実写に近い質感で、背景や光はやわらかな絵画表現で仕上げます。</p>
-          <div className="hero-actions">
+          <div className="storybook-hero-actions">
             {APPLICATIONS_OPEN ? (
               <StartStoryLink className="button button-primary">
-                思い出をつくる <span aria-hidden="true">→</span>
+                物語をつくる <span aria-hidden="true">→</span>
               </StartStoryLink>
             ) : (
-              <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
+              <span className="button button-prelaunch" aria-disabled="true">
+                {PRELAUNCH_CTA}
+              </span>
             )}
-            <Link className="text-link light-link" href="/film/hinata-demo">
-              完成ページを体験する <span aria-hidden="true">↗</span>
+            <Link className="text-link" href="/film/miru-demo">
+              動くページを見る <span aria-hidden="true">↗</span>
             </Link>
           </div>
-        </div>
-        <div className="scroll-note" aria-hidden="true">
-          SCROLL <span />
+          <span className="storybook-hero-note">
+            PICTURE BOOK 01 · 春風から届いた手紙
+          </span>
         </div>
       </section>
 
-      <section className="intro section" id="about">
-        <div className="shell intro-grid">
+      <section className="storybook-intro section" id="about">
+        <div className="shell storybook-intro-grid">
           <div>
-            <p className="eyebrow">OUR APPROACH</p>
-            <h2 className="display-title">
-              記録ではなく、
+            <p className="eyebrow">NOT A RE-CREATION, A NEW STORY</p>
+            <h2>
+              写真を再現するのではなく、
               <br />
-              記憶を残す。
+              記憶から物語を描く。
             </h2>
           </div>
-          <div className="intro-copy">
+          <div>
             <p>
-              何気ない寝顔、いつもの散歩道、家族になった日のこと。
-              大切なのは、きれいな写真の枚数ではなく、その子らしい時間です。
+              毛並みやしっぽを実写のように完璧に再現することより、ご家族が知っている表情や、あの日の空気を一冊の絵本として残すことを大切にします。
             </p>
             <p>
-              お話を伺いながら、一頭一頭に合わせた構成をつくり、元写真と新しく描く場面を組み合わせて一本の作品にします。
+              一場面ずつ同じ画材と色で描き、動画では犬を大きく演技させません。花びら、水面、光、まばたき。ページがそっと息をするような動きに整えます。
             </p>
-            <div className="trust-row" aria-label="サービスの特徴">
-              <span>実写に近い愛犬の質感</span>
-              <span>人の手で監修</span>
-              <span>写真3枚・思い出3つから</span>
-            </div>
-          </div>
-        </div>
-        <div className="shell expression-guide" aria-labelledby="expression-guide-title">
-          <div>
-            <p className="eyebrow">BEFORE YOU ORDER</p>
-            <h3 id="expression-guide-title">完全な実写再現ではありません。</h3>
-          </div>
-          <div>
-            <p>WAN MEMORYは、元写真をそのまま動かしたり、実際の出来事を記録映像のように再現するサービスではありません。写真から分かる特徴と、お客様が覚えているエピソードをもとに、新しい思い出の場面を制作します。</p>
             <ul>
-              <li><strong>愛犬</strong><span>顔・毛色・体型を参考に、実写に近い質感で表現</span></li>
-              <li><strong>背景と光</strong><span>記憶をたどるような、やわらかな絵画表現</span></li>
-              <li><strong>制作前の確認</strong><span>場面イメージをご確認いただいてから映像化</span></li>
+              <li>やわらかな水彩・ガッシュ</li>
+              <li>物語をつなぐ短い文章</li>
+              <li>人の目で一場面ずつ確認</li>
             </ul>
-            <p className="expression-guide-caution">AIによる生成表現のため、顔や身体などの細部が元写真と完全に同一にならない場合があります。</p>
-            <Link className="text-link" href="/film/hinata-demo">実際の仕上がりを見る →</Link>
           </div>
         </div>
       </section>
 
-      <ScrollMemoryStory />
+      <section className="storybook-preview section" id="story-preview">
+        <div className="shell">
+          <div className="storybook-heading">
+            <div>
+              <p className="eyebrow">MIRU AND A PETAL OF SPRING</p>
+              <h2>
+                一枚の花びらが、
+                <br />
+                三つの記憶をつないでいく。
+              </h2>
+            </div>
+            <p>
+              ミルのテストストーリー「ひとひらの春」より。
+              <br />
+              絵・動き・文章を同じ世界観でつなぎます。
+            </p>
+          </div>
+          <ol className="storybook-page-grid">
+            {storyPages.map((page, index) => (
+              <li key={page.number} className={index === 0 ? "featured" : ""}>
+                <figure>
+                  <img
+                    src={page.image}
+                    alt={`動く絵本「${page.label}」の場面`}
+                  />
+                  <figcaption>
+                    <span>{page.number}</span>
+                    <strong>{page.label}</strong>
+                  </figcaption>
+                </figure>
+                <blockquote>{page.sentence}</blockquote>
+              </li>
+            ))}
+          </ol>
+          <Link
+            className="button button-outline storybook-preview-link"
+            href="/film/miru-demo"
+          >
+            ミルの動くページを見る →
+          </Link>
+        </div>
+      </section>
 
-      <section className="purpose-section section-tight">
+      <section className="storybook-method section" id="memory-story">
+        <div className="shell">
+          <div className="storybook-heading light">
+            <div>
+              <p className="eyebrow">HOW A MEMORY BECOMES A BOOK</p>
+              <h2>
+                あなたが渡すのは、
+                <br />
+                写真と、覚えていること。
+              </h2>
+            </div>
+            <p>
+              映像AIの指示を書く必要はありません。
+              <br />
+              物語と絵と動きは、こちらで一つに整えます。
+            </p>
+          </div>
+          <ol className="storybook-method-grid">
+            <li>
+              <span>01</span>
+              <strong>その子らしい一枚</strong>
+              <p>
+                顔・全身・横向きの3枚セットは不要です。まずは「この子らしい」と思えるお気に入りの写真を選びます。
+              </p>
+            </li>
+            <li>
+              <span>02</span>
+              <strong>三つの思い出</strong>
+              <p>
+                初めての海、いつもの昼寝、忘れられない春。場所やしぐさ、その時の気持ちを聞かせてください。
+              </p>
+            </li>
+            <li>
+              <span>03</span>
+              <strong>二つの物語案</strong>
+              <p>
+                単なる回想の並びではなく、花びらや光など一つのモチーフで記憶をつなぐ2案をご提案します。
+              </p>
+            </li>
+            <li>
+              <span>04</span>
+              <strong>動く絵本へ</strong>
+              <p>
+                承認いただいた絵本ページに小さな動きをつけ、文章・BGMとともに約1分の作品へ仕上げます。
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section className="storybook-directions section-tight">
         <div className="shell">
           <div className="section-heading-row">
             <div>
-              <p className="eyebrow">ONE MEMORY FILM</p>
-              <h2>いまを残す、一つのかたち。</h2>
+              <p className="eyebrow">TWO STORY DIRECTIONS</p>
+              <h2>同じ思い出から、二つの物語。</h2>
             </div>
-            <p>一緒に過ごしている今を、その子らしい約1分のメモリーフィルムにします。</p>
+            <p>お支払いの前に、心に近い1案を選べます。</p>
           </div>
-          <div className="purpose-grid single">
-            <article className="purpose-card purpose-now">
-              <span className="purpose-number">01</span>
-              <div className="purpose-card-content">
-                <p className="card-kicker">いまを残す思い出フィルム</p>
-                <h3>いつもの日々を、未来の宝物に。</h3>
-                <p className="purpose-description">散歩やお昼寝、家族を待つ後ろ姿。今を一緒に過ごしているその子の表情を映像に残します。</p>
-                <div className="purpose-ending"><span>COMMON ENDING</span><strong>また明日も、いつもの道を。</strong><p>家族を振り返り、並んで歩き続けるエンディング。</p></div>
-              </div>
+          <div className="storybook-direction-grid">
+            <article>
+              <span>STORY A</span>
+              <h3>ひとひらの春</h3>
+              <p>
+                一枚の花びらが案内人になり、春の散歩道から初めての海、眠る部屋まで旅をする物語。
+              </p>
+              <ol>
+                <li>春風から届いた手紙</li>
+                <li>桜色の旅</li>
+                <li>はじめての波</li>
+                <li>夢の中の宝物</li>
+              </ol>
             </article>
-          </div>
-        </div>
-      </section>
-
-      <section className="film-section section" id="films">
-        <div className="shell">
-          <div className="film-heading">
-            <div>
-              <p className="eyebrow light">FILM MOOD</p>
-              <h2>一頭ごとに、違う物語。</h2>
-            </div>
-            <p>
-              愛犬の特徴は実写に近く、背景や光は記憶のようにやわらかく。
-              <br />
-              すべての場面を同じ表現トーンに整えます。
-            </p>
-          </div>
-          <div className="film-grid">
-            <Link className="film-card film-card-main" href="/film/hinata-demo">
-              <div
-                className="film-still still-warm"
-                aria-hidden="true"
-                style={{ backgroundImage: "url('/film/hinata/card-poster.jpg')", backgroundPosition: "center" }}
-              >
-                <span className="play-mark">▶</span>
-                <span className="film-time">00:48</span>
-              </div>
-              <div className="film-meta">
-                <div>
-                  <p>ひなたと歩いた、いつもの季節</p>
-                  <span>Warm daily film</span>
-                </div>
-                <span>柴犬・4歳</span>
-              </div>
-            </Link>
-            <article className="film-card">
-              <div className="film-still still-spring" aria-hidden="true">
-                <span className="play-mark">▶</span>
-                <span className="film-time">00:58</span>
-              </div>
-              <div className="film-meta">
-                <div>
-                  <p>はじめての春</p>
-                  <span>Anniversary film</span>
-                </div>
-                <span>トイプードル・1歳</span>
-              </div>
+            <article>
+              <span>STORY B</span>
+              <h3>ミルの、はじめて図鑑</h3>
+              <p>
+                出会った色、音、においを一ページずつ集め、最後に「わたしの宝物図鑑」が完成する物語。
+              </p>
+              <ol>
+                <li>桜色をみつける</li>
+                <li>水の音をおぼえる</li>
+                <li>海の青をひらく</li>
+                <li>今日の宝物をしまう</li>
+              </ol>
             </article>
-            <article className="film-card">
-              <div className="film-still still-sunset" aria-hidden="true">
-                <span className="play-mark">▶</span>
-                <span className="film-time">01:00</span>
-              </div>
-              <div className="film-meta">
-                <div>
-                  <p>はじめての海</p>
-                  <span>Cinematic daily film</span>
-                </div>
-                <span>ゴールデンレトリバー・5歳</span>
-              </div>
-            </article>
-          </div>
-          <p className="portfolio-note">※ 掲載作品は仕上がりの表現サンプルです。AI生成表現のため、元写真との完全な同一性を保証するものではありません。</p>
-        </div>
-      </section>
-
-      <section className="demo-teaser section" id="demo">
-        <div className="shell demo-teaser-grid">
-          <div className="demo-teaser-copy">
-            <p className="eyebrow">CUSTOMER SITE DEMO</p>
-            <h2>完成後のページを、<br />そのまま体験。</h2>
-            <p>映像が完成したら、WAN MEMORYのドメイン内にその子だけのページを制作します。映像、写真、物語、ご家族からの言葉が実際にどう見えるか、実際の制作事例でご覧ください。</p>
-            <Link className="button button-primary" href="/film/hinata-demo">ひなたの完成デモを見る <span aria-hidden="true">→</span></Link>
-          </div>
-          <div className="demo-browser-preview" aria-hidden="true">
-            <div className="demo-browser-bar"><span /><span /><span /><p>WAN MEMORY / MEMORY / HINATA</p></div>
-            <div className="demo-browser-image" style={{ backgroundImage: "linear-gradient(180deg, rgba(20,25,21,.05), rgba(20,25,21,.5)), url('/film/hinata/demo-poster.jpg')", backgroundPosition: "center" }}><span>PLAY SAMPLE</span></div>
-            <div className="demo-browser-copy"><small>MEMORY FILM · SHIBA INU</small><strong>ひなたと歩いた、いつもの季節</strong><p>桜の花びらを追いかけた春から、いつもの帰り道まで。</p></div>
           </div>
         </div>
       </section>
 
       <section className="process-section section" id="flow">
         <div className="shell">
-          <p className="eyebrow">HOW IT WORKS</p>
+          <p className="eyebrow">FROM PHOTO TO STORYBOOK</p>
           <div className="process-head">
-            <h2>ご登録からお届けまで、8つのステップ。</h2>
-            <p>ログイン後の制作室で、写真の追加から納品まで確認できます。</p>
+            <h2>ご相談からお届けまで。</h2>
+            <p>制作室で、物語・絵本ページ・完成映像を順番に確認できます。</p>
           </div>
           <ol className="process-list">
             {[
-              ["01", "会員登録して、相談を始める", "メールアドレスで専用制作室をつくり、愛犬の基本情報から入力を始めます。"],
-              ["02", "思い出と写真を預ける", "エピソードと写真を非公開領域へ送信します。HEIC写真は自動でJPGへ変換します。"],
-              ["03", "素材確認を待つ", "担当者がその子らしさとご希望を確認します。写真は制作中も追加できます。"],
-              ["04", "映像構成案2案を受け取る", "3つのエピソードを複数の場面へ広げ、方向性の異なる2つの構成案を制作室へお届けします。"],
-              ["05", "1案を選び、料金と納期を確認する", "選んだ方向性、確定料金、予定納期をご確認いただいた後に制作を始めます。"],
-              ["06", "場面イメージを確認する", "愛犬は実写に近い質感、背景や光はやわらかな絵画表現で制作した静止画をお届けします。顔や体型も確認いただき、調整のご希望を2回までお受けします。"],
-              ["07", "映像を制作・確認し、修正を依頼する", "約1分の映像をご確認いただき、外見や動き、リード、字幕など気になる点をお知らせください。"],
-              ["08", "完成映像と専用サイトを受け取る", "完成映像と、その子だけのメモリーサイトを受け取り、専用URLからいつでも見返せます。"],
+              [
+                "01",
+                "写真と三つの思い出を送る",
+                "お気に入りの代表写真と、物語にしたい出来事を登録します。途中保存もできます。",
+              ],
+              [
+                "02",
+                "二つの物語案を受け取る",
+                "担当者が写真とお話を読み、つながり方の異なる二つのあらすじをご提案します。",
+              ],
+              [
+                "03",
+                "1案を選び、料金を確認する",
+                "選んだ物語、確定料金、予定納期、キャンセル条件を確認してからカードでお支払いいただきます。",
+              ],
+              [
+                "04",
+                "絵本ページと文章を確認する",
+                "全場面の絵と、その場面に入る短い文章を先にお見せします。調整は2回まで可能です。",
+              ],
+              [
+                "05",
+                "小さな動きを加える",
+                "承認された絵をもとに、犬の姿を安定させながら環境と表情を控えめに動かします。",
+              ],
+              [
+                "06",
+                "完成前の作品を確認する",
+                "BGMと文章を含む約1分の映像をご確認いただき、修正を2回までお受けします。",
+              ],
+              [
+                "07",
+                "専用ページで受け取る",
+                "完成した動く絵本と写真を、その子だけの専用ページへお届けします。",
+              ],
             ].map(([number, title, copy]) => (
               <li key={number}>
                 <span className="process-number">{number}</span>
@@ -343,46 +419,13 @@ export default async function Home() {
         <div className="shell">
           <div className="pricing-heading">
             <div>
-              <p className="eyebrow">PLANS</p>
-              <h2>迷わない、ひとつのプラン。</h2>
+              <p className="eyebrow">ONE STORYBOOK PLAN</p>
+              <h2>物語から、完成ページまで。</h2>
             </div>
-            <p>映像構成案のご提案から、約1分の完成映像と専用サイトまで。</p>
+            <p>二つの物語案、絵本ページ、約1分の映像、専用サイトを含みます。</p>
           </div>
-          <aside className="included-memory-site" aria-label="メモリーフィルムに含まれる専用メモリーサイト">
-            <div className="included-memory-site-intro">
-              <p className="included-label">INCLUDED IN MEMORY FILM</p>
-              <div>
-                <h3>映像を受け取ったあとも、思い出へ帰れる場所。</h3>
-                <p>完成映像だけでなく、愛犬へのメッセージ、選んだ物語、思い出の写真をひとつにまとめた専用ページを、WAN MEMORYのドメイン内にお客様ごとに制作します。追加料金はかかりません。</p>
-              </div>
-            </div>
-            <div className="memory-site-usage">
-              <p className="memory-site-usage-title">専用メモリーサイトの使い方</p>
-              <ol>
-                <li><span>01</span><div><strong>納品のお知らせを受け取る</strong><p>映像が完成すると、ログイン後の制作室に「専用メモリーサイトを見る」ボタンが表示されます。</p></div></li>
-                <li><span>02</span><div><strong>写真を選び、アルバムを整える</strong><p>制作室で、専用ページに表示する思い出の写真を選べます。</p></div></li>
-                <li><span>03</span><div><strong>専用URLから、何度でも振り返る</strong><p>完成映像・メッセージ・物語・写真を、ひとつのページでいつでもご覧いただけます。映像は閲覧専用です。</p></div></li>
-              </ol>
-              <div className="memory-site-note"><span>PRIVATE</span><p>ページは検索結果に表示されません。専用URLからログインせずに閲覧でき、必要な場合はURLを新しく発行できます。画面録画などを技術的に完全に防ぐことはできません。</p></div>
-              <Link className="memory-site-demo-link" href="/film/hinata-demo">実際の完成イメージを見る →</Link>
-            </div>
-          </aside>
           <div className="pricing-grid">
             <LivePriceCard />
-          </div>
-        </div>
-      </section>
-
-      <section className="guide-section section" aria-labelledby="guide-title">
-        <div className="shell">
-          <div className="section-heading-row">
-            <div><p className="eyebrow">WAN MEMORY GUIDE</p><h2 id="guide-title">はじめての方へ。</h2></div>
-            <p>思い出動画の特徴と、写真の準備方法をご案内します。</p>
-          </div>
-          <div className="guide-card-grid">
-            <Link href="/aiken-omoide-douga"><span>01</span><h3>愛犬の思い出動画とは</h3><p>写真からどのように約1分の映像をつくるのか、制作方法と流れをご紹介します。</p><i aria-hidden="true">→</i></Link>
-            <Link href="/uchinoko-kinenbi-douga"><span>02</span><h3>うちの子記念日を動画に</h3><p>家族になった日や誕生日までの時間を、物語として残すヒントをまとめました。</p><i aria-hidden="true">→</i></Link>
-            <Link href="/dog-photo-guide"><span>03</span><h3>愛犬写真の選び方</h3><p>顔・全身・横向きなど、外見を保ちやすい基準写真の選び方をご案内します。</p><i aria-hidden="true">→</i></Link>
           </div>
         </div>
       </section>
@@ -392,12 +435,17 @@ export default async function Home() {
           <div>
             <p className="eyebrow">FAQ</p>
             <h2>よくあるご質問</h2>
-            <p className="faq-lead">まだ決めきれないことがあっても大丈夫です。受付後に担当者と一緒に整理できます。</p>
+            <p className="faq-lead">
+              写真が少なくても、まだ物語がまとまっていなくても大丈夫です。
+            </p>
           </div>
           <div className="faq-list">
             {homeFaqs.map(([question, answer]) => (
               <details key={question}>
-                <summary>{question}<span aria-hidden="true">＋</span></summary>
+                <summary>
+                  {question}
+                  <span aria-hidden="true">＋</span>
+                </summary>
                 <p>{answer}</p>
               </details>
             ))}
@@ -405,15 +453,30 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="final-cta">
+      <section className="final-cta storybook-final-cta">
         <div className="shell final-cta-inner">
-          <p className="eyebrow light">BEGIN YOUR MEMORY</p>
-          <h2>{APPLICATIONS_OPEN ? <>その子のことを、<br />ゆっくり聞かせてください。</> : <>ただいま、正式公開の<br />準備を進めています。</>}</h2>
-          <p>{APPLICATIONS_OPEN ? `先着${MEMORY_FILM_PRICING.launchLimit}組は ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。入力内容はこの端末に自動で保存されます。` : PRELAUNCH_COPY}</p>
+          <p className="eyebrow light">OPEN THE FIRST PAGE</p>
+          <h2>
+            その子の物語を、
+            <br />
+            一ページ目から。
+          </h2>
+          <p>
+            {APPLICATIONS_OPEN
+              ? `先着${MEMORY_FILM_PRICING.launchLimit}組は ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。相談時点では料金は発生しません。`
+              : PRELAUNCH_COPY}
+          </p>
           {APPLICATIONS_OPEN ? (
-            <StartStoryLink className="button button-cream">思い出づくりを始める <span aria-hidden="true">→</span></StartStoryLink>
+            <StartStoryLink className="button button-cream">
+              物語づくりを始める →
+            </StartStoryLink>
           ) : (
-            <span className="button button-prelaunch button-prelaunch-light" aria-disabled="true">{PRELAUNCH_CTA}</span>
+            <span
+              className="button button-prelaunch button-prelaunch-light"
+              aria-disabled="true"
+            >
+              {PRELAUNCH_CTA}
+            </span>
           )}
         </div>
       </section>

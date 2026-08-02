@@ -25,9 +25,17 @@ export function MobileStickyCta() {
   }, []);
 
   return (
-    <aside className={visible ? "mobile-sticky-cta visible" : "mobile-sticky-cta"} aria-label="お申し込み">
-      <div><p>MEMORY FILM</p><strong>先着10組 モニター受付中</strong></div>
-      <StartStoryLink className="button button-cream">思い出をつくる <span aria-hidden="true">→</span></StartStoryLink>
+    <aside
+      className={visible ? "mobile-sticky-cta visible" : "mobile-sticky-cta"}
+      aria-label="お申し込み"
+    >
+      <div>
+        <p>MOVING STORYBOOK</p>
+        <strong>先着10組 モニター受付中</strong>
+      </div>
+      <StartStoryLink className="button button-cream">
+        物語をつくる <span aria-hidden="true">→</span>
+      </StartStoryLink>
     </aside>
   );
 }

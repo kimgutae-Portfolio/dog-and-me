@@ -15,8 +15,12 @@ export function InfoPage({ eyebrow, title, lead, children }: Props) {
       <header className="info-header">
         <div className="shell">
           <Link className="brand" href="/" aria-label="WAN MEMORY トップへ">
-            <span className="brand-mark" aria-hidden="true">WM</span>
-            <span className="brand-type">WAN MEMORY<small>MEMORY MOVIES FOR YOUR DOG</small></span>
+            <span className="brand-mark" aria-hidden="true">
+              WM
+            </span>
+            <span className="brand-type">
+              WAN MEMORY<small>MOVING STORYBOOKS FOR YOUR DOG</small>
+            </span>
           </Link>
           <Link href="/">トップへ戻る</Link>
         </div>

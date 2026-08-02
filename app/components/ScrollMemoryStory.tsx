@@ -29,8 +29,8 @@ const chapters = [
     number: "03",
     kicker: "TWO STORY DIRECTIONS",
     title: "物語を、まずは",
-    emphasis: "2つの映像構成案に。",
-    copy: "3つの思い出をそれぞれ複数の場面へ広げ、切り口の異なる2つの映像構成案をご提案します。心に近い1案を選んでいただき、場面や言葉を整えながら約1分のメモリーフィルムへ仕上げます。",
+    emphasis: "2つの物語案に。",
+    copy: "3つの思い出を物語の種にして、切り口の異なる2つの物語案をご提案します。心に近い1案を選んでいただき、絵本ページと文章を整えながら約1分の動く絵本へ仕上げます。",
     scene: "CONCEPT A / THE WAY HOME",
     sceneTitle: "四季を歩いた、いつもの帰り道。",
     sceneNote: "2案を比べてから、制作する物語を選べます",
@@ -40,7 +40,7 @@ const chapters = [
     kicker: "WAN MEMORY",
     title: "あなたは、",
     emphasis: "思い出を話すだけ。",
-    copy: "映像AIの使い方を覚える必要はありません。映像構成案のご提案から約1分の完成映像、専用サイトの仕上げまでお任せください。大切な時間を、何度でも会いにいけるかたちにします。",
+    copy: "生成AIの使い方を覚える必要はありません。物語案のご提案から絵本ページ、約1分の完成動画、専用サイトの仕上げまでお任せください。大切な時間を、何度でも開ける物語にします。",
     scene: "A MEMORY FOR YOUR FAMILY",
     sceneTitle: "ひなたと歩いた季節",
     sceneNote: "愛犬との時間を、いつまでも動く記憶に。",
@@ -66,17 +66,26 @@ export function ScrollMemoryStory() {
     const safeIndex = Math.min(chapters.length - 1, Math.max(0, index));
     const sectionTop = window.scrollY + section.getBoundingClientRect().top;
     const scrollable = Math.max(section.offsetHeight - window.innerHeight, 1);
-    const target = sectionTop + scrollable * (safeIndex / (chapters.length - 1));
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const target =
+      sectionTop + scrollable * (safeIndex / (chapters.length - 1));
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     snapTargetRef.current = safeIndex;
     activeRef.current = safeIndex;
     setActive(safeIndex);
-    window.scrollTo({ top: target, behavior: reducedMotion ? "auto" : "smooth" });
+    window.scrollTo({
+      top: target,
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
 
-    window.setTimeout(() => {
-      if (snapTargetRef.current === safeIndex) snapTargetRef.current = null;
-    }, reducedMotion ? 50 : 700);
+    window.setTimeout(
+      () => {
+        if (snapTargetRef.current === safeIndex) snapTargetRef.current = null;
+      },
+      reducedMotion ? 50 : 700,
+    );
   }, []);
 
   useEffect(() => {
@@ -89,7 +98,10 @@ export function ScrollMemoryStory() {
       const rect = section.getBoundingClientRect();
       const scrollable = Math.max(section.offsetHeight - window.innerHeight, 1);
       const nextProgress = Math.min(1, Math.max(0, -rect.top / scrollable));
-      const nextActive = Math.min(chapters.length - 1, Math.floor(nextProgress * chapters.length));
+      const nextActive = Math.min(
+        chapters.length - 1,
+        Math.floor(nextProgress * chapters.length),
+      );
 
       setProgress(nextProgress);
       if (snapTargetRef.current === null) {
@@ -137,7 +149,8 @@ export function ScrollMemoryStory() {
       const touch = event.touches[0];
       if (!touch) return;
       const rect = section.getBoundingClientRect();
-      touchPinnedRef.current = rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
+      touchPinnedRef.current =
+        rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
       touchStartYRef.current = touch.clientY;
       touchStartChapterRef.current = activeRef.current;
     };
@@ -169,14 +182,20 @@ export function ScrollMemoryStory() {
       section.removeEventListener("touchstart", handleTouchStart);
       section.removeEventListener("touchend", handleTouchEnd);
       window.clearTimeout(wheelUnlockTimer);
-      if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
+      if (frameRef.current !== null)
+        window.cancelAnimationFrame(frameRef.current);
     };
   }, [moveToChapter]);
 
   const chapter = chapters[active];
 
   return (
-    <section className="scroll-story" id="memory-story" ref={sectionRef} aria-labelledby="scroll-story-title">
+    <section
+      className="scroll-story"
+      id="memory-story"
+      ref={sectionRef}
+      aria-labelledby="scroll-story-title"
+    >
       <div className="scroll-story-sticky" data-step={active + 1}>
         <div className="story-backdrop" aria-hidden="true" />
         <div className="story-vignette" aria-hidden="true" />
@@ -193,18 +212,26 @@ export function ScrollMemoryStory() {
               <strong>{chapter.emphasis}</strong>
             </h2>
             <p className="story-body">{chapter.copy}</p>
-            {active === chapters.length - 1 && (
-              APPLICATIONS_OPEN ? (
+            {active === chapters.length - 1 &&
+              (APPLICATIONS_OPEN ? (
                 <StartStoryLink className="button button-cream story-cta">
                   うちの子の物語をつくる <span aria-hidden="true">→</span>
                 </StartStoryLink>
               ) : (
-                <span className="button button-prelaunch button-prelaunch-light story-cta" aria-disabled="true">{PRELAUNCH_CTA}</span>
-              )
-            )}
+                <span
+                  className="button button-prelaunch button-prelaunch-light story-cta"
+                  aria-disabled="true"
+                >
+                  {PRELAUNCH_CTA}
+                </span>
+              ))}
           </div>
 
-          <div className="story-visual" key={`visual-${active}`} aria-label={`${chapter.scene} ${chapter.sceneTitle}`}>
+          <div
+            className="story-visual"
+            key={`visual-${active}`}
+            aria-label={`${chapter.scene} ${chapter.sceneTitle}`}
+          >
             <div className="story-film-meta">
               <span>{chapter.scene}</span>
               <span>WAN MEMORY / {chapter.number}</span>
@@ -237,7 +264,9 @@ export function ScrollMemoryStory() {
           <div className="story-scroll-progress" aria-hidden="true">
             <span style={{ height: `${Math.max(progress * 100, 3)}%` }} />
           </div>
-          <p className="story-scroll-label" aria-hidden="true">SCROLL TO CONTINUE</p>
+          <p className="story-scroll-label" aria-hidden="true">
+            SCROLL TO CONTINUE
+          </p>
         </div>
       </div>
     </section>

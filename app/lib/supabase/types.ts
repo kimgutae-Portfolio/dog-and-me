@@ -134,15 +134,24 @@ export type MemoryOrder = {
   updated_at: string;
 };
 
-export function getProductionFields(order: Partial<MemoryOrder>): WanMemoryProductionFields {
+export function getProductionFields(
+  order: Partial<MemoryOrder>,
+): WanMemoryProductionFields {
   return {
     primaryFacePhotoId: order.primary_face_photo_id ?? null,
     primaryBodyPhotoId: order.primary_body_photo_id ?? null,
     sideTailPhotoId: order.side_tail_photo_id ?? null,
     appearancePolicy: order.appearance_policy ?? null,
-    selectedAppearanceDescription: order.selected_appearance_description ?? null,
-    selectedAppearancePhotoIds: Array.isArray(order.selected_appearance_photo_ids) ? order.selected_appearance_photo_ids : [],
-    ownerLockedTraits: Array.isArray(order.owner_locked_traits) ? order.owner_locked_traits : [],
+    selectedAppearanceDescription:
+      order.selected_appearance_description ?? null,
+    selectedAppearancePhotoIds: Array.isArray(
+      order.selected_appearance_photo_ids,
+    )
+      ? order.selected_appearance_photo_ids
+      : [],
+    ownerLockedTraits: Array.isArray(order.owner_locked_traits)
+      ? order.owner_locked_traits
+      : [],
     aiReconstructionAcknowledged: order.ai_reconstruction_acknowledged === true,
     photoAnalysisStatus: order.photo_analysis_status ?? "needs_customer_input",
     photoAnalysisApprovedAt: order.photo_analysis_approved_at ?? null,
@@ -172,6 +181,7 @@ export type OrderAsset = {
   album_caption: string | null;
   album_sort_order: number;
   scene_title: string | null;
+  story_caption: string | null;
   scene_sort_order: number;
   source_still_asset_id: string | null;
   created_at: string;
@@ -316,13 +326,13 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   awaiting_materials: "素材の追加待ち",
   materials_submitted: "ご相談を受け付けました",
   reviewing_materials: "写真とお話を確認しています",
-  concepts_ready: "映像構成案2案をご確認ください",
-  concept_selected: "選んだ物語を構成しています",
-  stills_review: "場面イメージをご確認ください",
-  production: "約1分の映像を制作しています",
-  customer_review: "完成前の映像をご確認ください",
+  concepts_ready: "物語案2案をご確認ください",
+  concept_selected: "選んだ物語の絵本ページを描いています",
+  stills_review: "絵本ページと文章をご確認ください",
+  production: "動く絵本を制作しています",
+  customer_review: "完成前の動く絵本をご確認ください",
   revision_requested: "修正内容を反映しています",
   quality_check: "最終確認をしています",
-  delivered: "完成映像をお届けしました",
+  delivered: "完成した動く絵本をお届けしました",
   cancelled: "キャンセル",
 };

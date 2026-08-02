@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble a WAN MEMORY customer film from Runway image-to-video clips.
+"""Assemble a WAN MEMORY moving storybook from Runway image-to-video clips.
 
 Structure (see docs/MANUAL_PRODUCTION_WORKFLOW.md):
   intro card -> [photo hold -> clip] for the intro clip -> memory blocks
@@ -16,12 +16,13 @@ Usage:
   python3 scripts/assemble_film.py \
     --order-dir demo/customer-personas/hinata/WM-2026-3357CF \
     --intro-clip 1 --memory-clips 2,3 4,5 6 --ending-clip 7 \
-    --kicker "A MEMORY FILM" \
+    --kicker "A MOVING STORYBOOK" \
     --title "ひなたと歩いた、いつもの季節" \
     --ending-text "ひなたへ。\\n特別なことがない日も、\\nあなたと歩くと全部が大切な思い出になります。\\nこれからも季節の匂いを一緒に見つけながら、\\nゆっくり同じ道を歩こうね。" \
     --out demo/customer-personas/hinata/WM-2026-3357CF/final.mp4
 """
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -77,6 +78,89 @@ def make_ending_card(png_path, lines, mark):
         text_center(draw, line, f_body, y0 + i * line_h, INK)
     text_center(draw, mark, f_mark, y0 + len(lines) * line_h + 50, RUST)
     img.save(png_path)
+
+
+def wrap_story_text(draw, text, font, max_width):
+    """Wrap Japanese story text without relying on whitespace boundaries."""
+    lines = []
+    current = ""
+    for char in text.strip():
+        candidate = current + char
+        bbox = draw.textbbox((0, 0), candidate, font=font)
+        if current and bbox[2] - bbox[0] > max_width:
+            lines.append(current)
+            current = char
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return lines[:2]
+
+
+def make_story_caption_overlay(png_path, text):
+    """Draw one quiet picture-book sentence on a translucent paper ribbon."""
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype(MINCHO, 48, index=0)
+    lines = wrap_story_text(draw, text, font, 1460)
+    line_h = 68
+    text_boxes = [draw.textbbox((0, 0), line, font=font) for line in lines]
+    text_w = max((box[2] - box[0] for box in text_boxes), default=0)
+    panel_w = min(W - 180, text_w + 110)
+    panel_h = 54 + line_h * len(lines)
+    x0 = (W - panel_w) / 2
+    y0 = H - panel_h - 72
+    draw.rounded_rectangle(
+        (x0, y0, x0 + panel_w, y0 + panel_h),
+        radius=18,
+        fill=(248, 243, 234, 218),
+        outline=(111, 94, 82, 42),
+        width=1,
+    )
+    for index, line in enumerate(lines):
+        box = text_boxes[index]
+        width = box[2] - box[0]
+        draw.text(
+            ((W - width) / 2, y0 + 27 + index * line_h),
+            line,
+            font=font,
+            fill=(61, 55, 49, 255),
+        )
+    img.save(png_path)
+
+
+def burn_story_captions(video_path, captions, windows, out_path, total_duration, tmp_dir):
+    """Burn approved scene sentences into the assembled film with soft fades."""
+    if not captions:
+        return
+    inputs = ["-i", video_path]
+    filters = []
+    previous = "0:v"
+    for index, (caption, (start, end)) in enumerate(zip(captions, windows), start=1):
+        overlay_path = os.path.join(tmp_dir, f"caption_{index}.png")
+        make_story_caption_overlay(overlay_path, caption)
+        duration = max(end - start, 0.8)
+        fade = min(0.45, duration / 3)
+        inputs += ["-loop", "1", "-framerate", str(FPS), "-t", f"{duration:.3f}", "-i", overlay_path]
+        overlay_label = f"caption{index}"
+        output_label = f"captioned{index}"
+        filters.append(
+            f"[{index}:v]format=rgba,"
+            f"fade=t=in:st=0:d={fade:.3f}:alpha=1,"
+            f"fade=t=out:st={duration - fade:.3f}:d={fade:.3f}:alpha=1,"
+            f"setpts=PTS+{start:.3f}/TB[{overlay_label}]"
+        )
+        filters.append(
+            f"[{previous}][{overlay_label}]overlay=0:0:eof_action=pass[{output_label}]"
+        )
+        previous = output_label
+    run([
+        "ffmpeg", "-y", *inputs,
+        "-filter_complex", ";".join(filters),
+        "-map", f"[{previous}]", "-an", "-t", f"{total_duration:.3f}",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-preset", "medium",
+        out_path,
+    ])
 
 
 def image_to_clip(png_path, out_path, duration):
@@ -158,10 +242,12 @@ def main():
     ap.add_argument("--memory-clips", required=True, nargs="+",
                      help='e.g. "2,3" "4,5" "6" — one group per memory block')
     ap.add_argument("--ending-clip", required=True, type=int)
-    ap.add_argument("--kicker", default="A MEMORY FILM")
+    ap.add_argument("--kicker", default="A MOVING STORYBOOK")
     ap.add_argument("--title", required=True)
     ap.add_argument("--ending-text", required=True, help="use \\n for line breaks")
     ap.add_argument("--ending-mark", default="WAN MEMORY")
+    ap.add_argument("--captions-json", default=None,
+                    help="JSON array with one approved story sentence per scene")
     ap.add_argument("--bgm", default=None)
     ap.add_argument("--letterbox", action="store_true",
                      help="add cinematic black bars top/bottom")
@@ -171,6 +257,14 @@ def main():
                      help="unify color grade + vignette + subtle grain across the whole film")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
+
+    captions = []
+    if args.captions_json:
+        with open(args.captions_json, "r", encoding="utf-8") as handle:
+            captions = json.load(handle)
+        if not isinstance(captions, list) or not all(isinstance(item, str) and item.strip() for item in captions):
+            raise ValueError("captions JSON must be a non-empty string array")
+        captions = [item.strip() for item in captions]
 
     memory_groups = [[int(x) for x in g.split(",")] for g in args.memory_clips]
     order_dir = args.order_dir
@@ -243,6 +337,21 @@ def main():
         segments.append(ending_card_mp4)
         durations.append(ENDING_CARD_SECONDS)
 
+        if captions and len(captions) != total_clips:
+            raise ValueError(f"expected {total_clips} scene captions, received {len(captions)}")
+
+        segment_starts = [0.0]
+        for index in range(1, len(durations)):
+            segment_starts.append(segment_starts[-1] + durations[index - 1] - XFADE)
+        caption_windows = []
+        for index in range(total_clips):
+            photo_index = 1 + index * 2
+            clip_index = photo_index + 1
+            caption_windows.append((
+                segment_starts[photo_index] + 0.65,
+                segment_starts[clip_index] + CLIP_SECONDS - 0.55,
+            ))
+
         print(f"[assemble] {len(segments)} segments, raw total "
               f"{sum(durations):.1f}s, after {len(segments)-1} crossfades "
               f"~{sum(durations) - XFADE*(len(segments)-1):.1f}s", file=sys.stderr)
@@ -251,14 +360,25 @@ def main():
         # UI will otherwise look frozen here for minutes.
         progress(55, "全体をつなげています（数分かかります）")
 
-        silent_out = os.path.join(tmp, "silent.mp4") if args.bgm else args.out
+        needs_post_process = bool(args.bgm or captions)
+        assembled_out = os.path.join(tmp, "assembled.mp4") if needs_post_process else args.out
         letterbox_pct = args.letterbox_pct if args.letterbox else 0.0
-        total_duration = concat_with_xfade(segments, durations, silent_out, letterbox_pct, args.film_look)
+        total_duration = concat_with_xfade(segments, durations, assembled_out, letterbox_pct, args.film_look)
+
+        video_for_audio = assembled_out
+        if captions:
+            progress(86, "物語の文章を重ねています")
+            captioned_out = os.path.join(tmp, "captioned.mp4") if args.bgm else args.out
+            burn_story_captions(
+                assembled_out, captions, caption_windows, captioned_out,
+                total_duration, tmp,
+            )
+            video_for_audio = captioned_out
 
         if args.bgm:
             progress(92, "BGMを合わせています")
             ending_card_start = total_duration - ENDING_CARD_SECONDS
-            mux_bgm(silent_out, args.bgm, args.out, total_duration, ending_card_start)
+            mux_bgm(video_for_audio, args.bgm, args.out, total_duration, ending_card_start)
 
     progress(100, "編集が完了しました")
     print(f"[assemble] done -> {args.out} ({total_duration:.1f}s)", file=sys.stderr)

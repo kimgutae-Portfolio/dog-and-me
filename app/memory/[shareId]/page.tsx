@@ -5,18 +5,20 @@ import { SharedMemorySite } from "./SharedMemorySite";
 
 type PageProps = { params: Promise<{ shareId: string }> };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { shareId } = await params;
   const [origin, memory] = await Promise.all([
     getRequestOrigin(),
     getPublicSharedMemory(shareId).catch(() => null),
   ]);
   const title = memory
-    ? `${memory.order.pet_name}との思い出「${memory.delivery.title}」`
-    : "専用メモリーサイト";
+    ? `${memory.order.pet_name}の動く絵本「${memory.delivery.title}」`
+    : "専用ものがたりサイト";
   const description = memory
-    ? `${memory.order.pet_name}との大切な時間をまとめた、WAN MEMORYの専用メモリーサイトです。`
-    : "大切な時間を、映像と写真でいつでも見返せるWAN MEMORYの専用ページです。";
+    ? `${memory.order.pet_name}との大切な時間から描いた、WAN MEMORYの動く絵本です。`
+    : "愛犬との大切な時間を、動く絵本と写真で見返せるWAN MEMORYの専用ページです。";
   const pageUrl = `${origin}/memory/${encodeURIComponent(shareId)}`;
   const imageUrl = `${origin}/api/memory/${encodeURIComponent(shareId)}/og`;
 
@@ -36,7 +38,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: "WAN MEMORY",
       locale: "ja_JP",
       type: "website",
-      images: [{ url: imageUrl, alt: memory ? `${memory.order.pet_name}の思い出写真` : "WAN MEMORY" }],
+      images: [
+        {
+          url: imageUrl,
+          alt: memory ? `${memory.order.pet_name}の思い出写真` : "WAN MEMORY",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
