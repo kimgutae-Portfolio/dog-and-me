@@ -19,11 +19,42 @@ export const metadata: Metadata = {
 };
 
 const sourceArchive = [
-  ["01", "桜道ではじめての春", "基準写真", "0%"],
-  ["02", "窓辺の午後", "基準写真", "25%"],
-  ["03", "青い毛布のピクニック", "基準写真", "50%"],
-  ["04", "はじめての海", "基準写真", "75%"],
-  ["05", "金色の帰り道", "基準写真", "100%"],
+  {
+    number: "01",
+    title: "桜道ではじめての春",
+    photos: [
+      { src: "/film/miru/customer-01-cherry-path.jpg", role: "基準写真" },
+    ],
+  },
+  {
+    number: "02",
+    title: "はじめての波",
+    photos: [
+      { src: "/film/miru/customer-02-sea-wave.jpg", role: "基準写真" },
+    ],
+  },
+  {
+    number: "03",
+    title: "海のあとの昼寝",
+    photos: [
+      { src: "/film/miru/customer-03-after-sea-nap.jpg", role: "基準写真" },
+    ],
+  },
+  {
+    number: "04",
+    title: "窓辺で待つ朝",
+    photos: [
+      { src: "/film/miru/customer-04-face-home.jpg", role: "基準写真" },
+      { src: "/film/miru/customer-04-body-home.jpg", role: "補助写真 1" },
+    ],
+  },
+  {
+    number: "05",
+    title: "いつもの散歩道",
+    photos: [
+      { src: "/film/miru/customer-05-neighborhood.jpg", role: "基準写真" },
+    ],
+  },
 ] as const;
 
 const chapters = [
@@ -91,18 +122,20 @@ export default function MiruDemoPage() {
             お客様の制作室では、送った写真を物語ごとの保管箱としていつでも確認できます。最初の1枚が絵本ページの基準写真になり、必要な物語だけ補助写真を2枚まで追加できます。
           </p>
           <ol className="miru-book-source-grid">
-            {sourceArchive.map(([number, title, role, position]) => (
+            {sourceArchive.map(({ number, title, photos }) => (
               <li key={number}>
-                <span
-                  className="miru-book-source-photo"
-                  role="img"
-                  aria-label={`${title}のデモ用お客様写真`}
-                  style={{ backgroundPosition: `${position} center` }}
-                />
+                <div className="miru-book-source-photos">
+                  {photos.map(({ src, role }) => (
+                    <figure key={src}>
+                      <img src={src} alt={`${title}の${role}`} />
+                      <figcaption>{role}</figcaption>
+                    </figure>
+                  ))}
+                </div>
                 <div>
                   <span>STORY {number}</span>
                   <strong>{title}</strong>
-                  <small>{role} · 1 / 3枚</small>
+                  <small>{photos.length} / 3枚を保管中</small>
                 </div>
               </li>
             ))}
