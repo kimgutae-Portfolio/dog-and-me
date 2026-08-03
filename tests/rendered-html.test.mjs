@@ -50,16 +50,14 @@ test("server-renders the Japanese landing page", async () => {
     ["WebSite", "Organization", "Service", "FAQPage"],
   );
   assert.equal(
-    structuredData.find((entry) => entry["@type"] === "Service").offers,
-    undefined,
+    structuredData.find((entry) => entry["@type"] === "Service").offers
+      .availability,
+    "https://schema.org/InStock",
   );
   assert.equal(structuredData.at(-1).mainEntity.length, 10);
-  assert.match(html, /現在、正式公開に向けて準備中です/);
-  assert.match(html, /お申し込み受付は準備中/);
-  assert.match(
-    html,
-    /サービス内容と完成デモはご覧いただけます。お申し込み受付の開始は、このページでお知らせします。/,
-  );
+  assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
+  assert.match(html, /物語をつくる/);
+  assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
   assert.match(html, /写真を再現するのではなく/);
   assert.match(html, /水彩・ガッシュ/);
   assert.match(html, /一枚の花びらが/);
@@ -70,7 +68,6 @@ test("server-renders the Japanese landing page", async () => {
     html,
     /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
   );
-  assert.doesNotMatch(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
   assert.match(html, /動くページを見る/);
   assert.match(html, /ミルのテストストーリー/);
   assert.match(html, /動く絵本/);
