@@ -924,6 +924,11 @@ test("stores storybook page sentences and burns them into the final video", asyn
   assert.match(assembler, /make_story_caption_overlay/);
   assert.match(assembler, /burn_story_captions/);
   assert.match(assembler, /物語の文章を重ねています/);
+  assert.match(assembler, /PAGE_TURN_TRANSITION = "coverright"/);
+  assert.match(assembler, /transition=\{PAGE_TURN_TRANSITION\}/);
+  assert.doesNotMatch(assembler, /PHOTO_HOLD_SECONDS/);
+  assert.doesNotMatch(assembler, /transition=fade:duration/);
+  assert.match(renderRoute, /ordered\.length \* 5\.0 \+ 7\.0 - 0\.7/);
   assert.match(css, /\.stills-story-caption/);
 });
 

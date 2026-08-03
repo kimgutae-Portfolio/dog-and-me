@@ -394,8 +394,11 @@ export async function POST(request: NextRequest) {
           throw new Error(`保存に失敗しました: ${uploadError.message}`);
         uploadedPath = storagePath;
 
+        // The local assembler uses one 5s moving page per Runway clip, with
+        // a 0.7s picture-book page cover at every join. There are no frozen
+        // photo holds between pages.
         const durationSeconds =
-          3.0 + ordered.length * 6.5 + 7.0 - 0.5 * (2 * ordered.length + 1);
+          3.0 + ordered.length * 5.0 + 7.0 - 0.7 * (ordered.length + 1);
         const { data: assetId, error: registerError } = await supabase.rpc(
           "admin_register_assembled_film",
           {

@@ -2,15 +2,13 @@
 """Assemble a WAN MEMORY moving storybook from Runway image-to-video clips.
 
 Structure (see docs/MANUAL_PRODUCTION_WORKFLOW.md):
-  intro card -> [photo hold -> clip] for the intro clip -> memory blocks
-  ([photo hold -> clip] for each clip in the block) -> [photo hold -> clip]
-  for the ending clip -> ending card.
+  intro card -> moving storybook pages -> ending card.
 
-Before every clip, its own source still (N.png, the Runway generation
-reference for N-video.mp4) holds for PHOTO_HOLD_SECONDS and then crossfades
-into that same clip starting to move — "the photo comes alive" — instead of
-padding block length with a frozen/zoomed hold. Total runtime is therefore
-no longer a fixed 60s; it follows however many clips each memory block has.
+Each approved Runway clip is one continuous page. There is no still-photo
+hold between pages, so the story never appears to stop. Pages change with a
+short page-cover transition (`coverright`), which reads like a new
+picture-book page covering the page before it. Total runtime follows the
+number of approved clips.
 
 Usage:
   python3 scripts/assemble_film.py \
@@ -32,9 +30,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1920, 1080
 FPS = 24
-XFADE = 0.5
+PAGE_TURN_SECONDS = 0.7
+PAGE_TURN_TRANSITION = "coverright"
 CLIP_SECONDS = 5.0
-PHOTO_HOLD_SECONDS = 1.5
 INTRO_CARD_SECONDS = 3.0
 ENDING_CARD_SECONDS = 7.0
 
@@ -130,7 +128,7 @@ def make_story_caption_overlay(png_path, text):
 
 
 def burn_story_captions(video_path, captions, windows, out_path, total_duration, tmp_dir):
-    """Burn approved scene sentences into the assembled film with soft fades."""
+    """Burn approved scene sentences into the assembled storybook with soft caption fades."""
     if not captions:
         return
     inputs = ["-i", video_path]
@@ -164,7 +162,7 @@ def burn_story_captions(video_path, captions, windows, out_path, total_duration,
 
 
 def image_to_clip(png_path, out_path, duration):
-    """Static hold — used for title/ending cards and pre-clip photo holds."""
+    """Create a static page — used only for the title and ending cards."""
     run(["ffmpeg", "-y", "-loop", "1", "-i", png_path, "-t", str(duration),
          "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},format=yuv420p",
          "-an", out_path])
@@ -185,12 +183,13 @@ def concat_with_xfade(segments, durations, out_path, letterbox_pct=0.0, film_loo
     prev_label = "0:v"
     cum = durations[0]
     for i in range(1, n):
-        offset = cum - XFADE
+        offset = cum - PAGE_TURN_SECONDS
         label = f"v{i}"
         filter_parts.append(
-            f"[{prev_label}][{i}:v]xfade=transition=fade:duration={XFADE}:offset={offset:.3f}[{label}]"
+            f"[{prev_label}][{i}:v]xfade=transition={PAGE_TURN_TRANSITION}:"
+            f"duration={PAGE_TURN_SECONDS}:offset={offset:.3f}[{label}]"
         )
-        cum = cum + durations[i] - XFADE
+        cum = cum + durations[i] - PAGE_TURN_SECONDS
         prev_label = label
     if letterbox_pct > 0:
         bar = round(H * letterbox_pct / 100)
@@ -272,9 +271,6 @@ def main():
     def clip_path(n):
         return os.path.join(order_dir, f"{n}-video.mp4")
 
-    def photo_path(n):
-        return os.path.join(order_dir, f"{n}.png")
-
     # Total clips drives the progress percentages below: intro + memories + ending.
     total_clips = 1 + sum(len(g) for g in memory_groups) + 1
     clips_done = 0
@@ -291,13 +287,8 @@ def main():
         segments = []
         durations = []
 
-        def add_photo_then_clip(n, tag):
+        def add_storybook_clip(n, tag):
             nonlocal clips_done
-            hold_mp4 = os.path.join(tmp, f"seg_{tag}_photo.mp4")
-            image_to_clip(photo_path(n), hold_mp4, PHOTO_HOLD_SECONDS)
-            segments.append(hold_mp4)
-            durations.append(PHOTO_HOLD_SECONDS)
-
             clip_mp4 = os.path.join(tmp, f"seg_{tag}_clip.mp4")
             normalize_clip(clip_path(n), clip_mp4)
             segments.append(clip_mp4)
@@ -317,16 +308,16 @@ def main():
         segments.append(intro_card_mp4)
         durations.append(INTRO_CARD_SECONDS)
 
-        # 2. Intro clip (photo holds, then comes alive)
-        add_photo_then_clip(args.intro_clip, "intro")
+        # 2. Intro clip — the first moving picture-book page.
+        add_storybook_clip(args.intro_clip, "intro")
 
         # 3. Memory blocks
         for gi, group in enumerate(memory_groups):
             for clip_no in group:
-                add_photo_then_clip(clip_no, f"mem{gi}_{clip_no}")
+                add_storybook_clip(clip_no, f"mem{gi}_{clip_no}")
 
-        # 4. Ending clip (photo holds, then comes alive)
-        add_photo_then_clip(args.ending_clip, "ending")
+        # 4. Ending clip — still moving continuously before the final page.
+        add_storybook_clip(args.ending_clip, "ending")
 
         # 5. Ending card
         ending_lines = args.ending_text.split("\\n")
@@ -342,19 +333,20 @@ def main():
 
         segment_starts = [0.0]
         for index in range(1, len(durations)):
-            segment_starts.append(segment_starts[-1] + durations[index - 1] - XFADE)
+            segment_starts.append(
+                segment_starts[-1] + durations[index - 1] - PAGE_TURN_SECONDS
+            )
         caption_windows = []
         for index in range(total_clips):
-            photo_index = 1 + index * 2
-            clip_index = photo_index + 1
+            clip_index = 1 + index
             caption_windows.append((
-                segment_starts[photo_index] + 0.65,
-                segment_starts[clip_index] + CLIP_SECONDS - 0.55,
+                segment_starts[clip_index] + 0.20,
+                segment_starts[clip_index] + CLIP_SECONDS - 0.20,
             ))
 
         print(f"[assemble] {len(segments)} segments, raw total "
-              f"{sum(durations):.1f}s, after {len(segments)-1} crossfades "
-              f"~{sum(durations) - XFADE*(len(segments)-1):.1f}s", file=sys.stderr)
+              f"{sum(durations):.1f}s, after {len(segments)-1} page turns "
+              f"~{sum(durations) - PAGE_TURN_SECONDS*(len(segments)-1):.1f}s", file=sys.stderr)
 
         # The single concat call is most of the wall time — say so, because the
         # UI will otherwise look frozen here for minutes.

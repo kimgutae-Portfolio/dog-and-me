@@ -640,10 +640,10 @@ export function AdminStudio() {
       ),
     [renderClips],
   );
-  // Mirrors the script's own arithmetic: intro card + n×(photo hold + clip)
-  // + ending card, minus one crossfade per join.
+  // Mirrors scripts/assemble_film.py: title page + n moving pages + ending
+  // page, minus one 0.7s picture-book page cover per join.
   const estimatedSeconds = renderClips.length
-    ? 3.0 + renderClips.length * 6.5 + 7.0 - 0.5 * (2 * renderClips.length + 1)
+    ? 3.0 + renderClips.length * 5.0 + 7.0 - 0.7 * (renderClips.length + 1)
     : 0;
   const openMessages = useMemo(
     () =>
@@ -3327,7 +3327,7 @@ export function AdminStudio() {
                   <section className="admin-card" id="admin-render">
                     <div className="card-head">
                       <div>
-                        <p className="eyebrow">FILM ASSEMBLY</p>
+                        <p className="eyebrow">STORYBOOK ASSEMBLY</p>
                         <h3>映像の自動編集</h3>
                       </div>
                       <span>
@@ -3355,7 +3355,7 @@ export function AdminStudio() {
                           お客様が承認した絵本ページごとに、Runwayのクリップを1本ずつ追加します。
                         </strong>
                         <span>
-                          編集は自動で行われ、完成した映像はこの画面でのみ再生できます。公開ボタンを押すまでお客様には表示されません。
+                          ページ間は本をめくるように新しいページが前のページを覆って切り替わり、ページの間で映像が止まる静止画ホールドは入りません。編集後の映像はこの画面でのみ再生でき、公開ボタンを押すまでお客様には表示されません。
                         </span>
                       </aside>
                     )}
