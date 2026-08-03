@@ -97,12 +97,9 @@ ORDER-NUMBER/
       original/
         story_01_primary-*.jpg
         story_01_support_1-*.jpg
-      runway_16x9/
-        story_01_primary-*.jpg
-        story_01_support_1-*.jpg
 ```
 
-GPT나 이미지 제작 도구에는 한 번에 한 물語 폴더만 전달한다. 파일명에 `primary`가 들어간 사진이 구도와 정체성의 기준이다. `support` 사진은 기준 사진과 충돌하지 않는 세부만 보충한다.
+원본 사진은 고객이 올린 원래 비율과 해상도 그대로 보관한다. 시스템이 여백·블러를 넣은 16:9 복사본을 만들지 않는다. GPT나 이미지 제작 도구에는 한 번에 한 물語 폴더만 전달한다. 파일명에 `primary`가 들어간 사진이 구도와 정체성의 기준이다. `support` 사진은 기준 사진과 충돌하지 않는 세부만 보충한다. 실제 16:9는 이 원본을 바탕으로 그림책 페이지를 재구성하는 이미지 생성 단계에서 만든다.
 
 `order.json`의 최상위 구조는 `job`, `style`, `stories`, `transition_rules`, `transitions`, `output_plan`이다. `stories`는 Gen-4 장면 5개, `transitions`는 강아지를 넣지 않는 Gen-4 Turbo 연결 페이지 4개를 정의한다. 연결 페이지는 고객 사진을 추가로 요구하지 않고, 앞뒤 물語의 색·소품·움직임을 이어주는 배경으로 만든다.
 

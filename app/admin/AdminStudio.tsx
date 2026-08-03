@@ -139,82 +139,6 @@ function archivePhotoName(asset: OrderAsset, index: number, role: string) {
   return `${String(index + 1).padStart(2, "0")}_${safeArchiveSegment(role)}_${safeArchiveSegment(stem)}.${extension}`;
 }
 
-function landscapePhotoName(asset: OrderAsset, index: number, role: string) {
-  const stem = asset.original_filename.replace(/\.[^.]+$/, "");
-  return `${String(index + 1).padStart(2, "0")}_${safeArchiveSegment(role)}_${safeArchiveSegment(stem)}_16x9.jpg`;
-}
-
-async function loadBrowserImage(blob: Blob) {
-  const objectUrl = URL.createObjectURL(blob);
-  try {
-    const image = new Image();
-    image.decoding = "async";
-    image.src = objectUrl;
-    await image.decode();
-    return image;
-  } catch (error) {
-    URL.revokeObjectURL(objectUrl);
-    throw error;
-  }
-}
-
-async function createLandscape16x9(blob: Blob) {
-  const width = 1920;
-  const height = 1080;
-  const image = await loadBrowserImage(blob);
-  try {
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("canvas is unavailable");
-
-    const backgroundScale = Math.max(
-      width / image.naturalWidth,
-      height / image.naturalHeight,
-    );
-    const backgroundWidth = image.naturalWidth * backgroundScale;
-    const backgroundHeight = image.naturalHeight * backgroundScale;
-    context.filter = "blur(42px) brightness(0.72) saturate(0.9)";
-    context.drawImage(
-      image,
-      (width - backgroundWidth) / 2,
-      (height - backgroundHeight) / 2,
-      backgroundWidth,
-      backgroundHeight,
-    );
-
-    context.filter = "none";
-    const foregroundScale = Math.min(
-      width / image.naturalWidth,
-      height / image.naturalHeight,
-    );
-    const foregroundWidth = image.naturalWidth * foregroundScale;
-    const foregroundHeight = image.naturalHeight * foregroundScale;
-    context.drawImage(
-      image,
-      (width - foregroundWidth) / 2,
-      (height - foregroundHeight) / 2,
-      foregroundWidth,
-      foregroundHeight,
-    );
-
-    const output = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (converted) =>
-          converted
-            ? resolve(converted)
-            : reject(new Error("16:9 conversion failed")),
-        "image/jpeg",
-        0.92,
-      );
-    });
-    return new Uint8Array(await output.arrayBuffer());
-  } finally {
-    URL.revokeObjectURL(image.src);
-  }
-}
-
 function formatDate(value: string | null) {
   return value
     ? new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(
@@ -1058,7 +982,6 @@ export function AdminStudio() {
           }`
         : roles[0];
       const archiveFilename = archivePhotoName(asset, index, archiveRole);
-      const runwayFilename = landscapePhotoName(asset, index, archiveRole);
       const storyFolder = memory
         ? `stories/${String(memory.sort_order).padStart(2, "0")}-${safeArchiveSegment(memory.title)}`
         : "additional";
@@ -1066,8 +989,6 @@ export function AdminStudio() {
         asset,
         archiveFilename,
         archivePath: `${storyFolder}/original/${archiveFilename}`,
-        runwayFilename,
-        runwayPath: `${storyFolder}/runway_16x9/${runwayFilename}`,
         roles,
         memory,
         photoPosition,
@@ -1078,8 +999,6 @@ export function AdminStudio() {
         asset,
         archiveFilename,
         archivePath,
-        runwayFilename,
-        runwayPath,
         roles,
         memory,
         photoPosition,
@@ -1087,10 +1006,6 @@ export function AdminStudio() {
         asset_id: asset.id,
         archive_filename: archiveFilename,
         archive_path: archivePath,
-        runway_16x9_filename: runwayFilename,
-        runway_16x9_archive_path: runwayPath,
-        runway_16x9_size: "1920x1080",
-        runway_16x9_layout: "full_photo_with_blurred_background",
         original_filename: asset.original_filename,
         mime_type: asset.mime_type,
         file_size: asset.file_size,
@@ -1130,7 +1045,6 @@ export function AdminStudio() {
             : "supporting_reference",
           position: photo.story_photo_position,
           archive_path: photo.archive_path,
-          runway_16x9_archive_path: photo.runway_16x9_archive_path,
         }));
       return {
         id: storyId,
@@ -1264,7 +1178,6 @@ export function AdminStudio() {
               : "supporting_reference",
             position: photo.story_photo_position,
             archive_path: photo.archive_path,
-            runway_16x9_archive_path: photo.runway_16x9_archive_path,
             original_filename: photo.original_filename,
           })),
       })),
@@ -1365,8 +1278,8 @@ export function AdminStudio() {
             "",
             "FOLDER GUIDE",
             "- stories/01-title/original/: original customer photos for that story only.",
-            "- stories/01-title/runway_16x9/: prepared 1920x1080 JPG files for that story's Runway work.",
-            "- The 16:9 files preserve the entire original photo and fill unused space with a blurred background; they are not AI outpainting.",
+            "- Original customer photos stay in their original aspect ratio and are never padded, blurred, or cropped by this export.",
+            "- Create the 16:9 storybook page image during the illustration step; that generated page, not the customer photo, is the asset sent to Runway.",
           ].join("\n"),
         ),
       };
@@ -1385,10 +1298,6 @@ export function AdminStudio() {
         files[`${root}/${item.archivePath}`] = new Uint8Array(
           await data.arrayBuffer(),
         );
-        setExportProgress(
-          `16:9制作写真を変換しています（${index + 1}/${sourceAssets.length}）`,
-        );
-        files[`${root}/${item.runwayPath}`] = await createLandscape16x9(data);
       }
       setExportProgress("ZIPファイルを作成しています…");
       const archive = await new Promise<Uint8Array>((resolve, reject) => {
@@ -1412,12 +1321,12 @@ export function AdminStudio() {
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
       setNotice(
-        `${memories.length}つの物語を制作フォルダに分けました。元写真${sourceAssets.length}枚と16:9制作写真を同梱しています。`,
+        `${memories.length}つの物語を制作フォルダに分けました。元写真${sourceAssets.length}枚と標準JSONを同梱しています。`,
       );
     } catch (bundleError) {
       console.error(bundleError);
       setError(
-        "写真の取得または16:9変換を完了できませんでした。通信状態を確認して、もう一度お試しください。",
+        "元写真の取得を完了できませんでした。通信状態を確認して、もう一度お試しください。",
       );
     } finally {
       setExportProgress("");
@@ -2841,7 +2750,7 @@ export function AdminStudio() {
                     <aside className="admin-operation-note strong">
                       <strong>標準JSONと物語別フォルダを一緒に作ります。</strong>
                       <span>
-                        ダウンロードしたorder.jsonをそのまま制作依頼に添付できます。5つの物語、4つのTurbo接続ページ、写真の対応関係、固定スタイルを同じJSONで確認できます。
+                        ダウンロードしたorder.jsonをそのまま制作依頼に添付できます。5つの物語、4つのTurbo接続ページ、写真の対応関係、固定スタイルを同じJSONで確認できます。顧客写真は原寸比率のまま保管し、16:9化は絵本ページ生成時に行います。
                       </span>
                     </aside>
                     <dl className="admin-story">

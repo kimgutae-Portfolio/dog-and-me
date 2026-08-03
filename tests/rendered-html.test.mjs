@@ -512,11 +512,11 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /import\("fflate"\)/);
   assert.match(admin, /photo-manifest\.json/);
   assert.match(admin, /GPT_INSTRUCTIONS\.txt/);
-  assert.match(admin, /createLandscape16x9/);
-  assert.match(admin, /canvas\.toBlob/);
-  assert.match(admin, /stories\/01-title\/runway_16x9/);
-  assert.match(admin, /runway_16x9_archive_path/);
-  assert.match(admin, /1920x1080/);
+  assert.doesNotMatch(admin, /createLandscape16x9/);
+  assert.doesNotMatch(admin, /runway_16x9/);
+  assert.doesNotMatch(admin, /runway_16x9_archive_path/);
+  assert.match(admin, /original customer photos/);
+  assert.match(admin, /Original customer photos stay in their original aspect ratio/);
   assert.match(admin, /requested_gpt_output/);
   assert.match(admin, /source_photos/);
   assert.match(admin, /wan-memory-storybook-production-export-3\.0/);
