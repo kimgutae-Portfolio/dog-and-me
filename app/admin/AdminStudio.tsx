@@ -68,6 +68,25 @@ const STORYBOOK_STYLE_PROFILE = {
     "embedded text",
   ],
 } as const;
+const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
+  id: "MEMORY STORYBOOK PRODUCTION",
+  version: "2.0",
+  source_photo_policy:
+    "Use customer photos only as original-aspect-ratio references. Never pad, blur, crop, or send the raw photo directly to Runway.",
+  page_image_policy:
+    "Recompose each story as a new 16:9 watercolor-and-gouache storybook page while preserving the primary photo's identity and the story's visible facts.",
+  story_pages: {
+    count: 5,
+    model: "gen4",
+    duration_seconds: 5,
+  },
+  transition_pages: {
+    count: 4,
+    model: "gen4_turbo",
+    duration_seconds: 5,
+    dog_in_transition: false,
+  },
+} as const;
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
 >;
@@ -1108,6 +1127,7 @@ export function AdminStudio() {
         ...STORYBOOK_STYLE_PROFILE,
         customer_requested_style: order.style,
       },
+      production_protocol: MEMORY_STORYBOOK_PRODUCTION_PROTOCOL,
       stories,
       transition_rules: {
         count: transitions.length,
@@ -1195,8 +1215,9 @@ export function AdminStudio() {
         .map((message) => message.body),
       requested_gpt_output: {
         current_stage:
-          "Read job, style, stories, and transition_rules first. Create five storybook page images and four background-only transition page images. Keep story sources separate.",
+          "Read job, style, production_protocol, stories, and transition_rules first. Follow MEMORY STORYBOOK PRODUCTION v2.0: create five new 16:9 storybook page images from the original-aspect-ratio customer references, then create four background-only transition page images. Keep story sources separate.",
         required_sections: [
+          "memory_storybook_production_checklist",
           "story_source_checklist",
           "story_page_image_plan",
           "transition_page_image_plan",
@@ -1265,14 +1286,17 @@ export function AdminStudio() {
         ),
         [`${root}/GPT_INSTRUCTIONS.txt`]: strToU8(
           [
-            "Read the top-level job, style, stories, and transition_rules in order.json first.",
-            "Create one storybook page image and one Gen-4 motion prompt for each story in stories/.",
-            "Create one background-only transition page image and one Gen-4 Turbo motion prompt for each item in transitions/.",
+            "Read the top-level job, style, production_protocol, stories, and transition_rules in order.json first.",
+            "Follow MEMORY STORYBOOK PRODUCTION v2.0 exactly: customer photos are original-aspect-ratio references, not finished 16:9 assets.",
+            "For each story, recompose a new 16:9 watercolor-and-gouache storybook page from that story's original photos and text before writing its Gen-4 motion prompt.",
+            "Create one background-only 16:9 bridge page and one Gen-4 Turbo motion prompt for each item in transitions/; never add the dog to a transition page.",
             "Each folder under stories/ is one independent story and one production unit.",
             "Attach order.json and only one story folder at a time when preparing that scene.",
             "Use the file containing primary in its name as the story's composition and identity anchor.",
             "Use support files only when they clarify details; never overwrite the primary photo's visible facts.",
             "Do not mix locations, clothing, seasons, or poses between different story folders.",
+            "Do not create padded, blurred, letterboxed, or cropped copies of the customer photos.",
+            "Do not send a raw customer photo directly to Runway; send only the approved generated storybook page image.",
             "Return the sections listed in requested_gpt_output inside order.json.",
             "Use asset_id and archive_path when referring to each photo.",
             "",
@@ -2750,7 +2774,7 @@ export function AdminStudio() {
                     <aside className="admin-operation-note strong">
                       <strong>標準JSONと物語別フォルダを一緒に作ります。</strong>
                       <span>
-                        ダウンロードしたorder.jsonをそのまま制作依頼に添付できます。5つの物語、4つのTurbo接続ページ、写真の対応関係、固定スタイルを同じJSONで確認できます。顧客写真は原寸比率のまま保管し、16:9化は絵本ページ生成時に行います。
+                        ダウンロードしたorder.jsonをそのまま「MEMORY STORYBOOK PRODUCTION v2.0」の制作依頼に添付できます。5つの物語、4つのTurbo接続ページ、写真の対応関係、固定スタイルを同じJSONで確認できます。顧客写真は原寸比率のまま保管し、16:9化は絵本ページ生成時に行います。
                       </span>
                     </aside>
                     <dl className="admin-story">
