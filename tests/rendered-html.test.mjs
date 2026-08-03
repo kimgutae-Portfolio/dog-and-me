@@ -526,7 +526,7 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /MEMORY_STORYBOOK_PRODUCTION_v2\.txt/);
   assert.match(admin, /MEMORY STORYBOOK PRODUCTION v2\.0/);
   assert.match(admin, /production_protocol/);
-  assert.match(admin, /original-aspect-ratio customer references/);
+  assert.match(admin, /original-aspect-ratio identity-locked references/);
   assert.match(admin, /transition_rules/);
   assert.match(admin, /gen4_turbo/);
   assert.match(admin, /physical_page_turn_without_crossfade/);

@@ -73,9 +73,9 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
   version: "2.0",
   prompt_filename: "MEMORY_STORYBOOK_PRODUCTION_v2.txt",
   source_photo_policy:
-    "Use customer photos only as original-aspect-ratio references. Never pad, blur, crop, or send the raw photo directly to Runway.",
+    "Use customer photos as identity-locked references in their original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories; never pad, blur, crop, or send the raw photo directly to Runway.",
   page_image_policy:
-    "Recompose each story as a new 16:9 watercolor-and-gouache storybook page while preserving the primary photo's identity and the story's visible facts.",
+    "Recompose only the scene, background, lighting, and painted treatment into a new 16:9 watercolor-and-gouache storybook page. The dog must remain recognizably the same dog as the primary reference.",
   story_pages: {
     count: 5,
     model: "gen4",
@@ -100,18 +100,20 @@ const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
 - support 사진은 primary와 충돌하지 않는 세부만 보충한다.
 
 가장 중요한 원본 사진 규칙
-1. 고객 사진은 원래 비율과 해상도 그대로 참고한다.
-2. 고객 사진을 패딩, 블러, 크롭, 레터박스 처리해서 16:9 복사본을 만들지 않는다.
-3. 고객 원본 사진을 그대로 Runway에 보내지 않는다.
-4. 16:9는 원본 사진의 변환 결과가 아니라, 네가 새로 만드는 그림책 페이지의 출력 비율이다.
-5. 한 물語의 장소·계절·목줄·소품·털 특징을 다른 물語에서 가져오지 않는다.
-6. 고객이 제공하지 않은 사실, 사람, 감정, 장소, 사건을 확정적으로 추가하지 않는다.
+1. 고객 사진은 원래 비율과 해상도 그대로 사용하며, 단순한 영감용 참고 이미지가 아니라 동일 개체를 고정하는 정체성 기준으로 사용한다.
+2. primary 사진의 강아지는 반드시 같은 강아지로 인식되어야 한다. 얼굴, 눈 크기와 간격, 눈꺼풀, 귀, 주둥이 길이, 체형, 털색과 털 배치, 꼬리 모양, 목줄과 보이는 액세서리를 가능한 한 그대로 유지한다.
+3. 그림책 화풍으로 바꾸는 것은 강아지의 정체성을 바꾸는 것이 아니다. 강아지는 사진과 같은 개체로 유지하고, 배경·조명·구도·질감만 그림책에 맞게 재구성한다.
+4. 고객 사진을 패딩, 블러, 크롭, 레터박스 처리해서 16:9 복사본을 만들지 않는다.
+5. 고객 원본 사진을 최종 영상처럼 그대로 Runway에 보내지는 않지만, 그림책 페이지를 만들 때는 강아지 정체성의 강한 이미지 레퍼런스로 사용한다.
+6. 16:9는 원본 사진의 변환 결과가 아니라, 네가 새로 만드는 그림책 페이지의 출력 비율이다.
+7. 한 물語의 장소·계절·목줄·소품·털 특징을 다른 물語에서 가져오지 않는다.
+8. 고객이 제공하지 않은 사실, 사람, 감정, 장소, 사건을 확정적으로 추가하지 않는다.
 
 그림책 화풍과 정체성
 - 강아지는 자연스러운 비율을 유지한 부드러운 painted dog로 그린다.
 - 배경은 이야기의 장소와 계절이 읽히는 풍부한 수채·과슈 그림으로 만든다.
 - 사진처럼 지나치게 실사화하지 않고, 과장된 애니메이션 눈·왜곡된 주둥이·새로운 털 무늬를 만들지 않는다.
-- primary 사진의 얼굴, 눈 크기, 눈꺼풀, 귀, 주둥이, 털색, 꼬리, 목줄 등 보이는 특징을 유지한다.
+- primary 사진의 얼굴, 눈 크기, 눈꺼풀, 귀, 주둥이, 털색, 꼬리, 목줄 등 보이는 특징을 유지한다. primary는 느슨한 영감이 아니라 identity lock이다.
 - 눈물자국, 새로운 액세서리, 사람 얼굴, 다른 동물은 사진이나 order.json에 근거가 없으면 추가하지 않는다.
 - 그림 안에 자막·로고·워터마크를 직접 넣지 않는다. 문장은 편집 단계에서 추가한다.
 
@@ -120,7 +122,7 @@ const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
 - 각 물語마다 새로운 16:9 그림책 페이지 1장을 계획하고, 그 페이지를 바탕으로 Gen-4 5초 영상 프롬프트 1개를 작성한다.
 - 한 장면에는 중심 행동 1개만 둔다. 작은 바람, 꽃잎, 물결, 커튼, 빛, 털끝처럼 움직임이 제한된 연출을 우선한다.
 - 이야기 문장은 order.json의 문장과 고객 사실을 우선하며, 화면을 가리지 않는 짧은 일본어 한 문장으로 정리한다.
-- 페이지를 만들기 전에 primary 사진과 story text가 서로 맞는지 확인한다.
+- 페이지를 만들기 전에 primary 사진과 story text가 서로 맞는지 확인한다. 결과가 다른 개처럼 보이면 승인하지 말고 정체성 레퍼런스를 강화해 다시 생성한다.
 
 연결 페이지 제작
 - transitions의 4개 항목을 모두 만든다. 각 연결 페이지는 앞뒤 이야기의 색·빛·소품·공간을 이어주는 배경 페이지다.
@@ -131,7 +133,7 @@ const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
 Runway 규칙
 - 이야기 페이지: 승인된 16:9 그림책 페이지 이미지 + Gen-4 + 5초.
 - 연결 페이지: 승인된 16:9 배경 페이지 이미지 + Gen-4 Turbo + 5초.
-- raw 고객 사진은 Runway 입력으로 사용하지 않는다.
+- raw 고객 사진은 최종 Runway 입력으로 사용하지 않지만, 그림책 페이지 생성 단계에서는 동일 개체를 유지하기 위한 핵심 레퍼런스로 사용한다.
 - 카메라 이동과 피사체 변형은 최소화한다. 눈·입·다리·꼬리의 큰 형태 변화, 새 물체 생성, 얼굴 변형, 갑작스러운 줌은 금지한다.
 - 결과가 이상하면 프롬프트를 길게 늘리지 말고, 페이지 그림을 먼저 수정한 뒤 다시 영상화한다.
 
@@ -1282,7 +1284,7 @@ export function AdminStudio() {
         .map((message) => message.body),
       requested_gpt_output: {
         current_stage:
-          "Read job, style, production_protocol, stories, and transition_rules first. Follow MEMORY STORYBOOK PRODUCTION v2.0: create five new 16:9 storybook page images from the original-aspect-ratio customer references, then create four background-only transition page images. Keep story sources separate.",
+          "Read job, style, production_protocol, stories, and transition_rules first. Follow MEMORY STORYBOOK PRODUCTION v2.0: lock each story's primary dog identity to the original-aspect-ratio customer photos, create five new 16:9 storybook page images by changing only the scene treatment, then create four background-only transition page images. Keep story sources separate.",
         required_sections: [
           "memory_storybook_production_checklist",
           "story_source_checklist",
@@ -1358,12 +1360,13 @@ export function AdminStudio() {
           [
             "Read the top-level job, style, production_protocol, stories, and transition_rules in order.json first.",
             "Read MEMORY_STORYBOOK_PRODUCTION_v2.txt before creating any image or prompt.",
-            "Follow MEMORY STORYBOOK PRODUCTION v2.0 exactly: customer photos are original-aspect-ratio references, not finished 16:9 assets.",
+            "Follow MEMORY STORYBOOK PRODUCTION v2.0 exactly: customer photos are original-aspect-ratio identity-locked references, not loose inspiration and not finished 16:9 assets.",
             "For each story, recompose a new 16:9 watercolor-and-gouache storybook page from that story's original photos and text before writing its Gen-4 motion prompt.",
             "Create one background-only 16:9 bridge page and one Gen-4 Turbo motion prompt for each item in transitions/; never add the dog to a transition page.",
             "Each folder under stories/ is one independent story and one production unit.",
             "Attach order.json and only one story folder at a time when preparing that scene.",
             "Use the file containing primary in its name as the story's composition and identity anchor.",
+            "Do not redesign the dog: preserve the primary dog's face, eye size and spacing, eyelids, muzzle, ears, body proportions, coat, tail, and visible collar.",
             "Use support files only when they clarify details; never overwrite the primary photo's visible facts.",
             "Do not mix locations, clothing, seasons, or poses between different story folders.",
             "Do not create padded, blurred, letterboxed, or cropped copies of the customer photos.",
