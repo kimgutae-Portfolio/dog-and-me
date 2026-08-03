@@ -522,6 +522,8 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /wan-memory-storybook-production-export-3\.0/);
   assert.match(admin, /STORYBOOK_STYLE_PROFILE/);
   assert.match(admin, /MEMORY_STORYBOOK_PRODUCTION_PROTOCOL/);
+  assert.match(admin, /MEMORY_STORYBOOK_PRODUCTION_PROMPT/);
+  assert.match(admin, /MEMORY_STORYBOOK_PRODUCTION_v2\.txt/);
   assert.match(admin, /MEMORY STORYBOOK PRODUCTION v2\.0/);
   assert.match(admin, /production_protocol/);
   assert.match(admin, /original-aspect-ratio customer references/);

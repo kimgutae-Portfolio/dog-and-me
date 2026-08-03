@@ -120,6 +120,8 @@ MEMORY STORYBOOK PRODUCTION v2.0
 
 이 규칙에서 16:9는 고객 사진의 변환 비율이 아니라, GPT가 새로 그리는 그림책 페이지의 출력 비율이다.
 
+전체 의뢰문은 [`MEMORY_STORYBOOK_PRODUCTION_PROMPT.md`](./MEMORY_STORYBOOK_PRODUCTION_PROMPT.md)에 보관하며, 관리자 다운로드 ZIP에도 같은 내용이 자동 포함된다.
+
 ## 4단계 — 그림책 페이지와 문장
 
 선택된 전체 물語안에 맞춰 물語별 그림책 페이지를 먼저 만든다. 실사 장면 재현이 아니라 고객 사진의 사건과 감정을 수채·과슈 질감의 한 페이지로 번역한다.
