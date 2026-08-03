@@ -519,6 +519,12 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /1920x1080/);
   assert.match(admin, /requested_gpt_output/);
   assert.match(admin, /source_photos/);
+  assert.match(admin, /wan-memory-storybook-production-export-3\.0/);
+  assert.match(admin, /STORYBOOK_STYLE_PROFILE/);
+  assert.match(admin, /transition_rules/);
+  assert.match(admin, /gen4_turbo/);
+  assert.match(admin, /physical_page_turn_without_crossfade/);
+  assert.match(admin, /transition_page_image_plan/);
   assert.match(admin, /アカウントの連絡先を除いた分析・制作用JSON/);
   assert.match(admin, /admin_resolve_revision/);
   assert.match(admin, /admin_resolve_message/);

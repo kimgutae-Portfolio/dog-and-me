@@ -49,6 +49,25 @@ const emptyConcept: ConceptDraft = {
   summary: "",
   storyScenes: {},
 };
+const STORYBOOK_STYLE_PROFILE = {
+  id: "storybook_watercolor_v1",
+  dog_treatment:
+    "soft painted dog with natural proportions, restrained watercolor and gouache texture",
+  background_treatment:
+    "rich illustrated environment with visible paper texture and clear story-specific atmosphere",
+  transition_treatment:
+    "background-only bridge page; carry one motif from the previous story into the next story",
+  avoid: [
+    "photorealistic dog",
+    "oversized anime eyes",
+    "tear stains or invented coat markings",
+    "film blur",
+    "film grain",
+    "heavy vignette",
+    "letterbox",
+    "embedded text",
+  ],
+} as const;
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
 >;
@@ -1086,31 +1105,123 @@ export function AdminStudio() {
           : null,
       }),
     );
+    const selectedStoryText = new Map(
+      (selectedConcept?.story_scenes ?? []).map((scene) => [
+        scene.memory_id,
+        scene.text,
+      ]),
+    );
+    const stories = memories.map((memory) => {
+      const storyNumber = String(memory.sort_order).padStart(2, "0");
+      const storyId = `story_${storyNumber}`;
+      const storyPhotoDetails = sourcePhotos
+        .filter((photo) => photo.memory?.number === memory.sort_order)
+        .sort(
+          (a, b) =>
+            (a.story_photo_position ?? 99) -
+            (b.story_photo_position ?? 99),
+        )
+        .map((photo) => ({
+          asset_id: photo.asset_id,
+          filename: photo.archive_filename,
+          original_filename: photo.original_filename,
+          role: photo.is_primary_scene_source
+            ? "primary_scene_source"
+            : "supporting_reference",
+          position: photo.story_photo_position,
+          archive_path: photo.archive_path,
+          runway_16x9_archive_path: photo.runway_16x9_archive_path,
+        }));
+      return {
+        id: storyId,
+        number: memory.sort_order,
+        title: memory.title,
+        caption:
+          selectedStoryText.get(memory.id)?.trim() || memory.description,
+        when: memory.when_text,
+        location: memory.location,
+        description: memory.description,
+        dog_behavior: memory.dog_behavior,
+        photos: storyPhotoDetails.map((photo) => photo.filename),
+        photo_details: storyPhotoDetails,
+        main_motif: null,
+        main_motif_instruction:
+          "Derive one visual motif from this story without adding customer facts.",
+        output: {
+          page_image_filename: `${storyId}.png`,
+          runway_clip_filename: `${storyId}-video.mp4`,
+          runway_model: "gen4",
+          runway_duration_seconds: 5,
+        },
+      };
+    });
+    const transitions = memories.slice(0, -1).map((memory, index) => {
+      const nextMemory = memories[index + 1];
+      const fromNumber = String(memory.sort_order).padStart(2, "0");
+      const toNumber = String(nextMemory.sort_order).padStart(2, "0");
+      const transitionId = `transition_${fromNumber}_${toNumber}`;
+      return {
+        id: transitionId,
+        from_story: `story_${fromNumber}`,
+        to_story: `story_${toNumber}`,
+        instruction:
+          "Create a background-only bridge page that carries one motif from the previous story into the next story.",
+        dog_in_transition: false,
+        output: {
+          page_image_filename: `${transitionId}.png`,
+          runway_clip_filename: `${transitionId}-video.mp4`,
+          runway_model: "gen4_turbo",
+          runway_duration_seconds: 5,
+        },
+      };
+    });
     const productionData = {
-      schema_version: "wan-memory-storybook-production-export-2.0",
+      schema_version: "wan-memory-storybook-production-export-3.0",
       exported_at: new Date().toISOString(),
+      job: {
+        id: order.order_number,
+        pet_name: order.pet_name,
+        name_kana: order.name_kana,
+        breed: order.breed,
+        age_text: order.age_text,
+        purpose: order.purpose,
+        workflow_stage:
+          productionFields.photoAnalysisStatus === "approved"
+            ? "story_sources_approved"
+            : "story_sources_review",
+      },
+      style: {
+        ...STORYBOOK_STYLE_PROFILE,
+        customer_requested_style: order.style,
+      },
+      stories,
+      transition_rules: {
+        count: transitions.length,
+        model: "gen4_turbo",
+        duration_seconds: 5,
+        dog_in_transition: false,
+        page_turn_mode: "physical_page_turn_without_crossfade",
+        page_turn_duration_seconds: 1.2,
+        text_is_added_after_video: true,
+      },
+      transitions,
+      output_plan: {
+        story_count: stories.length,
+        story_model: "gen4",
+        story_duration_seconds: 5,
+        transition_count: transitions.length,
+        transition_model: "gen4_turbo",
+        transition_duration_seconds: 5,
+        title_card_seconds: 3,
+        ending_card_seconds: 7,
+      },
       production_ref: order.order_number,
-      privacy_notice:
-        "Account email, phone number, postal address, and customer profile name are not included. Customer-written story text may still contain personal information and must be handled only for this order.",
       workflow_stage:
         productionFields.photoAnalysisStatus === "approved"
           ? "story_sources_approved"
           : "story_sources_review",
-      film: {
-        purpose: order.purpose,
-        duration_seconds: 60,
-        aspect_ratio: order.aspect_ratio,
-        style: order.style,
-        bgm: order.bgm,
-        narration: order.narration,
-      },
-      pet: {
-        name: order.pet_name,
-        name_kana: order.name_kana,
-        breed: order.breed,
-        age: order.age_text,
-        personality: order.personality,
-      },
+      privacy_notice:
+        "Account email, phone number, postal address, and customer profile name are not included. Customer-written story text may still contain personal information and must be handled only for this order.",
       story_source_rules: {
         story_count: memories.length,
         photos_per_story: "1-3",
@@ -1171,23 +1282,34 @@ export function AdminStudio() {
         .map((message) => message.body),
       requested_gpt_output: {
         current_stage:
-          "Review each story together with its own primary scene source and optional supporting references. Keep story sources separate.",
+          "Read job, style, stories, and transition_rules first. Create five storybook page images and four background-only transition page images. Keep story sources separate.",
         required_sections: [
           "story_source_checklist",
-          "primary_source_observations",
-          "supporting_reference_observations",
-          "story_to_image_plan",
-          "runway_motion_constraints",
+          "story_page_image_plan",
+          "transition_page_image_plan",
+          "gen4_scene_prompts",
+          "gen4_turbo_transition_prompts",
           "missing_information_only_if_blocking",
           "people_photo_assessment",
         ],
       },
     };
     const manifest = {
-      schema_version: "wan-memory-story-source-manifest-2.0",
+      schema_version: "wan-memory-story-source-manifest-3.0",
       production_ref: order.order_number,
       story_count: memories.length,
+      transition_count: transitions.length,
       photo_count: sourcePhotos.length,
+      stories: stories.map((story) => ({
+        id: story.id,
+        title: story.title,
+        photos: story.photos,
+      })),
+      transitions: transitions.map((transition) => ({
+        id: transition.id,
+        from_story: transition.from_story,
+        to_story: transition.to_story,
+      })),
       photos: sourcePhotos,
     };
     return { productionData, manifest, archivePhotos };
@@ -1230,7 +1352,10 @@ export function AdminStudio() {
         ),
         [`${root}/GPT_INSTRUCTIONS.txt`]: strToU8(
           [
-            "Each folder under stories/ is one independent story and one Runway production unit.",
+            "Read the top-level job, style, stories, and transition_rules in order.json first.",
+            "Create one storybook page image and one Gen-4 motion prompt for each story in stories/.",
+            "Create one background-only transition page image and one Gen-4 Turbo motion prompt for each item in transitions/.",
+            "Each folder under stories/ is one independent story and one production unit.",
             "Attach order.json and only one story folder at a time when preparing that scene.",
             "Use the file containing primary in its name as the story's composition and identity anchor.",
             "Use support files only when they clarify details; never overwrite the primary photo's visible facts.",
@@ -2714,9 +2839,9 @@ export function AdminStudio() {
                       </p>
                     )}
                     <aside className="admin-operation-note strong">
-                      <strong>物語ごとに、そのまま作業できるフォルダを作ります。</strong>
+                      <strong>標準JSONと物語別フォルダを一緒に作ります。</strong>
                       <span>
-                        各フォルダに基準写真、補助写真、Runway用の1920×1080画像、物語文をまとめます。別の物語の写真が混ざりません。
+                        ダウンロードしたorder.jsonをそのまま制作依頼に添付できます。5つの物語、4つのTurbo接続ページ、写真の対応関係、固定スタイルを同じJSONで確認できます。
                       </span>
                     </aside>
                     <dl className="admin-story">
