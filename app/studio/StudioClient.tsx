@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS, hasCurrentConsent } from "../lib/consent";
+import { APPLICATIONS_OPEN } from "../lib/site";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type {
   Delivery,
@@ -699,6 +700,10 @@ export function StudioClient() {
   };
 
   const startStripeCheckout = async () => {
+    if (!APPLICATIONS_OPEN) {
+      setError("現在、お支払い受付は準備中です。受付開始までお待ちください。");
+      return;
+    }
     if (
       !order ||
       !canOperateOrder ||
@@ -746,7 +751,9 @@ export function StudioClient() {
       }
       if (!response.ok || !result.url) {
         setError(
-          result.error === "consent_required"
+          result.error === "applications_paused"
+            ? "現在、お支払い受付は準備中です。受付開始までお待ちください。"
+            : result.error === "consent_required"
             ? "上の同意内容を注文へ記録してから、お支払いへお進みください。"
             : result.error === "order_not_found"
               ? "この注文を現在のアカウントで確認できませんでした。お申し込み時のアカウントでログインしているかご確認ください。"
@@ -1215,14 +1222,22 @@ export function StudioClient() {
                       className="button button-cream"
                       type="button"
                       disabled={
-                        startingPayment || !canOperateOrder || !consentCurrent
+                        !APPLICATIONS_OPEN ||
+                        startingPayment ||
+                        !canOperateOrder ||
+                        !consentCurrent
                       }
                       onClick={startStripeCheckout}
                     >
-                      {startingPayment
-                        ? "決済画面を準備中…"
-                        : "カードで支払う →"}
+                      {!APPLICATIONS_OPEN
+                        ? "お支払い受付は準備中"
+                        : startingPayment
+                          ? "決済画面を準備中…"
+                          : "カードで支払う →"}
                     </button>
+                    {!APPLICATIONS_OPEN && (
+                      <small>現在、サイトからのお支払いは受け付けていません。</small>
+                    )}
                     {!consentCurrent && (
                       <small>先に上の同意内容を注文へ記録してください。</small>
                     )}

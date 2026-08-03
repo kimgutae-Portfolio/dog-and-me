@@ -65,7 +65,9 @@ export function LivePriceCard() {
         選んだ物語案を、水彩で描く約1分の動く絵本に。
       </p>
       <p className="monitor-price-note">
-        {pricing.campaign_active
+        {!APPLICATIONS_OPEN
+          ? "受付開始時の価格と制作枠は、正式公開のお知らせとあわせてご案内します。"
+          : pricing.campaign_active
           ? `初期${pricing.launch_limit}組の受付終了後は、通常価格 ¥${formatYen(pricing.regular_price)}（税込）になります。`
           : "受付時に内容と納期をご確認いただき、制作を開始します。"}
       </p>
@@ -94,7 +96,9 @@ export function LivePriceCard() {
         </span>
       )}
       <p className="price-payment-note">
-        相談時点では料金は発生しません。物語案を選び、内容・納期・キャンセル条件をご確認後、絵本ページの制作前にカードでお支払いいただきます。通常10〜14営業日でオンライン納品します。
+        {APPLICATIONS_OPEN
+          ? "相談時点では料金は発生しません。物語案を選び、内容・納期・キャンセル条件をご確認後、絵本ページの制作前にカードでお支払いいただきます。通常10〜14営業日でオンライン納品します。"
+          : "現在はお申し込みとお支払いを受け付けていません。受付開始時に、内容・料金・納期・キャンセル条件を改めてご案内します。"}
         <Link href="/legal">販売条件を確認する</Link>
       </p>
     </article>

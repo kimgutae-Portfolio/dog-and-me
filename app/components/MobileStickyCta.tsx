@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../lib/site";
 import { StartStoryLink } from "./StartStoryLink";
 
 export function MobileStickyCta() {
@@ -30,8 +31,10 @@ export function MobileStickyCta() {
       aria-label="お申し込み"
     >
       <div>
-        <p>MOVING STORYBOOK</p>
-        <strong>先着10組 モニター受付中</strong>
+        <p>{APPLICATIONS_OPEN ? "MOVING STORYBOOK" : "COMING SOON"}</p>
+        <strong>
+          {APPLICATIONS_OPEN ? "先着10組 モニター受付中" : PRELAUNCH_CTA}
+        </strong>
       </div>
       <StartStoryLink className="button button-cream">
         物語をつくる <span aria-hidden="true">→</span>

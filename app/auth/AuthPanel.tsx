@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
+import { APPLICATIONS_OPEN } from "../lib/site";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 
 type AuthMode = "login" | "signup" | "reset";
@@ -42,9 +43,10 @@ export function AuthPanel() {
     [searchParams],
   );
   const signupNextPath = nextPath === "/studio" ? "/story" : nextPath;
-  const [mode, setMode] = useState<AuthMode>(() =>
-    requestedMode(searchParams.get("mode")),
-  );
+  const [mode, setMode] = useState<AuthMode>(() => {
+    const requested = requestedMode(searchParams.get("mode"));
+    return !APPLICATIONS_OPEN && requested === "signup" ? "login" : requested;
+  });
   const [petName, setPetName] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -96,6 +98,10 @@ export function AuthPanel() {
       }
 
       if (mode === "signup") {
+        if (!APPLICATIONS_OPEN) {
+          setError("現在、新規会員登録は準備中です。受付開始までお待ちください。");
+          return;
+        }
         if (!petName.trim()) {
           setError("愛犬のお名前を入力してください。");
           return;
@@ -312,7 +318,12 @@ export function AuthPanel() {
               ? "登録したメールアドレスへ再設定リンクをお送りします。"
               : "写真の追加から完成映像のお届けまで、こちらでご確認いただけます。"}
         </p>
-        {mode !== "reset" && (
+        {!APPLICATIONS_OPEN && mode === "login" && (
+          <p className="auth-prefill-note">
+            新規会員登録とお申し込みは現在準備中です。すでに制作室をお持ちの方はログインできます。
+          </p>
+        )}
+        {APPLICATIONS_OPEN && mode !== "reset" && (
           <div className="auth-tabs">
             <button
               className={mode === "login" ? "active" : ""}

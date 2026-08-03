@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { hasCurrentConsent } from "../../../lib/consent";
-import { DEFAULT_SITE_ORIGIN } from "../../../lib/site";
+import { APPLICATIONS_OPEN, DEFAULT_SITE_ORIGIN } from "../../../lib/site";
 import { getStripeServerClient } from "../../../lib/stripe-server";
 import type { MemoryOrder } from "../../../lib/supabase/types";
 
@@ -15,6 +15,13 @@ const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function POST(request: NextRequest) {
+  if (!APPLICATIONS_OPEN) {
+    return NextResponse.json(
+      { error: "applications_paused" },
+      { status: 503 },
+    );
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { hasCurrentConsent } from "../lib/consent";
+import { APPLICATIONS_OPEN } from "../lib/site";
 import type {
   FilmConcept,
   MemoryOrder,
@@ -834,6 +835,11 @@ export function AdminStudio() {
     const requestingPayment =
       order.payment_status !== "invoice_sent" &&
       paymentStatus === "invoice_sent";
+    if (requestingPayment && !APPLICATIONS_OPEN) {
+      setError("現在、お支払い受付は準備中のため案内を送信できません。");
+      setSaving(false);
+      return;
+    }
     const { error: updateError } = await supabase.rpc("admin_update_order", {
       p_order_id: order.id,
       p_status: status,
@@ -2598,7 +2604,7 @@ export function AdminStudio() {
                           <option
                             value="invoice_sent"
                             disabled={
-                              !canRequestPayment &&
+                              (!APPLICATIONS_OPEN || !canRequestPayment) &&
                               order.payment_status !== "invoice_sent"
                             }
                           >
@@ -2612,10 +2618,12 @@ export function AdminStudio() {
                           )}
                         </select>
                         <small>
-                          {order.payment_status === "pending" &&
-                          !canRequestPayment
-                            ? "構成案の選択と現在版の同意記録が揃うとご案内できます。"
-                            : "入金・返金は決済結果から自動反映されます。"}
+                          {!APPLICATIONS_OPEN
+                            ? "現在、お支払い受付は準備中です。"
+                            : order.payment_status === "pending" &&
+                                !canRequestPayment
+                              ? "構成案の選択と現在版の同意記録が揃うとご案内できます。"
+                              : "入金・返金は決済結果から自動反映されます。"}
                         </small>
                       </label>
                       <label>
@@ -2642,6 +2650,9 @@ export function AdminStudio() {
                       type="button"
                       disabled={
                         saving ||
+                        (!APPLICATIONS_OPEN &&
+                          paymentStatus === "invoice_sent" &&
+                          order.payment_status !== "invoice_sent") ||
                         (paymentStatus === "invoice_sent" &&
                           !canRequestPayment &&
                           order.payment_status !== "invoice_sent")
@@ -2650,10 +2661,14 @@ export function AdminStudio() {
                     >
                       {saving
                         ? "保存中…"
-                        : paymentStatus === "invoice_sent" &&
+                        : !APPLICATIONS_OPEN &&
+                            paymentStatus === "invoice_sent" &&
                             order.payment_status !== "invoice_sent"
-                          ? "お支払い案内を送る →"
-                          : "進行状況を保存"}
+                          ? "お支払い受付は準備中"
+                          : paymentStatus === "invoice_sent" &&
+                              order.payment_status !== "invoice_sent"
+                            ? "お支払い案内を送る →"
+                            : "進行状況を保存"}
                     </button>
                   </section>
 

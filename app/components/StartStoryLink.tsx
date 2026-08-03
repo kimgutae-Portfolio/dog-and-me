@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { START_STORY_HREF } from "../lib/site";
+import {
+  APPLICATIONS_OPEN,
+  PRELAUNCH_CTA,
+  START_STORY_HREF,
+} from "../lib/site";
 import { useAuth } from "./AuthProvider";
 
 type StartStoryLinkProps = {
@@ -28,6 +32,17 @@ export function StartStoryLink({ children, className }: StartStoryLinkProps) {
     event.preventDefault();
     setQueued(true);
   };
+
+  if (!APPLICATIONS_OPEN) {
+    return (
+      <span
+        className={[className, "button-prelaunch"].filter(Boolean).join(" ")}
+        aria-disabled="true"
+      >
+        {PRELAUNCH_CTA}
+      </span>
+    );
+  }
 
   return (
     <Link className={className} href={href} onClick={handleClick} aria-busy={queued || undefined}>

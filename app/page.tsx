@@ -11,6 +11,7 @@ import {
   APPLICATIONS_OPEN,
   PRELAUNCH_COPY,
   PRELAUNCH_CTA,
+  PRELAUNCH_TITLE,
   SITE_DESCRIPTION,
   SITE_NAME,
   BUSINESS_NAME,
@@ -124,13 +125,17 @@ export default async function Home() {
       provider: { "@id": `${origin}/#organization` },
       areaServed: { "@type": "Country", name: "日本" },
       availableLanguage: "日本語",
-      offers: {
-        "@type": "Offer",
-        price: MEMORY_FILM_PRICING.launchPrice,
-        priceCurrency: "JPY",
-        availability: "https://schema.org/InStock",
-        url: `${origin}/#plans`,
-      },
+      ...(APPLICATIONS_OPEN
+        ? {
+            offers: {
+              "@type": "Offer",
+              price: MEMORY_FILM_PRICING.launchPrice,
+              priceCurrency: "JPY",
+              availability: "https://schema.org/InStock",
+              url: `${origin}/#plans`,
+            },
+          }
+        : {}),
     },
     {
       "@context": "https://schema.org",
@@ -166,6 +171,13 @@ export default async function Home() {
         />
         <div className="storybook-hero-wash" aria-hidden="true" />
         <div className="shell storybook-hero-copy">
+          {!APPLICATIONS_OPEN && (
+            <aside className="prelaunch-status" role="status">
+              <span>COMING SOON</span>
+              <strong>{PRELAUNCH_TITLE}</strong>
+              <p>{PRELAUNCH_COPY}</p>
+            </aside>
+          )}
           <p className="eyebrow">A MOVING STORYBOOK FOR YOUR DOG</p>
           <h1 id="hero-title">
             うちの子が主人公になる、

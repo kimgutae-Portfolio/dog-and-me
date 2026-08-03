@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "../components/InfoPage";
 import { StartStoryLink } from "../components/StartStoryLink";
-import { BUSINESS_NAME, BUSINESS_OPERATOR, SUPPORT_EMAIL } from "../lib/site";
+import {
+  APPLICATIONS_OPEN,
+  BUSINESS_NAME,
+  BUSINESS_OPERATOR,
+  PRELAUNCH_COPY,
+  PRELAUNCH_TITLE,
+  SUPPORT_EMAIL,
+} from "../lib/site";
 
 export const metadata: Metadata = {
   title: "お問い合わせ",
@@ -18,9 +25,11 @@ export default function ContactPage() {
       lead="サービス内容のご質問から、制作中のご相談までお気軽にお問い合わせください。"
     >
       <section>
-        <h2>動く絵本のお申し込み</h2>
+        <h2>{APPLICATIONS_OPEN ? "動く絵本のお申し込み" : PRELAUNCH_TITLE}</h2>
         <p>
-          現在、初期10組限定のモニター価格でご相談を受け付けています。愛犬のことや残したい思い出をフォームからゆっくりお聞かせください。
+          {APPLICATIONS_OPEN
+            ? "現在、初期10組限定のモニター価格でご相談を受け付けています。愛犬のことや残したい思い出をフォームからゆっくりお聞かせください。"
+            : PRELAUNCH_COPY}
         </p>
         <StartStoryLink className="button button-primary">
           思い出づくりを始める →
