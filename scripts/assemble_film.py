@@ -129,21 +129,30 @@ def make_story_caption_overlay(png_path, text):
 
 def burn_story_captions(video_path, captions, windows, out_path, total_duration, tmp_dir):
     """Burn approved scene sentences into the assembled storybook with soft caption fades."""
-    if not captions:
+    if not any(caption.strip() for caption in captions):
         return
     inputs = ["-i", video_path]
     filters = []
     previous = "0:v"
-    for index, (caption, (start, end)) in enumerate(zip(captions, windows), start=1):
-        overlay_path = os.path.join(tmp_dir, f"caption_{index}.png")
+    overlay_index = 0
+    for scene_index, (caption, (start, end)) in enumerate(
+        zip(captions, windows), start=1
+    ):
+        if not caption.strip():
+            continue
+        overlay_index += 1
+        overlay_path = os.path.join(tmp_dir, f"caption_{scene_index}.png")
         make_story_caption_overlay(overlay_path, caption)
         duration = max(end - start, 0.8)
         fade = min(0.45, duration / 3)
-        inputs += ["-loop", "1", "-framerate", str(FPS), "-t", f"{duration:.3f}", "-i", overlay_path]
-        overlay_label = f"caption{index}"
-        output_label = f"captioned{index}"
+        inputs += [
+            "-loop", "1", "-framerate", str(FPS), "-t",
+            f"{duration:.3f}", "-i", overlay_path,
+        ]
+        overlay_label = f"caption{scene_index}"
+        output_label = f"captioned{scene_index}"
         filters.append(
-            f"[{index}:v]format=rgba,"
+            f"[{overlay_index}:v]format=rgba,"
             f"fade=t=in:st=0:d={fade:.3f}:alpha=1,"
             f"fade=t=out:st={duration - fade:.3f}:d={fade:.3f}:alpha=1,"
             f"setpts=PTS+{start:.3f}/TB[{overlay_label}]"
@@ -261,8 +270,10 @@ def main():
     if args.captions_json:
         with open(args.captions_json, "r", encoding="utf-8") as handle:
             captions = json.load(handle)
-        if not isinstance(captions, list) or not all(isinstance(item, str) and item.strip() for item in captions):
-            raise ValueError("captions JSON must be a non-empty string array")
+        if not isinstance(captions, list) or not all(
+            isinstance(item, str) for item in captions
+        ):
+            raise ValueError("captions JSON must be a string array")
         captions = [item.strip() for item in captions]
 
     memory_groups = [[int(x) for x in g.split(",")] for g in args.memory_clips]

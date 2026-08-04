@@ -170,6 +170,7 @@ export type OrderAsset = {
     | "source_video"
     | "scene_still"
     | "render_clip"
+    | "transition_clip"
     | "assembled_film"
     | "review_video"
     | "final_video"
@@ -208,7 +209,7 @@ export const SECURITY_EVENT_LABELS: Record<string, string> = {
   mfa_unenrolled: "二段階認証を解除",
 };
 
-export type RenderClipRole = "intro" | "memory" | "ending";
+export type RenderClipRole = "intro" | "memory" | "transition" | "ending";
 
 /** One clip in an assembly request, sent to /api/admin/render. */
 export type RenderRequestItem = {

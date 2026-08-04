@@ -672,6 +672,7 @@ export function AdminStudio() {
         asset.category === "source_image" ||
         asset.category === "scene_still" ||
         asset.category === "render_clip" ||
+        asset.category === "transition_clip" ||
         asset.category === "assembled_film" ||
         asset.category === "review_video" ||
         asset.category === "final_video",
@@ -783,6 +784,17 @@ export function AdminStudio() {
         ),
     [assets],
   );
+  const transitionClips = useMemo(
+    () =>
+      assets
+        .filter((asset) => asset.category === "transition_clip")
+        .sort(
+          (a, b) =>
+            a.scene_sort_order - b.scene_sort_order ||
+            a.created_at.localeCompare(b.created_at),
+        ),
+    [assets],
+  );
   const assembledFilms = useMemo(
     () =>
       assets
@@ -797,10 +809,24 @@ export function AdminStudio() {
       ),
     [renderClips],
   );
+  const transitionClipByIndex = useMemo(
+    () =>
+      new Map(
+        transitionClips.map((clip) => [clip.scene_sort_order, clip]),
+      ),
+    [transitionClips],
+  );
+  const allRenderClipsReady =
+    sceneStills.length === 5 &&
+    renderClips.length === 5 &&
+    transitionClips.length === 4 &&
+    sceneStills.every((still) => clipByStillId.has(still.id)) &&
+    [0, 1, 2, 3].every((index) => transitionClipByIndex.has(index));
   // Mirrors scripts/assemble_film.py: title page + n moving pages + ending
   // page, minus one 0.7s picture-book page cover per join.
-  const estimatedSeconds = renderClips.length
-    ? 3.0 + renderClips.length * 5.0 + 7.0 - 0.7 * (renderClips.length + 1)
+  const assemblyClipCount = renderClips.length + transitionClips.length;
+  const estimatedSeconds = assemblyClipCount
+    ? 3.0 + assemblyClipCount * 5.0 + 7.0 - 0.7 * (assemblyClipCount + 1)
     : 0;
   const openMessages = useMemo(
     () =>
@@ -2165,10 +2191,95 @@ export function AdminStudio() {
     setSaving(false);
   };
 
+  const uploadTransitionClip = async (
+    transitionSortOrder: number,
+    file: File,
+  ) => {
+    if (
+      !order ||
+      !canRenderFilm ||
+      transitionSortOrder < 0 ||
+      transitionSortOrder > 3
+    )
+      return;
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const extension =
+      file.name
+        .split(".")
+        .pop()
+        ?.toLowerCase()
+        .replace(/[^a-z0-9]/g, "") || "mp4";
+    const path = `admin/${order.id}/clips/transition_clip-${transitionSortOrder + 1}-${crypto.randomUUID()}.${extension}`;
+    const mimeType = file.type || "video/mp4";
+    const { error: uploadError } = await supabase.storage
+      .from("order-assets")
+      .upload(path, file, { contentType: mimeType, upsert: false });
+    if (uploadError) {
+      setError("接続クリップをアップロードできませんでした。");
+      setSaving(false);
+      return;
+    }
+    const { error: registerError } = await supabase.rpc(
+      "admin_register_transition_clip",
+      {
+        p_order_id: order.id,
+        p_storage_path: path,
+        p_original_filename: file.name,
+        p_mime_type: mimeType,
+        p_file_size: file.size,
+        p_transition_sort_order: transitionSortOrder,
+      },
+    );
+    if (registerError) {
+      await supabase.storage.from("order-assets").remove([path]);
+      setError(
+        "接続クリップを登録できませんでした。4つの指定スロットと、お客様の絵本ページ承認をご確認ください。",
+      );
+      setSaving(false);
+      return;
+    }
+    setClipInputKey((current) => current + 1);
+    setNotice(
+      `物語${transitionSortOrder + 1}→${transitionSortOrder + 2}の接続クリップを追加しました。`,
+    );
+    await loadDetails(order.id);
+    setSaving(false);
+  };
+
+  const deleteTransitionClip = async (asset: OrderAsset) => {
+    if (!order || !canRenderFilm) return;
+    if (
+      !window.confirm(
+        `「物語${asset.scene_sort_order + 1}→${asset.scene_sort_order + 2}」の接続クリップを削除しますか？`,
+      )
+    )
+      return;
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const { data: storagePath, error: deleteError } = await supabase.rpc(
+      "admin_delete_transition_clip",
+      { p_asset_id: asset.id },
+    );
+    if (deleteError) {
+      setError("接続クリップを削除できませんでした。");
+    } else {
+      if (storagePath)
+        await supabase.storage
+          .from("order-assets")
+          .remove([storagePath as string]);
+      setNotice("接続クリップを削除しました。");
+      await loadDetails(order.id);
+    }
+    setSaving(false);
+  };
+
   const startRender = async () => {
     if (!order || !canRenderFilm || rendering) return;
-    if (renderClips.length < 3) {
-      setError("編集にはクリップが3本以上必要です。");
+    if (!allRenderClipsReady) {
+      setError("物語クリップ5本と接続クリップ4本をすべて登録してください。");
       return;
     }
     if (!filmTitle.trim()) {
@@ -2185,15 +2296,26 @@ export function AdminStudio() {
     setRenderProgress("編集を準備しています…");
     const supabase = getSupabaseBrowserClient();
     const { data: sessionData } = await supabase.auth.getSession();
-    const items = renderClips.map((clip, index) => ({
-      clipAssetId: clip.id,
-      role:
-        index === 0
-          ? "intro"
-          : index === renderClips.length - 1
-            ? "ending"
-            : "memory",
-    }));
+    const items = sceneStills.flatMap((still, index) => {
+      const storyClip = clipByStillId.get(still.id)!;
+      const storyItem = {
+        clipAssetId: storyClip.id,
+        role:
+          index === 0
+            ? ("intro" as const)
+            : index === sceneStills.length - 1
+              ? ("ending" as const)
+              : ("memory" as const),
+      };
+      if (index === sceneStills.length - 1) return [storyItem];
+      return [
+        storyItem,
+        {
+          clipAssetId: transitionClipByIndex.get(index)!.id,
+          role: "transition" as const,
+        },
+      ];
+    });
 
     try {
       const response = await fetch("/api/admin/render", {
@@ -3774,7 +3896,7 @@ export function AdminStudio() {
                         <h3>映像の自動編集</h3>
                       </div>
                       <span>
-                        {renderClips.length}/{sceneStills.length}本
+                        {assemblyClipCount}/9本
                         {estimatedSeconds > 0
                           ? ` · 約${Math.round(estimatedSeconds)}秒`
                           : ""}
@@ -3795,10 +3917,10 @@ export function AdminStudio() {
                     {renderAvailable && (
                       <aside className="admin-operation-note strong">
                         <strong>
-                          お客様が承認した絵本ページごとに、Runwayのクリップを1本ずつ追加します。
+                          物語5本と、物語の間をつなぐTurbo接続クリップ4本を追加します。
                         </strong>
                         <span>
-                          ページ間は本をめくるように新しいページが前のページを覆って切り替わり、ページの間で映像が止まる静止画ホールドは入りません。編集後の映像はこの画面でのみ再生でき、公開ボタンを押すまでお客様には表示されません。
+                          編集順は「物語1 → 接続1→2 → 物語2」のように自動固定されます。ページ間は本をめくるように切り替わり、公開ボタンを押すまでお客様には表示されません。
                         </span>
                       </aside>
                     )}
@@ -3821,18 +3943,22 @@ export function AdminStudio() {
                     )}
 
                     {renderAvailable && sceneStills.length > 0 && (
-                      <div className="admin-render-clips">
-                        {sceneStills.map((still) => {
-                          const clip = clipByStillId.get(still.id);
-                          return (
-                            <article
-                              key={still.id}
-                              className={
-                                clip
-                                  ? "admin-render-clip ready"
-                                  : "admin-render-clip"
-                              }
-                            >
+                      <>
+                        <p className="admin-render-section-label">
+                          STORY · Gen-4 5秒（5本）
+                        </p>
+                        <div className="admin-render-clips">
+                          {sceneStills.map((still) => {
+                            const clip = clipByStillId.get(still.id);
+                            return (
+                              <article
+                                key={still.id}
+                                className={
+                                  clip
+                                    ? "admin-render-clip ready"
+                                    : "admin-render-clip"
+                                }
+                              >
                               {assetUrls[still.id] ? (
                                 <span
                                   className="admin-photo-thumb"
@@ -3900,10 +4026,90 @@ export function AdminStudio() {
                                   </label>
                                 )}
                               </div>
-                            </article>
-                          );
-                        })}
-                      </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                        <p className="admin-render-section-label">
+                          BRIDGE PAGE · Gen-4 Turbo 5秒（4本）
+                        </p>
+                        <div className="admin-render-clips admin-transition-clips">
+                          {memories.slice(0, -1).map((memory, index) => {
+                            const nextMemory = memories[index + 1];
+                            const clip = transitionClipByIndex.get(index);
+                            return (
+                              <article
+                                key={`transition-${memory.id}`}
+                                className={
+                                  clip
+                                    ? "admin-render-clip admin-transition-clip ready"
+                                    : "admin-render-clip admin-transition-clip"
+                                }
+                              >
+                                <span className="admin-transition-badge">
+                                  {index + 1} → {index + 2}
+                                </span>
+                                <div>
+                                  <strong>
+                                    {memory.title} →{" "}
+                                    {nextMemory?.title ?? `物語${index + 2}`}
+                                  </strong>
+                                  <small>
+                                    背景だけの接続ページをTurboで動かした5秒映像
+                                  </small>
+                                  {clip ? (
+                                    <>
+                                      {assetUrls[clip.id] && (
+                                        <video
+                                          className="admin-render-preview"
+                                          src={assetUrls[clip.id]}
+                                          controls
+                                          preload="metadata"
+                                        />
+                                      )}
+                                      <button
+                                        className="button button-outline"
+                                        type="button"
+                                        disabled={
+                                          saving || rendering || !canRenderFilm
+                                        }
+                                        onClick={() =>
+                                          deleteTransitionClip(clip)
+                                        }
+                                      >
+                                        接続クリップを削除
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <label
+                                      className={
+                                        saving || rendering || !canRenderFilm
+                                          ? "admin-render-upload disabled"
+                                          : "admin-render-upload"
+                                      }
+                                    >
+                                      <input
+                                        key={clipInputKey}
+                                        type="file"
+                                        accept="video/mp4,video/quicktime,video/webm"
+                                        disabled={
+                                          saving || rendering || !canRenderFilm
+                                        }
+                                        onChange={(event) => {
+                                          const file = event.target.files?.[0];
+                                          if (file)
+                                            uploadTransitionClip(index, file);
+                                        }}
+                                      />
+                                      <span>接続クリップを選ぶ</span>
+                                    </label>
+                                  )}
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                      </>
                     )}
 
                     {renderAvailable && sceneStills.length === 0 && (
@@ -3989,16 +4195,16 @@ export function AdminStudio() {
                             className="button button-primary"
                             type="button"
                             disabled={
-                              saving || rendering || renderClips.length < 3
+                              saving || rendering || !allRenderClipsReady
                             }
                             onClick={startRender}
                           >
                             {rendering ? "編集中…" : "編集を開始する →"}
                           </button>
                         </div>
-                        {renderClips.length > 0 && renderClips.length < 3 && (
+                        {assemblyClipCount > 0 && !allRenderClipsReady && (
                           <p className="admin-operation-note">
-                            クリップが3本以上になると編集を開始できます。
+                            物語クリップ5本と接続クリップ4本がすべて揃うと編集を開始できます。
                           </p>
                         )}
                         {renderProgress && (

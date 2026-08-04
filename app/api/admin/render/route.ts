@@ -158,13 +158,14 @@ export async function POST(request: NextRequest) {
     if (
       item.role !== "intro" &&
       item.role !== "memory" &&
+      item.role !== "transition" &&
       item.role !== "ending"
     ) {
       return Response.json({ error: "invalid_role" }, { status: 400 });
     }
     items.push({ clipAssetId: item.clipAssetId, role: item.role });
   }
-  if (items.length < 3 || items.length > 20) {
+  if (items.length !== 9) {
     return Response.json({ error: "invalid_item_count" }, { status: 400 });
   }
   if (
@@ -233,7 +234,7 @@ export async function POST(request: NextRequest) {
       "id, order_id, category, storage_path, scene_sort_order, source_still_asset_id",
     )
     .eq("order_id", orderId)
-    .eq("category", "render_clip");
+    .in("category", ["render_clip", "transition_clip"]);
   if (clipError)
     return Response.json({ error: "clip_lookup_failed" }, { status: 400 });
 
@@ -241,16 +242,47 @@ export async function POST(request: NextRequest) {
     ((clipRows as ClipRow[] | null) ?? []).map((row) => [row.id, row]),
   );
   const ordered: ClipRow[] = [];
-  for (const item of items) {
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index];
     const clip = clipById.get(item.clipAssetId);
     if (!clip)
       return Response.json({ error: "clip_not_in_order" }, { status: 400 });
-    if (!clip.source_still_asset_id)
-      return Response.json({ error: "clip_missing_still" }, { status: 400 });
+    if (item.role === "transition") {
+      const expectedTransitionIndex = (index - 1) / 2;
+      if (
+        index % 2 !== 1 ||
+        clip.category !== "transition_clip" ||
+        clip.source_still_asset_id ||
+        clip.scene_sort_order !== expectedTransitionIndex
+      )
+        return Response.json(
+          { error: "invalid_transition_clip" },
+          { status: 400 },
+        );
+    } else {
+      const expectedStoryIndex = index / 2;
+      const expectedRole =
+        index === 0
+          ? "intro"
+          : index === items.length - 1
+            ? "ending"
+            : "memory";
+      if (
+        index % 2 !== 0 ||
+        item.role !== expectedRole ||
+        clip.category !== "render_clip" ||
+        !clip.source_still_asset_id ||
+        clip.scene_sort_order !== expectedStoryIndex
+      ) {
+        return Response.json({ error: "clip_missing_still" }, { status: 400 });
+      }
+    }
     ordered.push(clip);
   }
 
-  const stillIds = ordered.map((clip) => clip.source_still_asset_id as string);
+  const stillIds = ordered
+    .filter((clip) => clip.category === "render_clip")
+    .map((clip) => clip.source_still_asset_id as string);
   const { data: stillRows, error: stillError } = await supabase
     .from("assets")
     .select("id, storage_path, category, order_id, story_caption")
@@ -303,13 +335,15 @@ export async function POST(request: NextRequest) {
         });
         for (let index = 0; index < ordered.length; index += 1) {
           const clip = ordered[index];
-          const still = stillById.get(clip.source_still_asset_id as string)!;
           const n = index + 1;
-          await downloadTo(
-            supabase,
-            still.storage_path,
-            path.join(workDir, `${n}.png`),
-          );
+          if (clip.category === "render_clip") {
+            const still = stillById.get(clip.source_still_asset_id as string)!;
+            await downloadTo(
+              supabase,
+              still.storage_path,
+              path.join(workDir, `${n}.png`),
+            );
+          }
           await downloadTo(
             supabase,
             clip.storage_path,
@@ -328,9 +362,11 @@ export async function POST(request: NextRequest) {
           captionsPath,
           JSON.stringify(
             ordered.map((clip) =>
-              stillById
-                .get(clip.source_still_asset_id as string)!
-                .story_caption!.trim(),
+              clip.category === "render_clip"
+                ? stillById
+                    .get(clip.source_still_asset_id as string)!
+                    .story_caption!.trim()
+                : "",
             ),
           ),
           "utf8",
