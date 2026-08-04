@@ -112,21 +112,21 @@ export default function MiruDemoPage() {
             <div>
               <p>01 / FROM PHOTO TO STORYBOOK</p>
               <h2>
-                한 장의 사진이,
+                一枚の写真が、
                 <br />
-                동화책의 한 장면이 되기까지.
+                絵本の一場面になるまで。
               </h2>
             </div>
-            <span>가운데 손잡이를 좌우로 움직여 보세요</span>
+            <span>中央のつまみを左右に動かしてみてください</span>
           </div>
           <MiruBeforeAfter
             beforeSrc="/film/miru/customer-01-cherry-path.jpg"
             afterSrc="/film/miru/01-spring-letter.jpg"
-            beforeAlt="미루의 원본 벚꽃길 사진"
-            afterAlt="미루가 그려진 동화책 페이지"
+            beforeAlt="ミルの桜道の元写真"
+            afterAlt="ミルが描かれた絵本ページ"
           />
           <p className="miru-book-note miru-book-comparison-note">
-            왼쪽은 고객님이 보내주신 사진, 오른쪽은 그 사진과 이야기에서 다시 그린 동화책 페이지입니다.
+            左側はお客様からお預かりした写真、右側はその写真と物語から描き下ろした絵本ページです。
           </p>
         </div>
       </section>

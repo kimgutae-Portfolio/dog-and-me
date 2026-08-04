@@ -6,6 +6,7 @@ import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
 import { MobileStickyCta } from "./components/MobileStickyCta";
 import { StartStoryLink } from "./components/StartStoryLink";
+import { MiruBeforeAfter } from "./film/miru-demo/MiruBeforeAfter";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 import {
   APPLICATIONS_OPEN,
@@ -232,6 +233,57 @@ export default async function Home() {
               <li>人の目で一場面ずつ確認</li>
             </ul>
           </div>
+        </div>
+      </section>
+
+      <section className="storybook-comparison section" id="comparison">
+        <div className="shell">
+          <div className="storybook-heading">
+            <div>
+              <p className="eyebrow">FROM PHOTO TO STORYBOOK</p>
+              <h2>
+                写真から、
+                <br />
+                絵本の一場面へ。
+              </h2>
+            </div>
+            <p>
+              中央のつまみを左右に動かすと、
+              <br />
+              お預かりした写真と描き下ろしたページを見比べられます。
+            </p>
+          </div>
+          <div className="storybook-comparison-grid">
+            <article className="storybook-comparison-card">
+              <div className="storybook-comparison-card-head">
+                <span>STORY 01</span>
+                <h3>桜道ではじめての春</h3>
+                <p>お客様の写真をもとに、春風のページを描きました。</p>
+              </div>
+              <MiruBeforeAfter
+                beforeSrc="/film/miru/customer-01-cherry-path.jpg"
+                afterSrc="/film/miru/01-spring-letter.jpg"
+                beforeAlt="ミルの桜道の元写真"
+                afterAlt="ミルが描かれた春の絵本ページ"
+              />
+            </article>
+            <article className="storybook-comparison-card">
+              <div className="storybook-comparison-card-head">
+                <span>STORY 03</span>
+                <h3>はじめての波</h3>
+                <p>海辺で出会った小さな波を、絵本のページに仕立てます。</p>
+              </div>
+              <MiruBeforeAfter
+                beforeSrc="/film/miru/customer-02-sea-wave.jpg"
+                afterSrc="/film/miru/03-first-wave.jpg"
+                beforeAlt="ミルの海辺の元写真"
+                afterAlt="ミルが描かれた海の絵本ページ"
+              />
+            </article>
+          </div>
+          <p className="storybook-comparison-note">
+            桜色の旅は物語のつなぎとなるページとして、そのまま絵本の流れに組み込みます。
+          </p>
         </div>
       </section>
 

@@ -1719,6 +1719,15 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-intro-grid ul { margin: 38px 0 0; padding: 22px 0 0; display: flex; flex-wrap: wrap; gap: 14px 28px; border-top: 1px solid rgba(64,59,53,.16); list-style: none; }
 .storybook-intro-grid li { color: #756c62; font-size: 11px; }
 .storybook-intro-grid li::before { content: "ひとひら"; margin-right: 8px; color: #ba7b7d; font-family: var(--font-serif); font-size: 8px; }
+.storybook-comparison { background: #f1e9dd; }
+.storybook-comparison-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.storybook-comparison-card { min-width: 0; padding: 24px; border: 1px solid rgba(64,59,53,.14); background: rgba(255,253,248,.72); box-shadow: 0 18px 46px rgba(71,57,47,.08); }
+.storybook-comparison-card-head { min-height: 148px; padding: 4px 4px 22px; }
+.storybook-comparison-card-head > span { color: #aa7775; font-size: 9px; font-weight: 700; letter-spacing: .16em; }
+.storybook-comparison-card-head h3 { margin: 17px 0 11px; font-family: var(--font-serif); font-size: clamp(23px,2.4vw,31px); font-weight: 400; letter-spacing: .04em; }
+.storybook-comparison-card-head p { margin: 0; color: #716b63; font-size: 11px; line-height: 1.8; }
+.storybook-comparison-card .miru-before-after { box-shadow: 0 18px 48px rgba(65,50,40,.12); }
+.storybook-comparison-note { margin: 24px 0 0; color: #716b63; font-size: 10px; line-height: 1.9; text-align: center; }
 .storybook-preview { background: #e9e0d2; }
 .storybook-heading { margin-bottom: 62px; display: flex; align-items: end; justify-content: space-between; gap: 50px; }
 .storybook-heading > p { margin: 0 0 8px; color: #716b63; font-size: 12px; line-height: 1.9; }
@@ -1831,6 +1840,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-hero-wash { background: linear-gradient(90deg, rgba(248,243,234,.95), rgba(248,243,234,.72) 63%, rgba(248,243,234,.3)); }
   .storybook-intro-grid { grid-template-columns: 1fr; gap: 20px; }
   .storybook-intro-grid > div:last-child { padding-top: 12px; }
+  .storybook-comparison-grid { grid-template-columns: 1fr; }
   .storybook-method-grid { grid-template-columns: repeat(2,1fr); }
   .storybook-method-grid li:nth-child(2) { border-right: 0; }
   .storybook-method-grid li:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.18); }
@@ -1849,6 +1859,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-hero-actions .text-link { align-self: center; }
   .storybook-hero-note { display: none; }
   .storybook-heading { align-items: start; flex-direction: column; gap: 20px; }
+  .storybook-comparison-card { padding: 16px; }
+  .storybook-comparison-card-head { min-height: 0; padding-bottom: 16px; }
   .storybook-page-grid { grid-template-columns: 1fr; }
   .storybook-page-grid li.featured { grid-column: auto; }
   .storybook-page-grid blockquote { font-size: 19px; }
