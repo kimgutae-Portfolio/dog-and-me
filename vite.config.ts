@@ -13,10 +13,6 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 
 const localBindingConfig = {
   main: "./worker/index.ts",
-  // Keep the explicit Node compatibility flag while Cloudflare transitions
-  // the default on 2026-08-04. This avoids the deploy validator rejecting a
-  // flag that is implicit for newer compatibility dates.
-  compatibility_date: "2026-08-03",
   compatibility_flags: ["nodejs_compat"],
   d1_databases: d1
     ? [
