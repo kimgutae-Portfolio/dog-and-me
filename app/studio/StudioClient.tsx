@@ -127,9 +127,10 @@ export function StudioClient() {
     if (!authLoading && !user) router.replace("/auth?next=/studio");
   }, [authLoading, router, user]);
 
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     const supabase = getSupabaseBrowserClient();
     const { data, error: ordersError } = await supabase
       .from("orders")
@@ -137,7 +138,7 @@ export function StudioClient() {
       .order("created_at", { ascending: false });
     if (ordersError) {
       setError("制作室の情報を読み込めませんでした。");
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
     const loadedOrders = (data ?? []) as MemoryOrder[];
@@ -151,8 +152,10 @@ export function StudioClient() {
         ? current
         : nextId,
     );
-    setLoading(false);
-  }, [searchParams, user]);
+    if (!silent) setLoading(false);
+    },
+    [searchParams, user],
+  );
 
   const loadDetails = useCallback(async (orderId: string) => {
     if (!orderId) return;
@@ -222,21 +225,29 @@ export function StudioClient() {
     };
   }, [loadDetails, selectedOrderId]);
 
-  useEffect(() => {
-    if (paymentResult !== "success" || !user) return;
-    let attempts = 0;
-    const interval = window.setInterval(() => {
-      attempts += 1;
-      void loadOrders();
-      if (attempts >= 10) window.clearInterval(interval);
-    }, 2000);
-    return () => window.clearInterval(interval);
-  }, [loadOrders, paymentResult, user]);
-
   const order = useMemo(
     () => orders.find((item) => item.id === selectedOrderId) ?? null,
     [orders, selectedOrderId],
   );
+
+  useEffect(() => {
+    if (paymentResult !== "success" || !user) return;
+    if (order?.payment_status === "paid") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("payment");
+      url.searchParams.delete("session_id");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+      return;
+    }
+    let attempts = 0;
+    void loadOrders({ silent: true });
+    const interval = window.setInterval(() => {
+      attempts += 1;
+      void loadOrders({ silent: true });
+      if (attempts >= 10) window.clearInterval(interval);
+    }, 2000);
+    return () => window.clearInterval(interval);
+  }, [loadOrders, order?.payment_status, paymentResult, user]);
   const finalAsset = useMemo(
     () =>
       delivery
