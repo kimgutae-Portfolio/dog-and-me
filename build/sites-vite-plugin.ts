@@ -1,4 +1,4 @@
-import { access, cp, mkdir, rm } from "node:fs/promises";
+import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
 
@@ -39,6 +39,25 @@ export function sites(): Plugin {
         await cp(drizzleSource, resolve(outputDirectory, "drizzle"), {
           recursive: true,
         });
+      }
+
+      // Cloudflare now treats nodejs_compat as a default. vinext emits an
+      // empty compatibility_flags array, which the Sites deploy validator
+      // can still interpret as an explicit legacy flag declaration. Remove
+      // the empty key while keeping any non-empty flags intact.
+      const wranglerConfigPath = resolve(root, "dist", "server", "wrangler.json");
+      if (await exists(wranglerConfigPath)) {
+        const wranglerConfig = JSON.parse(await readFile(wranglerConfigPath, "utf8")) as {
+          compatibility_flags?: unknown;
+          [key: string]: unknown;
+        };
+        if (
+          Array.isArray(wranglerConfig.compatibility_flags) &&
+          wranglerConfig.compatibility_flags.length === 0
+        ) {
+          delete wranglerConfig.compatibility_flags;
+          await writeFile(wranglerConfigPath, JSON.stringify(wranglerConfig));
+        }
       }
     },
   };
