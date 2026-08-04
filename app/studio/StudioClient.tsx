@@ -97,6 +97,7 @@ export function StudioClient() {
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [sourcePhotoUrls, setSourcePhotoUrls] = useState<
     Record<string, string>
   >({});
@@ -600,6 +601,65 @@ export function StudioClient() {
       await Promise.all([loadDetails(order.id), loadOrders()]);
     }
     setUploading(false);
+  };
+
+  const deleteStoryPhoto = async (memory: OrderMemory, asset: OrderAsset) => {
+    if (!order || !canManageSourcePhotos || uploading || deletingPhotoId) return;
+    const memoryPhotos = sourceAssets
+      .filter((candidate) => candidate.memory_id === memory.id)
+      .sort(
+        (a, b) =>
+          (a.memory_photo_sort_order ?? 99) -
+          (b.memory_photo_sort_order ?? 99),
+      );
+    if (memoryPhotos.length <= 1) {
+      setError("各物語には基準写真が1枚必要です。別の写真を追加してから削除してください。");
+      return;
+    }
+    if (
+      !window.confirm(
+        `「${memory.title}」からこの写真を削除しますか？${
+          asset.memory_photo_sort_order === 1
+            ? "次の写真が基準写真になります。"
+            : ""
+        }`,
+      )
+    )
+      return;
+
+    const remainingIds = memoryPhotos
+      .filter((candidate) => candidate.id !== asset.id)
+      .map((candidate) => candidate.id);
+    setDeletingPhotoId(asset.id);
+    setError("");
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { error: unlinkError } = await supabase.rpc(
+        "assign_memory_photos",
+        {
+          p_order_id: order.id,
+          p_memory_id: memory.id,
+          p_asset_ids: remainingIds,
+        },
+      );
+      if (unlinkError) throw unlinkError;
+      const { error: storageError } = await supabase.storage
+        .from("order-assets")
+        .remove([asset.storage_path]);
+      if (storageError) throw storageError;
+      const { error: assetError } = await supabase
+        .from("assets")
+        .delete()
+        .eq("id", asset.id);
+      if (assetError) throw assetError;
+      setNotice(`「${memory.title}」の写真を削除しました。`);
+      await Promise.all([loadDetails(order.id), loadOrders()]);
+    } catch (caught) {
+      console.error(caught);
+      setError("写真を削除できませんでした。もう一度お試しください。");
+    } finally {
+      setDeletingPhotoId(null);
+    }
   };
 
   const sendMessage = async (event: FormEvent) => {
@@ -1844,21 +1904,45 @@ export function StudioClient() {
                                     ? "基準写真"
                                     : `補助写真 ${(asset.memory_photo_sort_order ?? 2) - 1}`}
                                 </small>
-                                {canManageSourcePhotos &&
-                                  asset.memory_photo_sort_order !== 1 && (
+                                {canManageSourcePhotos && (
+                                  <div className="studio-story-photo-actions">
+                                    {asset.memory_photo_sort_order !== 1 && (
+                                      <button
+                                        type="button"
+                                        disabled={uploading || Boolean(deletingPhotoId)}
+                                        onClick={() =>
+                                          void makeStoryPhotoPrimary(
+                                            memory,
+                                            asset.id,
+                                          )
+                                        }
+                                      >
+                                        基準写真に変更
+                                      </button>
+                                    )}
                                     <button
+                                      className="studio-story-photo-delete"
                                       type="button"
-                                      disabled={uploading}
+                                      disabled={
+                                        memoryPhotos.length <= 1 ||
+                                        uploading ||
+                                        Boolean(deletingPhotoId)
+                                      }
+                                      title={
+                                        memoryPhotos.length <= 1
+                                          ? "基準写真が1枚必要です"
+                                          : "この写真を削除"
+                                      }
                                       onClick={() =>
-                                        void makeStoryPhotoPrimary(
-                                          memory,
-                                          asset.id,
-                                        )
+                                        void deleteStoryPhoto(memory, asset)
                                       }
                                     >
-                                      基準写真に変更
+                                      {deletingPhotoId === asset.id
+                                        ? "削除中…"
+                                        : "写真を削除"}
                                     </button>
-                                  )}
+                                  </div>
+                                )}
                               </article>
                             ))}
                           </div>

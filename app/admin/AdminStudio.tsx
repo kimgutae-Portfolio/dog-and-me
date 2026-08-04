@@ -3252,6 +3252,11 @@ export function AdminStudio() {
                         各ページには短い物語文が必要です。この文章はお客様の確認画面に表示され、承認後は自動編集で映像の字幕になります。
                       </span>
                     </aside>
+                    <ol className="admin-stills-flow" aria-label="絵本ページの確認フロー">
+                      <li><strong>1</strong><span>管理者が画像と物語文を追加</span></li>
+                      <li><strong>2</strong><span>「公開する」で顧客へ通知</span></li>
+                      <li><strong>3</strong><span>顧客が承認または調整依頼</span></li>
+                    </ol>
                     {order.status === "stills_review" &&
                     order.stills_change_open ? (
                       <aside className="admin-operation-note warning">
