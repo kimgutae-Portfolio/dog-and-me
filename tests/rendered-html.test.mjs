@@ -350,6 +350,9 @@ test("renders the moving storybook demo", async () => {
   const html = await response.text();
   assert.match(html, /ミルと、ひとひらの春/);
   assert.match(html, /STORYBOOK SAMPLE/);
+  assert.match(html, /FROM PHOTO TO STORYBOOK/);
+  assert.match(html, /元写真と絵本ページの比較位置/);
+  assert.match(html, /customer-01-cherry-path\.jpg/);
   assert.match(html, /A PAGE COMES ALIVE/);
   assert.match(html, /春風から届いた手紙/);
   assert.match(html, /ひとひらが/);

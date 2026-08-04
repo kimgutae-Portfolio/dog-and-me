@@ -1762,6 +1762,23 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .miru-book-cover p, .miru-book-heading p, .miru-book-letter > p { margin: 0 0 20px; color: #a16f70; font-size: 8px; font-weight: 700; letter-spacing: .22em; }
 .miru-book-cover h1 { margin: 0 0 24px; font-family: var(--font-serif); font-size: clamp(58px,7.5vw,98px); font-weight: 400; line-height: 1.42; letter-spacing: .07em; }
 .miru-book-cover span { color: #6c655d; font-size: 10px; letter-spacing: .1em; }
+.miru-book-comparison { padding: 124px 0 116px; background: #f1e9dd; }
+.miru-book-comparison .miru-book-heading { margin-bottom: 34px; }
+.miru-before-after { aspect-ratio: 16/9; position: relative; overflow: hidden; isolation: isolate; color: #fff; background: #d9cfc3; box-shadow: 0 28px 80px rgba(65,50,40,.16); touch-action: none; user-select: none; }
+.miru-before-after-image { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; }
+.miru-before-after-before { height: 100%; position: absolute; z-index: 1; inset: 0 auto 0 0; overflow: hidden; border-right: 0; }
+.miru-before-after-before .miru-before-after-image { width: 100%; max-width: none; object-position: 43% center; }
+.miru-before-after-label { position: absolute; z-index: 2; top: 18px; padding: 7px 9px 6px; color: rgba(255,255,255,.96); background: rgba(43,38,34,.58); font-size: 7px; letter-spacing: .16em; line-height: 1.25; pointer-events: none; transition: opacity .2s ease; }
+.miru-before-after-label small { display: block; margin-top: 3px; font-size: 8px; font-weight: 400; letter-spacing: .04em; }
+.miru-before-after-label-before { left: 18px; }
+.miru-before-after-label-after { right: 18px; text-align: right; }
+.miru-before-after-divider { width: 2px; height: 100%; position: absolute; z-index: 3; top: 0; transform: translateX(-50%); background: rgba(255,255,255,.95); cursor: ew-resize; outline: none; }
+.miru-before-after-divider::before { content: ""; width: 46px; height: 46px; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; border: 1px solid rgba(64,59,53,.2); border-radius: 50%; color: #4d4842; background: #fffaf2; box-shadow: 0 4px 14px rgba(42,34,27,.2); transform: translate(-50%,-50%); }
+.miru-before-after-divider span { position: absolute; z-index: 1; top: 50%; left: 50%; color: #4d4842; font-size: 18px; line-height: 1; transform: translate(-50%,-53%); pointer-events: none; }
+.miru-before-after-divider:focus-visible::before { outline: 3px solid rgba(161,111,112,.8); outline-offset: 3px; }
+.miru-before-after.is-dragging { cursor: ew-resize; }
+.miru-before-after.is-dragging .miru-before-after-label { opacity: .42; }
+.miru-book-comparison-note { margin-top: 14px; }
 .miru-book-source-archive { padding: 124px 0; background: #f8f3ea; }
 .miru-book-source-intro { max-width: 760px; margin: -12px 0 38px auto; color: #6b645b; font-size: 11px; line-height: 2; }
 .miru-book-source-grid { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; list-style: none; }
@@ -1848,7 +1865,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .miru-book-cover > div:last-child { width: calc(100% - 36px); padding-bottom: 58px; }
   .miru-book-cover h1 { font-size: 48px; }
   .miru-book-shell { width: calc(100% - 36px); }
-  .miru-book-source-archive, .miru-book-motion, .miru-book-chapters { padding: 82px 0; }
+  .miru-book-comparison, .miru-book-source-archive, .miru-book-motion, .miru-book-chapters { padding: 82px 0; }
   .miru-book-source-intro { margin: 0 0 28px; font-size: 10px; }
   .miru-book-source-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
   .miru-book-source-grid li:last-child { grid-column: 1 / -1; width: calc(50% - 5px); }
@@ -1856,6 +1873,13 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .miru-book-heading { align-items: start; flex-direction: column; gap: 15px; }
   .miru-book-player p { max-width: calc(100% - 30px); bottom: 7%; font-size: 14px; white-space: normal; }
   .miru-book-player button { width: 48px; height: 48px; }
+  .miru-before-after { aspect-ratio: 4/3; }
+  .miru-before-after-label { top: 12px; padding: 6px 7px 5px; font-size: 6px; }
+  .miru-before-after-label small { font-size: 7px; }
+  .miru-before-after-label-before { left: 12px; }
+  .miru-before-after-label-after { right: 12px; }
+  .miru-before-after-divider::before { width: 40px; height: 40px; }
+  .miru-before-after-divider span { font-size: 16px; }
   .miru-book-chapters ol { gap: 46px; }
   .miru-book-chapters li { grid-template-columns: 1fr; gap: 0; }
   .miru-book-chapters li:nth-child(even) img { order: initial; }

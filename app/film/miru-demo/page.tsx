@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StartStoryLink } from "../../components/StartStoryLink";
+import { MiruBeforeAfter } from "./MiruBeforeAfter";
 import { MiruStorybookPlayer } from "./MiruStorybookPlayer";
 
 export const metadata: Metadata = {
@@ -105,11 +106,35 @@ export default function MiruDemoPage() {
           <span>マルチーズ · はじめての春とはじめての海</span>
         </div>
       </section>
+      <section className="miru-book-comparison">
+        <div className="miru-book-shell">
+          <div className="miru-book-heading">
+            <div>
+              <p>01 / FROM PHOTO TO STORYBOOK</p>
+              <h2>
+                한 장의 사진이,
+                <br />
+                동화책의 한 장면이 되기까지.
+              </h2>
+            </div>
+            <span>가운데 손잡이를 좌우로 움직여 보세요</span>
+          </div>
+          <MiruBeforeAfter
+            beforeSrc="/film/miru/customer-01-cherry-path.jpg"
+            afterSrc="/film/miru/01-spring-letter.jpg"
+            beforeAlt="미루의 원본 벚꽃길 사진"
+            afterAlt="미루가 그려진 동화책 페이지"
+          />
+          <p className="miru-book-note miru-book-comparison-note">
+            왼쪽은 고객님이 보내주신 사진, 오른쪽은 그 사진과 이야기에서 다시 그린 동화책 페이지입니다.
+          </p>
+        </div>
+      </section>
       <section className="miru-book-source-archive">
         <div className="miru-book-shell">
           <div className="miru-book-heading">
             <div>
-              <p>01 / CUSTOMER PHOTO ARCHIVE</p>
+              <p>02 / CUSTOMER PHOTO ARCHIVE</p>
               <h2>
                 五つの記憶を、
                 <br />
@@ -152,7 +177,7 @@ export default function MiruDemoPage() {
         <div className="miru-book-shell">
           <div className="miru-book-heading">
             <div>
-              <p>02 / A PAGE COMES ALIVE</p>
+              <p>03 / A PAGE COMES ALIVE</p>
               <h2>
                 絵本の一ページが、
                 <br />
@@ -171,7 +196,7 @@ export default function MiruDemoPage() {
         <div className="miru-book-shell">
           <div className="miru-book-heading">
             <div>
-              <p>03 / STORY PAGES · SELECTED PAGES</p>
+              <p>04 / STORY PAGES · SELECTED PAGES</p>
               <h2>
                 ひとひらが、
                 <br />
@@ -195,7 +220,7 @@ export default function MiruDemoPage() {
         </div>
       </section>
       <section className="miru-book-letter">
-        <p>04 / A LETTER FOR MIRU</p>
+        <p>05 / A LETTER FOR MIRU</p>
         <blockquote>
           ミルへ。
           <br />
