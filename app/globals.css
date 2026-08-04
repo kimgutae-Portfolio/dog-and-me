@@ -594,6 +594,21 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .stills-change-form .stills-change-lead { margin: 0 0 10px; display: grid; gap: 4px; }
 .stills-change-form .stills-change-lead small { color: var(--muted); font-size: 10px; line-height: 1.8; }
 .admin-still-item { display: grid; gap: 8px; align-content: start; }
+.admin-still-upload-grid { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.admin-still-upload-card { min-width: 0; padding: 15px; display: grid; align-content: start; gap: 13px; border: 1px solid var(--line); background: #f6f2ea; }
+.admin-still-upload-card.complete { border-color: #9aaf92; background: #eef3ea; }
+.admin-still-upload-card > header { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; align-items: start; }
+.admin-still-upload-card > header > span { color: var(--rust); font-size: 8px; font-weight: 700; letter-spacing: .14em; }
+.admin-still-upload-card > header > strong { grid-column: 1; font-family: var(--font-serif); font-size: 15px; font-weight: 400; line-height: 1.55; }
+.admin-still-upload-card > header > small { grid-column: 2; grid-row: 1 / span 2; padding: 4px 8px; color: var(--muted); border: 1px solid var(--line); font-size: 8px; }
+.admin-still-upload-card.complete > header > small { color: #4c6b4a; border-color: #9aaf92; }
+.admin-still-upload-card label { display: grid; gap: 7px; color: var(--muted); font-size: 9px; }
+.admin-still-upload-card label small { font-size: 8px; }
+.admin-still-upload-card textarea { width: 100%; resize: vertical; }
+.admin-still-upload-card .button { justify-self: start; }
+.admin-still-upload-complete { display: grid; gap: 9px; }
+.admin-still-upload-complete p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.75; }
+.admin-still-upload-complete span { padding: 10px 11px; color: #59534c; background: rgba(255,255,255,.56); font-family: var(--font-serif); font-size: 11px; line-height: 1.7; }
 .admin-still-actions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
 .admin-security { margin-bottom: 18px; border: 1px solid var(--line); background: #f6f2ea; }
 .admin-security > summary { padding: 14px 17px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; cursor: pointer; list-style: none; }

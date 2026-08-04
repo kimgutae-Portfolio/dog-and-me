@@ -199,7 +199,18 @@ const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v1.0
 반환
 - 실제 그림책 페이지 이미지 5장
 - 각 이미지가 어느 story 번호인지 명시
-- primary/support 사용과 정체성 유지 여부를 짧게 기록`;
+- 각 페이지마다 order.json의 이야기 제목을 그대로 scene_title로 반환
+- 각 페이지마다 고객에게 이미지와 함께 보여주고 나중에 영상 자막으로도 사용할 짧고 자연스러운 일본어 한 문장을 story_caption으로 반환
+- story_caption은 selected_concept의 해당 장면과 고객이 제공한 사실만 사용하고, 약 25~50자 안에서 장면의 감정과 흐름이 자연스럽게 이어지게 작성
+- 이미지 안에는 story_caption을 직접 넣지 않는다
+- primary/support 사용과 정체성 유지 여부를 짧게 기록
+
+이미지 1장마다 다음 정보도 함께 반환
+{
+  "story_number": 1,
+  "scene_title": "order.json의 해당 이야기 제목",
+  "story_caption": "고객 확인용 일본어 한 문장"
+}`;
 
 const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v1.0
 
@@ -371,13 +382,18 @@ export function AdminStudio() {
   const [videoChecked, setVideoChecked] = useState(false);
   const [videoInputKey, setVideoInputKey] = useState(0);
   const [customerInputPending, setCustomerInputPending] = useState(false);
-  const [stillFile, setStillFile] = useState<File | null>(null);
-  const [stillTitle, setStillTitle] = useState("");
-  const [stillCaption, setStillCaption] = useState("");
+  const [stillFiles, setStillFiles] = useState<Record<string, File | null>>(
+    {},
+  );
+  const [stillCaptions, setStillCaptions] = useState<Record<string, string>>(
+    {},
+  );
   const [captionDrafts, setCaptionDrafts] = useState<Record<string, string>>(
     {},
   );
-  const [stillInputKey, setStillInputKey] = useState(0);
+  const [stillInputKeys, setStillInputKeys] = useState<
+    Record<string, number>
+  >({});
   const [clipInputKey, setClipInputKey] = useState(0);
   const [bgmTracks, setBgmTracks] = useState<string[]>([]);
   const [renderAvailable, setRenderAvailable] = useState(false);
@@ -734,8 +750,12 @@ export function AdminStudio() {
     [assets],
   );
   const allSceneCaptionsReady =
-    sceneStills.length > 0 &&
-    sceneStills.every((asset) => Boolean(asset.story_caption?.trim()));
+    memories.length === 5 &&
+    sceneStills.length === memories.length &&
+    sceneStills.every(
+      (asset, index) =>
+        asset.scene_sort_order === index && Boolean(asset.story_caption?.trim()),
+    );
   const runwayExportReady = Boolean(
     sourceExportReady &&
       selectedConcept &&
@@ -903,10 +923,9 @@ export function AdminStudio() {
       setVideoFile(null);
       setVideoChecked(false);
       setVideoInputKey((current) => current + 1);
-      setStillFile(null);
-      setStillTitle("");
-      setStillCaption("");
-      setStillInputKey((current) => current + 1);
+      setStillFiles({});
+      setStillCaptions({});
+      setStillInputKeys({});
       setClipInputKey((current) => current + 1);
       setFilmTitle(`${order.pet_name}の、小さなものがたり`);
       // The customer's own words to their dog are the right starting point for
@@ -1876,14 +1895,14 @@ export function AdminStudio() {
     setSaving(false);
   };
 
-  const uploadSceneStill = async () => {
+  const uploadSceneStill = async (
+    memory: OrderMemory,
+    sceneSortOrder: number,
+  ) => {
+    const stillFile = stillFiles[memory.id];
     if (!order || !stillFile || !canPrepareStills) return;
-    const title = stillTitle.trim();
-    const caption = stillCaption.trim();
-    if (!title) {
-      setError("場面のタイトルを入力してください。");
-      return;
-    }
+    const title = memory.title.trim();
+    const caption = (stillCaptions[memory.id] ?? "").trim();
     if (!caption) {
       setError("この場面に表示する物語の文章を入力してください。");
       return;
@@ -1916,7 +1935,7 @@ export function AdminStudio() {
         p_mime_type: mimeType,
         p_file_size: stillFile.size,
         p_scene_title: title,
-        p_scene_sort_order: sceneStills.length,
+        p_scene_sort_order: sceneSortOrder,
       },
     );
     if (registerError || !stillAssetId) {
@@ -1943,10 +1962,12 @@ export function AdminStudio() {
       setSaving(false);
       return;
     }
-    setStillFile(null);
-    setStillTitle("");
-    setStillCaption("");
-    setStillInputKey((current) => current + 1);
+    setStillFiles((current) => ({ ...current, [memory.id]: null }));
+    setStillCaptions((current) => ({ ...current, [memory.id]: "" }));
+    setStillInputKeys((current) => ({
+      ...current,
+      [memory.id]: (current[memory.id] ?? 0) + 1,
+    }));
     setNotice(
       "絵本ページと文章を追加しました。公開ボタンを押すまでお客様には表示されません。",
     );
@@ -3637,62 +3658,100 @@ export function AdminStudio() {
                       </div>
                     )}
                     {canPrepareStills && (
-                      <div className="admin-form-grid">
-                        <label>
-                          <span>場面のタイトル（お客様に表示）</span>
-                          <input
-                            value={stillTitle}
-                            maxLength={80}
-                            onChange={(event) =>
-                              setStillTitle(event.target.value)
-                            }
-                            placeholder="桜の花びらを追いかける場面"
-                          />
-                        </label>
-                        <label>
-                          <span>画像ファイル（JPG / PNG / WebP）</span>
-                          <input
-                            key={stillInputKey}
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            disabled={saving}
-                            onChange={(event) =>
-                              setStillFile(event.target.files?.[0] ?? null)
-                            }
-                          />
-                        </label>
-                        <label className="wide">
-                          <span>
-                            このページの物語文{" "}
-                            <small>映像の字幕になります</small>
-                          </span>
-                          <textarea
-                            rows={3}
-                            value={stillCaption}
-                            maxLength={120}
-                            onChange={(event) =>
-                              setStillCaption(event.target.value)
-                            }
-                            placeholder="春の日、小さな手紙が届きました。"
-                          />
-                        </label>
+                      <div className="admin-still-upload-grid">
+                        {memories.map((memory, index) => {
+                          const registeredStill = sceneStills.find(
+                            (asset) => asset.scene_sort_order === index,
+                          );
+                          const selectedFile = stillFiles[memory.id];
+                          const caption = stillCaptions[memory.id] ?? "";
+                          return (
+                            <article
+                              className={`admin-still-upload-card${
+                                registeredStill ? " complete" : ""
+                              }`}
+                              key={memory.id}
+                            >
+                              <header>
+                                <span>
+                                  PAGE {String(index + 1).padStart(2, "0")}
+                                </span>
+                                <strong>{memory.title}</strong>
+                                <small>
+                                  {registeredStill ? "登録済み" : "未登録"}
+                                </small>
+                              </header>
+                              {registeredStill ? (
+                                <div className="admin-still-upload-complete">
+                                  <p>
+                                    画像と物語文を登録済みです。差し替える場合は、上の登録済みページを削除してください。
+                                  </p>
+                                  <span>
+                                    {registeredStill.story_caption ??
+                                      "物語文が未入力です。上の欄で保存してください。"}
+                                  </span>
+                                </div>
+                              ) : (
+                                <>
+                                  <label>
+                                    <span>画像ファイル（JPG / PNG / WebP）</span>
+                                    <input
+                                      key={stillInputKeys[memory.id] ?? 0}
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp"
+                                      disabled={saving}
+                                      onChange={(event) =>
+                                        setStillFiles((current) => ({
+                                          ...current,
+                                          [memory.id]:
+                                            event.target.files?.[0] ?? null,
+                                        }))
+                                      }
+                                    />
+                                  </label>
+                                  <label>
+                                    <span>
+                                      このページの物語文{" "}
+                                      <small>お客様確認・映像字幕用</small>
+                                    </span>
+                                    <textarea
+                                      rows={3}
+                                      value={caption}
+                                      maxLength={120}
+                                      onChange={(event) =>
+                                        setStillCaptions((current) => ({
+                                          ...current,
+                                          [memory.id]: event.target.value,
+                                        }))
+                                      }
+                                      placeholder="画像制作時に返された日本語の一文を貼り付けてください。"
+                                    />
+                                  </label>
+                                  <button
+                                    className="button button-outline"
+                                    type="button"
+                                    disabled={
+                                      saving ||
+                                      !selectedFile ||
+                                      !caption.trim()
+                                    }
+                                    onClick={() =>
+                                      uploadSceneStill(memory, index)
+                                    }
+                                  >
+                                    {saving
+                                      ? "追加中…"
+                                      : `ページ${index + 1}を追加`}
+                                  </button>
+                                </>
+                              )}
+                            </article>
+                          );
+                        })}
                       </div>
                     )}
                     {canPrepareStills && (
                       <div className="admin-still-actions">
-                        <button
-                          className="button button-outline"
-                          type="button"
-                          disabled={
-                            saving ||
-                            !stillFile ||
-                            !stillTitle.trim() ||
-                            !stillCaption.trim()
-                          }
-                          onClick={uploadSceneStill}
-                        >
-                          {saving ? "追加中…" : "絵本ページを追加"}
-                        </button>
                         <button
                           className="button button-primary"
                           type="button"
