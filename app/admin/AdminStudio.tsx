@@ -156,6 +156,77 @@ Runway 규칙
 - Runway에는 승인된 그림책 페이지 이미지만 전달되는가?
 - 막히지 않은 질문을 추가로 만들지 않았는가?
 `;
+const CONCEPT_PROPOSAL_PROMPT = `WAN MEMORY STORY CONCEPT PROPOSAL v1.0
+
+첨부한 order.json과 stories/01~05의 고객 원본 사진을 읽고 고객에게 제시할 구성안 A와 B를 작성해줘.
+
+규칙
+- 아직 그림, 이미지 생성 프롬프트, Runway 프롬프트를 만들지 않는다.
+- 고객이 제공한 5개 이야기를 모두 포함한다.
+- 고객이 제공하지 않은 사람, 장소, 사건, 감정을 사실처럼 추가하지 않는다.
+- A안과 B안은 연결 방식과 감정의 흐름이 분명히 달라야 한다.
+- 움직이는 수채·과슈 그림책을 전제로 한다.
+- 고객에게 보여줄 내용은 자연스러운 일본어로 작성한다.
+- JSON 외의 설명을 작성하지 않는다.
+
+반환 형식
+{
+  "concept_a": {"title":"","tone":"","summary":"","story_scenes":[{"story_number":1,"story_title":"","text":""},{"story_number":2,"story_title":"","text":""},{"story_number":3,"story_title":"","text":""},{"story_number":4,"story_title":"","text":""},{"story_number":5,"story_title":"","text":""}]},
+  "concept_b": {"title":"","tone":"","summary":"","story_scenes":[{"story_number":1,"story_title":"","text":""},{"story_number":2,"story_title":"","text":""},{"story_number":3,"story_title":"","text":""},{"story_number":4,"story_title":"","text":""},{"story_number":5,"story_title":"","text":""}]}
+}`;
+
+const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v1.0
+
+첨부한 order.json의 selected_concept와 stories/01~05의 고객 원본 사진을 읽고 고객 확인용 그림책 페이지를 실제로 제작해줘.
+
+진행 방법
+- 이야기 01부터 05까지 한 번에 한 이야기씩 처리한다.
+- 각 이야기에서 primary 파일을 동일 강아지의 정체성·구도 기준으로 사용한다.
+- support 파일은 primary와 충돌하지 않는 세부만 보충한다.
+- 각 이야기마다 새로운 16:9 그림책 페이지 이미지 1장을 제작한다.
+- 이번 단계에서는 Runway나 Gen-4 프롬프트를 작성하지 않는다.
+
+이미지 규칙
+- 얼굴, 자연스러운 눈 크기와 간격, 눈꺼풀, 귀, 주둥이, 체형, 털색과 배치, 꼬리, 보이는 목줄을 유지한다.
+- 과장된 애니메이션 눈, 돌출된 눈, 새로운 털 무늬, 눈물자국을 만들지 않는다.
+- 원본을 크롭하거나 블러 여백으로 확장하지 말고 새로운 16:9 장면으로 재구성한다.
+- 배경은 장소와 계절이 읽히는 수채·과슈 질감으로 표현한다.
+- 강아지는 지나친 실사가 아닌 부드러운 painted illustration으로 표현한다.
+- 고객 사진에 없는 사람, 동물, 액세서리, 사건을 추가하지 않는다.
+- 자막, 글자, 로고, 워터마크를 이미지에 넣지 않는다.
+- 한 장면에는 중심 행동 하나만 두고 작은 영상 움직임을 넣을 여백을 남긴다.
+
+반환
+- 실제 그림책 페이지 이미지 5장
+- 각 이미지가 어느 story 번호인지 명시
+- primary/support 사용과 정체성 유지 여부를 짧게 기록`;
+
+const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v1.0
+
+첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
+
+먼저 order.json의 transitions와 selected_concept_context를 따라 강아지와 사람이 없는 전환 배경 이미지 4장을 제작한다. 앞 이야기의 색·빛·모티프가 다음 이야기로 자연스럽게 이어지는 수채·과슈 그림책 배경이어야 한다.
+
+그 다음 이야기 이미지 5장과 전환 배경 4장을 위한 Runway 프롬프트를 작성한다.
+
+Runway 규칙
+- 이야기 페이지: Gen-4, 5초, 프롬프트 최대 3000자.
+- 전환 페이지: Gen-4 Turbo, 5초, 프롬프트 최대 1000자.
+- 화면 비율은 옵션에서 설정하므로 프롬프트에 16:9를 쓰지 않는다.
+- 승인된 강아지의 얼굴, 체형, 눈, 귀, 주둥이, 털, 꼬리, 목줄을 바꾸지 않는다.
+- 이미지에 없는 사람, 동물, 사물을 생성하지 않는다.
+- 카메라는 고정하거나 최소한으로만 움직인다.
+- 갑작스러운 줌, 회전, 흔들림, 큰 걸음, 달리기, 점프, 입 모양 변화, 과도한 눈 깜빡임을 금지한다.
+- 털끝, 귀 끝, 꽃잎, 물결, 커튼, 빛, 그림자처럼 이미지에 실제 존재하는 요소 한두 개만 작게 움직인다.
+- 페이지 넘김과 자막은 편집 단계에서 추가하므로 프롬프트에 넣지 않는다.
+
+반환 형식
+{
+  "gen4_story_prompts":[{"story_number":1,"title":"","duration_seconds":5,"prompt":""}],
+  "gen4_turbo_transition_prompts":[{"transition":"01-02","duration_seconds":5,"prompt":""}]
+}
+
+두 배열은 각각 이야기 5개와 전환 4개를 빠짐없이 포함한다.`;
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
 >;
@@ -631,6 +702,26 @@ export function AdminStudio() {
       ) ?? null,
     [concepts, order?.selected_concept_slot],
   );
+  const sourceExportReady = Boolean(
+    order &&
+      memories.length === 5 &&
+      sourceAssets.length >= 5 &&
+      productionFields.photoAnalysisStatus === "approved",
+  );
+  const conceptExportReady = Boolean(
+    sourceExportReady &&
+      order &&
+      !order.selected_concept_slot &&
+      ["materials_submitted", "reviewing_materials", "concepts_ready"].includes(
+        order.status,
+      ),
+  );
+  const illustrationExportReady = Boolean(
+    sourceExportReady &&
+      selectedConcept &&
+      order?.payment_status === "paid" &&
+      !order.stills_approved_at,
+  );
   const sceneStills = useMemo(
     () =>
       assets
@@ -645,6 +736,14 @@ export function AdminStudio() {
   const allSceneCaptionsReady =
     sceneStills.length > 0 &&
     sceneStills.every((asset) => Boolean(asset.story_caption?.trim()));
+  const runwayExportReady = Boolean(
+    sourceExportReady &&
+      selectedConcept &&
+      order?.payment_status === "paid" &&
+      order?.stills_approved_at &&
+      sceneStills.length === 5 &&
+      allSceneCaptionsReady,
+  );
   const reviewVideos = useMemo(
     () => assets.filter((asset) => asset.category === "review_video"),
     [assets],
@@ -1367,55 +1466,101 @@ export function AdminStudio() {
     }
   };
 
-  const downloadProductionBundle = async () => {
+  const saveOperatorZip = async (
+    files: Record<string, Uint8Array>,
+    filename: string,
+  ) => {
+    const { zip } = await import("fflate");
+    const archive = await new Promise<Uint8Array>((resolve, reject) => {
+      zip(files, { level: 0 }, (zipError, result) => {
+        if (zipError) reject(zipError);
+        else resolve(result);
+      });
+    });
+    const archiveBuffer = archive.buffer.slice(
+      archive.byteOffset,
+      archive.byteOffset + archive.byteLength,
+    ) as ArrayBuffer;
+    const archiveUrl = URL.createObjectURL(
+      new Blob([archiveBuffer], { type: "application/zip" }),
+    );
+    const link = document.createElement("a");
+    link.href = archiveUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
+  };
+
+  const downloadSourceBundle = async (
+    stage: "concept" | "illustration",
+  ) => {
     const exportData = buildProductionExport();
     if (!order || !exportData || sourceAssets.length === 0) return;
-    if (!selectedConcept) {
-      setError("お客様が選んだ物語案を確認してから制作用データをダウンロードしてください。");
+    const ready = stage === "concept" ? conceptExportReady : illustrationExportReady;
+    if (!ready) {
+      setError(
+        stage === "concept"
+          ? "写真確認を完了し、お客様が物語案を選ぶ前の工程でダウンロードしてください。"
+          : "お客様の物語案選択とお支払いを確認してからダウンロードしてください。",
+      );
       return;
     }
     setExportingBundle(true);
     setExportProgress(`写真を準備しています（0/${sourceAssets.length}）`);
     setError("");
     try {
-      const [{ strToU8, zip }, supabase] = await Promise.all([
+      const [{ strToU8 }, supabase] = await Promise.all([
         import("fflate"),
         Promise.resolve(getSupabaseBrowserClient()),
       ]);
-      const root = safeArchiveSegment(order.order_number);
+      const suffix = stage === "concept" ? "01-concept-proposal" : "02-storybook-images";
+      const root = `${safeArchiveSegment(order.order_number)}-${suffix}`;
+      const prompt =
+        stage === "concept" ? CONCEPT_PROPOSAL_PROMPT : STORYBOOK_IMAGE_PROMPT;
+      const startHere =
+        stage === "concept"
+          ? [
+              "STEP 1 · A/B物語案を作るデータです。",
+              "1. order.jsonとstoriesフォルダを確認します。",
+              "2. このZIPと02_PROMPT_CONCEPT_PROPOSAL.txtをCodexへ添付します。",
+              "3. 返されたA/B案のタイトル・トーン・概要・5場面を管理画面へ入力します。",
+              "4. この段階では画像やRunwayプロンプトを作りません。",
+            ].join("\n")
+          : [
+              "STEP 2 · 顧客確認用の絵本ページを作るデータです。",
+              "1. order.jsonのselected_conceptを確認します。",
+              "2. Codexへorder.jsonと一つのstoryフォルダだけを添付し、01から05まで順番に制作します。",
+              "3. 02_PROMPT_STORYBOOK_IMAGES.txtをそのまま依頼文として使います。",
+              "4. 完成した5枚を管理画面へアップロードし、顧客確認へ公開します。",
+              "5. この段階ではRunwayプロンプトを作りません。",
+            ].join("\n");
+      const orderJson =
+        stage === "concept"
+          ? {
+              schema_version: "wan-memory-concept-proposal-input-1.0",
+              exported_at: new Date().toISOString(),
+              job: exportData.productionData.job,
+              style: exportData.productionData.style,
+              stories: exportData.productionData.stories,
+              memories: exportData.productionData.memories,
+              source_photos: exportData.productionData.source_photos,
+              people_policy: exportData.productionData.people_policy,
+              additional_customer_requests:
+                exportData.productionData.additional_customer_requests,
+              requested_output: "concept_a_and_b_for_admin_form",
+            }
+          : exportData.productionData;
       const files: Record<string, Uint8Array> = {
+        [`${root}/01_START_HERE.txt`]: strToU8(startHere),
+        [`${root}/02_PROMPT_${stage === "concept" ? "CONCEPT_PROPOSAL" : "STORYBOOK_IMAGES"}.txt`]:
+          strToU8(prompt),
         [`${root}/order.json`]: strToU8(
-          JSON.stringify(exportData.productionData, null, 2),
+          JSON.stringify(orderJson, null, 2),
         ),
         [`${root}/photo-manifest.json`]: strToU8(
           JSON.stringify(exportData.manifest, null, 2),
-        ),
-        [`${root}/MEMORY_STORYBOOK_PRODUCTION_v2.txt`]: strToU8(
-          MEMORY_STORYBOOK_PRODUCTION_PROMPT,
-        ),
-        [`${root}/GPT_INSTRUCTIONS.txt`]: strToU8(
-          [
-            "Read the top-level job, style, production_protocol, stories, and transition_rules in order.json first.",
-            "Read MEMORY_STORYBOOK_PRODUCTION_v2.txt before creating any image or prompt.",
-            "Follow MEMORY STORYBOOK PRODUCTION v2.0 exactly: customer photos are original-aspect-ratio identity-locked references, not loose inspiration and not finished 16:9 assets.",
-            "For each story, recompose a new 16:9 watercolor-and-gouache storybook page from that story's original photos and text before writing its Gen-4 motion prompt.",
-            "Create one background-only 16:9 bridge page and one Gen-4 Turbo motion prompt for each item in transitions/; never add the dog to a transition page.",
-            "Each folder under stories/ is one independent story and one production unit.",
-            "Attach order.json and only one story folder at a time when preparing that scene.",
-            "Use the file containing primary in its name as the story's composition and identity anchor.",
-            "Do not redesign the dog: preserve the primary dog's face, eye size and spacing, eyelids, muzzle, ears, body proportions, coat, tail, and visible collar.",
-            "Use support files only when they clarify details; never overwrite the primary photo's visible facts.",
-            "Do not mix locations, clothing, seasons, or poses between different story folders.",
-            "Do not create padded, blurred, letterboxed, or cropped copies of the customer photos.",
-            "Do not send a raw customer photo directly to Runway; send only the approved generated storybook page image.",
-            "Return the sections listed in requested_gpt_output inside order.json.",
-            "Use asset_id and archive_path when referring to each photo.",
-            "",
-            "FOLDER GUIDE",
-            "- stories/01-title/original/: original customer photos for that story only.",
-            "- Original customer photos stay in their original aspect ratio and are never padded, blurred, or cropped by this export.",
-            "- Create the 16:9 storybook page image during the illustration step; that generated page, not the customer photo, is the asset sent to Runway.",
-          ].join("\n"),
         ),
       };
       for (let index = 0; index < exportData.archivePhotos.length; index += 1) {
@@ -1435,34 +1580,86 @@ export function AdminStudio() {
         );
       }
       setExportProgress("ZIPファイルを作成しています…");
-      const archive = await new Promise<Uint8Array>((resolve, reject) => {
-        zip(files, { level: 0 }, (zipError, result) => {
-          if (zipError) reject(zipError);
-          else resolve(result);
-        });
-      });
-      const archiveBuffer = archive.buffer.slice(
-        archive.byteOffset,
-        archive.byteOffset + archive.byteLength,
-      ) as ArrayBuffer;
-      const archiveUrl = URL.createObjectURL(
-        new Blob([archiveBuffer], { type: "application/zip" }),
-      );
-      const link = document.createElement("a");
-      link.href = archiveUrl;
-      link.download = `${root}-GPT-production-data.zip`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
+      await saveOperatorZip(files, `${root}.zip`);
       setNotice(
-        `${memories.length}つの物語を制作フォルダに分けました。元写真${sourceAssets.length}枚と標準JSONを同梱しています。`,
+        stage === "concept"
+          ? "A/B物語案作成用のJSON・写真・依頼文をまとめました。"
+          : "絵本ページ画像制作用の選択案・JSON・写真・依頼文をまとめました。",
       );
     } catch (bundleError) {
       console.error(bundleError);
       setError(
         "元写真の取得を完了できませんでした。通信状態を確認して、もう一度お試しください。",
       );
+    } finally {
+      setExportProgress("");
+      setExportingBundle(false);
+    }
+  };
+
+  const downloadRunwayBundle = async () => {
+    const exportData = buildProductionExport();
+    if (!order || !exportData || !runwayExportReady) {
+      setError("5枚の絵本ページをお客様が承認した後にダウンロードできます。");
+      return;
+    }
+    setExportingBundle(true);
+    setExportProgress(`承認画像を準備しています（0/${sceneStills.length}）`);
+    setError("");
+    try {
+      const [{ strToU8 }, supabase] = await Promise.all([
+        import("fflate"),
+        Promise.resolve(getSupabaseBrowserClient()),
+      ]);
+      const root = `${safeArchiveSegment(order.order_number)}-03-runway-prompts`;
+      const runwayData = {
+        schema_version: "wan-memory-runway-prompt-input-1.0",
+        exported_at: new Date().toISOString(),
+        job: exportData.productionData.job,
+        style: exportData.productionData.style,
+        selected_concept: exportData.productionData.selected_concept,
+        stories: exportData.productionData.stories,
+        transition_rules: exportData.productionData.transition_rules,
+        transitions: exportData.productionData.transitions,
+        output_plan: exportData.productionData.output_plan,
+        approved_at: order.stills_approved_at,
+      };
+      const files: Record<string, Uint8Array> = {
+        [`${root}/01_START_HERE.txt`]: strToU8(
+          [
+            "STEP 3 · 顧客承認後のRunway制作データです。",
+            "1. order.jsonとapproved-pagesの5枚をCodexへ添付します。",
+            "2. 02_PROMPT_RUNWAY.txtをそのまま依頼文として使います。",
+            "3. Codexが背景だけの接続ページ4枚とRunwayプロンプト9本を作ります。",
+            "4. Story 5本はGen-4、接続4本はGen-4 Turboで各5秒制作します。",
+            "5. 完成した9本を管理画面の自動編集工程へ登録します。",
+          ].join("\n"),
+        ),
+        [`${root}/02_PROMPT_RUNWAY.txt`]: strToU8(RUNWAY_PROMPT_REQUEST),
+        [`${root}/order.json`]: strToU8(
+          JSON.stringify(runwayData, null, 2),
+        ),
+      };
+      for (let index = 0; index < sceneStills.length; index += 1) {
+        const asset = sceneStills[index];
+        setExportProgress(
+          `承認画像を準備しています（${index + 1}/${sceneStills.length}）`,
+        );
+        const { data, error: downloadError } = await supabase.storage
+          .from("order-assets")
+          .download(asset.storage_path);
+        if (downloadError || !data) throw downloadError ?? new Error("download failed");
+        const filename = archivePhotoName(asset, index, "approved_story_page");
+        files[`${root}/approved-pages/${filename}`] = new Uint8Array(
+          await data.arrayBuffer(),
+        );
+      }
+      setExportProgress("ZIPファイルを作成しています…");
+      await saveOperatorZip(files, `${root}.zip`);
+      setNotice("顧客承認済み画像・Runway依頼文・制作JSONをまとめました。");
+    } catch (bundleError) {
+      console.error(bundleError);
+      setError("承認画像の取得を完了できませんでした。もう一度お試しください。");
     } finally {
       setExportProgress("");
       setExportingBundle(false);
@@ -2844,39 +3041,56 @@ export function AdminStudio() {
                   <section className="admin-card" id="admin-story">
                     <div className="card-head">
                       <div>
-                        <p className="eyebrow">CUSTOMER STORY</p>
-                        <h3>物語別 Runway 制作セット</h3>
+                        <p className="eyebrow">PRODUCTION DOWNLOADS</p>
+                        <h3>工程別のCodex制作データ</h3>
                       </div>
-                      <div className="admin-export-actions">
+                    </div>
+                    <p className="admin-export-intro">
+                      注文の進行に合わせて必要なボタンだけが有効になります。各ZIPには、初めての担当者向け手順・そのまま送れる依頼文・JSON・必要な画像が入ります。
+                    </p>
+                    <div className="admin-stage-downloads">
+                      <article className={conceptExportReady ? "ready" : "locked"}>
+                        <header><span>STEP 1</span><strong>A/B物語案を作る</strong></header>
+                        <p>写真確認後、顧客が案を選ぶ前に使用します。</p>
+                        <small>内容：顧客エピソード、原本写真、フォーム形式の構成案プロンプト</small>
                         <button
-                          className="button button-outline admin-json-copy"
+                          className="button button-primary"
                           type="button"
-                          disabled={
-                            saving ||
-                            exportingBundle ||
-                            sourceAssets.length === 0 ||
-                            !selectedConcept
-                          }
-                          onClick={copyProductionJson}
+                          disabled={saving || exportingBundle || !conceptExportReady}
+                          onClick={() => void downloadSourceBundle("concept")}
                         >
-                          JSONだけコピー
+                          {exportingBundle && conceptExportReady ? "準備中…" : "① 構成案作成データをダウンロード"}
                         </button>
+                        {!conceptExportReady && <em>写真承認後・案選択前に有効</em>}
+                      </article>
+                      <article className={illustrationExportReady ? "ready" : "locked"}>
+                        <header><span>STEP 2</span><strong>絵本ページを作る</strong></header>
+                        <p>顧客のA/B案選択と決済完了後に使用します。</p>
+                        <small>内容：選択案、5場面、原本写真、画像制作専用プロンプト</small>
                         <button
-                          className="button button-primary admin-bundle-download"
+                          className="button button-primary"
                           type="button"
-                          disabled={
-                            saving ||
-                            exportingBundle ||
-                            sourceAssets.length === 0 ||
-                            !selectedConcept
-                          }
-                          onClick={downloadProductionBundle}
+                          disabled={saving || exportingBundle || !illustrationExportReady}
+                          onClick={() => void downloadSourceBundle("illustration")}
                         >
-                          {exportingBundle
-                            ? "準備中…"
-                            : "物語別の制作用データをダウンロード"}
+                          {exportingBundle && illustrationExportReady ? "準備中…" : "② 絵本画像制作データをダウンロード"}
                         </button>
-                      </div>
+                        {!illustrationExportReady && <em>案選択・決済完了後に有効</em>}
+                      </article>
+                      <article className={runwayExportReady ? "ready" : "locked"}>
+                        <header><span>STEP 3</span><strong>Runway制作へ進む</strong></header>
+                        <p>5枚の絵本ページを顧客が承認した後に使用します。</p>
+                        <small>内容：承認画像5枚、選択案、転換情報、Runway専用プロンプト</small>
+                        <button
+                          className="button button-primary"
+                          type="button"
+                          disabled={saving || exportingBundle || !runwayExportReady}
+                          onClick={() => void downloadRunwayBundle()}
+                        >
+                          {exportingBundle && runwayExportReady ? "準備中…" : "③ Runway制作データをダウンロード"}
+                        </button>
+                        {!runwayExportReady && <em>顧客の絵本ページ承認後に有効</em>}
+                      </article>
                     </div>
                     {exportProgress && (
                       <p className="admin-export-progress" role="status">
@@ -2884,20 +3098,6 @@ export function AdminStudio() {
                         {exportProgress}
                       </p>
                     )}
-                    {!selectedConcept && (
-                      <aside className="admin-operation-note warning">
-                        <strong>選択された物語案がまだありません。</strong>
-                        <span>
-                          お客様がA/B案を選ぶと、タイトル・トーン・概要・5つの場面を含む制作用データをダウンロードできます。
-                        </span>
-                      </aside>
-                    )}
-                    <aside className="admin-operation-note strong">
-                      <strong>標準JSONと物語別フォルダを一緒に作ります。</strong>
-                      <span>
-                        ダウンロードしたorder.jsonをそのまま「MEMORY STORYBOOK PRODUCTION v2.0」の制作依頼に添付できます。5つの物語、4つのTurbo接続ページ、写真の対応関係、固定スタイルを同じJSONで確認できます。顧客写真は原寸比率のまま保管し、16:9化は絵本ページ生成時に行います。
-                      </span>
-                    </aside>
                     <dl className="admin-story">
                       <div>
                         <dt>映像の目的</dt>
