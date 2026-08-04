@@ -624,6 +624,13 @@ export function AdminStudio() {
     () => assets.filter((asset) => asset.category === "source_image"),
     [assets],
   );
+  const selectedConcept = useMemo(
+    () =>
+      concepts.find(
+        (concept) => concept.slot === order?.selected_concept_slot,
+      ) ?? null,
+    [concepts, order?.selected_concept_slot],
+  );
   const sceneStills = useMemo(
     () =>
       assets
@@ -1040,10 +1047,6 @@ export function AdminStudio() {
 
   const buildProductionExport = () => {
     if (!order) return null;
-    const selectedConcept =
-      concepts.find(
-        (concept) => concept.slot === order.selected_concept_slot,
-      ) ?? null;
     const orderedSourceAssets = [...sourceAssets].sort((a, b) => {
       const aMemory = memories.find((item) => item.id === a.memory_id);
       const bMemory = memories.find((item) => item.id === b.memory_id);
@@ -1140,6 +1143,8 @@ export function AdminStudio() {
         title: memory.title,
         caption:
           selectedStoryText.get(memory.id)?.trim() || memory.description,
+        selected_concept_scene_text:
+          selectedStoryText.get(memory.id)?.trim() || memory.description,
         when: memory.when_text,
         location: memory.location,
         description: memory.description,
@@ -1162,12 +1167,26 @@ export function AdminStudio() {
       const fromNumber = String(memory.sort_order).padStart(2, "0");
       const toNumber = String(nextMemory.sort_order).padStart(2, "0");
       const transitionId = `transition_${fromNumber}_${toNumber}`;
+      const fromSceneText =
+        selectedStoryText.get(memory.id)?.trim() || memory.description;
+      const toSceneText =
+        selectedStoryText.get(nextMemory.id)?.trim() || nextMemory.description;
       return {
         id: transitionId,
         from_story: `story_${fromNumber}`,
         to_story: `story_${toNumber}`,
         instruction:
           "Create a background-only bridge page that carries one motif from the previous story into the next story.",
+        selected_concept_context: selectedConcept
+          ? {
+              slot: selectedConcept.slot,
+              title: selectedConcept.title,
+              tone: selectedConcept.tone,
+              summary: selectedConcept.summary,
+              from_scene_text: fromSceneText,
+              to_scene_text: toSceneText,
+            }
+          : null,
         dog_in_transition: false,
         output: {
           page_image_filename: `${transitionId}.png`,
@@ -1312,7 +1331,17 @@ export function AdminStudio() {
         id: transition.id,
         from_story: transition.from_story,
         to_story: transition.to_story,
+        selected_concept_context: transition.selected_concept_context,
       })),
+      selected_concept: selectedConcept
+        ? {
+            slot: selectedConcept.slot,
+            title: selectedConcept.title,
+            tone: selectedConcept.tone,
+            summary: selectedConcept.summary,
+            story_scenes: selectedConcept.story_scenes,
+          }
+        : null,
       photos: sourcePhotos,
     };
     return { productionData, manifest, archivePhotos };
@@ -1320,6 +1349,10 @@ export function AdminStudio() {
 
   const copyProductionJson = async () => {
     if (!order) return;
+    if (!selectedConcept) {
+      setError("お客様が選んだ物語案を確認してから制作用データを作成してください。");
+      return;
+    }
     const exportData = buildProductionExport();
     if (!exportData) return;
     try {
@@ -1337,6 +1370,10 @@ export function AdminStudio() {
   const downloadProductionBundle = async () => {
     const exportData = buildProductionExport();
     if (!order || !exportData || sourceAssets.length === 0) return;
+    if (!selectedConcept) {
+      setError("お客様が選んだ物語案を確認してから制作用データをダウンロードしてください。");
+      return;
+    }
     setExportingBundle(true);
     setExportProgress(`写真を準備しています（0/${sourceAssets.length}）`);
     setError("");
@@ -2817,7 +2854,8 @@ export function AdminStudio() {
                           disabled={
                             saving ||
                             exportingBundle ||
-                            sourceAssets.length === 0
+                            sourceAssets.length === 0 ||
+                            !selectedConcept
                           }
                           onClick={copyProductionJson}
                         >
@@ -2829,7 +2867,8 @@ export function AdminStudio() {
                           disabled={
                             saving ||
                             exportingBundle ||
-                            sourceAssets.length === 0
+                            sourceAssets.length === 0 ||
+                            !selectedConcept
                           }
                           onClick={downloadProductionBundle}
                         >
@@ -2844,6 +2883,14 @@ export function AdminStudio() {
                         <span aria-hidden="true" />
                         {exportProgress}
                       </p>
+                    )}
+                    {!selectedConcept && (
+                      <aside className="admin-operation-note warning">
+                        <strong>選択された物語案がまだありません。</strong>
+                        <span>
+                          お客様がA/B案を選ぶと、タイトル・トーン・概要・5つの場面を含む制作用データをダウンロードできます。
+                        </span>
+                      </aside>
                     )}
                     <aside className="admin-operation-note strong">
                       <strong>標準JSONと物語別フォルダを一緒に作ります。</strong>
