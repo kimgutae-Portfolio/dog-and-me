@@ -1291,7 +1291,7 @@ export function StudioClient() {
                         !canOperateOrder ||
                         !consentCurrent
                       }
-                      onClick={startStripeCheckout}
+                      onClick={() => void startStripeCheckout()}
                     >
                       {!APPLICATIONS_OPEN
                         ? "お支払い受付は準備中"
