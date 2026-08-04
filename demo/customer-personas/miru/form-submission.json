@@ -1,0 +1,257 @@
+{
+  "schema_version": "wan-memory-demo-persona-2.0",
+  "form_snapshot": "2026-07-31",
+  "synthetic_demo": true,
+  "synthetic_disclosure": "이 주문과 사진은 실제 고객 자료가 아닌 WAN MEMORY 테스트용 가상 페르소나입니다.",
+  "story_count": 5,
+  "persona": {
+    "customer_name": "鈴木 奈緒（架空）",
+    "customer_age_range": "30代",
+    "region": "神奈川県横浜市",
+    "email": "miru-demo@example.com",
+    "relationship_context": "2026年1月に保護団体からミルを迎え、一人と一頭で暮らし始めた。"
+  },
+  "form": {
+    "pet_name": "ミル",
+    "name_kana": "みる",
+    "breed": "マルチーズ",
+    "age_text": "推定3歳",
+    "personality": [
+      "甘えん坊",
+      "おだやか",
+      "ちょっぴり頑固"
+    ],
+    "message_to_pet": "ミルへ。家族になってくれてありがとう。花びらも波の音も、ミルと一緒に見るとはじめての宝物になります。これからも急がず、ミルの歩幅でいろいろな季節を見つけに行こうね。",
+    "reference_photos": {
+      "primary_face_photo": "photo-01",
+      "primary_body_photo": "photo-02",
+      "side_tail_photo": "photo-03"
+    },
+    "fixed_production_settings": {
+      "purpose": "いまを残す",
+      "style": "実写に近い愛犬と、やわらかな絵画表現",
+      "aspect_ratio": "16:9 横型",
+      "narration": "ナレーションなし",
+      "bgm": "おまかせ"
+    },
+    "consents": {
+      "terms_and_privacy": true,
+      "photo_rights_and_people_handling": true,
+      "external_ai_processing": true,
+      "finish_expression_acknowledged": true,
+      "terms_version": "2026-07-29-style-v2",
+      "privacy_version": "2026-07-27",
+      "ai_notice_version": "2026-07-29-style-v2",
+      "photo_rights_version": "2026-07-25-photo-people-v2",
+      "people_policy_version": "2026-07-25-people-policy-v2"
+    }
+  },
+  "memories": [
+    {
+      "client_key": "memory-miru-01",
+      "sort_order": 1,
+      "title": "家族になって、はじめての春",
+      "when_text": "2026年4月",
+      "location": "家の近くの川沿いの桜道",
+      "description": "家族になって三か月ほどたった春、ミルと初めて桜の道を歩きました。風で花びらが動くたびに足を止め、片方の前足を上げたまま不思議そうに見上げてから、私の顔を確かめるように振り返った姿が心に残っています。",
+      "photo_ids": [
+        "photo-04"
+      ]
+    },
+    {
+      "client_key": "memory-miru-02",
+      "sort_order": 2,
+      "title": "小さな波に出会った日",
+      "when_text": "2026年7月",
+      "location": "鎌倉の静かな海岸",
+      "description": "朝の涼しい時間に、ミルを初めて海へ連れて行きました。波の音を聞くと一度立ち止まり、小さな波が前足に触れると少しだけ後ろへ体を引いて、白い泡が戻っていく様子をじっと見つめていました。",
+      "photo_ids": [
+        "photo-05"
+      ]
+    },
+    {
+      "client_key": "memory-miru-03",
+      "sort_order": 3,
+      "title": "海から帰って眠った夕方",
+      "when_text": "初めて海へ行った日の夕方",
+      "location": "自宅のリビング",
+      "description": "海から帰って足を洗うと、ミルは窓辺のラグまでゆっくり歩き、たたんだタオルのそばで前足に顔をのせて眠りました。初めての場所では慎重だったミルが、家に戻って安心しきった顔を見せてくれた大切な夕方です。",
+      "photo_ids": [
+        "photo-06"
+      ]
+    },
+    {
+      "client_key": "memory-miru-04",
+      "sort_order": 4,
+      "title": "近所の道を覚えた日",
+      "when_text": "2026年8月",
+      "location": "家の近くの静かな路地",
+      "description": "雨上がりの朝、ミルと家の近くをゆっくり歩きました。濡れた石垣の葉を眺めながら何度も振り返り、少しずつ自分の道として覚えていくような姿が可愛くて、いつもの散歩が新しい思い出になりました。",
+      "photo_ids": [
+        "photo-07"
+      ]
+    },
+    {
+      "client_key": "memory-miru-05",
+      "sort_order": 5,
+      "title": "窓辺のいつもの朝",
+      "when_text": "2026年8月のある朝",
+      "location": "自宅の窓辺",
+      "description": "朝の光がカーテンのすき間から入ると、ミルは窓辺に座って外の気配を静かに聞いていました。特別なことのない時間なのに、家族になった今の安心が表情ににじんでいて、何度も見返したくなる朝の一枚です。",
+      "photo_ids": [
+        "photo-08"
+      ]
+    }
+  ],
+  "photos": [
+    {
+      "id": "photo-01",
+      "path": "photos/01-primary-face-home.png",
+      "roles": [
+        "primary_face_reference"
+      ],
+      "contains_people": false,
+      "operator_note": "両目、目の間隔、鼻、短い口元、垂れ耳が最も鮮明。顔の最優先基準。"
+    },
+    {
+      "id": "photo-02",
+      "path": "photos/02-primary-body-home.png",
+      "roles": [
+        "primary_body_reference"
+      ],
+      "contains_people": false,
+      "operator_note": "頭から四本の足先、体格、毛の長さ、しっぽまで確認できる全身基準。"
+    },
+    {
+      "id": "photo-03",
+      "path": "photos/03-side-tail-neighborhood.png",
+      "roles": [
+        "side_tail_reference"
+      ],
+      "contains_people": false,
+      "operator_note": "横向きの胴体比率と、背中の上へ高くカーブするしっぽの基準。"
+    },
+    {
+      "id": "photo-04",
+      "path": "photos/04-first-spring-cherry-path.png",
+      "roles": [
+        "memory_01",
+        "film_mood_first_spring"
+      ],
+      "contains_people": false,
+      "operator_note": "桜道で花びらを見上げ、片方の前足を上げた動き。首輪とタグは一つずつ。"
+    },
+    {
+      "id": "photo-05",
+      "path": "photos/05-first-sea-wave.png",
+      "roles": [
+        "memory_02",
+        "film_mood_first_sea"
+      ],
+      "contains_people": false,
+      "operator_note": "波打ち際で泡を見下ろす場面。前足の先だけ少し濡れ、全身としっぽが見える。"
+    },
+    {
+      "id": "photo-06",
+      "path": "photos/06-after-sea-nap.png",
+      "roles": [
+        "memory_03",
+        "common_ending_reference"
+      ],
+      "contains_people": false,
+      "operator_note": "帰宅後の静かな日常場面。ラグの上で前足に顔をのせて眠っている。"
+    },
+    {
+      "id": "photo-07",
+      "path": "photos/07-first-neighborhood-walk.png",
+      "roles": [
+        "memory_04"
+      ],
+      "contains_people": false,
+      "operator_note": "雨上がりの近所道で振り返る場面。濡れた路面と緑の石垣が、日常の新しい発見を表す。"
+    },
+    {
+      "id": "photo-08",
+      "path": "photos/08-window-morning.png",
+      "roles": [
+        "memory_05",
+        "common_ending_reference"
+      ],
+      "contains_people": false,
+      "operator_note": "同じ窓辺で朝の光を受けて座る場面。穏やかな日常の結末とキャラクターの顔基準を兼ねる。"
+    }
+  ],
+  "identity_profile_for_test": {
+    "stable_traits": [
+      "少し離れて見える丸い濃い茶色の目",
+      "小さな黒い鼻と、短く丸い口元",
+      "先端だけ淡いアイボリーの柔らかな垂れ耳",
+      "約3kgの小さく引き締まった体格",
+      "背中の上へ高くカーブする白いふさふさのしっぽ",
+      "細いダスティブルーの首輪と、無地の小さな丸い銀色タグ"
+    ],
+    "must_not_change": [
+      "目の間隔と大きさ",
+      "鼻と口元の比率",
+      "耳の形と色",
+      "毛色と現在の毛の長さ",
+      "体格と脚の長さ",
+      "しっぽの形",
+      "首輪やタグの数"
+    ]
+  },
+  "film_mood_tests": [
+    {
+      "slug": "first-spring",
+      "display_title": "はじめての春",
+      "homepage_label": "マルチーズ・推定3歳",
+      "center_memory": "memory-miru-01",
+      "opening": "朝の窓辺にやわらかな光が入り、ミルが目を開ける。白い毛の輪郭から桜道へつなぐ。",
+      "middle": "花びらを見上げる春を長めに描き、波に戸惑う夏は『次の季節にも増えた、はじめて』として短く重ねる。",
+      "ending": "海から帰った夕方、安心して眠るミルの呼吸と、そばに置かれた青いタオルで閉じる。",
+      "mood_keywords": [
+        "淡い桜色",
+        "朝の自然光",
+        "家族になった最初の季節",
+        "小さな発見",
+        "静かな幸福"
+      ],
+      "card_poster_photo": "photo-04",
+      "suggested_title_copy": "はじめての春",
+      "suggested_subcopy": "家族になって、最初に見つけた季節。"
+    },
+    {
+      "slug": "first-sea",
+      "display_title": "はじめての海",
+      "homepage_label": "マルチーズ・推定3歳",
+      "center_memory": "memory-miru-02",
+      "opening": "静かな波音と広い水平線の前で、ミルが足を止める。最初の一歩までを丁寧に見せる。",
+      "middle": "前足に触れる波と慎重な表情を中心に、春の花びらを短い回想として差し込み、家族と増えた『はじめて』をつなぐ。",
+      "ending": "帰宅後、窓辺で眠るミルへ寄り、波音が穏やかな寝息へ変わって終わる。",
+      "mood_keywords": [
+        "淡い青",
+        "広い水平線",
+        "波への戸惑い",
+        "慎重な一歩",
+        "冒険のあとの安心"
+      ],
+      "card_poster_photo": "photo-05",
+      "suggested_title_copy": "はじめての海",
+      "suggested_subcopy": "小さな波に出会った、夏の一日。"
+    }
+  ],
+  "expected_first_gpt_stage": {
+    "instruction": "写真と申込内容の分析だけを行い、まだ映像構成案やRunwayプロンプトは作成しない。基準写真3枚と、思い出ごとに分かれた参考写真3枚を別の役割として扱う。",
+    "required_sections": [
+      "observed_facts",
+      "unknown_or_uncertain",
+      "photo_roles",
+      "representative_reference_photos",
+      "identity_profile",
+      "production_risks",
+      "customer_questions",
+      "can_proceed",
+      "people_photo_assessment"
+    ]
+  }
+}
