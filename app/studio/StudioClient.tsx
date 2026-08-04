@@ -508,6 +508,8 @@ export function StudioClient() {
           : item,
       ),
     );
+    setNotice("選択した物語案を保存しました。決済画面を準備しています。");
+    await startStripeCheckout(true);
     setConceptReceipt({ slot, title: conceptTitle });
     setConfirmingConcept(false);
   };
@@ -759,7 +761,7 @@ export function StudioClient() {
     setAcceptingConsent(false);
   };
 
-  const startStripeCheckout = async () => {
+  const startStripeCheckout = async (fromConceptSelection = false) => {
     if (!APPLICATIONS_OPEN) {
       setError("現在、お支払い受付は準備中です。受付開始までお待ちください。");
       return;
@@ -767,7 +769,9 @@ export function StudioClient() {
     if (
       !order ||
       !canOperateOrder ||
-      order.payment_status !== "invoice_sent" ||
+      (!fromConceptSelection && order.payment_status !== "invoice_sent") ||
+      (fromConceptSelection &&
+        !["pending", "invoice_sent"].includes(order.payment_status)) ||
       !consentCurrent ||
       startingPayment
     )

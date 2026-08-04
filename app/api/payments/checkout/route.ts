@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { hasCurrentConsent } from "../../../lib/consent";
+import { sendPaymentRequestNotification } from "../../../lib/email/messageNotification";
 import { APPLICATIONS_OPEN, DEFAULT_SITE_ORIGIN } from "../../../lib/site";
 import { getStripeServerClient } from "../../../lib/stripe-server";
 import type { MemoryOrder } from "../../../lib/supabase/types";
@@ -88,9 +89,55 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "order_not_found" }, { status: 404 });
   }
 
-  const order = orderData as MemoryOrder;
+  let order = orderData as MemoryOrder;
   if (order.payment_status === "paid") {
     return NextResponse.json({ paid: true });
+  }
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  if (order.payment_status === "pending") {
+    if (order.status !== "concept_selected" || !order.selected_concept_slot) {
+      return NextResponse.json({ error: "order_not_ready" }, { status: 409 });
+    }
+    if (!hasCurrentConsent(order)) {
+      return NextResponse.json({ error: "consent_required" }, { status: 409 });
+    }
+    const updatedAt = new Date().toISOString();
+    const { error: prepareError } = await admin
+      .from("orders")
+      .update({ payment_status: "invoice_sent", updated_at: updatedAt })
+      .eq("id", order.id)
+      .eq("payment_status", "pending");
+    if (prepareError) {
+      console.error("Automatic payment preparation failed", prepareError);
+      return NextResponse.json(
+        { error: "payment_preparation_failed" },
+        { status: 500 },
+      );
+    }
+    await admin.from("order_events").insert({
+      order_id: order.id,
+      actor_id: null,
+      event_type: "stripe_payment_requested",
+      payload: { source: "customer_concept_selection" },
+    });
+    const refreshed = await admin
+      .from("orders")
+      .select("*")
+      .eq("id", order.id)
+      .single();
+    if (refreshed.data) order = refreshed.data as MemoryOrder;
+    const emailResult = await sendPaymentRequestNotification({
+      to: authData.user.email ?? "",
+      petName: order.pet_name,
+      amount: order.quoted_price,
+      studioUrl: `${(process.env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN).replace(/\/+$/, "")}/studio?order=${encodeURIComponent(order.id)}#payment`,
+      idempotencyKey: `payment-request-${order.id}-${order.updated_at}`,
+    });
+    if (!emailResult.sent) {
+      console.warn("Automatic payment email was not sent", emailResult.reason);
+    }
   }
   if (order.payment_status !== "invoice_sent") {
     return NextResponse.json(
@@ -118,9 +165,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
   const { data: activeSession, error: activeSessionError } = await admin
     .from("stripe_checkout_sessions")
     .select("*")
