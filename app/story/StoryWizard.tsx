@@ -547,10 +547,18 @@ export function StoryWizard() {
     event: ChangeEvent<HTMLInputElement>,
     memoryKey: string,
   ) => {
-    const files = Array.from(event.target.files ?? []);
+    const selectedFiles = Array.from(event.target.files ?? []);
+    // Keep the story flow deliberate: one scene photo is added per picker
+    // action, so the customer can see exactly which story it belongs to.
+    const files = selectedFiles.slice(0, 1);
     event.target.value = "";
     const memory = draft.memories.find((item) => item.clientKey === memoryKey);
     if (!memory || !files.length) return;
+    if (selectedFiles.length > 1) {
+      setPhotoSelectionNotice(
+        "写真は1枚ずつ追加します。最初に選んだ1枚だけを保存しています。",
+      );
+    }
     const room = MAX_PHOTOS_PER_MEMORY - memory.photoKeys.length;
     if (room <= 0) {
       setPhotoSelectionNotice(
@@ -1396,8 +1404,8 @@ export function StoryWizard() {
                                   <strong>写真を追加</strong>
                                   <small>
                                     {memory.photoKeys.length === 0
-                                      ? "まず1枚だけ選んでください"
-                                      : "必要なときだけ補助写真を追加"}
+                                      ? "まず1枚を選んでください"
+                                      : "必要なときだけ1枚ずつ追加"}
                                   </small>
                                 </label>
                               )}
@@ -1407,7 +1415,6 @@ export function StoryWizard() {
                               className="reference-slot-input"
                               type="file"
                               accept={PHOTO_INPUT_ACCEPT}
-                              multiple
                               onChange={(event) =>
                                 handleMemoryPhotoUpload(event, memory.clientKey)
                               }

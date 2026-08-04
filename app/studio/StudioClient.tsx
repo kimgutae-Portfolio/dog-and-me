@@ -523,9 +523,11 @@ export function StudioClient() {
           (a.memory_photo_sort_order ?? 99) -
           (b.memory_photo_sort_order ?? 99),
       );
+    // Add one image per action so the operator/customer can verify the
+    // story assignment before adding another supporting photo.
     const files = Array.from(event.target.files ?? []).slice(
       0,
-      Math.max(0, 3 - existingPhotos.length),
+      Math.max(0, Math.min(1, 3 - existingPhotos.length)),
     );
     if (!files.length) return;
     setUploading(true);
@@ -1873,7 +1875,6 @@ export function StudioClient() {
                               <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                                multiple
                                 disabled={uploading}
                                 onChange={(event) => addPhotos(event, memory)}
                               />
