@@ -45,7 +45,7 @@ export function LivePriceCard() {
         <span>
           {APPLICATIONS_OPEN
             ? pricing.campaign_active
-              ? `先着${pricing.launch_limit}組 · 残り${pricing.launch_remaining}組`
+              ? `初期${pricing.launch_limit}組限定 · モニター価格 · 残り${pricing.launch_remaining}組`
               : "通常受付"
             : "正式公開準備中"}
         </span>
@@ -68,7 +68,7 @@ export function LivePriceCard() {
         {!APPLICATIONS_OPEN
           ? "受付開始時の価格と制作枠は、正式公開のお知らせとあわせてご案内します。"
           : pricing.campaign_active
-          ? `初期${pricing.launch_limit}組の受付終了後は、通常価格 ¥${formatYen(pricing.regular_price)}（税込）になります。`
+          ? `モニター受付終了後は ¥${formatYen(pricing.regular_price)}（税込）になります。`
           : "受付時に内容と納期をご確認いただき、制作を開始します。"}
       </p>
       <ul>
