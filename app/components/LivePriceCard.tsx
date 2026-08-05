@@ -11,6 +11,7 @@ type Pricing = {
   current_price: number;
   regular_price: number;
   launch_limit: number;
+  launch_used: number;
   launch_remaining: number;
   campaign_active: boolean;
 };
@@ -19,6 +20,7 @@ const fallback: Pricing = {
   current_price: MEMORY_FILM_PRICING.launchPrice,
   regular_price: MEMORY_FILM_PRICING.regularPrice,
   launch_limit: MEMORY_FILM_PRICING.launchLimit,
+  launch_used: 0,
   launch_remaining: MEMORY_FILM_PRICING.launchLimit,
   campaign_active: true,
 };
@@ -45,7 +47,9 @@ export function LivePriceCard() {
         <span>
           {APPLICATIONS_OPEN
             ? pricing.campaign_active
-              ? `初期${pricing.launch_limit}組限定 · モニター価格 · 残り${pricing.launch_remaining}組`
+              ? pricing.launch_used >= 3
+                ? `初期${pricing.launch_limit}組限定 · モニター価格 · 残り${pricing.launch_remaining}組`
+                : `初期${pricing.launch_limit}組限定 · モニター受付中`
               : "通常受付"
             : "正式公開準備中"}
         </span>
