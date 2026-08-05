@@ -19,7 +19,7 @@ const BUCKET = "order-assets";
 const BGM_DIR = path.join(process.cwd(), "assets", "bgm");
 const ASSEMBLE_SCRIPT = path.join(process.cwd(), "scripts", "assemble_film.py");
 const PROFESSIONAL_STORYBOOK_DURATION_SECONDS =
-  3 + 5 * 7 + 7 - (0.65 + 4 * 0.95 + 0.75);
+  3 + 8 * 7 + 7 - (0.65 + 4 * 0.95 + 3 * 0.35 + 0.75);
 
 type RequestItem = { clipAssetId: string; role: RenderClipRole };
 
@@ -30,6 +30,7 @@ type ClipRow = {
   storage_path: string;
   scene_sort_order: number;
   source_still_asset_id: string | null;
+  render_take: number;
 };
 
 function ndjson(event: RenderProgressEvent) {
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
     }
     items.push({ clipAssetId: item.clipAssetId, role: item.role });
   }
-  if (items.length !== 5) {
+  if (items.length !== 8) {
     return Response.json({ error: "invalid_item_count" }, { status: 400 });
   }
   if (
@@ -229,10 +230,39 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
+  const { data: orderSettings, error: orderSettingsError } = await supabase
+    .from("orders")
+    .select("expanded_story_sort_orders")
+    .eq("id", orderId)
+    .maybeSingle();
+  const expandedStorySortOrders = Array.isArray(
+    orderSettings?.expanded_story_sort_orders,
+  )
+    ? (orderSettings.expanded_story_sort_orders as number[])
+    : [];
+  if (
+    orderSettingsError ||
+    expandedStorySortOrders.length !== 3 ||
+    new Set(expandedStorySortOrders).size !== 3 ||
+    expandedStorySortOrders.some((value) => value < 0 || value > 4)
+  ) {
+    return Response.json(
+      { error: "expanded_story_selection_missing" },
+      { status: 400 },
+    );
+  }
+  const expandedStorySet = new Set(expandedStorySortOrders);
+  const expectedSlots = Array.from({ length: 5 }, (_, storySortOrder) => [
+    { storySortOrder, renderTake: 1 },
+    ...(expandedStorySet.has(storySortOrder)
+      ? [{ storySortOrder, renderTake: 2 }]
+      : []),
+  ]).flat();
+
   const { data: clipRows, error: clipError } = await supabase
     .from("assets")
     .select(
-      "id, order_id, category, storage_path, scene_sort_order, source_still_asset_id",
+      "id, order_id, category, storage_path, scene_sort_order, source_still_asset_id, render_take",
     )
     .eq("order_id", orderId)
     .eq("category", "render_clip");
@@ -254,19 +284,21 @@ export async function POST(request: NextRequest) {
         : index === items.length - 1
           ? "ending"
           : "memory";
+    const expectedSlot = expectedSlots[index];
     if (
       item.role !== expectedRole ||
       clip.category !== "render_clip" ||
       !clip.source_still_asset_id ||
-      clip.scene_sort_order !== index
+      clip.scene_sort_order !== expectedSlot.storySortOrder ||
+      clip.render_take !== expectedSlot.renderTake
     ) {
       return Response.json({ error: "clip_missing_still" }, { status: 400 });
     }
     ordered.push(clip);
   }
 
-  const stillIds = ordered.map(
-    (clip) => clip.source_still_asset_id as string,
+  const stillIds = Array.from(
+    new Set(ordered.map((clip) => clip.source_still_asset_id as string)),
   );
   const { data: stillRows, error: stillError } = await supabase
     .from("assets")
@@ -355,6 +387,11 @@ export async function POST(request: NextRequest) {
         const memoryClips = ordered
           .slice(1, -1)
           .map((_, index) => String(index + 2));
+        const continuationClips = ordered
+          .map((clip, index) =>
+            clip.render_take === 2 ? String(index + 1) : null,
+          )
+          .filter((value): value is string => Boolean(value));
         const args = [
           "--order-dir",
           workDir,
@@ -364,6 +401,8 @@ export async function POST(request: NextRequest) {
           ...(memoryClips.length ? memoryClips : ["1"]),
           "--ending-clip",
           String(ordered.length),
+          "--continuation-clips",
+          ...continuationClips,
           "--kicker",
           kicker,
           "--title",
@@ -411,8 +450,9 @@ export async function POST(request: NextRequest) {
           throw new Error(`保存に失敗しました: ${uploadError.message}`);
         uploadedPath = storagePath;
 
-        // Five story clips are gently paced to seven seconds and turn directly
-        // into one another. No bridge background remains on screen.
+        // Five chapters use eight story clips: exactly three selected chapters
+        // have a second action. Same-chapter actions dissolve gently; only
+        // chapter boundaries receive the curved page turn.
         const durationSeconds = PROFESSIONAL_STORYBOOK_DURATION_SECONDS;
         const { data: assetId, error: registerError } = await supabase.rpc(
           "admin_register_assembled_film",

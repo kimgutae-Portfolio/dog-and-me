@@ -197,11 +197,17 @@ const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v1.0
   "story_caption": "고객 확인용 일본어 한 문장"
 }`;
 
-const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v2.0
+const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v3.0
 
 첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
 
-이야기 이미지 5장을 위한 Runway 프롬프트를 작성한다. 프롬프트 문장은 Runway가 명확하게 이해하도록 영어로 작성한다. 연결 배경 이미지와 연결 영상은 만들지 않는다. 최종 편집에서 한 이야기 페이지가 휘어지며 다음 이야기 페이지를 직접 드러낸다.
+order.json의 expanded_stories에 지정된 중요한 이야기 3개는 같은 승인 이미지로 서로 이어지는 프롬프트를 2개씩 만들고, 나머지 이야기 2개는 프롬프트를 1개씩 만든다. 총 8개의 Gen-4 프롬프트를 Runway가 명확하게 이해하도록 영어로 작성한다. 연결 배경 이미지와 연결 영상은 만들지 않는다.
+
+중요 이야기의 2개 프롬프트 규칙
+- take 1은 사건을 시작하는 작은 행동, take 2는 그 사건을 이어서 마무리하는 다른 행동으로 설계한다.
+- 두 take 모두 동일한 승인 이미지를 입력으로 사용하며 구도와 강아지 정체성을 바꾸지 않는다.
+- take 2가 take 1을 그대로 반복하거나 처음 상태로 되돌아가는 느낌이 나지 않게 한다.
+- 최종 편집에서는 같은 이야기의 take 1→2를 짧은 디졸브로 연결하고, 서로 다른 이야기 사이에만 곡면 책장 넘김을 사용한다.
 
 핵심 연출 목표
 - 다섯 장면이 모두 같은 정지 자세처럼 보이지 않게 한다.
@@ -211,7 +217,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v2.0
 
 이야기별 모션 설계
 1. 먼저 각 승인 이미지의 자세를 standing, walking, sitting, lying 중 하나로 판단한다.
-2. 다섯 이야기마다 서로 다른 primary_dog_action을 하나씩 정한다. 같은 head tilt나 같은 blink를 모든 장면에 반복하지 않는다.
+2. 총 8개 take마다 이야기 흐름에 맞는 primary_dog_action을 하나씩 정한다. 같은 head tilt나 같은 blink를 반복하지 않는다.
 3. primary action 외에는 secondary motion을 최대 2개만 사용한다. 작은 호흡, 귀 한쪽의 짧은 반응, 코로 냄새 맡기, 꼬리 끝의 짧은 흔들림, 털끝의 바람 반응처럼 자연스러운 움직임을 고른다.
 4. 승인 이미지에 보이는 환경 요소 하나를 이야기의 반응으로 움직인다. 예: 꽃잎이 지나가자 코를 살짝 들기, 잔물결이 닿자 앞발에 체중을 옮기기, 커튼 빛이 움직이자 귀가 짧게 반응하기.
 5. 5초 안에 시작-행동-안정의 작은 서사를 만든다.
@@ -241,14 +247,15 @@ Runway 규칙
 - 화면 비율은 옵션에서 설정하므로 프롬프트에 16:9를 쓰지 않는다.
 - 승인된 강아지의 얼굴, 체형, 눈, 귀, 주둥이, 털, 꼬리, 목줄을 바꾸지 않는다.
 - 이미지에 없는 사람, 동물, 사물을 생성하지 않는다.
-- 카메라는 기본적으로 고정한다. 이야기상 필요한 경우 다섯 장면 중 최대 두 장면에서만 매우 느린 push-in 또는 짧은 lateral drift 하나를 사용한다.
+- 카메라는 기본적으로 고정한다. 이야기상 필요한 경우 8개 take 중 최대 두 take에서만 매우 느린 push-in 또는 짧은 lateral drift 하나를 사용한다.
 - 갑작스러운 줌, 회전, 흔들림, 달리기, 점프, 신체 생성·소실, 다리 교차, 꼬리 복제, 얼굴 변형을 금지한다.
 - 한 장면에 primary dog action 1개, secondary motion 최대 2개, environment motion 1개만 사용한다.
 - 페이지 넘김과 자막은 편집 단계에서 추가하므로 프롬프트에 넣지 않는다.
 
-다섯 장면 전체 다양성 검수
-- primary_dog_action이 다섯 장면에서 실제로 서로 다른가?
+전체 8개 take 다양성 검수
+- primary_dog_action이 8개 take에서 실제로 서로 다른가?
 - 모든 장면이 단순히 가만히 서서 blink 또는 head tilt만 반복하고 있지 않은가?
+- 중요한 이야기 3개에서 take 1의 시작과 take 2의 마무리가 하나의 작은 사건처럼 이어지는가?
 - 각 행동이 해당 이미지의 자세와 보이는 신체 구조로 가능한가?
 - story text의 내용이 강아지 행동과 환경 반응에 반영됐는가?
 - 눈동자 단독 움직임 없이도 감정이 읽히는가?
@@ -258,6 +265,8 @@ Runway 규칙
 {
   "gen4_story_prompts":[{
     "story_number":1,
+    "take":1,
+    "chapter_role":"single | setup | continuation",
     "title":"",
     "pose_assessment":"standing | walking | sitting | lying",
     "story_beat":"",
@@ -271,7 +280,7 @@ Runway 규칙
   }]
 }
 
-gen4_story_prompts 배열은 이야기 5개를 빠짐없이 포함한다.`;
+gen4_story_prompts 배열은 이야기 5개를 빠짐없이 포함하며 총 8개여야 한다. expanded_stories로 선택된 3개 이야기만 take 1과 take 2를 갖고, 나머지는 take 1만 갖는다.`;
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
 >;
@@ -429,6 +438,7 @@ export function AdminStudio() {
     Record<string, number>
   >({});
   const [clipInputKey, setClipInputKey] = useState(0);
+  const [expandedStoryDraft, setExpandedStoryDraft] = useState<number[]>([]);
   const [bgmTracks, setBgmTracks] = useState<string[]>([]);
   const [renderAvailable, setRenderAvailable] = useState(false);
   const [filmTitle, setFilmTitle] = useState("");
@@ -791,13 +801,21 @@ export function AdminStudio() {
       (asset, index) =>
         asset.scene_sort_order === index && Boolean(asset.story_caption?.trim()),
     );
+  const expandedStorySortOrders = useMemo(
+    () =>
+      Array.isArray(order?.expanded_story_sort_orders)
+        ? [...order.expanded_story_sort_orders].sort((a, b) => a - b)
+        : [],
+    [order?.expanded_story_sort_orders],
+  );
   const runwayExportReady = Boolean(
     sourceExportReady &&
       selectedConcept &&
       order?.payment_status === "paid" &&
       order?.stills_approved_at &&
       sceneStills.length === 5 &&
-      allSceneCaptionsReady,
+      allSceneCaptionsReady &&
+      expandedStorySortOrders.length === 3,
   );
   const reviewVideos = useMemo(
     () => assets.filter((asset) => asset.category === "review_video"),
@@ -814,6 +832,7 @@ export function AdminStudio() {
         .sort(
           (a, b) =>
             a.scene_sort_order - b.scene_sort_order ||
+            (a.render_take ?? 1) - (b.render_take ?? 1) ||
             a.created_at.localeCompare(b.created_at),
         ),
     [assets],
@@ -825,19 +844,37 @@ export function AdminStudio() {
         .sort((a, b) => b.created_at.localeCompare(a.created_at)),
     [assets],
   );
-  const clipByStillId = useMemo(
+  const clipByStillAndTake = useMemo(
     () =>
       new Map(
-        renderClips.map((clip) => [clip.source_still_asset_id ?? "", clip]),
+        renderClips.map((clip) => [
+          `${clip.source_still_asset_id ?? ""}:${clip.render_take ?? 1}`,
+          clip,
+        ]),
       ),
     [renderClips],
   );
+  const requiredRenderSlots = useMemo(
+    () =>
+      sceneStills.flatMap((still) => [
+        { still, take: 1 as const },
+        ...(expandedStorySortOrders.includes(still.scene_sort_order)
+          ? [{ still, take: 2 as const }]
+          : []),
+      ]),
+    [expandedStorySortOrders, sceneStills],
+  );
   const allRenderClipsReady =
     sceneStills.length === 5 &&
-    renderClips.length === 5 &&
-    sceneStills.every((still) => clipByStillId.has(still.id));
-  const assemblyClipCount = renderClips.length;
-  const estimatedSeconds = 40;
+    expandedStorySortOrders.length === 3 &&
+    requiredRenderSlots.length === 8 &&
+    requiredRenderSlots.every(({ still, take }) =>
+      clipByStillAndTake.has(`${still.id}:${take}`),
+    );
+  const assemblyClipCount = requiredRenderSlots.filter(({ still, take }) =>
+    clipByStillAndTake.has(`${still.id}:${take}`),
+  ).length;
+  const estimatedSeconds = 60;
   const openMessages = useMemo(
     () =>
       messages.filter(
@@ -963,6 +1000,11 @@ export function AdminStudio() {
       setStillCaptions({});
       setStillInputKeys({});
       setClipInputKey((current) => current + 1);
+      setExpandedStoryDraft(
+        Array.isArray(order.expanded_story_sort_orders)
+          ? [...order.expanded_story_sort_orders].sort((a, b) => a - b)
+          : [],
+      );
       setFilmTitle(`${order.pet_name}の、小さなものがたり`);
       // The customer's own words to their dog are the right starting point for
       // the ending card; the operator edits from there.
@@ -1291,6 +1333,9 @@ export function AdminStudio() {
           position: photo.story_photo_position,
           archive_path: photo.archive_path,
         }));
+      const expandedMotion = expandedStorySortOrders.includes(
+        memory.sort_order - 1,
+      );
       return {
         id: storyId,
         number: memory.sort_order,
@@ -1308,9 +1353,13 @@ export function AdminStudio() {
         main_motif: null,
         main_motif_instruction:
           "Derive one visual motif from this story without adding customer facts.",
+        expanded_motion: expandedMotion,
+        runway_clip_count: expandedMotion ? 2 : 1,
         output: {
           page_image_filename: `${storyId}.png`,
-          runway_clip_filename: `${storyId}-video.mp4`,
+          runway_clip_filenames: expandedMotion
+            ? [`${storyId}-take-1.mp4`, `${storyId}-take-2.mp4`]
+            : [`${storyId}-take-1.mp4`],
           runway_model: "gen4",
           runway_duration_seconds: 5,
         },
@@ -1348,6 +1397,10 @@ export function AdminStudio() {
       transitions,
       output_plan: {
         story_count: stories.length,
+        expanded_story_count: expandedStorySortOrders.length,
+        expanded_story_sort_orders: expandedStorySortOrders,
+        runway_clip_count:
+          stories.length + expandedStorySortOrders.length,
         story_model: "gen4",
         story_duration_seconds: 5,
         transition_count: 0,
@@ -1611,7 +1664,9 @@ export function AdminStudio() {
   const downloadRunwayBundle = async () => {
     const exportData = buildProductionExport();
     if (!order || !exportData || !runwayExportReady) {
-      setError("5枚の絵本ページをお客様が承認した後にダウンロードできます。");
+      setError(
+        "絵本ページの承認後、重要な物語を3つ選んで保存するとダウンロードできます。",
+      );
       return;
     }
     setExportingBundle(true);
@@ -1630,13 +1685,25 @@ export function AdminStudio() {
         style: exportData.productionData.style,
         selected_concept: exportData.productionData.selected_concept,
         stories: exportData.productionData.stories,
+        expanded_story_sort_orders: expandedStorySortOrders,
+        expanded_stories: sceneStills
+          .filter((still) =>
+            expandedStorySortOrders.includes(still.scene_sort_order),
+          )
+          .map((still) => ({
+            story_number: still.scene_sort_order + 1,
+            title: still.scene_title,
+            clip_count: 2,
+          })),
         output_plan: {
           story_count: 5,
+          runway_clip_count: 8,
+          expanded_story_count: 3,
           story_model: "gen4",
           story_duration_seconds: 5,
           transition_video_count: 0,
           final_editing:
-            "Direct curved page turn from each story clip to the next story clip. Do not create or insert bridge backgrounds.",
+            "Use a short dissolve between take 1 and take 2 of the same story. Use a direct curved page turn only between different stories. Do not create or insert bridge backgrounds.",
         },
         approved_at: order.stills_approved_at,
       };
@@ -1646,10 +1713,10 @@ export function AdminStudio() {
             "STEP 3 · 顧客承認後のRunway制作データです。",
             "1. order.jsonとapproved-pagesの5枚をCodexへ添付します。",
             "2. 02_PROMPT_RUNWAY.txtをそのまま依頼文として使います。",
-            "3. CodexがStory用Runwayプロンプト5本を作ります。接続背景や接続映像は作りません。",
-            "4. Story 5本には、画像の姿勢に合う異なる犬らしい主動作を1つずつ割り当てます。瞳だけを動かさず、頭・耳・呼吸・重心・尻尾で感情を表現します。",
-            "5. Story 5本をGen-4で各5秒制作します。",
-            "6. 完成した5本を管理画面の自動編集工程へ登録します。ページめくりは編集時に直接追加されます。",
+            "3. CodexがStory用Runwayプロンプトを合計8本作ります。重要な3物語は2本、残り2物語は1本です。接続背景や接続映像は作りません。",
+            "4. 重要な物語のtake 1とtake 2は、同じ絵本ページの中で小さな出来事が始まり、続いて終わるように設計します。",
+            "5. Story 8本をGen-4で各5秒制作します。",
+            "6. 完成した8本を管理画面の対応する1本目・2本目スロットへ登録します。同じ物語は短いディゾルブ、物語間はページめくりで自動編集されます。",
           ].join("\n"),
         ),
         [`${root}/02_PROMPT_RUNWAY.txt`]: strToU8(RUNWAY_PROMPT_REQUEST),
@@ -2087,7 +2154,58 @@ export function AdminStudio() {
     setSaving(false);
   };
 
-  const uploadRenderClip = async (still: OrderAsset, file: File) => {
+  const toggleExpandedStory = (sortOrder: number) => {
+    setError("");
+    setExpandedStoryDraft((current) => {
+      if (current.includes(sortOrder)) {
+        const still = sceneStills.find(
+          (asset) => asset.scene_sort_order === sortOrder,
+        );
+        if (still && clipByStillAndTake.has(`${still.id}:2`)) {
+          setError(
+            "この物語の2本目を削除してから、重要な物語の選択を外してください。",
+          );
+          return current;
+        }
+        return current.filter((value) => value !== sortOrder);
+      }
+      if (current.length >= 3) {
+        setError("重要な物語は3つまで選択できます。");
+        return current;
+      }
+      return [...current, sortOrder].sort((a, b) => a - b);
+    });
+  };
+
+  const saveExpandedStories = async () => {
+    if (!order || expandedStoryDraft.length !== 3 || saving) return;
+    setSaving(true);
+    setError("");
+    const { error: saveError } = await getSupabaseBrowserClient().rpc(
+      "admin_set_expanded_story_slots",
+      {
+        p_order_id: order.id,
+        p_sort_orders: expandedStoryDraft,
+      },
+    );
+    if (saveError) {
+      setError(
+        "重要な物語を保存できませんでした。2本目を登録済みの物語を外す場合は、先にそのクリップを削除してください。",
+      );
+    } else {
+      setNotice(
+        "重要な物語3つを保存しました。選んだ物語はRunwayクリップを2本ずつ制作します。",
+      );
+      await Promise.all([loadOrders(), loadDetails(order.id)]);
+    }
+    setSaving(false);
+  };
+
+  const uploadRenderClip = async (
+    still: OrderAsset,
+    take: 1 | 2,
+    file: File,
+  ) => {
     if (!order || !canRenderFilm) return;
     setSaving(true);
     setError("");
@@ -2100,7 +2218,7 @@ export function AdminStudio() {
         .replace(/[^a-z0-9]/g, "") || "mp4";
     // Operator namespace, never the customer's uid folder — see the note at the
     // top of supabase/migrations/202607280001_render_clips.sql.
-    const path = `admin/${order.id}/clips/render_clip-${crypto.randomUUID()}.${extension}`;
+    const path = `admin/${order.id}/clips/render_clip-${still.scene_sort_order + 1}-take-${take}-${crypto.randomUUID()}.${extension}`;
     const mimeType = file.type || "video/mp4";
     const { error: uploadError } = await supabase.storage
       .from("order-assets")
@@ -2111,7 +2229,7 @@ export function AdminStudio() {
       return;
     }
     const { error: registerError } = await supabase.rpc(
-      "admin_register_render_clip",
+      "admin_register_story_render_clip",
       {
         p_order_id: order.id,
         p_storage_path: path,
@@ -2119,6 +2237,7 @@ export function AdminStudio() {
         p_mime_type: mimeType,
         p_file_size: file.size,
         p_still_asset_id: still.id,
+        p_render_take: take,
       },
     );
     if (registerError) {
@@ -2130,7 +2249,9 @@ export function AdminStudio() {
       return;
     }
     setClipInputKey((current) => current + 1);
-    setNotice(`「${still.scene_title ?? "場面"}」のクリップを追加しました。`);
+    setNotice(
+      `「${still.scene_title ?? "場面"}」の${take}本目を追加しました。`,
+    );
     await loadDetails(order.id);
     setSaving(false);
   };
@@ -2166,7 +2287,9 @@ export function AdminStudio() {
   const startRender = async () => {
     if (!order || !canRenderFilm || rendering) return;
     if (!allRenderClipsReady) {
-      setError("物語クリップ5本をすべて登録してください。");
+      setError(
+        "重要な物語3つを選び、物語クリップ8本をすべて登録してください。",
+      );
       return;
     }
     if (!filmTitle.trim()) {
@@ -2183,14 +2306,14 @@ export function AdminStudio() {
     setRenderProgress("編集を準備しています…");
     const supabase = getSupabaseBrowserClient();
     const { data: sessionData } = await supabase.auth.getSession();
-    const items = sceneStills.map((still, index) => {
-      const storyClip = clipByStillId.get(still.id)!;
+    const items = requiredRenderSlots.map(({ still, take }, index) => {
+      const storyClip = clipByStillAndTake.get(`${still.id}:${take}`)!;
       return {
         clipAssetId: storyClip.id,
         role:
           index === 0
             ? ("intro" as const)
-            : index === sceneStills.length - 1
+            : index === requiredRenderSlots.length - 1
               ? ("ending" as const)
               : ("memory" as const),
       };
@@ -2763,7 +2886,7 @@ export function AdminStudio() {
                     <dl className="admin-story">
                       <div>
                         <dt>制作単位</dt>
-                        <dd>{memories.length}物語 · 物語ごとにRunway 1クリップ</dd>
+                        <dd>{memories.length}物語 · 重要な3物語は2クリップ</dd>
                       </div>
                       <div>
                         <dt>写真の使い方</dt>
@@ -3102,7 +3225,54 @@ export function AdminStudio() {
                       <article className={runwayExportReady ? "ready" : "locked"}>
                         <header><span>STEP 3</span><strong>Runway制作へ進む</strong></header>
                         <p>5枚の絵本ページを顧客が承認した後に使用します。</p>
-                        <small>内容：承認画像5枚、選択案、転換情報、Runway専用プロンプト</small>
+                        <small>内容：承認画像5枚、重要な3物語の指定、Gen-4用プロンプト8本</small>
+                        {order.stills_approved_at && sceneStills.length === 5 && (
+                          <div className="admin-expanded-story-picker">
+                            <strong>2本にする重要な物語を3つ選択</strong>
+                            <div>
+                              {sceneStills.map((still) => {
+                                const selected = expandedStoryDraft.includes(
+                                  still.scene_sort_order,
+                                );
+                                return (
+                                  <button
+                                    key={`expanded-${still.id}`}
+                                    type="button"
+                                    className={selected ? "selected" : ""}
+                                    aria-pressed={selected}
+                                    disabled={saving || !canRenderFilm}
+                                    onClick={() =>
+                                      toggleExpandedStory(
+                                        still.scene_sort_order,
+                                      )
+                                    }
+                                  >
+                                    <span>
+                                      物語{still.scene_sort_order + 1}
+                                    </span>
+                                    {still.scene_title ?? "場面"}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <button
+                              className="button button-outline"
+                              type="button"
+                              disabled={
+                                saving ||
+                                !canRenderFilm ||
+                                expandedStoryDraft.length !== 3 ||
+                                JSON.stringify(expandedStoryDraft) ===
+                                  JSON.stringify(expandedStorySortOrders)
+                              }
+                              onClick={() => void saveExpandedStories()}
+                            >
+                              {saving
+                                ? "保存中…"
+                                : `重要な物語を保存（${expandedStoryDraft.length}/3）`}
+                            </button>
+                          </div>
+                        )}
                         <button
                           className="button button-primary"
                           type="button"
@@ -3111,7 +3281,11 @@ export function AdminStudio() {
                         >
                           {exportingBundle && runwayExportReady ? "準備中…" : "③ Runway制作データをダウンロード"}
                         </button>
-                        {!runwayExportReady && <em>顧客の絵本ページ承認後に有効</em>}
+                        {!runwayExportReady && (
+                          <em>
+                            顧客承認後、重要な物語3つを保存すると有効
+                          </em>
+                        )}
                       </article>
                     </div>
                     {exportProgress && (
@@ -3775,7 +3949,7 @@ export function AdminStudio() {
                         <h3>映像の自動編集</h3>
                       </div>
                       <span>
-                        {assemblyClipCount}/5本
+                        {assemblyClipCount}/8本
                         {` · 完成約${estimatedSeconds}秒`}
                       </span>
                     </div>
@@ -3794,10 +3968,10 @@ export function AdminStudio() {
                     {renderAvailable && (
                       <aside className="admin-operation-note strong">
                         <strong>
-                          お客様が承認した5つの物語クリップを追加します。
+                          5つの物語へ、合計8本のクリップを追加します。
                         </strong>
                         <span>
-                          物語1のページが曲がりながら物語2を直接見せるため、途中に背景だけの画面は残りません。以前登録した接続クリップがあっても自動編集では使用しません。
+                          重要な3物語は1本目→2本目を短いディゾルブでつなぎます。別の物語へ進む時だけページをめくるため、途中に背景だけの画面は残りません。
                         </span>
                       </aside>
                     )}
@@ -3822,19 +3996,20 @@ export function AdminStudio() {
                     {renderAvailable && sceneStills.length > 0 && (
                       <>
                         <p className="admin-render-section-label">
-                          STORY · Gen-4 5秒（5本）
+                          STORY · Gen-4 5秒（合計8本）
                         </p>
                         <div className="admin-render-clips">
                           {sceneStills.map((still) => {
-                            const clip = clipByStillId.get(still.id);
+                            const takes: Array<1 | 2> =
+                              expandedStorySortOrders.includes(
+                                still.scene_sort_order,
+                              )
+                                ? [1, 2]
+                                : [1];
                             return (
                               <article
                                 key={still.id}
-                                className={
-                                  clip
-                                    ? "admin-render-clip ready"
-                                    : "admin-render-clip"
-                                }
+                                className="admin-render-clip"
                               >
                               {assetUrls[still.id] ? (
                                 <span
@@ -3858,50 +4033,85 @@ export function AdminStudio() {
                                   )}{" "}
                                   · {still.scene_title ?? "場面"}
                                 </strong>
-                                {clip ? (
-                                  <>
-                                    {assetUrls[clip.id] && (
-                                      <video
-                                        className="admin-render-preview"
-                                        src={assetUrls[clip.id]}
-                                        controls
-                                        preload="metadata"
-                                      />
-                                    )}
-                                    <button
-                                      className="button button-outline"
-                                      type="button"
-                                      disabled={
-                                        saving || rendering || !canRenderFilm
-                                      }
-                                      onClick={() => deleteRenderClip(clip)}
-                                    >
-                                      クリップを削除
-                                    </button>
-                                  </>
-                                ) : (
-                                  <label
-                                    className={
-                                      saving || rendering || !canRenderFilm
-                                        ? "admin-render-upload disabled"
-                                        : "admin-render-upload"
-                                    }
-                                  >
-                                    <input
-                                      key={clipInputKey}
-                                      type="file"
-                                      accept="video/mp4,video/quicktime,video/webm"
-                                      disabled={
-                                        saving || rendering || !canRenderFilm
-                                      }
-                                      onChange={(event) => {
-                                        const file = event.target.files?.[0];
-                                        if (file) uploadRenderClip(still, file);
-                                      }}
-                                    />
-                                    <span>クリップを選ぶ</span>
-                                  </label>
-                                )}
+                                <div className="admin-story-takes">
+                                  {takes.map((take) => {
+                                    const clip = clipByStillAndTake.get(
+                                      `${still.id}:${take}`,
+                                    );
+                                    return (
+                                      <section
+                                        key={`${still.id}-take-${take}`}
+                                        className={clip ? "ready" : ""}
+                                      >
+                                        <span>
+                                          {takes.length === 2
+                                            ? `${take}本目 · ${take === 1 ? "はじまり" : "つづき"}`
+                                            : "1本で完結"}
+                                        </span>
+                                        {clip ? (
+                                          <>
+                                            {assetUrls[clip.id] && (
+                                              <video
+                                                className="admin-render-preview"
+                                                src={assetUrls[clip.id]}
+                                                controls
+                                                preload="metadata"
+                                              />
+                                            )}
+                                            <button
+                                              className="button button-outline"
+                                              type="button"
+                                              disabled={
+                                                saving ||
+                                                rendering ||
+                                                !canRenderFilm
+                                              }
+                                              onClick={() =>
+                                                deleteRenderClip(clip)
+                                              }
+                                            >
+                                              このクリップを削除
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <label
+                                            className={
+                                              saving ||
+                                              rendering ||
+                                              !canRenderFilm
+                                                ? "admin-render-upload disabled"
+                                                : "admin-render-upload"
+                                            }
+                                          >
+                                            <input
+                                              key={`${clipInputKey}-${take}`}
+                                              type="file"
+                                              accept="video/mp4,video/quicktime,video/webm"
+                                              disabled={
+                                                saving ||
+                                                rendering ||
+                                                !canRenderFilm
+                                              }
+                                              onChange={(event) => {
+                                                const file =
+                                                  event.target.files?.[0];
+                                                if (file)
+                                                  uploadRenderClip(
+                                                    still,
+                                                    take,
+                                                    file,
+                                                  );
+                                              }}
+                                            />
+                                            <span>
+                                              {take}本目を選ぶ
+                                            </span>
+                                          </label>
+                                        )}
+                                      </section>
+                                    );
+                                  })}
+                                </div>
                               </div>
                               </article>
                             );
@@ -4002,7 +4212,7 @@ export function AdminStudio() {
                         </div>
                         {assemblyClipCount > 0 && !allRenderClipsReady && (
                           <p className="admin-operation-note">
-                            物語クリップ5本がすべて揃うと編集を開始できます。
+                            重要な3物語の2本目を含む、物語クリップ8本がすべて揃うと編集を開始できます。
                           </p>
                         )}
                         {renderProgress && (

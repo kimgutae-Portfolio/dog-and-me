@@ -4,11 +4,10 @@
 Structure (see docs/MANUAL_PRODUCTION_WORKFLOW.md):
   intro card -> moving storybook pages -> ending card.
 
-Each approved Runway clip is one continuous page. There is no still-photo
-hold between pages, so the story never appears to stop. Pages change with a
-short page-cover transition (`coverright`), which reads like a new
-picture-book page covering the page before it. Total runtime follows the
-number of approved clips.
+Each approved Runway clip is one continuous page. Three selected stories use
+two clips: the two actions dissolve gently inside the same chapter, while a
+curved page turn is reserved for movement between different stories. There is
+no still-photo hold or standalone bridge background.
 
 Usage:
   python3 scripts/assemble_film.py \
@@ -35,6 +34,7 @@ STORY_CLIP_SECONDS = 7.0
 BRIDGE_CLIP_SECONDS = 1.6
 PAGE_CURL_SECONDS = 0.95
 BRIDGE_DISSOLVE_SECONDS = 0.28
+CONTINUATION_DISSOLVE_SECONDS = 0.35
 CARD_DISSOLVE_SECONDS = 0.65
 ENDING_DISSOLVE_SECONDS = 0.75
 INTRO_CARD_SECONDS = 3.0
@@ -131,19 +131,48 @@ def make_story_caption_overlay(png_path, text):
     img.save(png_path)
 
 
-def burn_story_captions(video_path, captions, windows, out_path, total_duration, tmp_dir):
+def burn_story_captions(
+    video_path,
+    captions,
+    windows,
+    out_path,
+    total_duration,
+    tmp_dir,
+    continuation_clip_numbers,
+):
     """Burn approved scene sentences into the assembled storybook with soft caption fades."""
     if not any(caption.strip() for caption in captions):
         return
+    # When a highlighted story uses two consecutive motion clips, keep its one
+    # approved sentence on screen as a single caption span. Rebuilding the same
+    # overlay for each take would create an obvious fade-out/fade-in blink.
+    caption_spans = []
+    for scene_index, (caption, (start, end)) in enumerate(
+        zip(captions, windows), start=1
+    ):
+        caption = caption.strip()
+        if not caption:
+            continue
+        if (
+            scene_index in continuation_clip_numbers
+            and caption_spans
+            and caption_spans[-1][0] == caption
+        ):
+            previous_caption, previous_start, _, previous_index = caption_spans[-1]
+            caption_spans[-1] = (
+                previous_caption,
+                previous_start,
+                end,
+                previous_index,
+            )
+        else:
+            caption_spans.append((caption, start, end, scene_index))
+
     inputs = ["-i", video_path]
     filters = []
     previous = "0:v"
     overlay_index = 0
-    for scene_index, (caption, (start, end)) in enumerate(
-        zip(captions, windows), start=1
-    ):
-        if not caption.strip():
-            continue
+    for caption, start, end, scene_index in caption_spans:
         overlay_index += 1
         overlay_path = os.path.join(tmp_dir, f"caption_{scene_index}.png")
         make_story_caption_overlay(overlay_path, caption)
@@ -217,7 +246,9 @@ def transition_spec(previous_kind, next_kind):
         return "fade", CARD_DISSOLVE_SECONDS
     if next_kind == "ending_card":
         return "fade", ENDING_DISSOLVE_SECONDS
-    if previous_kind == "story" and next_kind in ("story", "bridge"):
+    if next_kind == "story_continuation":
+        return "fade", CONTINUATION_DISSOLVE_SECONDS
+    if previous_kind in ("story", "story_continuation") and next_kind in ("story", "bridge"):
         return "page_curl", PAGE_CURL_SECONDS
     if previous_kind == "bridge" and next_kind == "story":
         return "fade", BRIDGE_DISSOLVE_SECONDS
@@ -322,6 +353,8 @@ def main():
                      help='e.g. "2,3" "4,5" "6" — one group per memory block')
     ap.add_argument("--ending-clip", required=True, type=int)
     ap.add_argument("--bridge-clips", nargs="*", type=int, default=[])
+    ap.add_argument("--continuation-clips", nargs="*", type=int, default=[],
+                    help="1-based clip numbers that are take 2 of the preceding story")
     ap.add_argument("--kicker", default="A MOVING STORYBOOK")
     ap.add_argument("--title", required=True)
     ap.add_argument("--ending-text", required=True, help="use \\n for line breaks")
@@ -350,6 +383,7 @@ def main():
 
     memory_groups = [[int(x) for x in g.split(",")] for g in args.memory_clips]
     bridge_clip_numbers = set(args.bridge_clips)
+    continuation_clip_numbers = set(args.continuation_clips)
     order_dir = args.order_dir
 
     def clip_path(n):
@@ -382,7 +416,11 @@ def main():
             else:
                 normalize_story_clip(clip_path(n), clip_mp4)
                 clip_duration = STORY_CLIP_SECONDS
-                clip_kind = "story"
+                clip_kind = (
+                    "story_continuation"
+                    if n in continuation_clip_numbers
+                    else "story"
+                )
             segments.append(clip_mp4)
             durations.append(clip_duration)
             segment_kinds.append(clip_kind)
@@ -472,7 +510,7 @@ def main():
             captioned_out = os.path.join(tmp, "captioned.mp4") if args.bgm else args.out
             burn_story_captions(
                 assembled_out, captions, caption_windows, captioned_out,
-                total_duration, tmp,
+                total_duration, tmp, continuation_clip_numbers,
             )
             video_for_audio = captioned_out
 

@@ -22,6 +22,8 @@ next-env.d.ts
 supabase/.temp/
 outputs/
 wan-memory-production/
+__pycache__/
+*.py[cod]
 
 # Local-only demo/customer source material
 /demo/

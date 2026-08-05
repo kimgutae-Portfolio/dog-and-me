@@ -128,6 +128,7 @@ export type MemoryOrder = {
   runway_generation_count: number;
   runway_retry_count: number;
   production_log: string | null;
+  expanded_story_sort_orders: number[];
   draft_expires_at: string | null;
   stage_updated_at: string;
   created_at: string;
@@ -186,6 +187,7 @@ export type OrderAsset = {
   story_caption: string | null;
   scene_sort_order: number;
   source_still_asset_id: string | null;
+  render_take: 1 | 2;
   created_at: string;
 };
 
