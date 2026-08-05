@@ -332,51 +332,20 @@ export default async function Home() {
 
       <section className="storybook-method section" id="memory-story">
         <div className="shell">
-          <div className="storybook-heading light">
+          <div className="storybook-heading storybook-method-summary light">
             <div>
-              <p className="eyebrow">HOW A MEMORY BECOMES A BOOK</p>
+              <p className="eyebrow">YOU SHARE THE MEMORIES</p>
               <h2>
-                あなたが渡すのは、
+                お送りいただくのは、
                 <br />
-                写真と、覚えていること。
+                5つの思い出と写真だけ。
               </h2>
             </div>
             <p>
-              映像AIの指示を書く必要はありません。
-              <br />
-              物語と絵と動きは、こちらで一つに整えます。
+              物語の構成、文章、絵、動きは、
+              <br />こちらですべて整えます。
             </p>
           </div>
-          <ol className="storybook-method-grid">
-            <li>
-              <span>01</span>
-              <strong>物語にしたい日</strong>
-              <p>
-                初めての海、いつもの昼寝、忘れられない春。残したい出来事を5つ選びます。
-              </p>
-            </li>
-            <li>
-              <span>02</span>
-              <strong>その日の写真を一枚</strong>
-              <p>
-                各物語に同じ場面の写真を1枚添えます。必要な物語だけ補助写真を2枚まで追加できます。
-              </p>
-            </li>
-            <li>
-              <span>03</span>
-              <strong>二つの物語案</strong>
-              <p>
-                単なる回想の並びではなく、花びらや光など一つのモチーフで記憶をつなぐ2案をご提案します。
-              </p>
-            </li>
-            <li>
-              <span>04</span>
-              <strong>動く絵本へ</strong>
-              <p>
-                承認いただいた絵本ページに小さな動きをつけ、文章・BGMとともに約1分の作品へ仕上げます。
-              </p>
-            </li>
-          </ol>
         </div>
       </section>
 
@@ -385,44 +354,18 @@ export default async function Home() {
           <div className="section-heading-row">
             <div>
               <p className="eyebrow">TWO STORY DIRECTIONS</p>
-              <h2>同じ思い出から、二つの物語。</h2>
+              <h2>同じ思い出から、二つの物語案をご提案。</h2>
             </div>
-            <p>お支払いの前に、心に近い1案を選べます。</p>
-          </div>
-          <div className="storybook-direction-grid">
-            <article>
-              <span>STORY A</span>
-              <h3>ひとひらの春</h3>
-              <p>
-                一枚の花びらが案内人になり、春の散歩道から初めての海、眠る部屋まで旅をする物語。
-              </p>
-              <ol>
-                <li>春風から届いた手紙</li>
-                <li>桜色の旅</li>
-                <li>はじめての波</li>
-                <li>夢の中の宝物</li>
-              </ol>
-            </article>
-            <article>
-              <span>STORY B</span>
-              <h3>ミルの、はじめて図鑑</h3>
-              <p>
-                出会った色、音、においを一ページずつ集め、最後に「わたしの宝物図鑑」が完成する物語。
-              </p>
-              <ol>
-                <li>桜色をみつける</li>
-                <li>水の音をおぼえる</li>
-                <li>海の青をひらく</li>
-                <li>今日の宝物をしまう</li>
-              </ol>
-            </article>
+            <p>
+              お送りいただいた5つの出来事をもとに、つながり方の異なる2案をお作りします。内容を比べて、心に近い1案をお支払い前にお選びいただけます。
+            </p>
           </div>
         </div>
       </section>
 
       <section className="process-section section" id="flow">
         <div className="shell">
-          <p className="eyebrow">FROM PHOTO TO STORYBOOK</p>
+          <p className="eyebrow">HOW YOUR STORYBOOK IS MADE</p>
           <div className="process-head">
             <h2>ご相談からお届けまで。</h2>
             <p>制作室で、物語・絵本ページ・完成映像を順番に確認できます。</p>
