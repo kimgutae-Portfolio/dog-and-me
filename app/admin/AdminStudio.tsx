@@ -212,13 +212,46 @@ const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v1.0
   "story_caption": "고객 확인용 일본어 한 문장"
 }`;
 
-const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v1.0
+const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v2.0
 
 첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
 
 먼저 order.json의 transitions와 selected_concept_context를 따라 강아지와 사람이 없는 전환 배경 이미지 4장을 제작한다. 앞 이야기의 색·빛·모티프가 다음 이야기로 자연스럽게 이어지는 수채·과슈 그림책 배경이어야 한다.
 
-그 다음 이야기 이미지 5장과 전환 배경 4장을 위한 Runway 프롬프트를 작성한다.
+그 다음 이야기 이미지 5장과 전환 배경 4장을 위한 Runway 프롬프트를 작성한다. 프롬프트 문장은 Runway가 명확하게 이해하도록 영어로 작성한다.
+
+핵심 연출 목표
+- 다섯 장면이 모두 같은 정지 자세처럼 보이지 않게 한다.
+- 각 이야기의 고객 사실과 selected_concept 장면 문장을 실제 행동의 원인으로 사용한다.
+- 강아지의 감정은 눈동자를 굴리거나 사람처럼 표정을 바꾸는 방식이 아니라, 머리 방향, 귀 반응, 코의 움직임, 호흡, 체중 이동, 앞발, 꼬리로 표현한다.
+- 정체성을 지키는 것과 움직임을 없애는 것은 다르다. 얼굴과 체형은 고정하되, 원본 자세가 허용하는 범위에서 살아 있는 강아지다운 행동을 넣는다.
+
+이야기별 모션 설계
+1. 먼저 각 승인 이미지의 자세를 standing, walking, sitting, lying 중 하나로 판단한다.
+2. 다섯 이야기마다 서로 다른 primary_dog_action을 하나씩 정한다. 같은 head tilt나 같은 blink를 모든 장면에 반복하지 않는다.
+3. primary action 외에는 secondary motion을 최대 2개만 사용한다. 작은 호흡, 귀 한쪽의 짧은 반응, 코로 냄새 맡기, 꼬리 끝의 짧은 흔들림, 털끝의 바람 반응처럼 자연스러운 움직임을 고른다.
+4. 승인 이미지에 보이는 환경 요소 하나를 이야기의 반응으로 움직인다. 예: 꽃잎이 지나가자 코를 살짝 들기, 잔물결이 닿자 앞발에 체중을 옮기기, 커튼 빛이 움직이자 귀가 짧게 반응하기.
+5. 5초 안에 시작-행동-안정의 작은 서사를 만든다.
+   - 0.0~1.0초: 원래 자세와 얼굴을 안정적으로 유지
+   - 1.0~3.8초: primary action 한 번
+   - 3.8~5.0초: 과장 없이 다시 편안한 자세로 안정
+6. 고객이 제공하지 않은 사건을 새로 만들지 않는다. 풍부함은 새 물체 생성이 아니라, 고객의 기억에 맞는 행동과 환경의 인과관계로 만든다.
+
+자세별 허용 행동 예시
+- standing: 공기 냄새를 맡으며 코와 머리를 조금 들기, 한쪽 귀가 소리에 반응하기, 앞발 사이의 체중을 천천히 옮기기, 꼬리를 한두 번 작게 흔들기.
+- walking: 이미지의 진행 방향으로 작은 한 걸음을 자연스럽게 이어간 뒤 멈추기, 땅을 잠깐 냄새 맡고 다시 고개를 들기.
+- sitting: 소리가 난 방향으로 머리를 조금 돌리기, 한쪽 귀를 움직이기, 가슴의 잔잔한 호흡과 꼬리 끝의 짧은 반응.
+- lying: 편안한 호흡, 귀의 짧은 움직임, 앞발을 아주 조금 펴기, 머리를 편안하게 내려놓기.
+- 다리나 꼬리가 이미지에서 가려졌다면 해당 부위의 큰 움직임을 지시하지 않는다.
+- 원래 자세가 뒷받침하지 않는 걷기, 방향 전환, 일어서기, 점프는 만들지 않는다.
+
+눈과 얼굴 안전 규칙
+- 홍채와 동공의 크기, 위치, 간격, 시선 방향을 승인 이미지 기준으로 안정적으로 유지한다.
+- 눈동자가 좌우로 따로 움직이거나 빠르게 따라보는 동작, eye darting, eye rolling, wandering pupils, crossed eyes를 금지한다.
+- 시선 변화가 필요하면 눈동자만 움직이지 말고 머리 전체를 아주 조금 돌린다. 눈은 머리와 함께 자연스럽게 같은 방향을 유지한다.
+- 눈 깜빡임은 꼭 필요한 장면에서만 한 번 천천히 허용하며, 다섯 장면에 반복하지 않는다.
+- 눈 크기 확대, 눈꺼풀 변형, 과한 반짝임, 새 눈물자국을 금지한다.
+- 입은 승인 이미지 상태를 유지한다. 말하는 입 모양, 갑작스러운 미소, 과장된 헐떡임을 만들지 않는다.
 
 Runway 규칙
 - 이야기 페이지: Gen-4, 5초, 프롬프트 최대 3000자.
@@ -226,15 +259,41 @@ Runway 규칙
 - 화면 비율은 옵션에서 설정하므로 프롬프트에 16:9를 쓰지 않는다.
 - 승인된 강아지의 얼굴, 체형, 눈, 귀, 주둥이, 털, 꼬리, 목줄을 바꾸지 않는다.
 - 이미지에 없는 사람, 동물, 사물을 생성하지 않는다.
-- 카메라는 고정하거나 최소한으로만 움직인다.
-- 갑작스러운 줌, 회전, 흔들림, 큰 걸음, 달리기, 점프, 입 모양 변화, 과도한 눈 깜빡임을 금지한다.
-- 털끝, 귀 끝, 꽃잎, 물결, 커튼, 빛, 그림자처럼 이미지에 실제 존재하는 요소 한두 개만 작게 움직인다.
+- 카메라는 기본적으로 고정한다. 이야기상 필요한 경우 다섯 장면 중 최대 두 장면에서만 매우 느린 push-in 또는 짧은 lateral drift 하나를 사용한다.
+- 갑작스러운 줌, 회전, 흔들림, 달리기, 점프, 신체 생성·소실, 다리 교차, 꼬리 복제, 얼굴 변형을 금지한다.
+- 한 장면에 primary dog action 1개, secondary motion 최대 2개, environment motion 1개만 사용한다.
+- 전환 배경은 최종 편집에서 중앙 약 1.6초만 사용한다. 강한 사건을 만들지 말고 꽃잎, 물결, 비 그림자, 커튼 빛처럼 앞뒤 이야기를 이어주는 한 가지 모티프가 끊김 없이 움직이게 한다.
 - 페이지 넘김과 자막은 편집 단계에서 추가하므로 프롬프트에 넣지 않는다.
+
+다섯 장면 전체 다양성 검수
+- primary_dog_action이 다섯 장면에서 실제로 서로 다른가?
+- 모든 장면이 단순히 가만히 서서 blink 또는 head tilt만 반복하고 있지 않은가?
+- 각 행동이 해당 이미지의 자세와 보이는 신체 구조로 가능한가?
+- story text의 내용이 강아지 행동과 환경 반응에 반영됐는가?
+- 눈동자 단독 움직임 없이도 감정이 읽히는가?
+- 정체성 보존 규칙 때문에 필요한 강아지다운 움직임까지 삭제하지 않았는가?
 
 반환 형식
 {
-  "gen4_story_prompts":[{"story_number":1,"title":"","duration_seconds":5,"prompt":""}],
-  "gen4_turbo_transition_prompts":[{"transition":"01-02","duration_seconds":5,"prompt":""}]
+  "gen4_story_prompts":[{
+    "story_number":1,
+    "title":"",
+    "pose_assessment":"standing | walking | sitting | lying",
+    "story_beat":"",
+    "primary_dog_action":"",
+    "secondary_motions":[""],
+    "environment_motion":"",
+    "camera_motion":"locked | slow push-in | subtle lateral drift",
+    "eye_safety":"",
+    "duration_seconds":5,
+    "prompt":""
+  }],
+  "gen4_turbo_transition_prompts":[{
+    "transition":"01-02",
+    "bridge_motif":"",
+    "duration_seconds":5,
+    "prompt":""
+  }]
 }
 
 두 배열은 각각 이야기 5개와 전환 4개를 빠짐없이 포함한다.`;
@@ -1672,8 +1731,9 @@ export function AdminStudio() {
             "1. order.jsonとapproved-pagesの5枚をCodexへ添付します。",
             "2. 02_PROMPT_RUNWAY.txtをそのまま依頼文として使います。",
             "3. Codexが背景だけの接続ページ4枚とRunwayプロンプト9本を作ります。",
-            "4. Story 5本はGen-4、接続4本はGen-4 Turboで各5秒制作します。",
-            "5. 完成した9本を管理画面の自動編集工程へ登録します。",
+            "4. Story 5本には、画像の姿勢に合う異なる犬らしい主動作を1つずつ割り当てます。瞳だけを動かさず、頭・耳・呼吸・重心・尻尾で感情を表現します。",
+            "5. Story 5本はGen-4、接続4本はGen-4 Turboで各5秒制作します。",
+            "6. 完成した9本を管理画面の自動編集工程へ登録します。",
           ].join("\n"),
         ),
         [`${root}/02_PROMPT_RUNWAY.txt`]: strToU8(RUNWAY_PROMPT_REQUEST),
