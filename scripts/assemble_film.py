@@ -217,7 +217,7 @@ def transition_spec(previous_kind, next_kind):
         return "fade", CARD_DISSOLVE_SECONDS
     if next_kind == "ending_card":
         return "fade", ENDING_DISSOLVE_SECONDS
-    if previous_kind == "story" and next_kind == "bridge":
+    if previous_kind == "story" and next_kind in ("story", "bridge"):
         return "page_curl", PAGE_CURL_SECONDS
     if previous_kind == "bridge" and next_kind == "story":
         return "fade", BRIDGE_DISSOLVE_SECONDS

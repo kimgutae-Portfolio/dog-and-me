@@ -56,7 +56,7 @@ const STORYBOOK_STYLE_PROFILE = {
   background_treatment:
     "rich illustrated environment with visible paper texture and clear story-specific atmosphere",
   transition_treatment:
-    "background-only bridge page; carry one motif from the previous story into the next story",
+    "direct curved page turn from one approved story page to the next; no bridge background",
   avoid: [
     "photorealistic dog",
     "oversized anime eyes",
@@ -81,12 +81,7 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
     model: "gen4",
     duration_seconds: 5,
   },
-  transition_pages: {
-    count: 4,
-    model: "gen4_turbo",
-    duration_seconds: 5,
-    dog_in_transition: false,
-  },
+  transition_video_count: 0,
 } as const;
 const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
 
@@ -94,7 +89,7 @@ const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
 너는 WAN MEMORY의 그림책 제작 담당자다. 첨부된 order.json과 물語별 original 사진을 읽고, 고객의 실제 사진을 그대로 움직이는 대신 사진 속 사실과 기억을 수채·과슈 질감의 새로운 움직이는 그림책으로 재구성한다.
 
 입력 자료
-- order.json: job, style, production_protocol, stories, transition_rules, transitions, output_plan을 먼저 읽는다.
+- order.json: job, style, production_protocol, stories, output_plan을 먼저 읽는다.
 - stories/01-title/original/부터 stories/05-title/original/까지: 해당 물語에 연결된 고객 원본 사진이다.
 - 파일명에 primary가 포함된 사진은 그 물語의 얼굴·체형·구도·장면 사실 기준이다.
 - support 사진은 primary와 충돌하지 않는 세부만 보충한다.
@@ -124,35 +119,25 @@ const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
 - 이야기 문장은 order.json의 문장과 고객 사실을 우선하며, 화면을 가리지 않는 짧은 일본어 한 문장으로 정리한다.
 - 페이지를 만들기 전에 primary 사진과 story text가 서로 맞는지 확인한다. 결과가 다른 개처럼 보이면 승인하지 말고 정체성 레퍼런스를 강화해 다시 생성한다.
 
-연결 페이지 제작
-- transitions의 4개 항목을 모두 만든다. 각 연결 페이지는 앞뒤 이야기의 색·빛·소품·공간을 이어주는 배경 페이지다.
-- 연결 페이지에는 강아지, 사람, 새 동물을 넣지 않는다.
-- 연결 페이지도 새로운 16:9 그림책 이미지로 만든다.
-- 연결 페이지마다 Gen-4 Turbo 5초 프롬프트를 작성하고, 페이지 자체의 작은 움직임만 지정한다.
-
 Runway 규칙
 - 이야기 페이지: 승인된 16:9 그림책 페이지 이미지 + Gen-4 + 5초.
-- 연결 페이지: 승인된 16:9 배경 페이지 이미지 + Gen-4 Turbo + 5초.
 - raw 고객 사진은 최종 Runway 입력으로 사용하지 않지만, 그림책 페이지 생성 단계에서는 동일 개체를 유지하기 위한 핵심 레퍼런스로 사용한다.
 - 카메라 이동과 피사체 변형은 최소화한다. 눈·입·다리·꼬리의 큰 형태 변화, 새 물체 생성, 얼굴 변형, 갑작스러운 줌은 금지한다.
 - 결과가 이상하면 프롬프트를 길게 늘리지 말고, 페이지 그림을 먼저 수정한 뒤 다시 영상화한다.
 
 반드시 반환할 결과
-1. memory_storybook_production_checklist: 5개 이야기와 4개 연결 페이지가 모두 포함됐는지 확인.
+1. memory_storybook_production_checklist: 5개 이야기가 모두 포함됐는지 확인.
 2. story_source_checklist: 각 primary/support 사진, 사용 이유, 충돌 여부.
 3. story_page_image_plan: 이야기별 16:9 그림책 페이지의 장면·구도·화풍·문장.
-4. transition_page_image_plan: 연결 페이지별 배경·색·모티프·움직임.
-5. gen4_scene_prompts: 5개 이야기 페이지의 Gen-4 5초 프롬프트.
-6. gen4_turbo_transition_prompts: 4개 연결 페이지의 Turbo 5초 프롬프트.
-7. missing_information_only_if_blocking: 제작을 실제로 막는 경우에만 추가 질문.
-8. people_photo_assessment: 사람이 포함된 원본을 어떻게 안전하게 처리했는지.
+4. gen4_scene_prompts: 5개 이야기 페이지의 Gen-4 5초 프롬프트.
+5. missing_information_only_if_blocking: 제작을 실제로 막는 경우에만 추가 질문.
+6. people_photo_assessment: 사람이 포함된 원본을 어떻게 안전하게 처리했는지.
 
 최종 검수
-- 5개 이야기와 4개 연결 페이지가 모두 존재하는가?
+- 5개 이야기 페이지가 모두 존재하는가?
 - 모든 16:9 이미지가 고객 원본의 패딩·블러 복사본이 아니라 새 그림책 페이지인가?
 - 각 이야기가 자기 물語의 사진과 사실만 사용했는가?
 - 강아지 얼굴·체형·털·꼬리·목줄이 이야기마다 불필요하게 바뀌지 않았는가?
-- 연결 페이지에 강아지나 사람이 들어가지 않았는가?
 - Runway에는 승인된 그림책 페이지 이미지만 전달되는가?
 - 막히지 않은 질문을 추가로 만들지 않았는가?
 `;
@@ -216,9 +201,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v2.0
 
 첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
 
-먼저 order.json의 transitions와 selected_concept_context를 따라 강아지와 사람이 없는 전환 배경 이미지 4장을 제작한다. 앞 이야기의 색·빛·모티프가 다음 이야기로 자연스럽게 이어지는 수채·과슈 그림책 배경이어야 한다.
-
-그 다음 이야기 이미지 5장과 전환 배경 4장을 위한 Runway 프롬프트를 작성한다. 프롬프트 문장은 Runway가 명확하게 이해하도록 영어로 작성한다.
+이야기 이미지 5장을 위한 Runway 프롬프트를 작성한다. 프롬프트 문장은 Runway가 명확하게 이해하도록 영어로 작성한다. 연결 배경 이미지와 연결 영상은 만들지 않는다. 최종 편집에서 한 이야기 페이지가 휘어지며 다음 이야기 페이지를 직접 드러낸다.
 
 핵심 연출 목표
 - 다섯 장면이 모두 같은 정지 자세처럼 보이지 않게 한다.
@@ -255,14 +238,12 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v2.0
 
 Runway 규칙
 - 이야기 페이지: Gen-4, 5초, 프롬프트 최대 3000자.
-- 전환 페이지: Gen-4 Turbo, 5초, 프롬프트 최대 1000자.
 - 화면 비율은 옵션에서 설정하므로 프롬프트에 16:9를 쓰지 않는다.
 - 승인된 강아지의 얼굴, 체형, 눈, 귀, 주둥이, 털, 꼬리, 목줄을 바꾸지 않는다.
 - 이미지에 없는 사람, 동물, 사물을 생성하지 않는다.
 - 카메라는 기본적으로 고정한다. 이야기상 필요한 경우 다섯 장면 중 최대 두 장면에서만 매우 느린 push-in 또는 짧은 lateral drift 하나를 사용한다.
 - 갑작스러운 줌, 회전, 흔들림, 달리기, 점프, 신체 생성·소실, 다리 교차, 꼬리 복제, 얼굴 변형을 금지한다.
 - 한 장면에 primary dog action 1개, secondary motion 최대 2개, environment motion 1개만 사용한다.
-- 전환 배경은 최종 편집에서 중앙 약 1.6초만 사용한다. 강한 사건을 만들지 말고 꽃잎, 물결, 비 그림자, 커튼 빛처럼 앞뒤 이야기를 이어주는 한 가지 모티프가 끊김 없이 움직이게 한다.
 - 페이지 넘김과 자막은 편집 단계에서 추가하므로 프롬프트에 넣지 않는다.
 
 다섯 장면 전체 다양성 검수
@@ -287,16 +268,10 @@ Runway 규칙
     "eye_safety":"",
     "duration_seconds":5,
     "prompt":""
-  }],
-  "gen4_turbo_transition_prompts":[{
-    "transition":"01-02",
-    "bridge_motif":"",
-    "duration_seconds":5,
-    "prompt":""
   }]
 }
 
-두 배열은 각각 이야기 5개와 전환 4개를 빠짐없이 포함한다.`;
+gen4_story_prompts 배열은 이야기 5개를 빠짐없이 포함한다.`;
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
 >;
@@ -843,17 +818,6 @@ export function AdminStudio() {
         ),
     [assets],
   );
-  const transitionClips = useMemo(
-    () =>
-      assets
-        .filter((asset) => asset.category === "transition_clip")
-        .sort(
-          (a, b) =>
-            a.scene_sort_order - b.scene_sort_order ||
-            a.created_at.localeCompare(b.created_at),
-        ),
-    [assets],
-  );
   const assembledFilms = useMemo(
     () =>
       assets
@@ -868,21 +832,12 @@ export function AdminStudio() {
       ),
     [renderClips],
   );
-  const transitionClipByIndex = useMemo(
-    () =>
-      new Map(
-        transitionClips.map((clip) => [clip.scene_sort_order, clip]),
-      ),
-    [transitionClips],
-  );
   const allRenderClipsReady =
     sceneStills.length === 5 &&
     renderClips.length === 5 &&
-    transitionClips.length === 4 &&
-    sceneStills.every((still) => clipByStillId.has(still.id)) &&
-    [0, 1, 2, 3].every((index) => transitionClipByIndex.has(index));
-  const assemblyClipCount = renderClips.length + transitionClips.length;
-  const estimatedSeconds = 45;
+    sceneStills.every((still) => clipByStillId.has(still.id));
+  const assemblyClipCount = renderClips.length;
+  const estimatedSeconds = 40;
   const openMessages = useMemo(
     () =>
       messages.filter(
@@ -1361,40 +1316,7 @@ export function AdminStudio() {
         },
       };
     });
-    const transitions = memories.slice(0, -1).map((memory, index) => {
-      const nextMemory = memories[index + 1];
-      const fromNumber = String(memory.sort_order).padStart(2, "0");
-      const toNumber = String(nextMemory.sort_order).padStart(2, "0");
-      const transitionId = `transition_${fromNumber}_${toNumber}`;
-      const fromSceneText =
-        selectedStoryText.get(memory.id)?.trim() || memory.description;
-      const toSceneText =
-        selectedStoryText.get(nextMemory.id)?.trim() || nextMemory.description;
-      return {
-        id: transitionId,
-        from_story: `story_${fromNumber}`,
-        to_story: `story_${toNumber}`,
-        instruction:
-          "Create a background-only bridge page that carries one motif from the previous story into the next story.",
-        selected_concept_context: selectedConcept
-          ? {
-              slot: selectedConcept.slot,
-              title: selectedConcept.title,
-              tone: selectedConcept.tone,
-              summary: selectedConcept.summary,
-              from_scene_text: fromSceneText,
-              to_scene_text: toSceneText,
-            }
-          : null,
-        dog_in_transition: false,
-        output: {
-          page_image_filename: `${transitionId}.png`,
-          runway_clip_filename: `${transitionId}-video.mp4`,
-          runway_model: "gen4_turbo",
-          runway_duration_seconds: 5,
-        },
-      };
-    });
+    const transitions: never[] = [];
     const productionData = {
       schema_version: "wan-memory-storybook-production-export-3.0",
       exported_at: new Date().toISOString(),
@@ -1417,12 +1339,10 @@ export function AdminStudio() {
       production_protocol: MEMORY_STORYBOOK_PRODUCTION_PROTOCOL,
       stories,
       transition_rules: {
-        count: transitions.length,
-        model: "gen4_turbo",
-        duration_seconds: 5,
-        dog_in_transition: false,
-        page_turn_mode: "physical_page_turn_without_crossfade",
-        page_turn_duration_seconds: 1.2,
+        count: 0,
+        page_turn_mode: "direct_curved_page_turn_between_story_clips",
+        bridge_backgrounds_allowed: false,
+        page_turn_duration_seconds: 0.95,
         text_is_added_after_video: true,
       },
       transitions,
@@ -1430,9 +1350,7 @@ export function AdminStudio() {
         story_count: stories.length,
         story_model: "gen4",
         story_duration_seconds: 5,
-        transition_count: transitions.length,
-        transition_model: "gen4_turbo",
-        transition_duration_seconds: 5,
+        transition_count: 0,
         title_card_seconds: 3,
         ending_card_seconds: 7,
       },
@@ -1502,14 +1420,12 @@ export function AdminStudio() {
         .map((message) => message.body),
       requested_gpt_output: {
         current_stage:
-          "Read job, style, production_protocol, stories, and transition_rules first. Follow MEMORY STORYBOOK PRODUCTION v2.0: lock each story's primary dog identity to the original-aspect-ratio customer photos, create five new 16:9 storybook page images by changing only the scene treatment, then create four background-only transition page images. Keep story sources separate.",
+          "Read job, style, production_protocol, and stories first. Lock each story's primary dog identity to the original-aspect-ratio customer photos and create five new 16:9 storybook page images. Do not create bridge backgrounds or transition videos; the editor turns directly from one approved story page to the next.",
         required_sections: [
           "memory_storybook_production_checklist",
           "story_source_checklist",
           "story_page_image_plan",
-          "transition_page_image_plan",
           "gen4_scene_prompts",
-          "gen4_turbo_transition_prompts",
           "missing_information_only_if_blocking",
           "people_photo_assessment",
         ],
@@ -1519,19 +1435,14 @@ export function AdminStudio() {
       schema_version: "wan-memory-story-source-manifest-3.0",
       production_ref: order.order_number,
       story_count: memories.length,
-      transition_count: transitions.length,
+      transition_count: 0,
       photo_count: sourcePhotos.length,
       stories: stories.map((story) => ({
         id: story.id,
         title: story.title,
         photos: story.photos,
       })),
-      transitions: transitions.map((transition) => ({
-        id: transition.id,
-        from_story: transition.from_story,
-        to_story: transition.to_story,
-        selected_concept_context: transition.selected_concept_context,
-      })),
+      transitions: [],
       selected_concept: selectedConcept
         ? {
             slot: selectedConcept.slot,
@@ -1719,9 +1630,14 @@ export function AdminStudio() {
         style: exportData.productionData.style,
         selected_concept: exportData.productionData.selected_concept,
         stories: exportData.productionData.stories,
-        transition_rules: exportData.productionData.transition_rules,
-        transitions: exportData.productionData.transitions,
-        output_plan: exportData.productionData.output_plan,
+        output_plan: {
+          story_count: 5,
+          story_model: "gen4",
+          story_duration_seconds: 5,
+          transition_video_count: 0,
+          final_editing:
+            "Direct curved page turn from each story clip to the next story clip. Do not create or insert bridge backgrounds.",
+        },
         approved_at: order.stills_approved_at,
       };
       const files: Record<string, Uint8Array> = {
@@ -1730,10 +1646,10 @@ export function AdminStudio() {
             "STEP 3 · 顧客承認後のRunway制作データです。",
             "1. order.jsonとapproved-pagesの5枚をCodexへ添付します。",
             "2. 02_PROMPT_RUNWAY.txtをそのまま依頼文として使います。",
-            "3. Codexが背景だけの接続ページ4枚とRunwayプロンプト9本を作ります。",
+            "3. CodexがStory用Runwayプロンプト5本を作ります。接続背景や接続映像は作りません。",
             "4. Story 5本には、画像の姿勢に合う異なる犬らしい主動作を1つずつ割り当てます。瞳だけを動かさず、頭・耳・呼吸・重心・尻尾で感情を表現します。",
-            "5. Story 5本はGen-4、接続4本はGen-4 Turboで各5秒制作します。",
-            "6. 完成した9本を管理画面の自動編集工程へ登録します。",
+            "5. Story 5本をGen-4で各5秒制作します。",
+            "6. 完成した5本を管理画面の自動編集工程へ登録します。ページめくりは編集時に直接追加されます。",
           ].join("\n"),
         ),
         [`${root}/02_PROMPT_RUNWAY.txt`]: strToU8(RUNWAY_PROMPT_REQUEST),
@@ -2247,95 +2163,10 @@ export function AdminStudio() {
     setSaving(false);
   };
 
-  const uploadTransitionClip = async (
-    transitionSortOrder: number,
-    file: File,
-  ) => {
-    if (
-      !order ||
-      !canRenderFilm ||
-      transitionSortOrder < 0 ||
-      transitionSortOrder > 3
-    )
-      return;
-    setSaving(true);
-    setError("");
-    const supabase = getSupabaseBrowserClient();
-    const extension =
-      file.name
-        .split(".")
-        .pop()
-        ?.toLowerCase()
-        .replace(/[^a-z0-9]/g, "") || "mp4";
-    const path = `admin/${order.id}/clips/transition_clip-${transitionSortOrder + 1}-${crypto.randomUUID()}.${extension}`;
-    const mimeType = file.type || "video/mp4";
-    const { error: uploadError } = await supabase.storage
-      .from("order-assets")
-      .upload(path, file, { contentType: mimeType, upsert: false });
-    if (uploadError) {
-      setError("接続クリップをアップロードできませんでした。");
-      setSaving(false);
-      return;
-    }
-    const { error: registerError } = await supabase.rpc(
-      "admin_register_transition_clip",
-      {
-        p_order_id: order.id,
-        p_storage_path: path,
-        p_original_filename: file.name,
-        p_mime_type: mimeType,
-        p_file_size: file.size,
-        p_transition_sort_order: transitionSortOrder,
-      },
-    );
-    if (registerError) {
-      await supabase.storage.from("order-assets").remove([path]);
-      setError(
-        "接続クリップを登録できませんでした。4つの指定スロットと、お客様の絵本ページ承認をご確認ください。",
-      );
-      setSaving(false);
-      return;
-    }
-    setClipInputKey((current) => current + 1);
-    setNotice(
-      `物語${transitionSortOrder + 1}→${transitionSortOrder + 2}の接続クリップを追加しました。`,
-    );
-    await loadDetails(order.id);
-    setSaving(false);
-  };
-
-  const deleteTransitionClip = async (asset: OrderAsset) => {
-    if (!order || !canRenderFilm) return;
-    if (
-      !window.confirm(
-        `「物語${asset.scene_sort_order + 1}→${asset.scene_sort_order + 2}」の接続クリップを削除しますか？`,
-      )
-    )
-      return;
-    setSaving(true);
-    setError("");
-    const supabase = getSupabaseBrowserClient();
-    const { data: storagePath, error: deleteError } = await supabase.rpc(
-      "admin_delete_transition_clip",
-      { p_asset_id: asset.id },
-    );
-    if (deleteError) {
-      setError("接続クリップを削除できませんでした。");
-    } else {
-      if (storagePath)
-        await supabase.storage
-          .from("order-assets")
-          .remove([storagePath as string]);
-      setNotice("接続クリップを削除しました。");
-      await loadDetails(order.id);
-    }
-    setSaving(false);
-  };
-
   const startRender = async () => {
     if (!order || !canRenderFilm || rendering) return;
     if (!allRenderClipsReady) {
-      setError("物語クリップ5本と接続クリップ4本をすべて登録してください。");
+      setError("物語クリップ5本をすべて登録してください。");
       return;
     }
     if (!filmTitle.trim()) {
@@ -2352,9 +2183,9 @@ export function AdminStudio() {
     setRenderProgress("編集を準備しています…");
     const supabase = getSupabaseBrowserClient();
     const { data: sessionData } = await supabase.auth.getSession();
-    const items = sceneStills.flatMap((still, index) => {
+    const items = sceneStills.map((still, index) => {
       const storyClip = clipByStillId.get(still.id)!;
-      const storyItem = {
+      return {
         clipAssetId: storyClip.id,
         role:
           index === 0
@@ -2363,14 +2194,6 @@ export function AdminStudio() {
               ? ("ending" as const)
               : ("memory" as const),
       };
-      if (index === sceneStills.length - 1) return [storyItem];
-      return [
-        storyItem,
-        {
-          clipAssetId: transitionClipByIndex.get(index)!.id,
-          role: "transition" as const,
-        },
-      ];
     });
 
     try {
@@ -3952,7 +3775,7 @@ export function AdminStudio() {
                         <h3>映像の自動編集</h3>
                       </div>
                       <span>
-                        {assemblyClipCount}/9本
+                        {assemblyClipCount}/5本
                         {` · 完成約${estimatedSeconds}秒`}
                       </span>
                     </div>
@@ -3971,10 +3794,10 @@ export function AdminStudio() {
                     {renderAvailable && (
                       <aside className="admin-operation-note strong">
                         <strong>
-                          物語5本と、物語の間をつなぐTurbo接続クリップ4本を追加します。
+                          お客様が承認した5つの物語クリップを追加します。
                         </strong>
                         <span>
-                          編集順は「物語1 → 接続1→2 → 物語2」のように自動固定されます。ページ間は本をめくるように切り替わり、公開ボタンを押すまでお客様には表示されません。
+                          物語1のページが曲がりながら物語2を直接見せるため、途中に背景だけの画面は残りません。以前登録した接続クリップがあっても自動編集では使用しません。
                         </span>
                       </aside>
                     )}
@@ -4084,85 +3907,6 @@ export function AdminStudio() {
                             );
                           })}
                         </div>
-                        <p className="admin-render-section-label">
-                          BRIDGE PAGE · Gen-4 Turbo 5秒（4本）
-                        </p>
-                        <div className="admin-render-clips admin-transition-clips">
-                          {memories.slice(0, -1).map((memory, index) => {
-                            const nextMemory = memories[index + 1];
-                            const clip = transitionClipByIndex.get(index);
-                            return (
-                              <article
-                                key={`transition-${memory.id}`}
-                                className={
-                                  clip
-                                    ? "admin-render-clip admin-transition-clip ready"
-                                    : "admin-render-clip admin-transition-clip"
-                                }
-                              >
-                                <span className="admin-transition-badge">
-                                  {index + 1} → {index + 2}
-                                </span>
-                                <div>
-                                  <strong>
-                                    {memory.title} →{" "}
-                                    {nextMemory?.title ?? `物語${index + 2}`}
-                                  </strong>
-                                  <small>
-                                    5秒素材の中央部分を約1.6秒だけ、ページをめくる瞬間に使用
-                                  </small>
-                                  {clip ? (
-                                    <>
-                                      {assetUrls[clip.id] && (
-                                        <video
-                                          className="admin-render-preview"
-                                          src={assetUrls[clip.id]}
-                                          controls
-                                          preload="metadata"
-                                        />
-                                      )}
-                                      <button
-                                        className="button button-outline"
-                                        type="button"
-                                        disabled={
-                                          saving || rendering || !canRenderFilm
-                                        }
-                                        onClick={() =>
-                                          deleteTransitionClip(clip)
-                                        }
-                                      >
-                                        接続クリップを削除
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <label
-                                      className={
-                                        saving || rendering || !canRenderFilm
-                                          ? "admin-render-upload disabled"
-                                          : "admin-render-upload"
-                                      }
-                                    >
-                                      <input
-                                        key={clipInputKey}
-                                        type="file"
-                                        accept="video/mp4,video/quicktime,video/webm"
-                                        disabled={
-                                          saving || rendering || !canRenderFilm
-                                        }
-                                        onChange={(event) => {
-                                          const file = event.target.files?.[0];
-                                          if (file)
-                                            uploadTransitionClip(index, file);
-                                        }}
-                                      />
-                                      <span>接続クリップを選ぶ</span>
-                                    </label>
-                                  )}
-                                </div>
-                              </article>
-                            );
-                          })}
-                        </div>
                       </>
                     )}
 
@@ -4258,7 +4002,7 @@ export function AdminStudio() {
                         </div>
                         {assemblyClipCount > 0 && !allRenderClipsReady && (
                           <p className="admin-operation-note">
-                            物語クリップ5本と接続クリップ4本がすべて揃うと編集を開始できます。
+                            物語クリップ5本がすべて揃うと編集を開始できます。
                           </p>
                         )}
                         {renderProgress && (

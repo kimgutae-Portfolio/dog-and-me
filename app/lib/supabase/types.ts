@@ -209,7 +209,7 @@ export const SECURITY_EVENT_LABELS: Record<string, string> = {
   mfa_unenrolled: "二段階認証を解除",
 };
 
-export type RenderClipRole = "intro" | "memory" | "transition" | "ending";
+export type RenderClipRole = "intro" | "memory" | "ending";
 
 /** One clip in an assembly request, sent to /api/admin/render. */
 export type RenderRequestItem = {
