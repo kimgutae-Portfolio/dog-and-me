@@ -18,6 +18,8 @@ export const maxDuration = 300;
 const BUCKET = "order-assets";
 const BGM_DIR = path.join(process.cwd(), "assets", "bgm");
 const ASSEMBLE_SCRIPT = path.join(process.cwd(), "scripts", "assemble_film.py");
+const PROFESSIONAL_STORYBOOK_DURATION_SECONDS =
+  3 + 5 * 7 + 4 * 1.6 + 7 - (0.65 + 4 * 0.95 + 4 * 0.28 + 0.75);
 
 type RequestItem = { clipAssetId: string; role: RenderClipRole };
 
@@ -383,6 +385,11 @@ export async function POST(request: NextRequest) {
           ...(memoryClips.length ? memoryClips : ["1"]),
           "--ending-clip",
           String(ordered.length),
+          "--bridge-clips",
+          "2",
+          "4",
+          "6",
+          "8",
           "--kicker",
           kicker,
           "--title",
@@ -430,11 +437,10 @@ export async function POST(request: NextRequest) {
           throw new Error(`保存に失敗しました: ${uploadError.message}`);
         uploadedPath = storagePath;
 
-        // The local assembler uses one 5s moving page per Runway clip, with
-        // a 0.7s picture-book page cover at every join. There are no frozen
-        // photo holds between pages.
-        const durationSeconds =
-          3.0 + ordered.length * 5.0 + 7.0 - 0.7 * (ordered.length + 1);
+        // Five story clips are gently paced to seven seconds. The four Turbo
+        // bridge clips appear for only 1.6 seconds inside the editorial page
+        // turns, so they connect memories instead of becoming extra scenes.
+        const durationSeconds = PROFESSIONAL_STORYBOOK_DURATION_SECONDS;
         const { data: assetId, error: registerError } = await supabase.rpc(
           "admin_register_assembled_film",
           {

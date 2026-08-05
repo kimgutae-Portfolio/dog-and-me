@@ -30,9 +30,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1920, 1080
 FPS = 24
-PAGE_TURN_SECONDS = 0.7
-PAGE_TURN_TRANSITION = "coverright"
-CLIP_SECONDS = 5.0
+SOURCE_CLIP_SECONDS = 5.0
+STORY_CLIP_SECONDS = 7.0
+BRIDGE_CLIP_SECONDS = 1.6
+PAGE_CURL_SECONDS = 0.95
+BRIDGE_DISSOLVE_SECONDS = 0.28
+CARD_DISSOLVE_SECONDS = 0.65
+ENDING_DISSOLVE_SECONDS = 0.75
 INTRO_CARD_SECONDS = 3.0
 ENDING_CARD_SECONDS = 7.0
 
@@ -177,13 +181,68 @@ def image_to_clip(png_path, out_path, duration):
          "-an", out_path])
 
 
-def normalize_clip(src, out_path, duration=CLIP_SECONDS):
-    run(["ffmpeg", "-y", "-i", src, "-t", str(duration),
-         "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},format=yuv420p",
-         "-an", out_path])
+def normalize_story_clip(src, out_path):
+    """Give each story page enough reading time without introducing a freeze.
+
+    The original five-second Runway motion is played slightly slower. Frame
+    blending keeps restrained watercolor motion soft instead of juddering.
+    """
+    speed = STORY_CLIP_SECONDS / SOURCE_CLIP_SECONDS
+    run([
+        "ffmpeg", "-y", "-i", src, "-t", str(SOURCE_CLIP_SECONDS),
+        "-vf",
+        (
+            f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+            f"setpts={speed:.6f}*PTS,minterpolate=fps={FPS}:mi_mode=blend,"
+            "format=yuv420p"
+        ),
+        "-an", "-t", str(STORY_CLIP_SECONDS), out_path,
+    ])
 
 
-def concat_with_xfade(segments, durations, out_path, letterbox_pct=0.0, film_look=False):
+def normalize_bridge_clip(src, out_path):
+    """Use a moving bridge only as a brief visual breath, never a full scene."""
+    source_offset = max((SOURCE_CLIP_SECONDS - BRIDGE_CLIP_SECONDS) / 2, 0)
+    run([
+        "ffmpeg", "-y", "-ss", f"{source_offset:.3f}", "-i", src,
+        "-t", str(BRIDGE_CLIP_SECONDS),
+        "-vf",
+        f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},format=yuv420p",
+        "-an", out_path,
+    ])
+
+
+def transition_spec(previous_kind, next_kind):
+    if previous_kind == "title":
+        return "fade", CARD_DISSOLVE_SECONDS
+    if next_kind == "ending_card":
+        return "fade", ENDING_DISSOLVE_SECONDS
+    if previous_kind == "story" and next_kind == "bridge":
+        return "page_curl", PAGE_CURL_SECONDS
+    if previous_kind == "bridge" and next_kind == "story":
+        return "fade", BRIDGE_DISSOLVE_SECONDS
+    return "fade", CARD_DISSOLVE_SECONDS
+
+
+def page_curl_filter(previous_label, input_index, duration, offset, output_label):
+    """A bowed paper edge plus a neutral shadow, instead of a PPT-style wipe."""
+    boundary = "W*(1-P)+sin(Y/H*PI)*W*0.08*sin(P*PI)"
+    expression = (
+        f"if(lt(X,{boundary}),A,"
+        f"if(lt(X,{boundary}+5),if(eq(PLANE,0),235,128),"
+        f"if(lt(X,{boundary}+80),"
+        f"if(eq(PLANE,0),B*(0.62+0.38*(X-({boundary}))/80),B),B)))"
+    )
+    return (
+        f"[{previous_label}][{input_index}:v]"
+        f"xfade=transition=custom:duration={duration:.3f}:offset={offset:.3f}:"
+        f"expr='{expression}'[{output_label}]"
+    )
+
+
+def concat_with_xfade(
+    segments, durations, kinds, out_path, letterbox_pct=0.0, film_look=False
+):
     n = len(segments)
     inputs = []
     for s in segments:
@@ -191,14 +250,26 @@ def concat_with_xfade(segments, durations, out_path, letterbox_pct=0.0, film_loo
     filter_parts = []
     prev_label = "0:v"
     cum = durations[0]
+    segment_starts = [0.0]
+    transition_durations = []
     for i in range(1, n):
-        offset = cum - PAGE_TURN_SECONDS
+        transition, transition_duration = transition_spec(kinds[i - 1], kinds[i])
+        offset = cum - transition_duration
         label = f"v{i}"
-        filter_parts.append(
-            f"[{prev_label}][{i}:v]xfade=transition={PAGE_TURN_TRANSITION}:"
-            f"duration={PAGE_TURN_SECONDS}:offset={offset:.3f}[{label}]"
-        )
-        cum = cum + durations[i] - PAGE_TURN_SECONDS
+        if transition == "page_curl":
+            filter_parts.append(
+                page_curl_filter(
+                    prev_label, i, transition_duration, offset, label
+                )
+            )
+        else:
+            filter_parts.append(
+                f"[{prev_label}][{i}:v]xfade=transition=fade:"
+                f"duration={transition_duration:.3f}:offset={offset:.3f}[{label}]"
+            )
+        segment_starts.append(offset)
+        transition_durations.append(transition_duration)
+        cum = cum + durations[i] - transition_duration
         prev_label = label
     if letterbox_pct > 0:
         bar = round(H * letterbox_pct / 100)
@@ -224,7 +295,7 @@ def concat_with_xfade(segments, durations, out_path, letterbox_pct=0.0, film_loo
         out_path,
     ]
     run(cmd)
-    return cum
+    return cum, segment_starts, transition_durations
 
 
 def mux_bgm(video_path, bgm_path, out_path, total_duration, ending_card_start):
@@ -250,6 +321,7 @@ def main():
     ap.add_argument("--memory-clips", required=True, nargs="+",
                      help='e.g. "2,3" "4,5" "6" — one group per memory block')
     ap.add_argument("--ending-clip", required=True, type=int)
+    ap.add_argument("--bridge-clips", nargs="*", type=int, default=[])
     ap.add_argument("--kicker", default="A MOVING STORYBOOK")
     ap.add_argument("--title", required=True)
     ap.add_argument("--ending-text", required=True, help="use \\n for line breaks")
@@ -277,6 +349,7 @@ def main():
         captions = [item.strip() for item in captions]
 
     memory_groups = [[int(x) for x in g.split(",")] for g in args.memory_clips]
+    bridge_clip_numbers = set(args.bridge_clips)
     order_dir = args.order_dir
 
     def clip_path(n):
@@ -297,13 +370,22 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         segments = []
         durations = []
+        segment_kinds = []
 
         def add_storybook_clip(n, tag):
             nonlocal clips_done
             clip_mp4 = os.path.join(tmp, f"seg_{tag}_clip.mp4")
-            normalize_clip(clip_path(n), clip_mp4)
+            if n in bridge_clip_numbers:
+                normalize_bridge_clip(clip_path(n), clip_mp4)
+                clip_duration = BRIDGE_CLIP_SECONDS
+                clip_kind = "bridge"
+            else:
+                normalize_story_clip(clip_path(n), clip_mp4)
+                clip_duration = STORY_CLIP_SECONDS
+                clip_kind = "story"
             segments.append(clip_mp4)
-            durations.append(CLIP_SECONDS)
+            durations.append(clip_duration)
+            segment_kinds.append(clip_kind)
 
             clips_done += 1
             progress(10 + 40 * clips_done / total_clips,
@@ -318,6 +400,7 @@ def main():
         image_to_clip(intro_png, intro_card_mp4, INTRO_CARD_SECONDS)
         segments.append(intro_card_mp4)
         durations.append(INTRO_CARD_SECONDS)
+        segment_kinds.append("title")
 
         # 2. Intro clip — the first moving picture-book page.
         add_storybook_clip(args.intro_clip, "intro")
@@ -338,26 +421,10 @@ def main():
         image_to_clip(ending_png, ending_card_mp4, ENDING_CARD_SECONDS)
         segments.append(ending_card_mp4)
         durations.append(ENDING_CARD_SECONDS)
+        segment_kinds.append("ending_card")
 
         if captions and len(captions) != total_clips:
             raise ValueError(f"expected {total_clips} scene captions, received {len(captions)}")
-
-        segment_starts = [0.0]
-        for index in range(1, len(durations)):
-            segment_starts.append(
-                segment_starts[-1] + durations[index - 1] - PAGE_TURN_SECONDS
-            )
-        caption_windows = []
-        for index in range(total_clips):
-            clip_index = 1 + index
-            caption_windows.append((
-                segment_starts[clip_index] + 0.20,
-                segment_starts[clip_index] + CLIP_SECONDS - 0.20,
-            ))
-
-        print(f"[assemble] {len(segments)} segments, raw total "
-              f"{sum(durations):.1f}s, after {len(segments)-1} page turns "
-              f"~{sum(durations) - PAGE_TURN_SECONDS*(len(segments)-1):.1f}s", file=sys.stderr)
 
         # The single concat call is most of the wall time — say so, because the
         # UI will otherwise look frozen here for minutes.
@@ -366,7 +433,38 @@ def main():
         needs_post_process = bool(args.bgm or captions)
         assembled_out = os.path.join(tmp, "assembled.mp4") if needs_post_process else args.out
         letterbox_pct = args.letterbox_pct if args.letterbox else 0.0
-        total_duration = concat_with_xfade(segments, durations, assembled_out, letterbox_pct, args.film_look)
+        total_duration, segment_starts, transition_durations = concat_with_xfade(
+            segments,
+            durations,
+            segment_kinds,
+            assembled_out,
+            letterbox_pct,
+            args.film_look,
+        )
+
+        caption_windows = []
+        for index in range(total_clips):
+            clip_index = 1 + index
+            transition_in = transition_durations[clip_index - 1]
+            transition_out = (
+                transition_durations[clip_index]
+                if clip_index < len(transition_durations)
+                else 0
+            )
+            caption_windows.append((
+                segment_starts[clip_index] + transition_in + 0.18,
+                segment_starts[clip_index]
+                + durations[clip_index]
+                - transition_out
+                - 0.18,
+            ))
+
+        print(
+            f"[assemble] {len(segments)} segments, raw total "
+            f"{sum(durations):.1f}s, after {len(transition_durations)} "
+            f"editorial transitions ~{total_duration:.1f}s",
+            file=sys.stderr,
+        )
 
         video_for_audio = assembled_out
         if captions:

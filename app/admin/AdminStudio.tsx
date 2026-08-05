@@ -822,12 +822,8 @@ export function AdminStudio() {
     transitionClips.length === 4 &&
     sceneStills.every((still) => clipByStillId.has(still.id)) &&
     [0, 1, 2, 3].every((index) => transitionClipByIndex.has(index));
-  // Mirrors scripts/assemble_film.py: title page + n moving pages + ending
-  // page, minus one 0.7s picture-book page cover per join.
   const assemblyClipCount = renderClips.length + transitionClips.length;
-  const estimatedSeconds = assemblyClipCount
-    ? 3.0 + assemblyClipCount * 5.0 + 7.0 - 0.7 * (assemblyClipCount + 1)
-    : 0;
+  const estimatedSeconds = 45;
   const openMessages = useMemo(
     () =>
       messages.filter(
@@ -3897,9 +3893,7 @@ export function AdminStudio() {
                       </div>
                       <span>
                         {assemblyClipCount}/9本
-                        {estimatedSeconds > 0
-                          ? ` · 約${Math.round(estimatedSeconds)}秒`
-                          : ""}
+                        {` · 完成約${estimatedSeconds}秒`}
                       </span>
                     </div>
 
@@ -4055,7 +4049,7 @@ export function AdminStudio() {
                                     {nextMemory?.title ?? `物語${index + 2}`}
                                   </strong>
                                   <small>
-                                    背景だけの接続ページをTurboで動かした5秒映像
+                                    5秒素材の中央部分を約1.6秒だけ、ページをめくる瞬間に使用
                                   </small>
                                   {clip ? (
                                     <>
