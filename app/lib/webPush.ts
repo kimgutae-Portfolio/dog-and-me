@@ -1,5 +1,3 @@
-import { importJWK, SignJWT } from "jose";
-
 export type WebPushSubscription = {
   endpoint: string;
   keys: { p256dh: string; auth: string };
@@ -73,14 +71,24 @@ async function createVapidToken(endpoint: URL, config: WebPushConfig) {
     x: encodeBase64Url(publicKey.slice(1, 33)),
     y: encodeBase64Url(publicKey.slice(33, 65)),
   };
-  const signingKey = await importJWK(jwk, "ES256");
-  return new SignJWT({
+  const signingKey = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
+  const header = encodeBase64Url(encoder.encode(JSON.stringify({ alg: "ES256", typ: "JWT" })));
+  const payload = encodeBase64Url(encoder.encode(JSON.stringify({
     aud: endpoint.origin,
     exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60,
     sub: config.subject,
-  })
-    .setProtectedHeader({ alg: "ES256", typ: "JWT" })
-    .sign(signingKey);
+  })));
+  const signingInput = encoder.encode(`${header}.${payload}`);
+  const signature = new Uint8Array(
+    await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, signingKey, signingInput),
+  );
+  return `${header}.${payload}.${encodeBase64Url(signature)}`;
 }
 
 async function encryptPayload(subscription: WebPushSubscription, payload: string) {
