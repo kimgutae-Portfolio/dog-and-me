@@ -40,14 +40,10 @@ export default defineConfig(async ({ command }) => {
           },
         ]
       : [],
-    // The local Worker runner still needs the explicit flag to load
-    // node:async_hooks (the hosted runtime now treats it as the default).
-    ...(command === "serve"
-      ? {
-          compatibility_date: "2024-09-23",
-          compatibility_flags: ["nodejs_compat"],
-        }
-      : {}),
+    // Keep Node-compatible Web Crypto/HTTP dependencies available in both
+    // the local runner and the hosted Worker runtime.
+    compatibility_date: "2024-09-23",
+    compatibility_flags: ["nodejs_compat"],
   };
 
   return {
