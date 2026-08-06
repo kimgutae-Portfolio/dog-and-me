@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import webpush, { type PushSubscription } from "web-push";
+import { sendWebPushNotification } from "./webPush";
 
 export type AdminPushEventType =
   | "order_submitted"
@@ -97,8 +97,6 @@ export async function notifyAdmins({
   if (!profiles?.length) return { notified: 0, notificationIds: [], reason: "no_admin" };
 
   const config = vapidConfig();
-  if (config) webpush.setVapidDetails(config.subject, config.publicKey, config.privateKey);
-
   const origin = (process.env.SITE_ORIGIN || "https://kimi-to-no-eiga.ggutae0.chatgpt.site").replace(/\/+$/, "");
   const href = `${origin}/admin?order=${encodeURIComponent(orderId)}`;
   const dedupeKey = `${type}:${orderId}:${eventKey?.trim() || "event"}`;
@@ -152,12 +150,12 @@ export async function notifyAdmins({
     let lastError = "";
     const payload = JSON.stringify({ notificationId: notification.id, title, body, href, type });
     for (const subscription of subscriptions as Array<{ id: string; endpoint: string; p256dh: string; auth: string }>) {
-      const pushSubscription: PushSubscription = {
+      const pushSubscription = {
         endpoint: subscription.endpoint,
         keys: { p256dh: subscription.p256dh, auth: subscription.auth },
       };
       try {
-        await webpush.sendNotification(pushSubscription, payload, { TTL: 86400, urgency: "high" });
+        await sendWebPushNotification(pushSubscription, payload, config);
         delivered += 1;
       } catch (error) {
         lastError = error instanceof Error ? error.message : "push_failed";

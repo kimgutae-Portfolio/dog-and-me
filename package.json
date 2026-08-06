@@ -23,11 +23,11 @@
     "drizzle-orm": "0.45.2",
     "fflate": "0.7.4",
     "heic2any": "^0.0.4",
+    "jose": "^6.1.0",
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "stripe": "^22.4.0",
-    "web-push": "^3.6.7"
+    "stripe": "^22.4.0"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
