@@ -200,6 +200,28 @@ export type SecurityEvent = {
   created_at: string;
 };
 
+export type AdminNotification = {
+  id: string;
+  admin_user_id: string;
+  order_id: string | null;
+  notification_type: string;
+  title: string;
+  body: string;
+  href: string;
+  dedupe_key: string;
+  push_status:
+    | "pending"
+    | "sent"
+    | "failed"
+    | "not_subscribed"
+    | "not_configured"
+    | "expired";
+  delivery_count: number;
+  error_message: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
 /** Japanese labels for the audit log shown in the admin security section. */
 export const SECURITY_EVENT_LABELS: Record<string, string> = {
   login_succeeded: "ログイン成功",

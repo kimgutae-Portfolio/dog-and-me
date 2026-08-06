@@ -15,6 +15,7 @@ import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { hasCurrentConsent } from "../lib/consent";
 import { APPLICATIONS_OPEN } from "../lib/site";
+import { AdminPushCenter } from "./AdminPushCenter";
 import type {
   FilmConcept,
   MemoryOrder,
@@ -2669,6 +2670,7 @@ export function AdminStudio() {
             </summary>
 
             <div className="admin-security-body">
+              <AdminPushCenter />
               <section>
                 <h4>二段階認証（TOTP）</h4>
                 {mfaFactors.length > 0 ? (

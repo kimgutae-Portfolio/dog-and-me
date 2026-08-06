@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { notifyAdmins } from "../../../lib/adminPush";
 import { getStripeServerClient } from "../../../lib/stripe-server";
 
 export const runtime = "nodejs";
@@ -52,6 +53,12 @@ export async function POST(request: NextRequest) {
           p_livemode: event.livemode,
         });
         if (error) throw error;
+        const orderId = typeof session.metadata?.order_id === "string"
+          ? session.metadata.order_id
+          : session.client_reference_id;
+        if (orderId) {
+          await notifyAdmins({ orderId, type: "payment_succeeded", eventKey: event.id });
+        }
       }
     } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
       const session = event.data.object as Stripe.Checkout.Session;

@@ -8,6 +8,7 @@ import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS } from "../lib/consent";
 import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
+import { notifyAdminFromCustomer } from "../lib/adminPushClient";
 import type { StoryDraftAsset, StoryDraftRecord } from "../lib/supabase/types";
 import {
   deleteStoryDraftImage,
@@ -938,6 +939,7 @@ export function StoryWizard() {
         },
       );
       if (completeDraftError) console.error(completeDraftError);
+      await notifyAdminFromCustomer(orderId, "order_submitted", orderId);
       window.localStorage.removeItem("kimi-film-draft");
       window.localStorage.removeItem(`wan-memory-story-draft-${user.id}`);
       window.localStorage.removeItem("wan-memory-pending-order-id");

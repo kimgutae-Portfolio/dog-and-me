@@ -626,6 +626,18 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-security-log { max-height: 260px; overflow-y: auto; display: grid; gap: 5px; }
 .admin-security-log article { padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #ece7de; font-size: 9px; }
 .admin-security-log small { color: var(--muted); flex: 0 0 auto; }
+.admin-push-center { padding: 16px; border: 1px solid rgba(64,59,53,.12); background: #fbf8f1; }
+.admin-push-head, .admin-push-history-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.admin-push-head h4, .admin-push-history-head h4 { margin: 0; }
+.admin-push-status { padding: 4px 9px; border: 1px solid #b9a48f; color: #8a6b4d; font-size: 8px; white-space: nowrap; }
+.admin-push-status.on { border-color: #7f9c7d; color: #4c6b4a; }
+.admin-push-history { margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(64,59,53,.12); }
+.admin-push-history-list { max-height: 300px; margin-top: 10px; overflow-y: auto; display: grid; gap: 6px; }
+.admin-push-history-list article { padding: 10px 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; background: #ece7de; cursor: pointer; }
+.admin-push-history-list article.unread { border-left: 3px solid #a16f70; background: #f4e9e1; }
+.admin-push-history-list strong { font-size: 10px; }
+.admin-push-history-list p { margin: 4px 0 0; color: var(--muted); font-size: 9px; line-height: 1.7; }
+.admin-push-history-list small { color: var(--muted); font-size: 8px; text-align: right; white-space: nowrap; }
 .admin-render-clips { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
 .admin-render-section-label { margin: 22px 0 0; color: var(--rust); font-size: 8px; font-weight: 700; letter-spacing: .14em; }
 .admin-transition-clips { margin-top: 10px; }
@@ -2195,6 +2207,10 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .photo-guide-dialog > footer .button { min-height: 52px; font-size: 14px; }
 
 @media (max-width: 640px) {
+  .admin-push-head,
+  .admin-push-history-head { align-items: flex-start; flex-direction: column; }
+  .admin-push-history-list article { flex-direction: column; gap: 8px; }
+  .admin-push-history-list small { text-align: left; white-space: normal; }
   .auth-page { padding-inline: 16px; }
   .auth-card { padding: 36px 24px; }
   .auth-card > .brand { margin-bottom: 42px; }

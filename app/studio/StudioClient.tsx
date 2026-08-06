@@ -13,6 +13,7 @@ import {
 import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS, hasCurrentConsent } from "../lib/consent";
 import { APPLICATIONS_OPEN } from "../lib/site";
+import { notifyAdminFromCustomer } from "../lib/adminPushClient";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type {
   Delivery,
@@ -694,13 +695,14 @@ export function StudioClient() {
           order_id: order.id,
           sender_id: user.id,
           body: messageBody.trim(),
-        });
+        })
       if (messageError) {
         setError("メッセージを送信できませんでした。");
         return;
       }
       setMessageBody("");
       setNotice("担当者へメッセージを送りました。");
+      await notifyAdminFromCustomer(order.id, "customer_message", `${Date.now()}`);
       await loadDetails(order.id);
     } finally {
       setSendingMessage(false);
@@ -730,6 +732,7 @@ export function StudioClient() {
     }
     setRevisionBody("");
     setNotice("修正依頼を受け付けました。");
+    await notifyAdminFromCustomer(order.id, "customer_revision", `${Date.now()}`);
     await Promise.all([loadOrders(), loadDetails(order.id)]);
   };
 
@@ -876,6 +879,7 @@ export function StudioClient() {
     } else {
       setApprovalChecked(false);
       setNotice("この映像で確定しました。担当者が最終納品の準備を進めます。");
+      await notifyAdminFromCustomer(order.id, "review_approved", `${Date.now()}`);
       await Promise.all([loadOrders(), loadDetails(order.id)]);
     }
     setApprovingReview(false);
@@ -909,6 +913,7 @@ export function StudioClient() {
       setNotice(
         "絵本ページと文章を確定しました。この内容で動画制作を開始します。",
       );
+      await notifyAdminFromCustomer(order.id, "stills_approved", `${Date.now()}`);
       await Promise.all([loadOrders(), loadDetails(order.id)]);
     }
     setApprovingStills(false);
@@ -943,6 +948,7 @@ export function StudioClient() {
       setNotice(
         "調整のご希望をお送りしました。新しい絵本ページをお待ちください。",
       );
+      await notifyAdminFromCustomer(order.id, "stills_change_requested", `${Date.now()}`);
       await Promise.all([loadOrders(), loadDetails(order.id)]);
     }
     setSendingStillsChange(false);
