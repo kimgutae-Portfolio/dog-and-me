@@ -40,14 +40,10 @@ export default defineConfig(async ({ command }) => {
           },
         ]
       : [],
-    // The local Worker runner still needs the explicit flag to load
-    // node:async_hooks (the hosted runtime now treats it as the default).
-    ...(command === "serve"
-      ? {
-          compatibility_date: "2024-09-23",
-          compatibility_flags: ["nodejs_compat"],
-        }
-      : {}),
+    // Keep the local runner and hosted Worker on the same Node compatibility
+    // surface for existing server routes.
+    compatibility_date: "2024-09-23",
+    compatibility_flags: ["nodejs_compat"],
   };
 
   return {
