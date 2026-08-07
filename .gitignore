@@ -42,3 +42,4 @@ pnpm-debug.log*
 # Local documentation drafts
 /docs/RUNWAY_PROMPT_TEMPLATE.md
 /docs/SECURITY.md
+/output/

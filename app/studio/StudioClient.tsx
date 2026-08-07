@@ -26,6 +26,7 @@ import type {
 } from "../lib/supabase/types";
 import { ORDER_STATUS_LABELS } from "../lib/supabase/types";
 import { uploadOrderImages } from "../lib/supabase/uploads";
+import { ChatWidget } from "./ChatWidget";
 import { MemoryShareManager } from "./MemoryShareManager";
 
 const journeySteps = [
@@ -2021,69 +2022,35 @@ export function StudioClient() {
                   </p>
                 )}
               </section>
-
-              <aside className="studio-card message-card" id="messages">
-                <p className="eyebrow">MESSAGE</p>
-                <h2>担当者とのメッセージ</h2>
-                <div className="message-notification-note">
-                  <span aria-hidden="true">✉</span>
-                  <p>
-                    <strong>
-                      担当者からの確認やお願いはこちらに届きます。
-                    </strong>
-                    <small>
-                      新しいメッセージは、ご登録のメールアドレスにもお知らせします。内容は制作室でご確認ください。
-                    </small>
-                  </p>
-                </div>
-                <div className="message-thread">
-                  {messages.length ? (
-                    messages.slice(-5).map((message) => {
-                      const fromCustomer = message.sender_id === order.user_id;
-                      return (
-                        <article
-                          className={fromCustomer ? "mine" : ""}
-                          key={message.id}
-                        >
-                          <small>
-                            {fromCustomer ? "あなた" : "担当ディレクター"} ·{" "}
-                            {formatDate(message.created_at)}
-                          </small>
-                          <p>{message.body}</p>
-                        </article>
-                      );
-                    })
-                  ) : (
-                    <p className="message-empty">
-                      追加したい思い出やご質問をこちらから送れます。
-                    </p>
-                  )}
-                </div>
-                {canOperateOrder ? (
-                  <form className="message-form" onSubmit={sendMessage}>
-                    <textarea
-                      required
-                      value={messageBody}
-                      onChange={(event) => setMessageBody(event.target.value)}
-                      rows={3}
-                      maxLength={3000}
-                      placeholder="担当者へ伝えたいこと"
-                    />
-                    <button
-                      className="button button-outline message-send-button"
-                      type="submit"
-                      disabled={sendingMessage}
-                    >
-                      {sendingMessage ? "送信中…" : "メッセージを送る"}
-                    </button>
-                  </form>
-                ) : (
-                  <p className="readonly-preview-note">
-                    閲覧専用プレビューではメッセージを送信できません。
-                  </p>
-                )}
-              </aside>
             </div>
+
+            <ChatWidget
+              key={order.id}
+              order={order}
+              currentUserId={user.id}
+              canOperate={canOperateOrder}
+              messages={messages}
+              messageBody={messageBody}
+              onMessageBodyChange={setMessageBody}
+              sending={sendingMessage}
+              onSend={sendMessage}
+              onMessageReceived={(message) =>
+                setMessages((current) =>
+                  current.some((existing) => existing.id === message.id)
+                    ? current
+                    : [...current, message],
+                )
+              }
+              onMessagesRead={() =>
+                setMessages((current) =>
+                  current.map((existing) =>
+                    existing.sender_id !== user.id && !existing.read_at
+                      ? { ...existing, read_at: new Date().toISOString() }
+                      : existing,
+                  ),
+                )
+              }
+            />
 
             {canOperateOrder ? (
               <MemoryShareManager

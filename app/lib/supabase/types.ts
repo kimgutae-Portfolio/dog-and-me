@@ -339,6 +339,7 @@ export type OrderMessage = {
   status: "open" | "resolved";
   resolved_at: string | null;
   resolved_by: string | null;
+  read_at: string | null;
   created_at: string;
 };
 
