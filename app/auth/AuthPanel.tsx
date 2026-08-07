@@ -63,6 +63,22 @@ export function AuthPanel() {
       router.replace(nextPath);
   }, [loading, nextPath, router, searchParams, user]);
 
+  // Supabase reports a failed/expired confirmation or reset link via
+  // #error=...&error_description=... in the URL hash (not the query string),
+  // since it reuses the same redirect used for a successful session.
+  useEffect(() => {
+    if (!window.location.hash) return;
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const description = hashParams.get("error_description");
+    if (!description) return;
+    setError(friendlyError(decodeURIComponent(description.replace(/\+/g, " "))));
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search,
+    );
+  }, []);
+
   useEffect(() => {
     if (!signupConfirmationEmail) return;
     const previousOverflow = document.body.style.overflow;

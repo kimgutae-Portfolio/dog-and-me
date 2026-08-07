@@ -226,6 +226,7 @@ export function StoryWizard() {
   const photoFilesRef = useRef<PhotoDraft[]>([]);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const photoPreviewDialogRef = useRef<HTMLElement>(null);
+  const memoryCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const saveSequenceRef = useRef(0);
 
   useEffect(() => {
@@ -1171,19 +1172,33 @@ export function StoryWizard() {
                     <article
                       className={`memory-entry-card${complete ? " complete" : ""}`}
                       key={memory.clientKey}
+                      ref={(el) => {
+                        memoryCardRefs.current[memory.clientKey] = el;
+                      }}
                     >
                       <button
                         type="button"
                         className="memory-entry-toggle"
                         aria-expanded={expanded}
                         aria-controls={`memory-entry-content-${memory.clientKey}`}
-                        onClick={() =>
+                        onClick={() => {
+                          const opening = activeMemoryKey !== memory.clientKey;
                           setActiveMemoryKey((current) =>
                             current === memory.clientKey
                               ? ""
                               : memory.clientKey,
-                          )
-                        }
+                          );
+                          if (opening) {
+                            window.requestAnimationFrame(() => {
+                              memoryCardRefs.current[
+                                memory.clientKey
+                              ]?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                              });
+                            });
+                          }
+                        }}
                       >
                         <span className="memory-entry-toggle-copy">
                           <span>
