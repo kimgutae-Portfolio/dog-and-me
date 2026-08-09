@@ -96,6 +96,7 @@ export function StudioClient() {
   const [conceptReceipt, setConceptReceipt] = useState<{
     slot: "A" | "B";
     title: string;
+    checkoutUrl: string | null;
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -521,9 +522,11 @@ export function StudioClient() {
           : item,
       ),
     );
-    setNotice("選択した物語案を保存しました。決済画面を準備しています。");
-    await startStripeCheckout(true);
-    setConceptReceipt({ slot, title: conceptTitle });
+    const checkoutUrl = await startStripeCheckout(true, false);
+    if (checkoutUrl) {
+      setNotice("");
+      setConceptReceipt({ slot, title: conceptTitle, checkoutUrl });
+    }
     setConfirmingConcept(false);
   };
 
@@ -776,10 +779,13 @@ export function StudioClient() {
     setAcceptingConsent(false);
   };
 
-  const startStripeCheckout = async (fromConceptSelection = false) => {
+  const startStripeCheckout = async (
+    fromConceptSelection = false,
+    autoRedirect = true,
+  ): Promise<string | null> => {
     if (!APPLICATIONS_OPEN) {
       setError("現在、お支払い受付は準備中です。受付開始までお待ちください。");
-      return;
+      return null;
     }
     if (
       !order ||
@@ -790,7 +796,7 @@ export function StudioClient() {
       !consentCurrent ||
       startingPayment
     )
-      return;
+      return null;
     setStartingPayment(true);
     setError("");
     setNotice("");
@@ -802,7 +808,7 @@ export function StudioClient() {
         setError(
           "ログイン情報を確認できませんでした。もう一度ログインしてください。",
         );
-        return;
+        return null;
       }
       const response = await fetch("/api/payments/checkout", {
         method: "POST",
@@ -821,12 +827,12 @@ export function StudioClient() {
       if (result.paid) {
         await loadOrders();
         setNotice("お支払いは確認済みです。");
-        return;
+        return null;
       }
       if (result.processing) {
         setNotice("入金結果を確認しています。数秒後に自動で反映されます。");
         window.setTimeout(() => void loadOrders(), 3000);
-        return;
+        return null;
       }
       if (!response.ok || !result.url) {
         setError(
@@ -844,9 +850,10 @@ export function StudioClient() {
                     ? "決済画面を準備しています。数秒待ってから、もう一度お試しください。"
                     : "決済画面を開けませんでした。時間をおいてもう一度お試しください。",
         );
-        return;
+        return null;
       }
-      window.location.assign(result.url);
+      if (autoRedirect) window.location.assign(result.url);
+      return result.url;
     } finally {
       setStartingPayment(false);
     }
@@ -1027,7 +1034,7 @@ export function StudioClient() {
             <h2 id="concept-receipt-title">物語案をお預かりしました。</h2>
             <p id="concept-receipt-copy">
               「{conceptReceipt.title}
-              」で制作希望を送信しました。担当者が内容を確認し、次の準備を進めますので、少しお待ちください。
+              」で制作希望を送信しました。次に、制作を始めるためのお支払いへお進みください。
             </p>
             <aside>
               <strong>制作が始まる前なら変更できます</strong>
@@ -1039,9 +1046,19 @@ export function StudioClient() {
               autoFocus
               className="button button-primary"
               type="button"
+              onClick={() => {
+                if (conceptReceipt.checkoutUrl)
+                  window.location.assign(conceptReceipt.checkoutUrl);
+              }}
+            >
+              お支払いへ進む →
+            </button>
+            <button
+              className="auth-text-button"
+              type="button"
               onClick={() => setConceptReceipt(null)}
             >
-              制作室に戻る →
+              あとで支払う（制作室に戻る）
             </button>
           </section>
         </div>

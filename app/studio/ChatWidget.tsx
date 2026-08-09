@@ -5,10 +5,18 @@ import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { MemoryOrder, OrderMessage } from "../lib/supabase/types";
 
 function formatTime(value: string) {
+  // Realtime postgres_changes payloads carry Postgres's native timestamp
+  // text ("2026-08-09 12:34:56.123+00", space-separated) instead of the
+  // ISO 8601 format PostgREST normalizes to for regular selects. Safari's
+  // Date parser is strict and throws on the space-separated form, which
+  // would otherwise crash the whole message list mid-render.
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return "";
   return new Intl.DateTimeFormat("ja-JP", {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function ChatWidget({
@@ -174,7 +182,7 @@ export function ChatWidget({
       )}
       <button
         type="button"
-        className="chat-widget-toggle"
+        className={`chat-widget-toggle${open ? " is-open" : ""}`}
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-label={
@@ -183,11 +191,14 @@ export function ChatWidget({
             : "担当者とのメッセージ"
         }
       >
-        {open ? "×" : "✉"}
-        {!open && unreadCount > 0 && (
-          <span className="chat-widget-badge" aria-hidden="true">
-            !
-          </span>
+        <span className="chat-widget-toggle-icon" aria-hidden="true">
+          {open ? "×" : "✉"}
+          {!open && unreadCount > 0 && (
+            <span className="chat-widget-badge">!</span>
+          )}
+        </span>
+        {!open && (
+          <span className="chat-widget-toggle-label">担当者へメッセージ</span>
         )}
       </button>
     </div>
