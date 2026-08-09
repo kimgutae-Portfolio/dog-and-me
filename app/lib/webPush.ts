@@ -36,7 +36,7 @@ function concatBytes(...parts: Uint8Array[]) {
   return result;
 }
 
-async function hmac(keyBytes: Uint8Array, data: Uint8Array) {
+async function hmac(keyBytes: Uint8Array<ArrayBuffer>, data: Uint8Array<ArrayBuffer>) {
   const key = await crypto.subtle.importKey(
     "raw",
     keyBytes,
@@ -47,7 +47,7 @@ async function hmac(keyBytes: Uint8Array, data: Uint8Array) {
   return new Uint8Array(await crypto.subtle.sign("HMAC", key, data));
 }
 
-async function hkdfExpand(prk: Uint8Array, info: Uint8Array, length: number) {
+async function hkdfExpand(prk: Uint8Array<ArrayBuffer>, info: Uint8Array, length: number) {
   const blocks: Uint8Array[] = [];
   let previous = new Uint8Array();
   for (let index = 1; blocks.reduce((total, block) => total + block.length, 0) < length; index += 1) {
