@@ -161,41 +161,183 @@ const CONCEPT_PROPOSAL_PROMPT = `WAN MEMORY STORY CONCEPT PROPOSAL v1.0
   "concept_b": {"title":"","tone":"","summary":"","story_scenes":[{"story_number":1,"story_title":"","text":""},{"story_number":2,"story_title":"","text":""},{"story_number":3,"story_title":"","text":""},{"story_number":4,"story_title":"","text":""},{"story_number":5,"story_title":"","text":""}]}
 }`;
 
-const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v1.0
+const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v2.0
 
-첨부한 order.json의 selected_concept와 stories/01~05의 고객 원본 사진을 읽고 고객 확인용 그림책 페이지를 실제로 제작해줘.
+첨부 자료
+- order.json
+- stories/01~05의 고객 원본 사진
+- style_reference.png: 모든 페이지에 공통으로 적용할 화풍 기준 이미지
+
+첨부한 order.json의 selected_concept와 stories/01~05의 고객 원본 사진을 읽고, 고객 확인용 그림책 페이지를 실제로 제작해줘.
+
+style_reference.png는 화풍만 참고한다.
+style_reference.png에 등장하는 강아지, 체형, 포즈, 목줄, 벚꽃, 꽃잎, 강, 산책로, 계절, 장소, 사물, 사건은 어떤 이야기에도 가져오지 않는다.
 
 진행 방법
-- 이야기 01부터 05까지 한 번에 한 이야기씩 처리한다.
-- 각 이야기에서 primary 파일을 동일 강아지의 정체성·구도 기준으로 사용한다.
-- support 파일은 primary와 충돌하지 않는 세부만 보충한다.
-- 각 이야기마다 새로운 16:9 그림책 페이지 이미지 1장을 제작한다.
-- 이번 단계에서는 Runway나 Gen-4 프롬프트를 작성하지 않는다.
+- 이야기 01부터 05까지 반드시 한 번에 한 이야기씩 순서대로 처리한다.
+- 각 이야기의 primary 사진을 해당 장면의 강아지 정체성, 신체 비율, 액세서리, 중심 행동, 구도 기준으로 사용한다.
+- support 사진은 primary와 충돌하지 않는 세부만 보충한다.
+- style_reference.png는 색감, 수채 표현, 선묘, 종이 질감, 배경 묘사 방식에만 사용한다.
+- 각 이야기마다 원본 사진을 직접 변형한 이미지가 아닌 새로운 16:9 그림책 페이지 이미지 1장을 제작한다.
+- 원본 사진의 종횡비는 그대로 읽고, 크롭·패딩·블러 확장 없이 새로운 16:9 장면으로 재구성한다.
+- 이번 단계에서는 Runway, Gen-4 또는 영상 생성 프롬프트를 작성하지 않는다.
 
-이미지 규칙
-- 얼굴, 자연스러운 눈 크기와 간격, 눈꺼풀, 귀, 주둥이, 체형, 털색과 배치, 꼬리, 보이는 목줄을 유지한다.
-- 과장된 애니메이션 눈, 돌출된 눈, 새로운 털 무늬, 눈물자국을 만들지 않는다.
-- 원본을 크롭하거나 블러 여백으로 확장하지 말고 새로운 16:9 장면으로 재구성한다.
-- 배경은 장소와 계절이 읽히는 수채·과슈 질감으로 표현한다.
-- 강아지는 지나친 실사가 아닌 부드러운 painted illustration으로 표현한다.
-- 고객 사진에 없는 사람, 동물, 액세서리, 사건을 추가하지 않는다.
-- 자막, 글자, 로고, 워터마크를 이미지에 넣지 않는다.
-- 한 장면에는 중심 행동 하나만 두고 작은 영상 움직임을 넣을 여백을 남긴다.
+입력 이미지 역할
+- Image 1: primary reference
+  - 강아지 정체성, 체형, 액세서리, 행동, 장면 구성의 최우선 기준
+- Image 2~3: support reference
+  - primary와 충돌하지 않는 세부만 참고
+- style_reference.png: style-only reference
+  - 화풍만 참고하고 내용이나 강아지 외형은 절대 복사하지 않음
 
-반환
-- 실제 그림책 페이지 이미지 5장
-- 각 이미지가 어느 story 번호인지 명시
-- 각 페이지마다 order.json의 이야기 제목을 그대로 scene_title로 반환
-- 각 페이지마다 고객에게 이미지와 함께 보여주고 나중에 영상 자막으로도 사용할 짧고 자연스러운 일본어 한 문장을 story_caption으로 반환
-- story_caption은 selected_concept의 해당 장면과 고객이 제공한 사실만 사용하고, 약 25~50자 안에서 장면의 감정과 흐름이 자연스럽게 이어지게 작성
-- 이미지 안에는 story_caption을 직접 넣지 않는다
-- primary/support 사용과 정체성 유지 여부를 짧게 기록
+강아지 정체성 규칙
+- primary 사진에 나타난 동일한 강아지로 인식되어야 한다.
+- 얼굴형, 자연스러운 눈 크기와 간격, 눈꺼풀, 시선, 귀의 형태와 위치를 유지한다.
+- 주둥이의 길이와 폭, 코의 크기와 형태를 유지한다.
+- 머리와 몸통의 비율을 유지한다.
+- 몸통의 길이와 높이, 가슴에서 지면까지의 간격을 유지한다.
+- 다리 길이, 팔꿈치 위치, 뒷다리 각도, 발 크기를 primary 사진과 동일하게 유지한다.
+- 다리를 짧게 만들거나 머리를 크게 만들지 않는다.
+- 털색, 털의 배치, 미용 길이, 곱슬기와 질감을 유지한다.
+- 꼬리의 길이, 말림, 방향을 유지한다.
+- 목줄, 하네스, 옷 등 보이는 액세서리의 형태와 색상을 유지한다.
+- 액세서리에 있는 글자나 브랜드 표시는 재현하지 않는다.
+- support 사진 때문에 primary의 외형이나 비율을 변경하지 않는다.
 
-이미지 1장마다 다음 정보도 함께 반환
+금지되는 강아지 표현
+- 과장된 애니메이션 눈
+- 지나치게 크거나 돌출된 눈
+- primary보다 짧은 다리
+- 과도하게 큰 머리
+- 지나치게 둥글거나 뚱뚱해진 몸통
+- 새로운 털 무늬
+- 눈물자국
+- 눈물이나 과장된 슬픔
+- 공격적인 표정이나 이빨
+- 다른 품종처럼 보이는 외형
+- 지나친 실사 표현
+
+공통 화풍 잠금 규칙
+모든 페이지에 아래 화풍을 동일하게 적용한다.
+
+- 밝고 맑은 일본 그림책풍 수채화
+- 수채화 중심의 표현
+- 과슈는 밝은 부분과 중요한 세부에만 제한적으로 사용
+- 투명하게 겹쳐지는 수채 레이어
+- 섬세한 연필선과 수채 선묘
+- 털은 큰 덩어리보다 가늘고 자연스러운 여러 가닥으로 표현
+- 얼굴과 눈, 코, 주둥이는 선명하지만 실사적이지 않게 표현
+- 밝은 아이보리색 종이가 하이라이트 사이로 자연스럽게 보이게 표현
+- 맑고 분리된 파스텔 색상
+- 부드럽고 중립적인 그림자
+- 작은 붓 터치로 장소의 깊이와 계절감을 섬세하게 표현
+- 밝고 깨끗한 자연광
+- 손으로 그린 듯한 정교하고 완성도 높은 그림책 일러스트
+- 배경도 생략하지 말고 장소와 계절이 충분히 읽히도록 묘사
+- 강아지는 배경과 같은 수채화 세계 안에 자연스럽게 어우러지게 표현
+
+필수 스타일 문장
+Luminous Japanese picture-book watercolor illustration, watercolor-dominant rendering with sparse restrained gouache accents, transparent layered washes, delicate pencil-and-watercolor contours, fine natural fur strands, pale warm-ivory paper highlights, clean pastel color separation, soft neutral shadows, detailed environmental depth, controlled small brushwork, gentle natural daylight, refined hand-painted storybook finish.
+
+금지되는 화풍
+- 두껍고 불투명한 과슈 덩어리
+- 유화나 임파스토처럼 솟아 보이는 질감
+- 털이 크고 각진 조각처럼 나뉘는 표현
+- 반복되는 디지털 붓 도장 무늬
+- 거칠고 뭉친 잔디 표현
+- 이미지 전체를 덮는 노란색 또는 세피아 필터
+- 탁하고 갈색으로 뭉친 색감
+- 플라스틱 같은 3D 렌더링
+- 평면적인 카툰 스타일
+- 사진처럼 지나친 실사
+- 필름 블러, 필름 그레인, 강한 비네팅
+- 프레임, 테두리, 레터박스
+- 스타일 기준 이미지의 강아지나 배경을 복사하는 것
+
+장면 구성 규칙
+- selected_concept의 해당 장면과 고객이 제공한 사실만 사용한다.
+- 고객 사진에 없는 사람, 동물, 액세서리, 사물, 사건, 장소, 감정을 추가하지 않는다.
+- 사진에 등장하는 요소라도 중심 행동에 필요하지 않으면 단순화할 수 있다.
+- 한 페이지에는 하나의 중심 행동만 표현한다.
+- 강아지의 중심 행동이 즉시 읽히는 구도를 사용한다.
+- 작은 영상 움직임을 추가할 수 있도록 강아지 주변에 자연스러운 여백을 남긴다.
+- 배경은 장소와 계절이 명확하게 읽혀야 한다.
+- 원본 사진을 크롭하거나 블러 배경으로 확장하지 않는다.
+- 새로운 16:9 장면으로 완전히 재구성한다.
+
+사람 표현 규칙
+- order.json의 people_policy를 반드시 확인하고 따른다.
+- face_usage_policy가 faces_never_generated_or_used_back_views_only이면 사람의 얼굴을 생성하지 않는다.
+- 이 경우 사람과 아기는 완전한 뒷모습 또는 얼굴이 완전히 가려진 방향으로만 표현한다.
+- 원본에 없는 사람은 추가하지 않는다.
+
+이미지 내 문자 금지
+- story_caption을 이미지에 넣지 않는다.
+- 자막, 제목, 글자, 숫자, 로고, 브랜드, 상품 라벨, 워터마크를 넣지 않는다.
+- 원본 의상이나 액세서리에 글자가 있더라도 형태와 색상만 유지하고 글자는 제거한다.
+- 글자처럼 보이는 임의의 기호도 만들지 않는다.
+
+이야기별 제작 및 검수 절차
+각 이야기는 다음 순서로 처리한다.
+
+1. order.json에서 이야기 번호, 제목, selected_concept 장면, 시기, 장소, 고객 설명을 확인한다.
+2. primary 사진을 원본 종횡비로 확인한다.
+3. support 사진이 있으면 primary와 충돌하지 않는 세부만 확인한다.
+4. style_reference.png의 화풍만 확인한다.
+5. 새로운 16:9 그림책 페이지를 제작한다.
+6. 제작된 이미지를 primary와 비교해 아래 항목을 검수한다.
+   - 얼굴과 눈
+   - 귀와 주둥이
+   - 머리와 몸통 비율
+   - 몸통 높이
+   - 다리 길이와 발 크기
+   - 털색과 미용 형태
+   - 꼬리
+   - 목줄, 하네스, 의상
+   - 중심 행동과 구도
+7. style_reference.png와 비교해 아래 항목을 검수한다.
+   - 투명한 수채 레이어
+   - 섬세한 선묘
+   - 밝은 종이색
+   - 깨끗한 파스텔 색상
+   - 자연스러운 털 선
+   - 충분한 배경 깊이
+   - 두꺼운 과슈 또는 디지털 붓 덩어리가 없는지
+8. 정체성이나 화풍이 맞지 않으면 다음 이야기로 넘어가지 말고 잘못된 부분만 교정한다.
+9. 검수를 통과한 뒤 다음 이야기로 넘어간다.
+
+story_caption 규칙
+- 고객에게 이미지와 함께 보여줄 짧고 자연스러운 일본어 한 문장으로 작성한다.
+- 나중에 영상 자막으로 그대로 사용할 수 있어야 한다.
+- 약 25~50자 안으로 작성한다.
+- selected_concept의 해당 장면과 고객이 제공한 사실만 사용한다.
+- 고객이 제공하지 않은 사람, 장소, 사건, 행동, 감정을 추가하지 않는다.
+- 다섯 문장이 하나의 이야기처럼 자연스럽게 이어지도록 감정의 흐름을 조정한다.
+- story_caption은 이미지 안에 직접 넣지 않는다.
+
+최종 반환
+- 실제 16:9 그림책 페이지 이미지 5장
+- 각 이미지의 story 번호
+- order.json의 이야기 제목을 그대로 사용한 scene_title
+- 일본어 story_caption
+- 사용한 primary 및 support 파일
+- primary 기준 정체성 유지 여부
+- style_reference 기준 화풍 유지 여부
+- 인물 얼굴 정책 준수 여부
+- 이미지 안에 문자나 로고가 없는지 여부
+
+각 이미지마다 다음 형식으로 반환한다.
+
 {
   "story_number": 1,
   "scene_title": "order.json의 해당 이야기 제목",
-  "story_caption": "고객 확인용 일본어 한 문장"
+  "story_caption": "고객 확인용 일본어 한 문장",
+  "primary_used": "사용한 primary 파일명",
+  "support_used": [],
+  "identity_check": "passed",
+  "style_check": "passed",
+  "people_policy_check": "passed",
+  "embedded_text_check": "passed"
 }`;
 
 const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v3.0
@@ -1596,7 +1738,7 @@ export function AdminStudio() {
           : [
               "STEP 2 · 顧客確認用の絵本ページを作るデータです。",
               "1. order.jsonのselected_conceptを確認します。",
-              "2. Codexへorder.jsonと一つのstoryフォルダだけを添付し、01から05まで順番に制作します。",
+              "2. Codexへorder.json、style_reference.png（画風基準画像・別途用意）、対象のstoryフォルダを添付し、01から05まで順番に制作します。",
               "3. 02_PROMPT_STORYBOOK_IMAGES.txtをそのまま依頼文として使います。",
               "4. 完成した5枚を管理画面へアップロードし、顧客確認へ公開します。",
               "5. この段階ではRunwayプロンプトを作りません。",
