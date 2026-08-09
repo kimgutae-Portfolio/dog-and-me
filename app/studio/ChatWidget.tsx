@@ -47,8 +47,14 @@ export function ChatWidget({
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
+    // The topic includes a random suffix so this always gets a brand-new
+    // channel object. supabase-js reuses an existing channel by exact topic
+    // string, and removeChannel()'s unsubscribe is async — without the
+    // suffix, an effect re-run before the previous channel finished tearing
+    // down (e.g. React Strict Mode's mount/cleanup/mount in dev) would get
+    // back that still-joining channel and crash calling .on() on it.
     const channel = supabase
-      .channel(`order-messages-${order.id}`)
+      .channel(`order-messages-${order.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         {
