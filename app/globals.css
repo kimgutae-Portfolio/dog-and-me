@@ -889,6 +889,16 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-concept-story-scenes label { padding: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.5); }
 .admin-concept-story-scenes label > span { display: block; color: var(--rust); font-size: 8px; font-weight: 700; line-height: 1.6; }
 .admin-concept-story-scenes textarea { margin-top: 6px; }
+.admin-concept-json-import { margin: 18px 0 22px; padding: 16px; border: 1px solid #c8d2c3; background: #f1f5ee; }
+.admin-concept-json-import-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.admin-concept-json-import-head > div { display: grid; gap: 5px; }
+.admin-concept-json-import-head strong { color: #496045; font-size: 10px; }
+.admin-concept-json-import-head small { color: var(--muted); font-size: 9px; line-height: 1.7; }
+.admin-concept-json-import > textarea { width: 100%; margin-top: 12px; padding: 12px; border: 1px solid #c8d2c3; background: white; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; line-height: 1.6; resize: vertical; }
+.admin-concept-json-file { position: relative; overflow: hidden; white-space: nowrap; }
+.admin-concept-json-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.admin-concept-json-actions { margin-top: 10px; display: flex; align-items: center; gap: 12px; }
+.admin-concept-json-actions .admin-operation-note { margin: 0; }
 .admin-empty-copy { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.8; }
 .admin-concepts { margin-bottom: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .admin-concepts > div { padding: 20px; display: grid; gap: 14px; border: 1px solid var(--line); }
@@ -1040,6 +1050,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .admin-attention-summary { grid-template-columns: 1fr 1fr; }
   .admin-attention-summary div { min-height: 76px; }
   .admin-form-grid, .admin-story, .admin-concepts { grid-template-columns: 1fr; }
+  .admin-concept-json-import-head, .admin-concept-json-actions { align-items: stretch; flex-direction: column; }
   .admin-form-grid label.wide { grid-column: auto; }
   .admin-form-grid input, .admin-form-grid select, .admin-form-grid textarea, .admin-concepts input, .admin-concepts textarea, .admin-message-form textarea { min-height: 50px; font-size: 16px; }
   .admin-card > .button, .admin-message-form .button { width: 100%; }

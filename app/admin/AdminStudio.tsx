@@ -50,6 +50,90 @@ const emptyConcept: ConceptDraft = {
   summary: "",
   storyScenes: {},
 };
+
+type ConceptJsonRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): ConceptJsonRecord | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as ConceptJsonRecord)
+    : null;
+}
+
+function asText(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizedText(value: string) {
+  return value.toLocaleLowerCase().replace(/[\s「」『』。、・:：!?！？]/g, "");
+}
+
+function sceneCandidates(value: ConceptJsonRecord) {
+  const candidates = [value.story_scenes, value.storyScenes, value.scenes, value.stories];
+  return candidates.find((item) => Array.isArray(item)) as unknown[] | undefined;
+}
+
+function conceptCandidate(root: ConceptJsonRecord, slot: "A" | "B"): ConceptJsonRecord | null {
+  const lower = slot.toLowerCase();
+  const direct = root[`concept_${lower}`] ?? root[`concept${slot}`];
+  const directRecord = asRecord(direct);
+  if (directRecord) return directRecord;
+  const concepts = root.concepts;
+  if (Array.isArray(concepts)) {
+    return asRecord(
+      concepts.find((item) => {
+        const record = asRecord(item);
+        return asText(record?.slot).toUpperCase() === slot;
+      }),
+    );
+  }
+  if (asRecord(concepts)) {
+    const record = concepts as ConceptJsonRecord;
+    return asRecord(record[slot] ?? record[lower] ?? record[`concept_${lower}`]);
+  }
+  return null;
+}
+
+function conceptFromJson(value: unknown, memories: OrderMemory[], slot: "A" | "B") {
+  const root = asRecord(value);
+  if (!root) throw new Error("JSONのルートはオブジェクトにしてください。");
+  const candidate = conceptCandidate(root, slot);
+  if (!candidate) throw new Error(`構成案${slot}が見つかりません。concept_${slot.toLowerCase()}を確認してください。`);
+  const title = asText(candidate.title ?? candidate.name);
+  const tone = asText(candidate.tone ?? candidate.style);
+  const summary = asText(candidate.summary ?? candidate.overview ?? candidate.outline);
+  if (!title || !summary) throw new Error(`構成案${slot}のタイトルと概要が必要です。`);
+  const scenes = sceneCandidates(candidate) ?? [];
+  const storyScenes: Record<string, string> = {};
+  memories.forEach((memory, index) => {
+    const matchingScene = scenes
+      .map(asRecord)
+      .filter(Boolean)
+      .find((scene) => {
+        const number = Number(scene?.story_number ?? scene?.storyNumber ?? scene?.memory_number ?? scene?.number);
+        const sceneTitle = asText(scene?.story_title ?? scene?.storyTitle ?? scene?.memory_title ?? scene?.title);
+        return number === memory.sort_order || number === memory.sort_order + 1 ||
+          (sceneTitle && normalizedText(sceneTitle) === normalizedText(memory.title));
+      }) ?? asRecord(scenes[index]);
+    const text = asText(
+      matchingScene?.text ??
+        matchingScene?.scene_text ??
+        matchingScene?.story_text ??
+        matchingScene?.description ??
+        matchingScene?.scene,
+    );
+    if (!text) throw new Error(`構成案${slot}の物語${index + 1}の文章が見つかりません。`);
+    storyScenes[memory.id] = text;
+  });
+  return { title, tone, summary, storyScenes } satisfies ConceptDraft;
+}
+
+function parseConceptJson(value: unknown, memories: OrderMemory[]) {
+  if (memories.length !== 5) throw new Error("先に5つの物語を読み込んでください。");
+  return {
+    a: conceptFromJson(value, memories, "A"),
+    b: conceptFromJson(value, memories, "B"),
+  };
+}
 const STORYBOOK_STYLE_PROFILE = {
   id: "storybook_watercolor_v1",
   dog_treatment:
@@ -551,6 +635,8 @@ export function AdminStudio() {
   const [revisions, setRevisions] = useState<RevisionRequest[]>([]);
   const [conceptA, setConceptA] = useState<ConceptDraft>(emptyConcept);
   const [conceptB, setConceptB] = useState<ConceptDraft>(emptyConcept);
+  const [conceptJsonDraft, setConceptJsonDraft] = useState("");
+  const [conceptJsonStatus, setConceptJsonStatus] = useState("");
   const [status, setStatus] = useState<OrderStatus>("materials_submitted");
   const [paymentStatus, setPaymentStatus] =
     useState<MemoryOrder["payment_status"]>("pending");
@@ -1184,7 +1270,11 @@ export function AdminStudio() {
   );
 
   const selectOrder = (orderId: string) => {
-    if (orderId !== selectedOrderId) setMessageDraft("");
+    if (orderId !== selectedOrderId) {
+      setMessageDraft("");
+      setConceptJsonDraft("");
+      setConceptJsonStatus("");
+    }
     setSelectedOrderId(orderId);
   };
 
@@ -1294,6 +1384,38 @@ export function AdminStudio() {
       await loadOrders();
     }
     setSaving(false);
+  };
+
+  const importConceptJson = (rawJson = conceptJsonDraft) => {
+    if (!rawJson.trim()) {
+      setError("構成案JSONを貼り付けてください。");
+      return;
+    }
+    try {
+      const parsed = JSON.parse(rawJson) as unknown;
+      const next = parseConceptJson(parsed, memories);
+      setConceptA(next.a);
+      setConceptB(next.b);
+      setConceptJsonStatus("A・B案を5つの物語へ自動マッチしました。まだお客様には公開されていません。");
+      setError("");
+      setNotice("構成案JSONをフォームへ反映しました。内容を確認してから最後に公開してください。");
+    } catch (caught) {
+      setConceptJsonStatus("");
+      setError(caught instanceof Error ? caught.message : "構成案JSONを読み込めませんでした。");
+    }
+  };
+
+  const handleConceptJsonFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const rawJson = await file.text();
+      setConceptJsonDraft(rawJson);
+      importConceptJson(rawJson);
+    } catch {
+      setError("構成案JSONファイルを読み込めませんでした。");
+    }
   };
 
   const saveConcepts = async () => {
@@ -3714,6 +3836,35 @@ export function AdminStudio() {
                         </span>
                       </aside>
                     )}
+                    <div className="admin-concept-json-import">
+                      <div className="admin-concept-json-import-head">
+                        <div>
+                          <strong>Codex에서 받은 구성안 JSON 불러오기</strong>
+                          <small>
+                            JSON을 붙여넣거나 파일을 선택하면 A·B안의 제목·톤·개요·5개 장면이 아래 폼에 자동으로 연결됩니다.
+                          </small>
+                        </div>
+                        <label className="button button-secondary admin-concept-json-file">
+                          JSON 파일 선택
+                          <input type="file" accept="application/json,.json" onChange={handleConceptJsonFile} />
+                        </label>
+                      </div>
+                      <textarea
+                        rows={6}
+                        value={conceptJsonDraft}
+                        onChange={(event) => {
+                          setConceptJsonDraft(event.target.value);
+                          setConceptJsonStatus("");
+                        }}
+                        placeholder={'{"concept_a":{"title":"...","tone":"...","summary":"...","story_scenes":[...]},"concept_b":{...}}'}
+                      />
+                      <div className="admin-concept-json-actions">
+                        <button className="button button-secondary" type="button" onClick={() => importConceptJson()} disabled={!conceptJsonDraft.trim() || saving}>
+                          JSONを自動マッチする
+                        </button>
+                        {conceptJsonStatus && <span className="admin-operation-note strong">{conceptJsonStatus}</span>}
+                      </div>
+                    </div>
                     <div className="admin-concepts">
                       {(
                         [
