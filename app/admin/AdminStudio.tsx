@@ -165,8 +165,13 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
     count: 5,
     model: "gen4",
     duration_seconds: 5,
+    expanded_story_duration_seconds: 10,
+    expanded_story_count: 3,
+    expanded_story_rule:
+      "The three selected important stories are one continuous 10-second clip each; the remaining two stories are one continuous 5-second clip each.",
   },
   transition_video_count: 0,
+  transition_page_count: 0,
 } as const;
 const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
 
@@ -199,13 +204,13 @@ const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
 
 이야기 페이지 제작
 - stories의 5개 물語를 모두 포함한다. 누락하거나 순서를 바꾸지 않는다.
-- 각 물語마다 새로운 16:9 그림책 페이지 1장을 계획하고, 그 페이지를 바탕으로 Gen-4 5초 영상 프롬프트 1개를 작성한다.
+- 각 물語마다 새로운 16:9 그림책 페이지 1장을 계획한다. 영상 단계에서는 expanded_stories의 3개는 Gen-4 10초 1편씩, 나머지 2개는 Gen-4 5초 1편씩 사용한다.
 - 한 장면에는 중심 행동 1개만 둔다. 작은 바람, 꽃잎, 물결, 커튼, 빛, 털끝처럼 움직임이 제한된 연출을 우선한다.
 - 이야기 문장은 order.json의 문장과 고객 사실을 우선하며, 화면을 가리지 않는 짧은 일본어 한 문장으로 정리한다.
 - 페이지를 만들기 전에 primary 사진과 story text가 서로 맞는지 확인한다. 결과가 다른 개처럼 보이면 승인하지 말고 정체성 레퍼런스를 강화해 다시 생성한다.
 
 Runway 규칙
-- 이야기 페이지: 승인된 16:9 그림책 페이지 이미지 + Gen-4 + 5초.
+- 이야기 페이지: 승인된 16:9 그림책 페이지 이미지 + Gen-4. expanded_stories는 10초 1편, 나머지는 5초 1편이다.
 - raw 고객 사진은 최종 Runway 입력으로 사용하지 않지만, 그림책 페이지 생성 단계에서는 동일 개체를 유지하기 위한 핵심 레퍼런스로 사용한다.
 - 카메라 이동과 피사체 변형은 최소화한다. 눈·입·다리·꼬리의 큰 형태 변화, 새 물체 생성, 얼굴 변형, 갑작스러운 줌은 금지한다.
 - 결과가 이상하면 프롬프트를 길게 늘리지 말고, 페이지 그림을 먼저 수정한 뒤 다시 영상화한다.
@@ -424,90 +429,116 @@ story_caption 규칙
   "embedded_text_check": "passed"
 }`;
 
-const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v3.0
+const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v3.2
 
 첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
 
-order.json의 expanded_stories에 지정된 중요한 이야기 3개는 같은 승인 이미지로 서로 이어지는 프롬프트를 2개씩 만들고, 나머지 이야기 2개는 프롬프트를 1개씩 만든다. 총 8개의 Gen-4 프롬프트를 Runway가 명확하게 이해하도록 영어로 작성한다. 연결 배경 이미지와 연결 영상은 만들지 않는다.
+order.json의 expanded_stories에 지정된 중요한 이야기 3개는 각각 하나의 10초 Gen-4 프롬프트로 작성한다. 나머지 이야기 2개는 각각 하나의 5초 Gen-4 프롬프트로 작성한다. 총 5개의 이미지 투 비디오 프롬프트를 Runway가 명확하게 이해하도록 영어로 작성한다.
 
-중요 이야기의 2개 프롬프트 규칙
-- take 1은 사건을 시작하는 작은 행동, take 2는 그 사건을 이어서 마무리하는 다른 행동으로 설계한다.
-- 두 take 모두 동일한 승인 이미지를 입력으로 사용하며 구도와 강아지 정체성을 바꾸지 않는다.
-- take 2가 take 1을 그대로 반복하거나 처음 상태로 되돌아가는 느낌이 나지 않게 한다.
-- 최종 편집에서는 같은 이야기의 take 1→2를 짧은 디졸브로 연결하고, 서로 다른 이야기 사이에만 곡면 책장 넘김을 사용한다.
+중요 이야기를 여러 take로 분리하지 않는다. 연결 배경 이미지와 연결 영상은 만들지 않는다.
+
+중요 이야기의 10초 프롬프트 규칙
+- expanded_stories로 지정된 중요한 이야기는 승인 이미지 한 장을 사용하여 하나의 연속된 10초 영상으로 만든다.
+- 10초 영상 안에서 사건의 시작과 이어지는 마무리를 하나의 작은 연속 행동으로 보여준다.
+- 서로 관계없는 두 행동을 나열하지 않는다.
+- motion phase 2는 motion phase 1을 반복하거나 처음 상태로 되돌리지 않고 자연스럽게 이어받아야 한다.
+- 두 phase 모두 동일한 승인 이미지의 구도, 강아지 정체성, 기존 진행 방향과 camera-facing facial view를 유지한다.
+- 중간 전환, 컷, 디졸브 또는 페이지 넘김을 프롬프트에 넣지 않는다.
+- 최종 편집에서는 서로 다른 이야기 사이에만 곡면 책장 넘김을 사용한다.
 
 핵심 연출 목표
+- 강아지가 실제로 살아 움직이는 영상으로 보이게 한다.
+- 이미지 전체가 미끄러지거나 확대되는 PowerPoint식 움직임으로 만들지 않는다.
+- 강아지의 실제 동작이 카메라 움직임이나 환경 움직임보다 분명하게 보여야 한다.
 - 다섯 장면이 모두 같은 정지 자세처럼 보이지 않게 한다.
-- 각 이야기의 고객 사실과 selected_concept 장면 문장을 실제 행동의 원인으로 사용한다.
-- 강아지의 감정은 눈동자를 굴리거나 사람처럼 표정을 바꾸는 방식이 아니라, 머리 방향, 귀 반응, 코의 움직임, 호흡, 체중 이동, 앞발, 꼬리로 표현한다.
-- 정체성을 지키는 것과 움직임을 없애는 것은 다르다. 얼굴과 체형은 고정하되, 원본 자세가 허용하는 범위에서 살아 있는 강아지다운 행동을 넣는다.
+- 각 이야기의 고객 사실과 selected_concept 장면 문장을 강아지 행동의 원인으로 사용한다.
+- 얼굴 정체성을 지키는 것과 강아지의 신체 움직임을 없애는 것을 혼동하지 않는다.
+- 얼굴 특징과 카메라를 향한 얼굴 방향은 안정적으로 유지하되, 머리는 몸의 이동과 보행 리듬을 자연스럽게 따라가게 한다.
+- 감정은 사람처럼 표정을 크게 바꾸거나 눈동자를 굴리는 방식이 아니라, 호흡, 귀 반응, 코의 움직임, 체중 이동, 앞발, 몸통, 꼬리의 움직임으로 표현한다.
 
-이야기별 모션 설계
-1. 먼저 각 승인 이미지의 자세를 standing, walking, sitting, lying 중 하나로 판단한다.
-2. 총 8개 take마다 이야기 흐름에 맞는 primary_dog_action을 하나씩 정한다. 같은 head tilt나 같은 blink를 반복하지 않는다.
-3. primary action 외에는 secondary motion을 최대 2개만 사용한다. 작은 호흡, 귀 한쪽의 짧은 반응, 코로 냄새 맡기, 꼬리 끝의 짧은 흔들림, 털끝의 바람 반응처럼 자연스러운 움직임을 고른다.
-4. 승인 이미지에 보이는 환경 요소 하나를 이야기의 반응으로 움직인다. 예: 꽃잎이 지나가자 코를 살짝 들기, 잔물결이 닿자 앞발에 체중을 옮기기, 커튼 빛이 움직이자 귀가 짧게 반응하기.
-5. 5초 안에 시작-행동-안정의 작은 서사를 만든다.
-   - 0.0~1.0초: 원래 자세와 얼굴을 안정적으로 유지
-   - 1.0~3.8초: primary action 한 번
-   - 3.8~5.0초: 과장 없이 다시 편안한 자세로 안정
-6. 고객이 제공하지 않은 사건을 새로 만들지 않는다. 풍부함은 새 물체 생성이 아니라, 고객의 기억에 맞는 행동과 환경의 인과관계로 만든다.
+승인 이미지 분석
+각 이야기마다 먼저 자세(standing, walking, sitting, lying), 기존 진행 방향, 얼굴 각도(front, three-quarter, side), 실제로 보이는 다리·발·꼬리·목줄·옷의 범위, 움직일 수 있는 신체 부위, 배경 기준 요소를 분석한다.
 
-자세별 허용 행동 예시
-- standing: 공기 냄새를 맡으며 코와 머리를 조금 들기, 한쪽 귀가 소리에 반응하기, 앞발 사이의 체중을 천천히 옮기기, 꼬리를 한두 번 작게 흔들기.
-- walking: 이미지의 진행 방향으로 작은 한 걸음을 자연스럽게 이어간 뒤 멈추기, 땅을 잠깐 냄새 맡고 다시 고개를 들기.
-- sitting: 소리가 난 방향으로 머리를 조금 돌리기, 한쪽 귀를 움직이기, 가슴의 잔잔한 호흡과 꼬리 끝의 짧은 반응.
-- lying: 편안한 호흡, 귀의 짧은 움직임, 앞발을 아주 조금 펴기, 머리를 편안하게 내려놓기.
-- 다리나 꼬리가 이미지에서 가려졌다면 해당 부위의 큰 움직임을 지시하지 않는다.
-- 원래 자세가 뒷받침하지 않는 걷기, 방향 전환, 일어서기, 점프는 만들지 않는다.
+실제 신체 움직임 설계
+- 프롬프트에서는 정체성 고정보다 primary dog action을 먼저 설명한다.
+- walking 또는 달리는 자세에서는 기존 진행 방향을 이어가며 뒷다리가 지면을 밀고 앞발과 뒷발이 차례로 착지하고 어깨·엉덩이·몸통이 연결된 보행 리듬을 만든다.
+- 강아지가 걷거나 달릴 때 울타리, 길, 풀, 가구 등 배경 기준 요소에 대해 실제로 위치를 바꾼다.
+- 앉거나 누운 자세에서는 걷기를 강제로 만들지 않고 가슴 호흡, 앞발 조정, 몸통 체중 이동, 편안한 자세 정돈을 사용한다.
+- primary action 외 secondary motion은 최대 2개만 사용한다. 귀·털·꼬리·옷은 primary action이나 보이는 바람에 자연스럽게 반응시킨다.
+- “tiny movement”, “almost still”, “barely moves”처럼 움직임을 지나치게 축소하는 표현을 사용하지 않는다.
+- 고객이 제공하지 않은 사건이나 물체를 추가하지 않는다.
 
-눈과 얼굴 안전 규칙
-- 홍채와 동공의 크기, 위치, 간격, 시선 방향을 승인 이미지 기준으로 안정적으로 유지한다.
-- 눈동자가 좌우로 따로 움직이거나 빠르게 따라보는 동작, eye darting, eye rolling, wandering pupils, crossed eyes를 금지한다.
-- 시선 변화가 필요하면 눈동자만 움직이지 말고 머리 전체를 아주 조금 돌린다. 눈은 머리와 함께 자연스럽게 같은 방향을 유지한다.
-- 눈 깜빡임은 꼭 필요한 장면에서만 한 번 천천히 허용하며, 다섯 장면에 반복하지 않는다.
-- 눈 크기 확대, 눈꺼풀 변형, 과한 반짝임, 새 눈물자국을 금지한다.
-- 입은 승인 이미지 상태를 유지한다. 말하는 입 모양, 갑작스러운 미소, 과장된 헐떡임을 만들지 않는다.
+얼굴 방향 및 정체성 안정 규칙
+- 승인 이미지의 얼굴 형태, 눈 크기와 간격, 눈꺼풀, 귀, 주둥이, 털 배치와 색상, 체형, 꼬리, 보이는 목줄과 옷을 유지한다.
+- 승인 이미지의 camera-facing view를 영상 전체에서 유지한다. 머리는 몸의 이동과 보행 리듬을 따라가되 새로운 얼굴 면을 드러내지 않는다.
+- 영어 prompt에는 다음처럼 짧게 작성한다: “The head moves naturally with the body while keeping the original camera-facing view. The same recognizable facial design remains consistent.”
+- 눈동자만 좌우로 움직이거나 eye darting, eye rolling, wandering pupils, crossed eyes를 만들지 않는다. 눈 깜빡임은 필요한 이야기에서만 한 번 천천히 허용한다.
+- 눈 확대, 눈꺼풀 변형, 과도한 반짝임, 새 눈물자국, 말하는 입, 갑작스러운 미소, 과장된 헐떡임을 만들지 않는다.
 
-Runway 규칙
-- 이야기 페이지: Gen-4, 5초, 프롬프트 최대 3000자.
-- 화면 비율은 옵션에서 설정하므로 프롬프트에 16:9를 쓰지 않는다.
-- 승인된 강아지의 얼굴, 체형, 눈, 귀, 주둥이, 털, 꼬리, 목줄을 바꾸지 않는다.
-- 이미지에 없는 사람, 동물, 사물을 생성하지 않는다.
-- 카메라는 기본적으로 고정한다. 이야기상 필요한 경우 8개 take 중 최대 두 take에서만 매우 느린 push-in 또는 짧은 lateral drift 하나를 사용한다.
-- 갑작스러운 줌, 회전, 흔들림, 달리기, 점프, 신체 생성·소실, 다리 교차, 꼬리 복제, 얼굴 변형을 금지한다.
-- 한 장면에 primary dog action 1개, secondary motion 최대 2개, environment motion 1개만 사용한다.
-- 페이지 넘김과 자막은 편집 단계에서 추가하므로 프롬프트에 넣지 않는다.
+영상 길이별 동작 구성
+중요 이야기 10초: 0.0~0.4초 자세 유지, 0.4~4.5초 motion phase 1, 4.5~8.8초 연결되는 motion phase 2, 8.8~10.0초 처음 상태로 되돌아가지 않는 자연스러운 감속과 안정.
+일반 이야기 5초: 0.0~0.3초 자세 유지, 0.3~4.2초 primary action, 4.2~5.0초 자연스러운 감속과 안정.
+모든 영상은 끊김 없는 single continuous shot이며, 첫 프레임을 오래 정지시키거나 처음 위치로 강제 복귀시키지 않는다.
 
-전체 8개 take 다양성 검수
-- primary_dog_action이 8개 take에서 실제로 서로 다른가?
-- 모든 장면이 단순히 가만히 서서 blink 또는 head tilt만 반복하고 있지 않은가?
-- 중요한 이야기 3개에서 take 1의 시작과 take 2의 마무리가 하나의 작은 사건처럼 이어지는가?
-- 각 행동이 해당 이미지의 자세와 보이는 신체 구조로 가능한가?
-- story text의 내용이 강아지 행동과 환경 반응에 반영됐는가?
-- 눈동자 단독 움직임 없이도 감정이 읽히는가?
-- 정체성 보존 규칙 때문에 필요한 강아지다운 움직임까지 삭제하지 않았는가?
+카메라와 배경 규칙
+- 5개 영상 모두 locked camera를 사용한다. push-in, lateral drift, pan, zoom, 회전, 흔들림을 사용하지 않는다.
+- 카메라는 배경에 고정하고, 강아지가 움직일 때 정적인 배경은 함께 이동하지 않게 한다.
+- environment motion은 승인 이미지에 실제로 보이는 꽃잎, 풀끝, 잔물결, 커튼 빛 등 국소 요소 하나만 사용한다.
+
+영어 프롬프트 작성 원칙
+1. 강아지의 primary action과 실제 이동량
+2. 다리·발·어깨·엉덩이·몸통의 연결된 관절 움직임
+3. 귀·털·꼬리·옷의 자연스러운 반응
+4. 짧은 얼굴 방향 및 정체성 안정 문장
+5. 배경 기준 요소에 대한 실제 위치 변화
+6. 고정 카메라와 정적인 배경
+7. “Single continuous shot” 또는 “Continuous natural action”으로 마무리
+
+금지 사항
+- 승인 이미지에 없는 사람, 동물, 사물, 액세서리, 사건 생성
+- 강아지 얼굴·체형·털 무늬·꼬리·목줄·옷 변경, 신체 부위 생성·소실, 다리 교차, 꼬리·다리 복제, 얼굴 변형
+- 첫 프레임을 영상 길이 내내 거의 그대로 유지하는 정지 영상
+- primary action 없이 blink, 귀 움직임 또는 꼬리 흔들기만 수행하는 영상
+- 이미지 전체가 미끄러지는 평면 이동으로 강아지 동작을 대신하는 연출
+
+전체 5개 프롬프트 검수
+- gen4_story_prompts 배열이 정확히 5개이고 이야기 1~5가 각각 한 번씩 포함되는가?
+- expanded_stories 3개만 duration_seconds가 10이고 나머지 2개만 5인가?
+- 하나의 이야기가 여러 take로 나뉘지 않았는가?
+- 중요한 이야기의 motion phase 1과 2가 하나의 사건으로 자연스럽게 연결되는가?
+- 각 행동이 승인 이미지의 자세와 보이는 신체 구조로 가능한가?
+- 걷는 장면에 실제 다리 관절 운동과 배경 기준 위치 변화가 포함되는가?
+- 앉거나 누운 장면에 단순 blink가 아닌 실제 몸통 또는 체중 움직임이 있는가?
+- 얼굴 방향을 유지하면서 머리가 몸의 움직임을 자연스럽게 따라가는가?
+- 고객 사실과 selected_concept가 행동과 환경 반응에 반영되는가?
 
 반환 형식
 {
-  "gen4_story_prompts":[{
-    "story_number":1,
-    "take":1,
-    "chapter_role":"single | setup | continuation",
-    "title":"",
-    "pose_assessment":"standing | walking | sitting | lying",
-    "story_beat":"",
-    "primary_dog_action":"",
-    "secondary_motions":[""],
-    "environment_motion":"",
-    "camera_motion":"locked | slow push-in | subtle lateral drift",
-    "eye_safety":"",
-    "duration_seconds":5,
-    "prompt":""
-  }]
+  "gen4_story_prompts": [
+    {
+      "story_number": 1,
+      "expanded_story": true,
+      "chapter_role": "expanded | single",
+      "title": "",
+      "pose_assessment": "standing | walking | sitting | lying",
+      "facial_view": "front | three-quarter | side",
+      "story_beat": "",
+      "primary_dog_action": "",
+      "motion_phase_1": "",
+      "motion_phase_2": "",
+      "articulated_body_motion": "",
+      "secondary_motions": [""],
+      "environment_motion": "",
+      "background_reference_for_position": "",
+      "camera_motion": "locked",
+      "identity_and_face_safety": "",
+      "duration_seconds": 10,
+      "prompt": ""
+    }
+  ]
 }
 
-gen4_story_prompts 배열은 이야기 5개를 빠짐없이 포함하며 총 8개여야 한다. expanded_stories로 선택된 3개 이야기만 take 1과 take 2를 갖고, 나머지는 take 1만 갖는다.`;
+일반 5초 이야기에서는 motion_phase_2를 빈 문자열로 반환한다. gen4_story_prompts 배열은 정확히 5개이며 expanded_stories 3개는 각각 하나의 10초 프롬프트, 나머지 2개는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
 >;
@@ -1084,26 +1115,20 @@ export function AdminStudio() {
     [renderClips],
   );
   const requiredRenderSlots = useMemo(
-    () =>
-      sceneStills.flatMap((still) => [
-        { still, take: 1 as const },
-        ...(expandedStorySortOrders.includes(still.scene_sort_order)
-          ? [{ still, take: 2 as const }]
-          : []),
-      ]),
-    [expandedStorySortOrders, sceneStills],
+    () => sceneStills.map((still) => ({ still, take: 1 as const })),
+    [sceneStills],
   );
   const allRenderClipsReady =
     sceneStills.length === 5 &&
     expandedStorySortOrders.length === 3 &&
-    requiredRenderSlots.length === 8 &&
+    requiredRenderSlots.length === 5 &&
     requiredRenderSlots.every(({ still, take }) =>
       clipByStillAndTake.has(`${still.id}:${take}`),
     );
   const assemblyClipCount = requiredRenderSlots.filter(({ still, take }) =>
     clipByStillAndTake.has(`${still.id}:${take}`),
   ).length;
-  const estimatedSeconds = 60;
+  const estimatedSeconds = 45;
   const openMessages = useMemo(
     () =>
       messages.filter(
@@ -1619,14 +1644,12 @@ export function AdminStudio() {
         main_motif_instruction:
           "Derive one visual motif from this story without adding customer facts.",
         expanded_motion: expandedMotion,
-        runway_clip_count: expandedMotion ? 2 : 1,
+        runway_clip_count: 1,
         output: {
           page_image_filename: `${storyId}.png`,
-          runway_clip_filenames: expandedMotion
-            ? [`${storyId}-take-1.mp4`, `${storyId}-take-2.mp4`]
-            : [`${storyId}-take-1.mp4`],
+          runway_clip_filenames: [`${storyId}.mp4`],
           runway_model: "gen4",
-          runway_duration_seconds: 5,
+          runway_duration_seconds: expandedMotion ? 10 : 5,
         },
       };
     });
@@ -1664,11 +1687,17 @@ export function AdminStudio() {
         story_count: stories.length,
         expanded_story_count: expandedStorySortOrders.length,
         expanded_story_sort_orders: expandedStorySortOrders,
-        runway_clip_count:
-          stories.length + expandedStorySortOrders.length,
+        runway_clip_count: stories.length,
         story_model: "gen4",
         story_duration_seconds: 5,
+        expanded_story_duration_seconds: 10,
+        total_story_video_seconds:
+          stories.filter((story) => story.expanded_motion).length * 10 +
+          stories.filter((story) => !story.expanded_motion).length * 5,
+        story_duration_policy:
+          "expanded_stories=10s single continuous clip; other_stories=5s single continuous clip",
         transition_count: 0,
+        transition_video_count: 0,
         title_card_seconds: 3,
         ending_card_seconds: 7,
       },
@@ -1944,12 +1973,15 @@ export function AdminStudio() {
       ]);
       const root = `${safeArchiveSegment(order.order_number)}-03-runway-prompts`;
       const runwayData = {
-        schema_version: "wan-memory-runway-prompt-input-1.0",
+        schema_version: "wan-memory-runway-prompt-input-3.2",
         exported_at: new Date().toISOString(),
         job: exportData.productionData.job,
         style: exportData.productionData.style,
+        production_protocol: exportData.productionData.production_protocol,
         selected_concept: exportData.productionData.selected_concept,
         stories: exportData.productionData.stories,
+        transition_rules: exportData.productionData.transition_rules,
+        transitions: exportData.productionData.transitions,
         expanded_story_sort_orders: expandedStorySortOrders,
         expanded_stories: sceneStills
           .filter((still) =>
@@ -1958,17 +1990,25 @@ export function AdminStudio() {
           .map((still) => ({
             story_number: still.scene_sort_order + 1,
             title: still.scene_title,
-            clip_count: 2,
+            expanded_story: true,
+            chapter_role: "expanded",
+            clip_count: 1,
+            duration_seconds: 10,
           })),
         output_plan: {
           story_count: 5,
-          runway_clip_count: 8,
+          runway_clip_count: 5,
           expanded_story_count: 3,
           story_model: "gen4",
           story_duration_seconds: 5,
+          expanded_story_duration_seconds: 10,
+          total_story_video_seconds: 40,
+          story_duration_policy:
+            "expanded_stories=10s single continuous clip; other_stories=5s single continuous clip",
           transition_video_count: 0,
+          transition_page_count: 0,
           final_editing:
-            "Use a short dissolve between take 1 and take 2 of the same story. Use a direct curved page turn only between different stories. Do not create or insert bridge backgrounds.",
+            "Use one continuous clip per story. Do not split stories into takes. Use a direct curved page turn only between different stories. Do not create or insert bridge backgrounds or bridge videos.",
         },
         approved_at: order.stills_approved_at,
       };
@@ -1978,10 +2018,10 @@ export function AdminStudio() {
             "STEP 3 · 顧客承認後のRunway制作データです。",
             "1. order.jsonとapproved-pagesの5枚をCodexへ添付します。",
             "2. 02_PROMPT_RUNWAY.txtをそのまま依頼文として使います。",
-            "3. CodexがStory用Runwayプロンプトを合計8本作ります。重要な3物語は2本、残り2物語は1本です。接続背景や接続映像は作りません。",
-            "4. 重要な物語のtake 1とtake 2は、同じ絵本ページの中で小さな出来事が始まり、続いて終わるように設計します。",
-            "5. Story 8本をGen-4で各5秒制作します。",
-            "6. 完成した8本を管理画面の対応する1本目・2本目スロットへ登録します。同じ物語は短いディゾルブ、物語間はページめくりで自動編集されます。",
+            "3. CodexがStory用Runwayプロンプトを合計5本作ります。重要な3物語は各10秒、残り2物語は各5秒です。接続背景や接続映像は作りません。",
+            "4. 重要な物語も複数takeに分けず、1本の10秒動画の中で始まりから自然なまとまりまで続く一つの行動として設計します。",
+            "5. Story 5本をGen-4で、重要な3本は10秒・残り2本は5秒で制作します。",
+            "6. 完成した5本を管理画面の各物語1本スロットへ登録します。物語間のページめくりは自動編集されます。",
           ].join("\n"),
         ),
         [`${root}/02_PROMPT_RUNWAY.txt`]: strToU8(RUNWAY_PROMPT_REQUEST),
@@ -2423,15 +2463,6 @@ export function AdminStudio() {
     setError("");
     setExpandedStoryDraft((current) => {
       if (current.includes(sortOrder)) {
-        const still = sceneStills.find(
-          (asset) => asset.scene_sort_order === sortOrder,
-        );
-        if (still && clipByStillAndTake.has(`${still.id}:2`)) {
-          setError(
-            "この物語の2本目を削除してから、重要な物語の選択を外してください。",
-          );
-          return current;
-        }
         return current.filter((value) => value !== sortOrder);
       }
       if (current.length >= 3) {
@@ -2455,11 +2486,11 @@ export function AdminStudio() {
     );
     if (saveError) {
       setError(
-        "重要な物語を保存できませんでした。2本目を登録済みの物語を外す場合は、先にそのクリップを削除してください。",
+        "重要な物語を保存できませんでした。選択状態を確認して、もう一度お試しください。",
       );
     } else {
       setNotice(
-        "重要な物語3つを保存しました。選んだ物語はRunwayクリップを2本ずつ制作します。",
+        "重要な物語3つを保存しました。選んだ物語はRunwayで10秒、その他は5秒の1本として制作します。",
       );
       await Promise.all([loadOrders(), loadDetails(order.id)]);
     }
@@ -2468,7 +2499,6 @@ export function AdminStudio() {
 
   const uploadRenderClip = async (
     still: OrderAsset,
-    take: 1 | 2,
     file: File,
   ) => {
     if (!order || !canRenderFilm) return;
@@ -2483,7 +2513,7 @@ export function AdminStudio() {
         .replace(/[^a-z0-9]/g, "") || "mp4";
     // Operator namespace, never the customer's uid folder — see the note at the
     // top of supabase/migrations/202607280001_render_clips.sql.
-    const path = `admin/${order.id}/clips/render_clip-${still.scene_sort_order + 1}-take-${take}-${crypto.randomUUID()}.${extension}`;
+    const path = `admin/${order.id}/clips/render_clip-${still.scene_sort_order + 1}-${crypto.randomUUID()}.${extension}`;
     const mimeType = file.type || "video/mp4";
     const { error: uploadError } = await supabase.storage
       .from("order-assets")
@@ -2502,7 +2532,7 @@ export function AdminStudio() {
         p_mime_type: mimeType,
         p_file_size: file.size,
         p_still_asset_id: still.id,
-        p_render_take: take,
+        p_render_take: 1,
       },
     );
     if (registerError) {
@@ -2515,7 +2545,7 @@ export function AdminStudio() {
     }
     setClipInputKey((current) => current + 1);
     setNotice(
-      `「${still.scene_title ?? "場面"}」の${take}本目を追加しました。`,
+      `「${still.scene_title ?? "場面"}」の動画を追加しました。`,
     );
     await loadDetails(order.id);
     setSaving(false);
@@ -2553,7 +2583,7 @@ export function AdminStudio() {
     if (!order || !canRenderFilm || rendering) return;
     if (!allRenderClipsReady) {
       setError(
-        "重要な物語3つを選び、物語クリップ8本をすべて登録してください。",
+        "重要な物語3つを選び、5つの物語クリップをすべて登録してください。",
       );
       return;
     }
@@ -3491,10 +3521,10 @@ export function AdminStudio() {
                       <article className={runwayExportReady ? "ready" : "locked"}>
                         <header><span>STEP 3</span><strong>Runway制作へ進む</strong></header>
                         <p>5枚の絵本ページを顧客が承認した後に使用します。</p>
-                        <small>内容：承認画像5枚、重要な3物語の指定、Gen-4用プロンプト8本</small>
+                        <small>内容：承認画像5枚、重要な3物語の指定、Gen-4用プロンプト5本</small>
                         {order.stills_approved_at && sceneStills.length === 5 && (
                           <div className="admin-expanded-story-picker">
-                            <strong>2本にする重要な物語を3つ選択</strong>
+                            <strong>10秒にする重要な物語を3つ選択</strong>
                             <div>
                               {sceneStills.map((still) => {
                                 const selected = expandedStoryDraft.includes(
@@ -4244,7 +4274,7 @@ export function AdminStudio() {
                         <h3>映像の自動編集</h3>
                       </div>
                       <span>
-                        {assemblyClipCount}/8本
+                        {assemblyClipCount}/5本
                         {` · 完成約${estimatedSeconds}秒`}
                       </span>
                     </div>
@@ -4263,10 +4293,10 @@ export function AdminStudio() {
                     {renderAvailable && (
                       <aside className="admin-operation-note strong">
                         <strong>
-                          5つの物語へ、合計8本のクリップを追加します。
+                          5つの物語へ、合計5本のクリップを追加します。
                         </strong>
                         <span>
-                          重要な3物語は1本目→2本目を短いディゾルブでつなぎます。別の物語へ進む時だけページをめくるため、途中に背景だけの画面は残りません。
+                          重要な3物語は各10秒の1本で完結します。残り2物語は各5秒で、物語の間だけページをめくります。
                         </span>
                       </aside>
                     )}
@@ -4291,16 +4321,11 @@ export function AdminStudio() {
                     {renderAvailable && sceneStills.length > 0 && (
                       <>
                         <p className="admin-render-section-label">
-                          STORY · Gen-4 5秒（合計8本）
+                          STORY · Gen-4（重要3本は10秒・他2本は5秒、合計5本）
                         </p>
                         <div className="admin-render-clips">
                           {sceneStills.map((still) => {
-                            const takes: Array<1 | 2> =
-                              expandedStorySortOrders.includes(
-                                still.scene_sort_order,
-                              )
-                                ? [1, 2]
-                                : [1];
+                            const takes: Array<1> = [1];
                             return (
                               <article
                                 key={still.id}
@@ -4339,9 +4364,11 @@ export function AdminStudio() {
                                         className={clip ? "ready" : ""}
                                       >
                                         <span>
-                                          {takes.length === 2
-                                            ? `${take}本目 · ${take === 1 ? "はじまり" : "つづき"}`
-                                            : "1本で完結"}
+                                          {expandedStorySortOrders.includes(
+                                            still.scene_sort_order,
+                                          )
+                                            ? "Gen-4 · 10秒で完結"
+                                            : "Gen-4 · 5秒で完結"}
                                         </span>
                                         {clip ? (
                                           <>
@@ -4391,15 +4418,11 @@ export function AdminStudio() {
                                                 const file =
                                                   event.target.files?.[0];
                                                 if (file)
-                                                  uploadRenderClip(
-                                                    still,
-                                                    take,
-                                                    file,
-                                                  );
+                                                  uploadRenderClip(still, file);
                                               }}
                                             />
                                             <span>
-                                              {take}本目を選ぶ
+                                              動画を選ぶ
                                             </span>
                                           </label>
                                         )}
@@ -4507,7 +4530,7 @@ export function AdminStudio() {
                         </div>
                         {assemblyClipCount > 0 && !allRenderClipsReady && (
                           <p className="admin-operation-note">
-                            重要な3物語の2本目を含む、物語クリップ8本がすべて揃うと編集を開始できます。
+                            5つの物語クリップ（重要な3本は10秒、その他2本は5秒）がすべて揃うと編集を開始できます。
                           </p>
                         )}
                         {renderProgress && (

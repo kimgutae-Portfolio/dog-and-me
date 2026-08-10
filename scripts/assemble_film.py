@@ -5,9 +5,9 @@ Structure (see docs/MANUAL_PRODUCTION_WORKFLOW.md):
   intro card -> moving storybook pages -> ending card.
 
 Each approved Runway clip is one continuous page. Three selected stories use
-two clips: the two actions dissolve gently inside the same chapter, while a
-curved page turn is reserved for movement between different stories. There is
-no still-photo hold or standalone bridge background.
+one continuous ten-second clip and the remaining two use one five-second clip.
+A curved page turn is reserved for movement between different stories. There
+is no still-photo hold or standalone bridge background.
 
 Usage:
   python3 scripts/assemble_film.py \
@@ -29,8 +29,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1920, 1080
 FPS = 24
-SOURCE_CLIP_SECONDS = 5.0
-STORY_CLIP_SECONDS = 7.0
+SOURCE_CLIP_SECONDS = 5.0  # legacy bridge source length
+SHORT_STORY_CLIP_SECONDS = 5.0
+EXPANDED_STORY_CLIP_SECONDS = 10.0
 BRIDGE_CLIP_SECONDS = 1.6
 PAGE_CURL_SECONDS = 0.95
 BRIDGE_DISSOLVE_SECONDS = 0.28
@@ -138,14 +139,13 @@ def burn_story_captions(
     out_path,
     total_duration,
     tmp_dir,
-    continuation_clip_numbers,
+    expanded_clip_numbers,
 ):
     """Burn approved scene sentences into the assembled storybook with soft caption fades."""
     if not any(caption.strip() for caption in captions):
         return
-    # When a highlighted story uses two consecutive motion clips, keep its one
-    # approved sentence on screen as a single caption span. Rebuilding the same
-    # overlay for each take would create an obvious fade-out/fade-in blink.
+    # Each story now has one continuous motion clip, so every approved sentence
+    # receives one uninterrupted caption span.
     caption_spans = []
     for scene_index, (caption, (start, end)) in enumerate(
         zip(captions, windows), start=1
@@ -153,20 +153,7 @@ def burn_story_captions(
         caption = caption.strip()
         if not caption:
             continue
-        if (
-            scene_index in continuation_clip_numbers
-            and caption_spans
-            and caption_spans[-1][0] == caption
-        ):
-            previous_caption, previous_start, _, previous_index = caption_spans[-1]
-            caption_spans[-1] = (
-                previous_caption,
-                previous_start,
-                end,
-                previous_index,
-            )
-        else:
-            caption_spans.append((caption, start, end, scene_index))
+        caption_spans.append((caption, start, end, scene_index))
 
     inputs = ["-i", video_path]
     filters = []
@@ -210,22 +197,22 @@ def image_to_clip(png_path, out_path, duration):
          "-an", out_path])
 
 
-def normalize_story_clip(src, out_path):
-    """Give each story page enough reading time without introducing a freeze.
+def normalize_story_clip(src, out_path, duration):
+    """Normalize one continuous Runway page to its requested duration.
 
-    The original five-second Runway motion is played slightly slower. Frame
-    blending keeps restrained watercolor motion soft instead of juddering.
+    Gen-4 supplies either a five- or ten-second source. No freeze-frame or
+    artificial hold is inserted; the source motion is preserved at natural
+    speed and only the frame size/rate are normalized for assembly.
     """
-    speed = STORY_CLIP_SECONDS / SOURCE_CLIP_SECONDS
     run([
-        "ffmpeg", "-y", "-i", src, "-t", str(SOURCE_CLIP_SECONDS),
+        "ffmpeg", "-y", "-i", src, "-t", str(duration),
         "-vf",
         (
             f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
-            f"setpts={speed:.6f}*PTS,minterpolate=fps={FPS}:mi_mode=blend,"
+            f"fps={FPS},"
             "format=yuv420p"
         ),
-        "-an", "-t", str(STORY_CLIP_SECONDS), out_path,
+        "-an", "-t", str(duration), out_path,
     ])
 
 
@@ -353,8 +340,10 @@ def main():
                      help='e.g. "2,3" "4,5" "6" — one group per memory block')
     ap.add_argument("--ending-clip", required=True, type=int)
     ap.add_argument("--bridge-clips", nargs="*", type=int, default=[])
-    ap.add_argument("--continuation-clips", nargs="*", type=int, default=[],
-                    help="1-based clip numbers that are take 2 of the preceding story")
+    ap.add_argument("--expanded-clips", nargs="*", type=int, default=[],
+                    help="1-based clip numbers that are continuous 10-second stories")
+    # Kept as a no-op compatibility flag for older local command lines.
+    ap.add_argument("--continuation-clips", nargs="*", type=int, default=[])
     ap.add_argument("--kicker", default="A MOVING STORYBOOK")
     ap.add_argument("--title", required=True)
     ap.add_argument("--ending-text", required=True, help="use \\n for line breaks")
@@ -383,7 +372,7 @@ def main():
 
     memory_groups = [[int(x) for x in g.split(",")] for g in args.memory_clips]
     bridge_clip_numbers = set(args.bridge_clips)
-    continuation_clip_numbers = set(args.continuation_clips)
+    expanded_clip_numbers = set(args.expanded_clips)
     order_dir = args.order_dir
 
     def clip_path(n):
@@ -414,13 +403,13 @@ def main():
                 clip_duration = BRIDGE_CLIP_SECONDS
                 clip_kind = "bridge"
             else:
-                normalize_story_clip(clip_path(n), clip_mp4)
-                clip_duration = STORY_CLIP_SECONDS
-                clip_kind = (
-                    "story_continuation"
-                    if n in continuation_clip_numbers
-                    else "story"
+                clip_duration = (
+                    EXPANDED_STORY_CLIP_SECONDS
+                    if n in expanded_clip_numbers
+                    else SHORT_STORY_CLIP_SECONDS
                 )
+                normalize_story_clip(clip_path(n), clip_mp4, clip_duration)
+                clip_kind = "story"
             segments.append(clip_mp4)
             durations.append(clip_duration)
             segment_kinds.append(clip_kind)
@@ -510,7 +499,7 @@ def main():
             captioned_out = os.path.join(tmp, "captioned.mp4") if args.bgm else args.out
             burn_story_captions(
                 assembled_out, captions, caption_windows, captioned_out,
-                total_duration, tmp, continuation_clip_numbers,
+                total_duration, tmp, expanded_clip_numbers,
             )
             video_for_audio = captioned_out
 

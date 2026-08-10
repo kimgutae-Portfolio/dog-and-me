@@ -19,7 +19,7 @@ const BUCKET = "order-assets";
 const BGM_DIR = path.join(process.cwd(), "assets", "bgm");
 const ASSEMBLE_SCRIPT = path.join(process.cwd(), "scripts", "assemble_film.py");
 const PROFESSIONAL_STORYBOOK_DURATION_SECONDS =
-  3 + 8 * 7 + 7 - (0.65 + 4 * 0.95 + 3 * 0.35 + 0.75);
+  3 + 40 + 7 - (0.65 + 4 * 0.95 + 0.75);
 
 type RequestItem = { clipAssetId: string; role: RenderClipRole };
 
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     }
     items.push({ clipAssetId: item.clipAssetId, role: item.role });
   }
-  if (items.length !== 8) {
+  if (items.length !== 5) {
     return Response.json({ error: "invalid_item_count" }, { status: 400 });
   }
   if (
@@ -252,12 +252,10 @@ export async function POST(request: NextRequest) {
     );
   }
   const expandedStorySet = new Set(expandedStorySortOrders);
-  const expectedSlots = Array.from({ length: 5 }, (_, storySortOrder) => [
-    { storySortOrder, renderTake: 1 },
-    ...(expandedStorySet.has(storySortOrder)
-      ? [{ storySortOrder, renderTake: 2 }]
-      : []),
-  ]).flat();
+  const expectedSlots = Array.from({ length: 5 }, (_, storySortOrder) => ({
+    storySortOrder,
+    renderTake: 1,
+  }));
 
   const { data: clipRows, error: clipError } = await supabase
     .from("assets")
@@ -387,9 +385,11 @@ export async function POST(request: NextRequest) {
         const memoryClips = ordered
           .slice(1, -1)
           .map((_, index) => String(index + 2));
-        const continuationClips = ordered
+        const expandedClipNumbers = ordered
           .map((clip, index) =>
-            clip.render_take === 2 ? String(index + 1) : null,
+            expandedStorySet.has(clip.scene_sort_order)
+              ? String(index + 1)
+              : null,
           )
           .filter((value): value is string => Boolean(value));
         const args = [
@@ -401,8 +401,8 @@ export async function POST(request: NextRequest) {
           ...(memoryClips.length ? memoryClips : ["1"]),
           "--ending-clip",
           String(ordered.length),
-          "--continuation-clips",
-          ...continuationClips,
+          "--expanded-clips",
+          ...expandedClipNumbers,
           "--kicker",
           kicker,
           "--title",
@@ -450,9 +450,8 @@ export async function POST(request: NextRequest) {
           throw new Error(`保存に失敗しました: ${uploadError.message}`);
         uploadedPath = storagePath;
 
-        // Five chapters use eight story clips: exactly three selected chapters
-        // have a second action. Same-chapter actions dissolve gently; only
-        // chapter boundaries receive the curved page turn.
+        // Five chapters use five story clips. The three selected chapters use
+        // one continuous 10-second clip; the other two use one 5-second clip.
         const durationSeconds = PROFESSIONAL_STORYBOOK_DURATION_SECONDS;
         const { data: assetId, error: registerError } = await supabase.rpc(
           "admin_register_assembled_film",
