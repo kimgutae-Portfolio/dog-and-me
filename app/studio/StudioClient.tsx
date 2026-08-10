@@ -693,21 +693,37 @@ export function StudioClient() {
     setSendingMessage(true);
     setError("");
     try {
-      const { error: messageError } = await getSupabaseBrowserClient()
+      const { data: insertedMessage, error: messageError } = await getSupabaseBrowserClient()
         .from("messages")
         .insert({
           order_id: order.id,
           sender_id: user.id,
           body: messageBody.trim(),
         })
+        .select("*")
+        .single();
       if (messageError) {
         setError("メッセージを送信できませんでした。");
         return;
       }
+      if (insertedMessage) {
+        setMessages((current) =>
+          current.some((message) => message.id === insertedMessage.id)
+            ? current
+            : [...current, insertedMessage as OrderMessage].sort((a, b) =>
+                a.created_at.localeCompare(b.created_at),
+              ),
+        );
+      }
       setMessageBody("");
       setNotice("担当者へメッセージを送りました。");
-      await notifyAdminFromCustomer(order.id, "customer_message", `${Date.now()}`);
-      await loadDetails(order.id);
+      // Notification and refresh are deliberately best-effort: neither can
+      // make a successfully inserted message look like a failed send.
+      void notifyAdminFromCustomer(order.id, "customer_message", `${Date.now()}`);
+      void loadDetails(order.id);
+    } catch (caught) {
+      console.error(caught);
+      setError("メッセージを送信できませんでした。通信状態をご確認ください。");
     } finally {
       setSendingMessage(false);
     }
@@ -2063,10 +2079,11 @@ export function StudioClient() {
                   current.map((existing) =>
                     existing.sender_id !== user.id && !existing.read_at
                       ? { ...existing, read_at: new Date().toISOString() }
-                      : existing,
+                    : existing,
                   ),
                 )
               }
+              onRefreshMessages={() => void loadDetails(order.id)}
             />
 
             {canOperateOrder ? (

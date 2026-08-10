@@ -1,6 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { MemoryOrder, OrderMessage } from "../lib/supabase/types";
 
@@ -30,6 +37,7 @@ export function ChatWidget({
   onSend,
   onMessageReceived,
   onMessagesRead,
+  onRefreshMessages,
 }: {
   order: MemoryOrder;
   currentUserId: string;
@@ -41,10 +49,19 @@ export function ChatWidget({
   onSend: (event: FormEvent) => void;
   onMessageReceived: (message: OrderMessage) => void;
   onMessagesRead: () => void;
+  onRefreshMessages: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState("CONNECTING");
   const threadRef = useRef<HTMLDivElement>(null);
   const markedThroughRef = useRef<string | null>(null);
+  const messageReceivedRef = useRef(onMessageReceived);
+  const refreshMessagesRef = useRef(onRefreshMessages);
+
+  useEffect(() => {
+    messageReceivedRef.current = onMessageReceived;
+    refreshMessagesRef.current = onRefreshMessages;
+  }, [onMessageReceived, onRefreshMessages]);
 
   const unreadCount = useMemo(
     () =>
@@ -72,14 +89,21 @@ export function ChatWidget({
           filter: `order_id=eq.${order.id}`,
         },
         (payload) => {
-          onMessageReceived(payload.new as OrderMessage);
+          messageReceivedRef.current(payload.new as OrderMessage);
         },
       )
-      .subscribe();
+      .subscribe((status) => setRealtimeStatus(status));
+    // Realtime is the fast path. A quiet refresh is the safety net for mobile
+    // sleep, browser tab suspension, or a transient websocket reconnect.
+    const refreshTimer = window.setInterval(
+      () => refreshMessagesRef.current(),
+      20000,
+    );
     return () => {
+      window.clearInterval(refreshTimer);
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // The callback refs above keep this channel stable while the parent rerenders.
   }, [order.id]);
 
   useEffect(() => {
@@ -99,6 +123,13 @@ export function ChatWidget({
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight });
   }, [open, messages]);
 
+  const handleComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing)
+      return;
+    event.preventDefault();
+    if (!sending && messageBody.trim()) event.currentTarget.form?.requestSubmit();
+  };
+
   return (
     <div className="chat-widget">
       {open && (
@@ -111,6 +142,14 @@ export function ChatWidget({
             <div>
               <p className="eyebrow">MESSAGE</p>
               <h2>担当ディレクターとのメッセージ</h2>
+              <span
+                className={`chat-widget-status${realtimeStatus === "SUBSCRIBED" ? " is-online" : ""}`}
+              >
+                <i aria-hidden="true" />
+                {realtimeStatus === "SUBSCRIBED"
+                  ? "オンラインで確認中"
+                  : "接続を確認中…"}
+              </span>
             </div>
             <button
               type="button"
@@ -161,17 +200,27 @@ export function ChatWidget({
                 required
                 value={messageBody}
                 onChange={(event) => onMessageBodyChange(event.target.value)}
+                onKeyDown={handleComposerKeyDown}
                 rows={2}
                 maxLength={3000}
                 placeholder="担当者へ伝えたいこと"
-              />
-              <button
-                className="button button-outline message-send-button"
-                type="submit"
+                aria-label="担当者へ伝えたいメッセージ"
                 disabled={sending}
-              >
-                {sending ? "送信中…" : "送信する"}
-              </button>
+              />
+              <div className="chat-widget-composer-footer">
+                <small>Enterで送信 · Shift + Enterで改行</small>
+                <button
+                  className="message-send-button"
+                  type="submit"
+                  disabled={sending || !messageBody.trim()}
+                >
+                  <span>{sending ? "送信中…" : "送信"}</span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m4 4 16 8-16 8 3.2-8L4 4Z" />
+                    <path d="M7.2 12H20" />
+                  </svg>
+                </button>
+              </div>
             </form>
           ) : (
             <p className="readonly-preview-note">
@@ -192,7 +241,16 @@ export function ChatWidget({
         }
       >
         <span className="chat-widget-toggle-icon" aria-hidden="true">
-          {open ? "×" : "✉"}
+          {open ? (
+            <svg viewBox="0 0 24 24">
+              <path d="m7 7 10 10M17 7 7 17" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24">
+              <path d="M20 11.5a7.2 7.2 0 0 1-7.5 7.2 8 8 0 0 1-3.3-.7L4 19l1.5-4.6A7.1 7.1 0 0 1 5 11.5 7.2 7.2 0 0 1 12.5 4 7.2 7.2 0 0 1 20 11.5Z" />
+              <path d="M9 11.5h.01M12.5 11.5h.01M16 11.5h.01" />
+            </svg>
+          )}
           {!open && unreadCount > 0 && (
             <span className="chat-widget-badge">!</span>
           )}

@@ -1004,6 +1004,48 @@ export function AdminStudio() {
     () => orders.find((item) => item.id === selectedOrderId) ?? null,
     [orders, selectedOrderId],
   );
+
+  useEffect(() => {
+    if (!order?.id || profile?.role !== "admin") return;
+    const supabase = getSupabaseBrowserClient();
+    const channel = supabase
+      .channel(
+        `admin-order-messages-${order.id}-${Math.random().toString(36).slice(2)}`,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `order_id=eq.${order.id}`,
+        },
+        (payload) => {
+          const incoming = payload.new as OrderMessage;
+          setMessages((current) =>
+            current.some((message) => message.id === incoming.id)
+              ? current
+              : [...current, incoming].sort((a, b) =>
+                  a.created_at.localeCompare(b.created_at),
+                ),
+          );
+        },
+      )
+      .subscribe();
+    const refreshTimer = window.setInterval(async () => {
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("order_id", order.id)
+        .order("created_at");
+      if (data) setMessages(data as OrderMessage[]);
+    }, 20000);
+    return () => {
+      window.clearInterval(refreshTimer);
+      supabase.removeChannel(channel);
+    };
+  }, [order?.id, profile?.role]);
+
   const productionFields = useMemo(
     () => getProductionFields(order ?? {}),
     [order],
