@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { MemoryOrder, OrderMessage } from "../lib/supabase/types";
 
@@ -48,6 +49,7 @@ export function ChatWidget({
   onRefreshMessages: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   // Keep the draft in the widget itself so order/realtime refreshes never
   // replace the textarea while the customer is typing.
   const [draftMessage, setDraftMessage] = useState("");
@@ -56,7 +58,24 @@ export function ChatWidget({
   const messageReceivedRef = useRef(onMessageReceived);
   const refreshMessagesRef = useRef(onRefreshMessages);
 
-  const canCompose = canOperate;
+  // A customer's own order is always allowed to receive a message. Other
+  // controls may be read-only (for example while an admin previews the page),
+  // but that must not hide the customer's conversation composer.
+  const canCompose = canOperate || currentUserId === order.user_id;
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [open]);
 
   useEffect(() => {
     messageReceivedRef.current = onMessageReceived;
@@ -134,7 +153,7 @@ export function ChatWidget({
     if (await onSend(body)) setDraftMessage("");
   };
 
-  return (
+  const widget = (
     <div className="chat-widget">
       {open && (
         <section
@@ -257,4 +276,8 @@ export function ChatWidget({
       </button>
     </div>
   );
+
+  // Render outside the studio content stack so fixed positioning and pointer
+  // events cannot be intercepted by the mobile action bar or card layers.
+  return mounted ? createPortal(widget, document.body) : null;
 }

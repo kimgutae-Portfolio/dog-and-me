@@ -683,7 +683,7 @@ export function StudioClient() {
     if (
       !user ||
       !order ||
-      !canOperateOrder ||
+      order.user_id !== user.id ||
       !body.trim() ||
       sendingMessage
     )
