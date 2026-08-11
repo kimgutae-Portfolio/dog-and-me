@@ -1489,6 +1489,31 @@ export function AdminStudio() {
     }
   };
 
+  const notifyCustomerByMessage = async (orderId: string, body: string) => {
+    const supabase = getSupabaseBrowserClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) return { saved: false, notificationSent: false };
+    const response = await fetch("/api/admin/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ orderId, body }),
+    }).catch(() => null);
+    const result = response
+      ? ((await response.json().catch(() => null)) as {
+          saved?: boolean;
+          notificationSent?: boolean;
+        } | null)
+      : null;
+    return {
+      saved: Boolean(response?.ok && result?.saved),
+      notificationSent: Boolean(result?.notificationSent),
+    };
+  };
+
   const saveConcepts = async () => {
     if (!photoAnalysisApproved) {
       setError(
@@ -1571,7 +1596,17 @@ export function AdminStudio() {
           : "2案を公開できませんでした。入力内容と現在の制作工程をご確認ください。",
       );
     else {
-      setNotice("2つの物語案を公開し、操作履歴へ記録しました。");
+      const notification = await notifyCustomerByMessage(
+        order.id,
+        "物語案A・Bを公開しました。制作室で2案をご確認のうえ、進めたい案を1つ選択してください。",
+      );
+      setNotice(
+        notification.saved
+          ? notification.notificationSent
+            ? "2つの物語案を公開し、お客様へメッセージとメールでお知らせしました。"
+            : "2つの物語案を公開し、チャットへお知らせしました。メール通知は送れませんでした。"
+          : "2つの物語案は公開しましたが、お客様へのチャット通知に失敗しました。手動でメッセージを送ってください。",
+      );
       await Promise.all([loadOrders(), loadDetails(order.id)]);
     }
     setSaving(false);

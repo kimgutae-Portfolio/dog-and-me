@@ -31,8 +31,6 @@ export function ChatWidget({
   currentUserId,
   canOperate,
   messages,
-  messageBody,
-  onMessageBodyChange,
   sending,
   onSend,
   onMessageReceived,
@@ -43,34 +41,22 @@ export function ChatWidget({
   currentUserId: string;
   canOperate: boolean;
   messages: OrderMessage[];
-  messageBody: string;
-  onMessageBodyChange: (value: string) => void;
   sending: boolean;
-  onSend: (event: FormEvent) => void;
+  onSend: (body: string) => Promise<boolean>;
   onMessageReceived: (message: OrderMessage) => void;
   onMessagesRead: () => void;
   onRefreshMessages: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  // Keep the draft in the widget itself. The studio refreshes order details
-  // for realtime/polling safety; a parent refresh must never interrupt typing.
-  const [draftMessage, setDraftMessage] = useState(messageBody);
+  // Keep the draft in the widget itself so order/realtime refreshes never
+  // replace the textarea while the customer is typing.
+  const [draftMessage, setDraftMessage] = useState("");
   const threadRef = useRef<HTMLDivElement>(null);
   const markedThroughRef = useRef<string | null>(null);
   const messageReceivedRef = useRef(onMessageReceived);
   const refreshMessagesRef = useRef(onRefreshMessages);
 
-  const canCompose = canOperate || currentUserId === order.user_id;
-
-  useEffect(() => {
-    // The parent clears its value after a successful send. Do not mirror any
-    // other parent refresh back into the composer while the customer is typing.
-    if (!messageBody && draftMessage) {
-      const clearTimer = window.setTimeout(() => setDraftMessage(""), 0);
-      return () => window.clearTimeout(clearTimer);
-    }
-    return undefined;
-  }, [draftMessage, messageBody]);
+  const canCompose = canOperate;
 
   useEffect(() => {
     messageReceivedRef.current = onMessageReceived;
@@ -141,6 +127,13 @@ export function ChatWidget({
     if (!sending && draftMessage.trim()) event.currentTarget.form?.requestSubmit();
   };
 
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    const body = draftMessage.trim();
+    if (sending || !body) return;
+    if (await onSend(body)) setDraftMessage("");
+  };
+
   return (
     <div className="chat-widget">
       {open && (
@@ -198,15 +191,11 @@ export function ChatWidget({
             )}
           </div>
           {canCompose ? (
-            <form className="message-form" onSubmit={onSend}>
+            <form className="message-form" onSubmit={handleSubmit}>
               <textarea
                 required
                 value={draftMessage}
-                onChange={(event) => {
-                  const nextValue = event.target.value;
-                  setDraftMessage(nextValue);
-                  onMessageBodyChange(nextValue);
-                }}
+                onChange={(event) => setDraftMessage(event.target.value)}
                 onKeyDown={handleComposerKeyDown}
                 rows={2}
                 maxLength={3000}

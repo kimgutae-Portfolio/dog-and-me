@@ -104,7 +104,6 @@ export function StudioClient() {
   const [sourcePhotoUrls, setSourcePhotoUrls] = useState<
     Record<string, string>
   >({});
-  const [messageBody, setMessageBody] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [revisionCategory, setRevisionCategory] = useState("絵の動き");
   const [revisionBody, setRevisionBody] = useState("");
@@ -680,16 +679,15 @@ export function StudioClient() {
     }
   };
 
-  const sendMessage = async (event: FormEvent) => {
-    event.preventDefault();
+  const sendMessage = async (body: string): Promise<boolean> => {
     if (
       !user ||
       !order ||
       !canOperateOrder ||
-      !messageBody.trim() ||
+      !body.trim() ||
       sendingMessage
     )
-      return;
+      return false;
     setSendingMessage(true);
     setError("");
     try {
@@ -698,13 +696,13 @@ export function StudioClient() {
         .insert({
           order_id: order.id,
           sender_id: user.id,
-          body: messageBody.trim(),
+          body: body.trim(),
         })
         .select("*")
         .single();
       if (messageError) {
         setError("メッセージを送信できませんでした。");
-        return;
+        return false;
       }
       if (insertedMessage) {
         setMessages((current) =>
@@ -715,15 +713,16 @@ export function StudioClient() {
               ),
         );
       }
-      setMessageBody("");
       setNotice("担当者へメッセージを送りました。");
       // Notification and refresh are deliberately best-effort: neither can
       // make a successfully inserted message look like a failed send.
       void notifyAdminFromCustomer(order.id, "customer_message", `${Date.now()}`);
       void loadDetails(order.id);
+      return true;
     } catch (caught) {
       console.error(caught);
       setError("メッセージを送信できませんでした。通信状態をご確認ください。");
+      return false;
     } finally {
       setSendingMessage(false);
     }
@@ -2063,8 +2062,6 @@ export function StudioClient() {
               currentUserId={user.id}
               canOperate={canOperateOrder}
               messages={messages}
-              messageBody={messageBody}
-              onMessageBodyChange={setMessageBody}
               sending={sendingMessage}
               onSend={sendMessage}
               onMessageReceived={(message) =>
