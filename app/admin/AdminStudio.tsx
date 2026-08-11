@@ -1172,7 +1172,7 @@ export function AdminStudio() {
   const assemblyClipCount = requiredRenderSlots.filter(({ still, take }) =>
     clipByStillAndTake.has(`${still.id}:${take}`),
   ).length;
-  const estimatedSeconds = 45;
+  const estimatedSeconds = 54;
   const openMessages = useMemo(
     () =>
       messages.filter(

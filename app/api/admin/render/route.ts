@@ -18,8 +18,10 @@ export const maxDuration = 300;
 const BUCKET = "order-assets";
 const BGM_DIR = path.join(process.cwd(), "assets", "bgm");
 const ASSEMBLE_SCRIPT = path.join(process.cwd(), "scripts", "assemble_film.py");
+// Title/ending fades overlap static cards. Only the four story-to-story page
+// turns add dedicated time because both adjacent motion clips hold still.
 const PROFESSIONAL_STORYBOOK_DURATION_SECONDS =
-  3 + 40 + 7 - (0.65 + 4 * 0.95 + 0.75);
+  3 + 40 + 7 + 4 * 0.95;
 
 type RequestItem = { clipAssetId: string; role: RenderClipRole };
 

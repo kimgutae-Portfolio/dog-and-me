@@ -69,35 +69,87 @@ def make_title_card(png_path, kicker, title):
     img.save(png_path)
 
 
+def wrap_japanese_text(draw, text, font, max_width):
+    """Wrap Japanese text by rendered width without requiring spaces."""
+    lines = []
+    current = ""
+    no_line_start = set("、。，．！？：；）」』】〉》…")
+    for char in text.strip():
+        candidate = current + char
+        bbox = draw.textbbox((0, 0), candidate, font=font)
+        if current and bbox[2] - bbox[0] > max_width:
+            # Keep Japanese closing punctuation with the preceding character.
+            if char in no_line_start:
+                lines.append(candidate)
+                current = ""
+            else:
+                lines.append(current)
+                current = char
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return lines
+
+
+def wrap_ending_lines(draw, paragraphs, font, max_width):
+    """Honor explicit breaks and also wrap every long ending paragraph."""
+    wrapped = []
+    for paragraph in paragraphs:
+        if paragraph.strip():
+            wrapped.extend(wrap_japanese_text(draw, paragraph, font, max_width))
+        elif wrapped and wrapped[-1] != "":
+            wrapped.append("")
+    return wrapped or [""]
+
+
 def make_ending_card(png_path, lines, mark):
     img = Image.new("RGB", (W, H), CREAM)
     draw = ImageDraw.Draw(img)
-    f_body = ImageFont.truetype(MINCHO, 42, index=0)
     f_mark = ImageFont.truetype(GOTHIC, 24)
-    line_h = 70
-    total_h = line_h * len(lines)
+    max_width = W - 360
+    max_body_height = H - 260
+
+    # Prefer the original 42 px body size, but shrink long messages just enough
+    # to keep every line and the signature inside the safe area.
+    wrapped_lines = []
+    f_body = None
+    line_h = 0
+    for font_size in range(42, 25, -2):
+        candidate_font = ImageFont.truetype(MINCHO, font_size, index=0)
+        candidate_lines = wrap_ending_lines(
+            draw, lines, candidate_font, max_width
+        )
+        candidate_line_h = round(font_size * 1.65)
+        if candidate_line_h * len(candidate_lines) <= max_body_height:
+            f_body = candidate_font
+            wrapped_lines = candidate_lines
+            line_h = candidate_line_h
+            break
+    if f_body is None:
+        f_body = ImageFont.truetype(MINCHO, 26, index=0)
+        wrapped_lines = wrap_ending_lines(draw, lines, f_body, max_width)
+        line_h = 43
+
+    mark_gap = 42
+    mark_height = 30
+    total_h = line_h * len(wrapped_lines) + mark_gap + mark_height
     y0 = (H - total_h) / 2
-    for i, line in enumerate(lines):
+    for i, line in enumerate(wrapped_lines):
         text_center(draw, line, f_body, y0 + i * line_h, INK)
-    text_center(draw, mark, f_mark, y0 + len(lines) * line_h + 50, RUST)
+    text_center(
+        draw,
+        mark,
+        f_mark,
+        y0 + len(wrapped_lines) * line_h + mark_gap,
+        RUST,
+    )
     img.save(png_path)
 
 
 def wrap_story_text(draw, text, font, max_width):
     """Wrap Japanese story text without relying on whitespace boundaries."""
-    lines = []
-    current = ""
-    for char in text.strip():
-        candidate = current + char
-        bbox = draw.textbbox((0, 0), candidate, font=font)
-        if current and bbox[2] - bbox[0] > max_width:
-            lines.append(current)
-            current = char
-        else:
-            current = candidate
-    if current:
-        lines.append(current)
-    return lines[:2]
+    return wrap_japanese_text(draw, text, font, max_width)[:2]
 
 
 def make_story_caption_overlay(png_path, text):
@@ -197,22 +249,25 @@ def image_to_clip(png_path, out_path, duration):
          "-an", out_path])
 
 
-def normalize_story_clip(src, out_path, duration):
-    """Normalize one continuous Runway page to its requested duration.
+def normalize_story_clip(src, out_path, motion_duration, start_hold, end_hold):
+    """Normalize one moving page and surround it with quiet transition frames.
 
-    Gen-4 supplies either a five- or ten-second source. No freeze-frame or
-    artificial hold is inserted; the source motion is preserved at natural
-    speed and only the frame size/rate are normalized for assembly.
+    A page turn must not borrow moving frames from either adjacent story. The
+    first frame is held while the page is revealed, then the complete source
+    motion plays, and the final frame is held while the page turns away.
     """
+    output_duration = start_hold + motion_duration + end_hold
     run([
-        "ffmpeg", "-y", "-i", src, "-t", str(duration),
+        "ffmpeg", "-y", "-i", src, "-t", str(motion_duration),
         "-vf",
         (
             f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+            f"tpad=start_mode=clone:start_duration={start_hold:.3f}:"
+            f"stop_mode=clone:stop_duration={motion_duration + end_hold:.3f},"
             f"fps={FPS},"
             "format=yuv420p"
         ),
-        "-an", "-t", str(duration), out_path,
+        "-an", "-t", f"{output_duration:.3f}", out_path,
     ])
 
 
@@ -395,7 +450,7 @@ def main():
         durations = []
         segment_kinds = []
 
-        def add_storybook_clip(n, tag):
+        def add_storybook_clip(n, tag, start_hold=0.0, end_hold=0.0):
             nonlocal clips_done
             clip_mp4 = os.path.join(tmp, f"seg_{tag}_clip.mp4")
             if n in bridge_clip_numbers:
@@ -408,7 +463,10 @@ def main():
                     if n in expanded_clip_numbers
                     else SHORT_STORY_CLIP_SECONDS
                 )
-                normalize_story_clip(clip_path(n), clip_mp4, clip_duration)
+                normalize_story_clip(
+                    clip_path(n), clip_mp4, clip_duration, start_hold, end_hold
+                )
+                clip_duration += start_hold + end_hold
                 clip_kind = "story"
             segments.append(clip_mp4)
             durations.append(clip_duration)
@@ -429,16 +487,29 @@ def main():
         durations.append(INTRO_CARD_SECONDS)
         segment_kinds.append("title")
 
-        # 2. Intro clip — the first moving picture-book page.
-        add_storybook_clip(args.intro_clip, "intro")
-
-        # 3. Memory blocks
-        for gi, group in enumerate(memory_groups):
-            for clip_no in group:
-                add_storybook_clip(clip_no, f"mem{gi}_{clip_no}")
-
-        # 4. Ending clip — still moving continuously before the final page.
-        add_storybook_clip(args.ending_clip, "ending")
+        # 2–4. Every editorial transition uses held boundary frames. The old
+        # overlap made the outgoing dog continue moving on the curling page and
+        # the incoming dog start moving before the new page had settled.
+        story_clip_numbers = [
+            args.intro_clip,
+            *(clip_no for group in memory_groups for clip_no in group),
+            args.ending_clip,
+        ]
+        for index, clip_no in enumerate(story_clip_numbers):
+            first_story = index == 0
+            last_story = index == len(story_clip_numbers) - 1
+            start_hold = (
+                CARD_DISSOLVE_SECONDS if first_story else PAGE_CURL_SECONDS
+            )
+            end_hold = (
+                ENDING_DISSOLVE_SECONDS if last_story else PAGE_CURL_SECONDS
+            )
+            add_storybook_clip(
+                clip_no,
+                f"story{index + 1}_{clip_no}",
+                start_hold,
+                end_hold,
+            )
 
         # 5. Ending card
         ending_lines = args.ending_text.split("\\n")

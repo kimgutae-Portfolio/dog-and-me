@@ -935,12 +935,16 @@ test("stores storybook page sentences and burns them into the final video", asyn
   assert.match(renderRoute, /--captions-json/);
   assert.match(assembler, /make_story_caption_overlay/);
   assert.match(assembler, /burn_story_captions/);
+  assert.match(assembler, /wrap_ending_lines/);
+  assert.match(assembler, /max_width = W - 360/);
   assert.match(assembler, /物語の文章を重ねています/);
-  assert.match(assembler, /PAGE_TURN_TRANSITION = "coverright"/);
-  assert.match(assembler, /transition=\{PAGE_TURN_TRANSITION\}/);
+  assert.match(assembler, /page_curl_filter/);
+  assert.match(assembler, /tpad=start_mode=clone:start_duration=/);
+  assert.match(assembler, /stop_mode=clone:stop_duration=/);
+  assert.match(assembler, /CARD_DISSOLVE_SECONDS if first_story/);
+  assert.match(assembler, /ENDING_DISSOLVE_SECONDS if last_story/);
   assert.doesNotMatch(assembler, /PHOTO_HOLD_SECONDS/);
-  assert.doesNotMatch(assembler, /transition=fade:duration/);
-  assert.match(renderRoute, /ordered\.length \* 5\.0 \+ 7\.0 - 0\.7/);
+  assert.match(renderRoute, /3 \+ 40 \+ 7 \+ 4 \* 0\.95/);
   assert.match(css, /\.stills-story-caption/);
 });
 
