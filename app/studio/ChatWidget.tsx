@@ -4,6 +4,7 @@ import {
   FormEvent,
   KeyboardEvent,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -50,10 +51,10 @@ export function ChatWidget({
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  // Keep the draft in the widget itself so order/realtime refreshes never
-  // replace the textarea while the customer is typing.
-  const [draftMessage, setDraftMessage] = useState("");
+  const toggleId = useId();
+  const panelId = useId();
   const threadRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const markedThroughRef = useRef<string | null>(null);
   const messageReceivedRef = useRef(onMessageReceived);
   const refreshMessagesRef = useRef(onRefreshMessages);
@@ -143,37 +144,53 @@ export function ChatWidget({
     if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing)
       return;
     event.preventDefault();
-    if (!sending && draftMessage.trim()) event.currentTarget.form?.requestSubmit();
+    if (!sending && event.currentTarget.value.trim())
+      event.currentTarget.form?.requestSubmit();
   };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const body = draftMessage.trim();
+    const body = textareaRef.current?.value.trim() ?? "";
     if (sending || !body) return;
-    if (await onSend(body)) setDraftMessage("");
+    if (await onSend(body) && textareaRef.current) textareaRef.current.value = "";
   };
 
   const widget = (
     <div className="chat-widget">
-      {open && (
-        <section
-          className="chat-widget-panel"
-          role="dialog"
-          aria-label="担当者とのメッセージ"
-        >
+      <input
+        className="chat-widget-control"
+        id={toggleId}
+        type="checkbox"
+        onChange={(event) => setOpen(event.currentTarget.checked)}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+      <section
+        className="chat-widget-panel"
+        id={panelId}
+        role="dialog"
+        aria-label="担当者とのメッセージ"
+      >
           <header className="chat-widget-header">
             <div>
               <p className="eyebrow">MESSAGE</p>
               <h2>担当ディレクターとのメッセージ</h2>
             </div>
-            <button
-              type="button"
+            <label
+              htmlFor={toggleId}
               className="chat-widget-close"
-              onClick={() => setOpen(false)}
+              role="button"
+              tabIndex={0}
               aria-label="閉じる"
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  event.currentTarget.click();
+                }
+              }}
             >
               ×
-            </button>
+            </label>
           </header>
           <div className="message-thread chat-widget-thread" ref={threadRef}>
             {!messages.length && (
@@ -212,9 +229,8 @@ export function ChatWidget({
           {canCompose ? (
             <form className="message-form" onSubmit={handleSubmit}>
               <textarea
+                ref={textareaRef}
                 required
-                value={draftMessage}
-                onChange={(event) => setDraftMessage(event.target.value)}
                 onKeyDown={handleComposerKeyDown}
                 rows={2}
                 maxLength={3000}
@@ -227,7 +243,7 @@ export function ChatWidget({
                 <button
                   className="message-send-button"
                   type="submit"
-                  disabled={sending || !draftMessage.trim()}
+                  disabled={sending}
                 >
                   <span>{sending ? "送信中…" : "送信"}</span>
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -242,18 +258,25 @@ export function ChatWidget({
               閲覧専用プレビューではメッセージを送信できません。
             </p>
           )}
-        </section>
-      )}
-      <button
-        type="button"
+      </section>
+      <label
+        htmlFor={toggleId}
         className={`chat-widget-toggle${open ? " is-open" : ""}`}
-        onClick={() => setOpen((current) => !current)}
+        role="button"
+        tabIndex={0}
         aria-expanded={open}
+        aria-controls={panelId}
         aria-label={
           unreadCount > 0
             ? "担当者とのメッセージ（未読あり）"
             : "担当者とのメッセージ"
         }
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.currentTarget.click();
+          }
+        }}
       >
         <span className="chat-widget-toggle-icon" aria-hidden="true">
           {open ? (
@@ -273,7 +296,7 @@ export function ChatWidget({
         {!open && (
           <span className="chat-widget-toggle-label">担当者へメッセージ</span>
         )}
-      </button>
+      </label>
     </div>
   );
 

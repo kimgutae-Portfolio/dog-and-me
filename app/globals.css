@@ -699,6 +699,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .message-form textarea:disabled { opacity: .7; cursor: wait; }
 
 .chat-widget { position: fixed; z-index: 1000; right: max(22px, env(safe-area-inset-right)); bottom: max(22px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: auto; }
+.chat-widget-control { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.chat-widget-control:not(:checked) ~ .chat-widget-panel { display: none; }
 .chat-widget-toggle { min-width: 58px; height: 58px; padding: 0 18px 0 0; display: inline-flex; align-items: center; gap: 9px; border: 1px solid rgba(255,255,255,.55); border-radius: 999px; color: #fffdf8; background: var(--forest); line-height: 1; cursor: pointer; box-shadow: 0 14px 34px rgba(37,48,39,.28); transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
 .chat-widget-toggle:hover { background: #27382b; transform: translateY(-2px); box-shadow: 0 18px 38px rgba(37,48,39,.34); }
 .chat-widget-toggle.is-open { width: 48px; min-width: 48px; height: 48px; padding: 0; justify-content: center; background: #f8f6f0; border-color: rgba(48,58,49,.2); color: var(--forest); box-shadow: 0 12px 28px rgba(37,48,39,.18); }
@@ -710,7 +712,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .chat-widget-panel { width: min(390px, calc(100vw - 32px)); max-height: min(580px, calc(100vh - 128px)); display: flex; flex-direction: column; padding: 20px; background: #fbfaf5; border: 1px solid rgba(48,58,49,.14); border-radius: 22px; box-shadow: 0 24px 70px rgba(20,24,20,.24); animation: chat-widget-open .2s ease both; }
 .chat-widget-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid rgba(48,58,49,.1); }
 .chat-widget-header h2 { margin: 2px 0 4px; font-family: var(--font-serif); font-size: 17px; font-weight: 400; }
-.chat-widget-close { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; border: 1px solid rgba(48,58,49,.12); border-radius: 50%; color: var(--muted); background: transparent; cursor: pointer; }
+.chat-widget-close { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; border: 1px solid rgba(48,58,49,.12); border-radius: 50%; color: var(--muted); background: transparent; cursor: pointer; user-select: none; }
 .chat-widget-close:hover { color: var(--forest); background: rgba(48,58,49,.06); }
 .chat-widget-thread { flex: 1; min-height: 0; max-height: 330px; margin: 14px 0; }
 .chat-widget-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
