@@ -77,6 +77,10 @@ export function ChatWidget({
     refreshMessagesRef.current = onRefreshMessages;
   }, [onMessageReceived, onRefreshMessages]);
 
+  useEffect(() => {
+    if (open) refreshMessagesRef.current();
+  }, [open]);
+
   const unreadCount = useMemo(
     () =>
       messages.filter((m) => m.sender_id !== currentUserId && !m.read_at)
@@ -107,14 +111,7 @@ export function ChatWidget({
         },
       )
       .subscribe();
-    // Realtime is the fast path. A quiet refresh is the safety net for mobile
-    // sleep, browser tab suspension, or a transient websocket reconnect.
-    const refreshTimer = window.setInterval(
-      () => refreshMessagesRef.current(),
-      20000,
-    );
     return () => {
-      window.clearInterval(refreshTimer);
       supabase.removeChannel(channel);
     };
     // The callback refs above keep this channel stable while the parent rerenders.

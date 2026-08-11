@@ -123,6 +123,7 @@ export function StudioClient() {
     useState(false);
   const [consentAiChecked, setConsentAiChecked] = useState(false);
   const [startingPayment, setStartingPayment] = useState(false);
+  const requestedOrderId = searchParams.get("order") ?? "";
   const received = searchParams.get("received") === "1";
   const paymentResult = searchParams.get("payment");
 
@@ -146,9 +147,8 @@ export function StudioClient() {
     }
     const loadedOrders = (data ?? []) as MemoryOrder[];
     setOrders(loadedOrders);
-    const requested = searchParams.get("order");
-    const nextId = loadedOrders.some((order) => order.id === requested)
-      ? requested!
+    const nextId = loadedOrders.some((order) => order.id === requestedOrderId)
+      ? requestedOrderId
       : (loadedOrders[0]?.id ?? "");
     setSelectedOrderId((current) =>
       current && loadedOrders.some((order) => order.id === current)
@@ -157,7 +157,7 @@ export function StudioClient() {
     );
     if (!silent) setLoading(false);
     },
-    [searchParams, user],
+    [requestedOrderId, user],
   );
 
   const loadDetails = useCallback(async (orderId: string) => {
