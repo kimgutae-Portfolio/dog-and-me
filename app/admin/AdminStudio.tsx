@@ -727,6 +727,8 @@ export function AdminStudio() {
   const [saving, setSaving] = useState(false);
   const [exportingBundle, setExportingBundle] = useState(false);
   const [exportProgress, setExportProgress] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
+  const [deleteConfirmNumber, setDeleteConfirmNumber] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [messageDraft, setMessageDraft] = useState("");
@@ -1341,6 +1343,8 @@ export function AdminStudio() {
       setMessageDraft("");
       setConceptJsonDraft("");
       setConceptJsonStatus("");
+      setCancelReason("");
+      setDeleteConfirmNumber("");
     }
     setSelectedOrderId(orderId);
   };
@@ -2408,6 +2412,123 @@ export function AdminStudio() {
     setSaving(false);
   };
 
+  const cancelOrder = async () => {
+    if (!order || !cancelReason.trim()) return;
+    if (
+      !window.confirm(
+        `${order.order_number} をキャンセルしますか？\nこの操作は取り消せません。`,
+      )
+    )
+      return;
+    setSaving(true);
+    setError("");
+    const { error: cancelError } = await getSupabaseBrowserClient().rpc(
+      "admin_cancel_order",
+      { p_order_id: order.id, p_reason: cancelReason.trim() },
+    );
+    if (cancelError) {
+      setError(
+        cancelError.message.includes("already cancelled")
+          ? "この注文はすでにキャンセル済みです。"
+          : cancelError.message.includes("no longer be cancelled")
+            ? "納品済みの注文はキャンセルできません。"
+            : "キャンセルできませんでした。",
+      );
+    } else {
+      setCancelReason("");
+      setNotice("注文をキャンセルしました。");
+      await loadOrders();
+      await loadDetails(order.id);
+    }
+    setSaving(false);
+  };
+
+  // Storage objects are removed after the rows, never before: a leftover file can
+  // be cleaned up later, a row deleted against a failed purge cannot be restored.
+  const removeStoragePaths = async (paths: unknown) => {
+    // A `returns setof text` RPC comes back as a bare string array, but tolerate
+    // the single-column-object shape too rather than silently skipping cleanup.
+    const list = (Array.isArray(paths) ? paths : [])
+      .map((row) => {
+        if (typeof row === "string") return row;
+        const value = Object.values(row ?? {}).find(
+          (candidate) => typeof candidate === "string",
+        );
+        return typeof value === "string" ? value : "";
+      })
+      .filter(Boolean);
+    if (list.length)
+      await getSupabaseBrowserClient()
+        .storage.from("order-assets")
+        .remove(list);
+    return list.length;
+  };
+
+  const purgeOrderFiles = async () => {
+    if (!order) return;
+    if (
+      !window.confirm(
+        `${order.order_number} のお客様の写真・映像をすべて削除しますか？\nこの操作は取り消せません。`,
+      )
+    )
+      return;
+    setSaving(true);
+    setError("");
+    const { data, error: purgeError } = await getSupabaseBrowserClient().rpc(
+      "admin_purge_order_files",
+      { p_order_id: order.id },
+    );
+    if (purgeError) {
+      setError(
+        purgeError.message.includes("cancel the order before")
+          ? "先に注文をキャンセルしてください。"
+          : "写真・映像を削除できませんでした。",
+      );
+    } else {
+      const removed = await removeStoragePaths(data);
+      setNotice(`お客様の写真・映像を${removed}件削除しました。`);
+      await loadDetails(order.id);
+    }
+    setSaving(false);
+  };
+
+  const deleteOrder = async () => {
+    if (!order || deleteConfirmNumber.trim() !== order.order_number) return;
+    if (
+      !window.confirm(
+        `${order.order_number} を完全に削除しますか？\n写真・メッセージ・履歴もすべて消え、取り消せません。`,
+      )
+    )
+      return;
+    setSaving(true);
+    setError("");
+    const { data, error: deleteError } = await getSupabaseBrowserClient().rpc(
+      "admin_delete_order",
+      {
+        p_order_id: order.id,
+        p_reason: cancelReason.trim() || "顧客都合によるキャンセル",
+      },
+    );
+    if (deleteError) {
+      setError(
+        deleteError.message.includes("payment history")
+          ? "決済履歴がある注文は削除できません。写真・映像の削除をご利用ください。"
+          : deleteError.message.includes("cancel the order before")
+            ? "先に注文をキャンセルしてください。"
+            : "注文を削除できませんでした。",
+      );
+      setSaving(false);
+      return;
+    }
+    await removeStoragePaths(data);
+    setDeleteConfirmNumber("");
+    setCancelReason("");
+    setNotice(`${order.order_number} を完全に削除しました。`);
+    selectOrder("");
+    await loadOrders();
+    setSaving(false);
+  };
+
   const deleteSceneStill = async (asset: OrderAsset) => {
     if (!order || !canPrepareStills) return;
     if (
@@ -3358,6 +3479,7 @@ export function AdminStudio() {
                     <a href="#admin-revisions">修正</a>
                     <a href="#admin-video">映像</a>
                     <a href="#admin-message">連絡</a>
+                    <a href="#admin-danger">取消</a>
                   </nav>
 
                   <section className="admin-card" id="admin-progress">
@@ -5013,6 +5135,132 @@ export function AdminStudio() {
                           </div>
                         ))}
                       </div>
+                    )}
+                  </section>
+
+                  <section
+                    className="admin-card admin-danger-card"
+                    id="admin-danger"
+                  >
+                    <div className="card-head">
+                      <div>
+                        <p className="eyebrow">ORDER CANCELLATION</p>
+                        <h3>キャンセル・データ削除</h3>
+                      </div>
+                      <span>取り消せない操作</span>
+                    </div>
+
+                    {order.status === "cancelled" ? (
+                      <>
+                        <aside className="admin-operation-note warning">
+                          <strong>この注文はキャンセル済みです。</strong>
+                          <span>
+                            進行状況を元に戻すことはできません。お客様の写真・映像を消す場合は下の操作を使ってください。
+                          </span>
+                        </aside>
+
+                        <div className="admin-danger-action">
+                          <div>
+                            <strong>お客様の写真・映像を削除する</strong>
+                            <span>
+                              お預かりした写真と映像をすべて消します。注文番号・金額・お支払い履歴は帳簿用に残ります。
+                            </span>
+                          </div>
+                          <button
+                            className="button button-outline"
+                            type="button"
+                            disabled={saving}
+                            onClick={purgeOrderFiles}
+                          >
+                            写真・映像を削除する
+                          </button>
+                        </div>
+
+                        <div className="admin-danger-action">
+                          <div>
+                            <strong>注文を完全に削除する</strong>
+                            {order.payment_status === "pending" ? (
+                              <span>
+                                写真・メッセージ・履歴を含めてすべて消えます。確認のため注文番号
+                                <code>{order.order_number}</code>
+                                を入力してください。
+                              </span>
+                            ) : (
+                              <span>
+                                この注文にはお支払い履歴があるため、完全削除はできません。上の「写真・映像を削除する」をご利用ください。
+                              </span>
+                            )}
+                          </div>
+                          {order.payment_status === "pending" && (
+                            <div className="admin-danger-confirm">
+                              <input
+                                value={deleteConfirmNumber}
+                                onChange={(event) =>
+                                  setDeleteConfirmNumber(event.target.value)
+                                }
+                                placeholder={order.order_number}
+                                aria-label="確認用の注文番号"
+                              />
+                              <button
+                                className="button button-danger"
+                                type="button"
+                                disabled={
+                                  saving ||
+                                  deleteConfirmNumber.trim() !==
+                                    order.order_number
+                                }
+                                onClick={deleteOrder}
+                              >
+                                完全に削除する
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : order.status === "delivered" ? (
+                      <aside className="admin-operation-note warning">
+                        <strong>納品済みの注文はキャンセルできません。</strong>
+                        <span>
+                          返金や取り消しが必要な場合は、決済側の対応とあわせてご検討ください。
+                        </span>
+                      </aside>
+                    ) : (
+                      <>
+                        <aside className="admin-operation-note warning">
+                          <strong>キャンセルすると元に戻せません。</strong>
+                          <span>
+                            制作は停止し、お客様の制作室でも進行できなくなります。写真などのデータはキャンセル後に別途削除できます。
+                          </span>
+                        </aside>
+                        {order.payment_status === "paid" && (
+                          <aside className="admin-operation-note warning">
+                            <strong>お支払い済みの注文です。</strong>
+                            <span>
+                              返金はStripe側での対応が必要です。キャンセル操作では返金されません。
+                            </span>
+                          </aside>
+                        )}
+                        <label className="admin-danger-reason">
+                          <span>キャンセル理由（記録に残ります）</span>
+                          <textarea
+                            rows={2}
+                            value={cancelReason}
+                            maxLength={500}
+                            onChange={(event) =>
+                              setCancelReason(event.target.value)
+                            }
+                            placeholder="例：お客様のご都合により取り消しのご依頼"
+                          />
+                        </label>
+                        <button
+                          className="button button-danger"
+                          type="button"
+                          disabled={saving || !cancelReason.trim()}
+                          onClick={cancelOrder}
+                        >
+                          この注文をキャンセルする
+                        </button>
+                      </>
                     )}
                   </section>
                 </div>

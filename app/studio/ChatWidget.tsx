@@ -52,11 +52,25 @@ export function ChatWidget({
   onRefreshMessages: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [realtimeStatus, setRealtimeStatus] = useState("CONNECTING");
+  // Keep the draft in the widget itself. The studio refreshes order details
+  // for realtime/polling safety; a parent refresh must never interrupt typing.
+  const [draftMessage, setDraftMessage] = useState(messageBody);
   const threadRef = useRef<HTMLDivElement>(null);
   const markedThroughRef = useRef<string | null>(null);
   const messageReceivedRef = useRef(onMessageReceived);
   const refreshMessagesRef = useRef(onRefreshMessages);
+
+  const canCompose = canOperate || currentUserId === order.user_id;
+
+  useEffect(() => {
+    // The parent clears its value after a successful send. Do not mirror any
+    // other parent refresh back into the composer while the customer is typing.
+    if (!messageBody && draftMessage) {
+      const clearTimer = window.setTimeout(() => setDraftMessage(""), 0);
+      return () => window.clearTimeout(clearTimer);
+    }
+    return undefined;
+  }, [draftMessage, messageBody]);
 
   useEffect(() => {
     messageReceivedRef.current = onMessageReceived;
@@ -92,7 +106,7 @@ export function ChatWidget({
           messageReceivedRef.current(payload.new as OrderMessage);
         },
       )
-      .subscribe((status) => setRealtimeStatus(status));
+      .subscribe();
     // Realtime is the fast path. A quiet refresh is the safety net for mobile
     // sleep, browser tab suspension, or a transient websocket reconnect.
     const refreshTimer = window.setInterval(
@@ -127,7 +141,7 @@ export function ChatWidget({
     if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing)
       return;
     event.preventDefault();
-    if (!sending && messageBody.trim()) event.currentTarget.form?.requestSubmit();
+    if (!sending && draftMessage.trim()) event.currentTarget.form?.requestSubmit();
   };
 
   return (
@@ -142,14 +156,6 @@ export function ChatWidget({
             <div>
               <p className="eyebrow">MESSAGE</p>
               <h2>担当ディレクターとのメッセージ</h2>
-              <span
-                className={`chat-widget-status${realtimeStatus === "SUBSCRIBED" ? " is-online" : ""}`}
-              >
-                <i aria-hidden="true" />
-                {realtimeStatus === "SUBSCRIBED"
-                  ? "オンラインで確認中"
-                  : "接続を確認中…"}
-              </span>
             </div>
             <button
               type="button"
@@ -194,25 +200,29 @@ export function ChatWidget({
               </p>
             )}
           </div>
-          {canOperate ? (
+          {canCompose ? (
             <form className="message-form" onSubmit={onSend}>
               <textarea
                 required
-                value={messageBody}
-                onChange={(event) => onMessageBodyChange(event.target.value)}
+                value={draftMessage}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  setDraftMessage(nextValue);
+                  onMessageBodyChange(nextValue);
+                }}
                 onKeyDown={handleComposerKeyDown}
                 rows={2}
                 maxLength={3000}
                 placeholder="担当者へ伝えたいこと"
                 aria-label="担当者へ伝えたいメッセージ"
-                disabled={sending}
+                aria-busy={sending}
               />
               <div className="chat-widget-composer-footer">
                 <small>Enterで送信 · Shift + Enterで改行</small>
                 <button
                   className="message-send-button"
                   type="submit"
-                  disabled={sending || !messageBody.trim()}
+                  disabled={sending || !draftMessage.trim()}
                 >
                   <span>{sending ? "送信中…" : "送信"}</span>
                   <svg viewBox="0 0 24 24" aria-hidden="true">

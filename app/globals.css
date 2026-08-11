@@ -32,6 +32,9 @@ button, summary, label, a { -webkit-tap-highlight-color: transparent; }
 .button-outline { border-color: var(--ink); color: var(--ink); background: transparent; }
 .button-outline:hover { background: var(--ink); color: white; }
 .button-cream { background: #f1e8d5; color: var(--ink); }
+.button-danger { border-color: #a4402f; color: #a4402f; background: transparent; }
+.button-danger:hover { background: #a4402f; color: white; }
+.button-danger:disabled { border-color: #c9b7b1; color: #b09f99; background: transparent; cursor: not-allowed; transform: none; }
 .button-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .button-prelaunch { border-color: rgba(37,37,31,.24); color: #655b4f; background: rgba(255,255,255,.38); cursor: default; }
 .button-prelaunch:hover { transform: none; }
@@ -707,9 +710,6 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .chat-widget-panel { width: min(390px, calc(100vw - 32px)); max-height: min(580px, calc(100vh - 128px)); display: flex; flex-direction: column; padding: 20px; background: #fbfaf5; border: 1px solid rgba(48,58,49,.14); border-radius: 22px; box-shadow: 0 24px 70px rgba(20,24,20,.24); animation: chat-widget-open .2s ease both; }
 .chat-widget-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid rgba(48,58,49,.1); }
 .chat-widget-header h2 { margin: 2px 0 4px; font-family: var(--font-serif); font-size: 17px; font-weight: 400; }
-.chat-widget-status { display: inline-flex; align-items: center; gap: 5px; color: #8a8275; font-size: 8px; letter-spacing: .04em; }
-.chat-widget-status i { width: 6px; height: 6px; display: inline-block; border-radius: 50%; background: #c6b9a7; }
-.chat-widget-status.is-online i { background: #6b9670; box-shadow: 0 0 0 3px rgba(107,150,112,.12); }
 .chat-widget-close { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; border: 1px solid rgba(48,58,49,.12); border-radius: 50%; color: var(--muted); background: transparent; cursor: pointer; }
 .chat-widget-close:hover { color: var(--forest); background: rgba(48,58,49,.06); }
 .chat-widget-thread { flex: 1; min-height: 0; max-height: 330px; margin: 14px 0; }
@@ -927,6 +927,24 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-operation-note.strong, .admin-operation-note.warning { display: grid; gap: 4px; border: 1px solid #b7c2b6; box-shadow: inset 0 0 0 4px rgba(104,128,107,.08); }
 .admin-operation-note.warning { border-color: #d5b2a3; background: #f6e8e1; box-shadow: inset 0 0 0 4px rgba(165,93,62,.07); }
 .admin-operation-note strong { color: var(--ink); font-size: 10px; }
+.admin-danger-card { border: 1px solid #d5b2a3; box-shadow: inset 0 0 0 5px rgba(165,93,62,.05); }
+.admin-danger-card .card-head span { color: #a4402f; }
+.admin-danger-reason { display: grid; gap: 8px; margin: 16px 0; }
+.admin-danger-reason > span { color: var(--ink); font-size: 10px; font-weight: 700; }
+.admin-danger-reason textarea { width: 100%; padding: 12px; border: 1px solid var(--line); outline: 0; background: rgba(255,255,255,.62); font-size: 10px; line-height: 1.7; resize: vertical; }
+.admin-danger-reason textarea:focus { border-color: #a4402f; }
+.admin-danger-action { margin-top: 16px; padding: 17px; display: grid; gap: 13px; border: 1px solid var(--line); background: rgba(255,255,255,.45); }
+.admin-danger-action > div { display: grid; gap: 5px; }
+.admin-danger-action strong { color: var(--ink); font-size: 10px; }
+.admin-danger-action span { color: var(--muted); font-size: 9px; line-height: 1.8; }
+.admin-danger-action code { padding: 1px 5px; background: #ece7de; font-size: 9px; }
+.admin-danger-confirm { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.admin-danger-confirm input { flex: 1 1 180px; min-width: 0; min-height: 46px; padding: 0 12px; border: 1px solid var(--line); outline: 0; background: white; font-size: 11px; }
+.admin-danger-confirm input:focus { border-color: #a4402f; }
+@media (max-width: 640px) {
+  .admin-danger-action .button, .admin-danger-confirm .button { width: 100%; }
+  .admin-danger-reason textarea, .admin-danger-confirm input { font-size: 16px; }
+}
 .admin-video-history { margin-top: 18px; display: grid; gap: 7px; }
 .admin-video-history > strong { margin-bottom: 3px; font-size: 9px; }
 .admin-video-history a { padding: 11px 13px; display: flex; justify-content: space-between; gap: 12px; color: var(--ink); background: #ece7de; font-size: 9px; }
