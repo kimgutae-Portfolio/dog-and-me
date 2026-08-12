@@ -64,6 +64,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /二つの物語案/);
   assert.match(html, /専用ページで受け取る/);
   assert.match(html, /専用ものがたりサイト/);
+  assert.match(html, /hero-owner-dog-rainy-home\.png/);
   assert.match(html, /物語案の確認までは無料/);
   assert.match(html, /お支払い後 10〜14営業日/);
   assert.ok(

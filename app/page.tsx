@@ -182,7 +182,7 @@ export default async function Home() {
       <section className="storybook-hero" aria-labelledby="hero-title">
         <Image
           className="storybook-hero-image"
-          src="/film/moka/05-storybook-lantern.webp"
+          src="/hero-owner-dog-rainy-home.png"
           alt=""
           fill
           priority
