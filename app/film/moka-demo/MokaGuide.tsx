@@ -5,6 +5,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /* eslint-disable @next/next/no-img-element -- Transparent character frames are animation sprites. */
 
 const framePath = "/film/moka/character/frames";
+// The frames were cleaned after launch. A revisioned URL prevents browsers and
+// the production CDN from reusing an older seated frame with neighbour pixels.
+const frameRevision = "20260812-clean-2";
 const reactions = ["head-tilt", "paw-wave", "speak-open"] as const;
 
 const messages: Record<string, string[]> = {
@@ -123,7 +126,12 @@ export function MokaGuide() {
         </div>
         <button className="moka-guide-character" type="button" onClick={() => speak(reactions[Math.floor(Math.random() * reactions.length)])} aria-label="モカに話しかける">
           <span className="moka-guide-walk-sprite" aria-hidden="true" />
-          <img className="moka-guide-pose" src={`${framePath}/${pose}.png`} alt="" draggable={false} />
+          <img
+            className="moka-guide-pose"
+            src={`${framePath}/${pose}.png?v=${frameRevision}`}
+            alt=""
+            draggable={false}
+          />
         </button>
       </div>
     </aside>

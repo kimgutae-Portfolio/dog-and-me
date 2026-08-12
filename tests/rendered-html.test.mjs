@@ -386,6 +386,17 @@ test("guards generated character sprites against frame-edge bleed", async () => 
   assert.match(studio, /isolated_frame_preview/);
 });
 
+test("busts cached Moka pose frames after edge cleanup", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [guide, styles] = await Promise.all([
+    readFile(new URL("app/film/moka-demo/MokaGuide.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(guide, /frameRevision = "20260812-clean-2"/);
+  assert.match(guide, /\.png\?v=\$\{frameRevision\}/);
+  assert.match(styles, /moka-walk-strip\.png\?v=20260812-clean-2/);
+});
+
 test("uses the default social image when a memory URL is unavailable", async () => {
   const response = await render("/api/memory/share-demo/og");
   assert.equal(response.status, 307);
