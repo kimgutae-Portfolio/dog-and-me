@@ -1130,7 +1130,7 @@ export function StoryWizard() {
               <p className="eyebrow">STORIES & PHOTOS</p>
               <h1 id="step-title">物語にしたい日と、その日の一枚。</h1>
               <p className="step-lead">
-                まずは、いちばん書きやすい思い出を1つだけ。入力内容と写真は自動保存されるので、残りはあとから少しずつ続けられます。
+                五つの思い出が、その子だけの物語になります。いちばん心に浮かぶ出来事から、最初の一場面をつくっていきましょう。
               </p>
               <aside
                 className={
@@ -1144,17 +1144,17 @@ export function StoryWizard() {
                   <span>{completedMemoryCount > 0 ? "FIRST MEMORY SAVED" : "START WITH ONE MEMORY"}</span>
                   <strong>
                     {completedMemoryCount > 0
-                      ? "最初の思い出を保存できました。"
-                      : "今日は、まず1つ書ければ大丈夫です。"}
+                      ? "いいスタートです。次の思い出へ進みましょう。"
+                      : "最初の一場面から、物語を始めましょう。"}
                   </strong>
                   <p>
                     {completedMemoryCount > 0
-                      ? "このまま次の思い出へ進んでも、いったん閉じて後日続けても大丈夫です。"
-                      : "タイトル・30文字ほどのお話・写真1枚で完了します。きれいな文章にする必要はありません。"}
+                      ? `五つのうち${completedMemoryCount}つが完成しました。思い出が重なるたび、物語の輪郭が見えてきます。`
+                      : "タイトル・30文字ほどのお話・写真1枚を添えると、物語の最初のページが形になります。"}
                   </p>
                   {completedMemoryCount > 0 && (
                     <Link className="first-memory-save-exit" href="/">
-                      今日はここまで保存して閉じる
+                      ここまでを保存して、あとで続ける
                     </Link>
                   )}
                 </div>

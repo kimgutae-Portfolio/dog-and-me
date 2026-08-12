@@ -445,8 +445,9 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(startStoryLink, /user \? "\/story" : START_STORY_HREF/);
   assert.match(startStoryLink, /if \(!loading\) return/);
   assert.match(storyWizard, /profile\?\.primary_pet_name/);
-  assert.match(storyWizard, /まずは、いちばん書きやすい思い出を1つだけ/);
-  assert.match(storyWizard, /今日はここまで保存して閉じる/);
+  assert.match(storyWizard, /五つの思い出が、その子だけの物語になります/);
+  assert.match(storyWizard, /最初の一場面から、物語を始めましょう/);
+  assert.match(storyWizard, /ここまでを保存して、あとで続ける/);
   assert.match(storyWizard, /if \(!showAllMemoryCards && index > 0\) return null/);
   assert.match(storyWizard, /書き方に迷ったら、例を見る/);
   assert.match(
@@ -850,7 +851,7 @@ test("stores exactly five stories with required scene photos", async () => {
   assert.match(rules, /cardinality\(coalesce\(p_client_keys/);
   assert.match(story, /const MIN_MEMORY_COUNT = 5/);
   assert.match(story, /const MAX_MEMORY_COUNT = 5/);
-  assert.match(story, /まずは、いちばん書きやすい思い出を1つだけ/);
+  assert.match(story, /五つの思い出が、その子だけの物語になります/);
   assert.match(story, /その子らしい反応を書く/);
   assert.match(story, /この物語の場面写真/);
   assert.match(story, /save_order_memory_entry/);
@@ -931,7 +932,7 @@ test("uses story-specific photo sources and requires operator approval", async (
   assert.match(sourceLock, /確認済みの写真は変更できません/);
   assert.match(sourceLock, /five stories are required before source approval/);
 
-  assert.match(story, /タイトル・30文字ほどのお話・写真1枚で完了します/);
+  assert.match(story, /タイトル・30文字ほどのお話・写真1枚を添えると/);
   assert.match(story, /FIXED_FILM_STYLE/);
   assert.doesNotMatch(story, /referencePhotosComplete/);
   assert.match(story, /仕上がりの表現について確認しました/);
