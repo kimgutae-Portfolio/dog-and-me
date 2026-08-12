@@ -365,19 +365,56 @@ export default async function Home() {
                 <i /><i /><i />
                 <span>MOKA&apos;S MEMORY SITE</span>
               </div>
-              <div className="storybook-site-window-hero">
-                <Image
-                  src="/film/moka/05-storybook-lantern.webp"
-                  alt="モカの個人ホームページに表示された夕暮れの物語"
-                  fill
-                  sizes="(max-width: 900px) 92vw, 55vw"
-                />
-                <div className="storybook-site-window-shade" aria-hidden="true" />
-                <div className="storybook-site-window-copy">
-                  <span>A STORY FOR MOKA</span>
-                  <strong>モカと、五つの記憶</strong>
-                  <small>いつもの日々をめぐる物語</small>
+              <div className="storybook-site-window-collage">
+                <div className="storybook-site-panel storybook-site-panel-cover">
+                  <Image
+                    src="/film/moka/05-storybook-lantern.webp"
+                    alt="モカの個人ホームページのメイン画面"
+                    fill
+                    sizes="(max-width: 900px) 82vw, 47vw"
+                  />
+                  <div className="storybook-site-window-shade" aria-hidden="true" />
+                  <div className="storybook-site-window-copy">
+                    <span>MAIN STORY</span>
+                    <strong>モカと、五つの記憶</strong>
+                    <small>いつもの日々をめぐる物語</small>
+                  </div>
                 </div>
+
+                <div className="storybook-site-panel storybook-site-panel-film">
+                  <Image
+                    src="/film/moka/02-storybook-train.webp"
+                    alt="完成した動く絵本の再生画面"
+                    fill
+                    sizes="(max-width: 640px) 43vw, 25vw"
+                  />
+                  <div className="storybook-site-panel-film-shade" aria-hidden="true" />
+                  <span>01 / COMPLETE FILM</span>
+                  <i aria-hidden="true">▶</i>
+                  <strong>五つの記憶を、一冊の映像に。</strong>
+                </div>
+
+                <div className="storybook-site-panel storybook-site-panel-album">
+                  <span>02 / PHOTO ALBUM</span>
+                  <strong>モカの時間を、写真帖に。</strong>
+                  <div>
+                    {[
+                      "/film/moka/06-rainy-entryway.webp",
+                      "/film/moka/02-storybook-train.webp",
+                      "/film/moka/09-autumn-ginkgo.webp",
+                      "/film/moka/03-storybook-bread.webp",
+                    ].map((src, index) => (
+                      <Image key={src} src={src} alt={`モカの写真アルバム ${index + 1}`} width={160} height={120} />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="storybook-site-panel storybook-site-panel-letter">
+                  <span>03 / FAMILY LETTER</span>
+                  <p>モカへ。<br />何気ない毎日も、<br />ぜんぶ大切な物語だよ。</p>
+                  <small>FROM YOUR FAMILY</small>
+                </div>
+
                 <div className="storybook-site-character" aria-hidden="true">
                   <div>ぼくの思い出、<br />見ていってね。</div>
                   <Image

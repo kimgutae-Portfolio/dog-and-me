@@ -1892,17 +1892,38 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-site-window-bar { height: 42px; padding: 0 15px; display: flex; align-items: center; gap: 7px; color: #817970; border-bottom: 1px solid rgba(64,59,53,.12); background: #f9f5ed; }
 .storybook-site-window-bar i { width: 7px; height: 7px; border-radius: 50%; background: #c9beb0; }
 .storybook-site-window-bar span { margin-left: auto; font-size: 6px; font-style: normal; letter-spacing: .18em; }
-.storybook-site-window-hero { aspect-ratio: 16/10; position: relative; overflow: hidden; background: #564a40; }
-.storybook-site-window-hero > img { object-fit: cover; object-position: center; transform: scale(1.02); transition: transform 8s ease; }
-.storybook-personal-site.is-section-active .storybook-site-window-hero > img { transform: scale(1.08); }
+.storybook-site-window-collage { aspect-ratio: 16/11.4; position: relative; overflow: hidden; background: linear-gradient(145deg,#ded4c7,#eee7dc); }
+.storybook-site-panel { position: absolute; overflow: hidden; border: 1px solid rgba(64,59,53,.17); background: #fffaf2; box-shadow: 0 18px 45px rgba(48,38,31,.22); transition: transform .8s cubic-bezier(.2,.8,.2,1); }
+.storybook-site-panel-cover { z-index: 1; inset: 7% 13% 9% 5%; transform: rotate(-1.5deg); }
+.storybook-site-panel-cover > img { object-fit: cover; object-position: center; transform: scale(1.02); transition: transform 8s ease; }
+.storybook-personal-site.is-section-active .storybook-site-panel-cover > img { transform: scale(1.08); }
+.storybook-personal-site.is-section-active .storybook-site-panel-cover { transform: rotate(-2deg) translate(-3px,-2px); }
 .storybook-site-window-shade { position: absolute; inset: 0; background: linear-gradient(90deg,rgba(32,28,25,.62),rgba(32,28,25,.03) 72%),linear-gradient(180deg,transparent 50%,rgba(32,28,25,.5)); }
 .storybook-site-window-copy { position: absolute; z-index: 1; left: 7%; bottom: 11%; display: grid; color: white; }
 .storybook-site-window-copy span { color: #e3c2b9; font-size: 7px; font-weight: 700; letter-spacing: .2em; }
 .storybook-site-window-copy strong { margin-top: 9px; font-family: var(--font-serif); font-size: clamp(22px,3vw,38px); font-weight: 400; letter-spacing: .07em; }
 .storybook-site-window-copy small { margin-top: 8px; color: rgba(255,255,255,.67); font-size: 8px; letter-spacing: .08em; }
-.storybook-site-character { width: 29%; position: absolute; z-index: 2; right: 2%; bottom: -3%; filter: drop-shadow(0 12px 12px rgba(26,21,18,.3)); animation: storybook-site-character-bob 3.2s ease-in-out infinite; }
+.storybook-site-panel-film { z-index: 4; width: 42%; height: 38%; right: 3%; top: 4%; color: white; transform: rotate(3.2deg); }
+.storybook-site-panel-film > img { object-fit: cover; }
+.storybook-site-panel-film-shade { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(30,28,25,.05),rgba(30,28,25,.72)); }
+.storybook-site-panel-film > span, .storybook-site-panel-album > span, .storybook-site-panel-letter > span { position: absolute; z-index: 2; left: 8%; top: 9%; font-size: 5px; font-style: normal; font-weight: 700; letter-spacing: .16em; }
+.storybook-site-panel-film > i { width: 33px; height: 33px; position: absolute; z-index: 2; inset: 43% auto auto 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.8); border-radius: 50%; font-size: 8px; font-style: normal; transform: translate(-50%,-50%); }
+.storybook-site-panel-film > strong { position: absolute; z-index: 2; left: 8%; bottom: 8%; font-family: var(--font-serif); font-size: 11px; font-weight: 400; }
+.storybook-personal-site.is-section-active .storybook-site-panel-film { transform: rotate(4deg) translate(4px,-4px); }
+.storybook-site-panel-album { z-index: 3; width: 45%; height: 35%; left: 2%; bottom: 2%; padding: 28px 10px 9px; transform: rotate(-3.2deg); }
+.storybook-site-panel-album > span { color: #a16f70; }
+.storybook-site-panel-album > strong { margin-bottom: 7px; display: block; color: #4e4842; font-family: var(--font-serif); font-size: 10px; font-weight: 400; }
+.storybook-site-panel-album > div { height: calc(100% - 15px); display: grid; grid-template-columns: repeat(2,1fr); gap: 3px; }
+.storybook-site-panel-album img { width: 100%; height: 100%; min-height: 0; display: block; object-fit: cover; }
+.storybook-personal-site.is-section-active .storybook-site-panel-album { transform: rotate(-4deg) translate(-4px,3px); }
+.storybook-site-panel-letter { z-index: 5; width: 37%; height: 33%; right: 4%; bottom: 3%; padding: 32px 14px 10px; color: white; text-align: center; background: linear-gradient(145deg,#4a5653,#69534f); transform: rotate(2deg); }
+.storybook-site-panel-letter > span { color: #ddb8b0; }
+.storybook-site-panel-letter p { margin: 0; font-family: var(--font-serif); font-size: 11px; line-height: 1.65; }
+.storybook-site-panel-letter small { margin-top: 8px; display: block; color: rgba(255,255,255,.48); font-size: 5px; letter-spacing: .14em; }
+.storybook-personal-site.is-section-active .storybook-site-panel-letter { transform: rotate(3deg) translate(4px,3px); }
+.storybook-site-character { width: 25%; position: absolute; z-index: 7; right: 28%; bottom: -4%; filter: drop-shadow(0 12px 12px rgba(26,21,18,.3)); animation: storybook-site-character-bob 3.2s ease-in-out infinite; }
 .storybook-site-character img { width: 100%; height: auto; display: block; }
-.storybook-site-character div { width: max-content; max-width: 125px; padding: 9px 12px; position: absolute; right: 70%; top: 7%; color: #554d46; border-radius: 13px 13px 3px 13px; background: rgba(255,251,242,.95); box-shadow: 0 8px 22px rgba(31,25,21,.18); font-family: var(--font-serif); font-size: 9px; line-height: 1.55; }
+.storybook-site-character div { width: max-content; max-width: 125px; padding: 9px 12px; position: absolute; right: 68%; top: -1%; color: #554d46; border-radius: 13px 13px 3px 13px; background: rgba(255,251,242,.95); box-shadow: 0 8px 22px rgba(31,25,21,.18); font-family: var(--font-serif); font-size: 9px; line-height: 1.55; }
 .storybook-site-character div::after { content: ""; width: 8px; height: 8px; position: absolute; right: -4px; bottom: 8px; background: inherit; transform: rotate(45deg); }
 .storybook-site-window-bottom { min-height: 50px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; color: #7b736a; background: #fffaf2; font-size: 6px; letter-spacing: .15em; }
 .storybook-personal-site-copy { min-width: 0; }
@@ -2165,11 +2186,17 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-personal-site-grid { gap: 36px; }
   .storybook-site-window { margin: 0 -10px; width: calc(100% + 20px); }
   .storybook-site-window-bar { height: 36px; }
-  .storybook-site-window-hero { aspect-ratio: 4/3; }
+  .storybook-site-window-collage { aspect-ratio: 4/3.5; }
   .storybook-site-window-copy { left: 6%; bottom: 9%; }
   .storybook-site-window-copy strong { font-size: 23px; }
-  .storybook-site-character { width: 39%; right: -3%; }
-  .storybook-site-character div { right: 62%; top: 3%; font-size: 8px; }
+  .storybook-site-panel-cover { inset: 5% 8% 15% 3%; }
+  .storybook-site-panel-film { width: 53%; height: 33%; right: 1%; top: 3%; }
+  .storybook-site-panel-album { width: 53%; height: 32%; left: 1%; bottom: 2%; }
+  .storybook-site-panel-letter { width: 47%; height: 30%; right: 2%; bottom: 3%; }
+  .storybook-site-panel-film > strong, .storybook-site-panel-letter p { font-size: 8px; }
+  .storybook-site-panel-album > strong { font-size: 8px; }
+  .storybook-site-character { width: 31%; right: 24%; bottom: 10%; }
+  .storybook-site-character div { right: 57%; top: -2%; padding: 7px 9px; font-size: 7px; }
   .storybook-site-window-bottom { min-height: 44px; padding: 0 12px; }
   .storybook-personal-site-lead { font-size: 12px; }
   .storybook-personal-site-features li { padding: 17px 0; }
