@@ -40,12 +40,25 @@ export function CustomerCharacterGuide({ spriteUrl, petName }: { spriteUrl: stri
   }, []);
 
   useEffect(() => {
+    let lastScrollAt = performance.now();
+    const showSpeech = () => {
+      setMessageIndex((current) => (current + 1) % messages.length);
+      setSpeaking(true);
+      if (speechTimer.current) clearTimeout(speechTimer.current);
+      speechTimer.current = setTimeout(() => setSpeaking(false), 3200);
+    };
     const hideWhileReading = () => {
+      lastScrollAt = performance.now();
       setSpeaking(false);
       if (speechTimer.current) clearTimeout(speechTimer.current);
     };
+    const occasionalSpeech = window.setInterval(() => {
+      if (document.hidden || performance.now() - lastScrollAt < 6000) return;
+      showSpeech();
+    }, 18000);
     window.addEventListener("scroll", hideWhileReading, { passive: true });
     return () => {
+      window.clearInterval(occasionalSpeech);
       window.removeEventListener("scroll", hideWhileReading);
       if (speechTimer.current) clearTimeout(speechTimer.current);
     };

@@ -97,18 +97,26 @@ export function MokaGuide() {
   }, [resting]);
 
   useEffect(() => {
+    if (resting) return;
+    let lastScrollAt = performance.now();
     const hideWhileReading = () => {
+      lastScrollAt = performance.now();
       setBubbleVisible(false);
       setPose("idle");
       pausedUntil.current = 0;
       if (reactionTimer.current) clearTimeout(reactionTimer.current);
     };
+    const occasionalSpeech = window.setInterval(() => {
+      if (document.hidden || performance.now() - lastScrollAt < 6000) return;
+      speak(reactions[Math.floor(Math.random() * reactions.length)]);
+    }, 18000);
     window.addEventListener("scroll", hideWhileReading, { passive: true });
     return () => {
+      window.clearInterval(occasionalSpeech);
       window.removeEventListener("scroll", hideWhileReading);
       if (reactionTimer.current) clearTimeout(reactionTimer.current);
     };
-  }, []);
+  }, [resting, speak]);
 
   if (resting) {
     return <button className="moka-guide-wake" type="button" onClick={() => setResting(false)}>モカを呼ぶ <span aria-hidden="true">♡</span></button>;

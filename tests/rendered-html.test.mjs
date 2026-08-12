@@ -397,7 +397,7 @@ test("busts cached Moka pose frames after edge cleanup", async () => {
   assert.match(styles, /moka-walk-strip\.png\?v=20260812-clean-2/);
 });
 
-test("character speech stays hidden while customers scroll and read", async () => {
+test("character speech waits until customers stop scrolling", async () => {
   const { readFile } = await import("node:fs/promises");
   const [mokaGuide, customerGuide] = await Promise.all([
     readFile(new URL("app/film/moka-demo/MokaGuide.tsx", root), "utf8"),
@@ -407,10 +407,14 @@ test("character speech stays hidden while customers scroll and read", async () =
     ),
   ]);
   assert.match(mokaGuide, /useState\(false\)/);
-  assert.doesNotMatch(mokaGuide, /setInterval/);
+  assert.match(mokaGuide, /performance\.now\(\) - lastScrollAt < 6000/);
+  assert.match(mokaGuide, /setInterval/);
+  assert.match(mokaGuide, /18000/);
   assert.match(mokaGuide, /addEventListener\("scroll", hideWhileReading/);
   assert.match(customerGuide, /useState\(false\)/);
-  assert.doesNotMatch(customerGuide, /setInterval/);
+  assert.match(customerGuide, /performance\.now\(\) - lastScrollAt < 6000/);
+  assert.match(customerGuide, /setInterval/);
+  assert.match(customerGuide, /18000/);
   assert.match(customerGuide, /addEventListener\("scroll", hideWhileReading/);
 });
 
