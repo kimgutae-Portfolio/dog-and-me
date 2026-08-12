@@ -397,6 +397,23 @@ test("busts cached Moka pose frames after edge cleanup", async () => {
   assert.match(styles, /moka-walk-strip\.png\?v=20260812-clean-2/);
 });
 
+test("character speech stays hidden while customers scroll and read", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [mokaGuide, customerGuide] = await Promise.all([
+    readFile(new URL("app/film/moka-demo/MokaGuide.tsx", root), "utf8"),
+    readFile(
+      new URL("app/film/[orderId]/CustomerCharacterGuide.tsx", root),
+      "utf8",
+    ),
+  ]);
+  assert.match(mokaGuide, /useState\(false\)/);
+  assert.doesNotMatch(mokaGuide, /setInterval/);
+  assert.match(mokaGuide, /addEventListener\("scroll", hideWhileReading/);
+  assert.match(customerGuide, /useState\(false\)/);
+  assert.doesNotMatch(customerGuide, /setInterval/);
+  assert.match(customerGuide, /addEventListener\("scroll", hideWhileReading/);
+});
+
 test("uses the default social image when a memory URL is unavailable", async () => {
   const response = await render("/api/memory/share-demo/og");
   assert.equal(response.status, 307);

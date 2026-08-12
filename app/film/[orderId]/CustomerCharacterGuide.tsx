@@ -10,8 +10,9 @@ const messages = [
 
 export function CustomerCharacterGuide({ spriteUrl, petName }: { spriteUrl: string; petName: string }) {
   const guideRef = useRef<HTMLButtonElement>(null);
+  const speechTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [messageIndex, setMessageIndex] = useState(0);
-  const [speaking, setSpeaking] = useState(true);
+  const [speaking, setSpeaking] = useState(false);
 
   useEffect(() => {
     const guide = guideRef.current;
@@ -39,12 +40,15 @@ export function CustomerCharacterGuide({ spriteUrl, petName }: { spriteUrl: stri
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setMessageIndex((current) => (current + 1) % messages.length);
-      setSpeaking(true);
-      window.setTimeout(() => setSpeaking(false), 4200);
-    }, 12000);
-    return () => window.clearInterval(timer);
+    const hideWhileReading = () => {
+      setSpeaking(false);
+      if (speechTimer.current) clearTimeout(speechTimer.current);
+    };
+    window.addEventListener("scroll", hideWhileReading, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", hideWhileReading);
+      if (speechTimer.current) clearTimeout(speechTimer.current);
+    };
   }, []);
 
   return (
@@ -57,6 +61,8 @@ export function CustomerCharacterGuide({ spriteUrl, petName }: { spriteUrl: stri
         onClick={() => {
           setMessageIndex((current) => (current + 1) % messages.length);
           setSpeaking(true);
+          if (speechTimer.current) clearTimeout(speechTimer.current);
+          speechTimer.current = setTimeout(() => setSpeaking(false), 3200);
         }}
         aria-label={`${petName}に話しかける`}
       >

@@ -26,7 +26,7 @@ export function MokaGuide() {
   const reactionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pose, setPose] = useState<Pose>("idle");
   const [message, setMessage] = useState(messages.cover[0]);
-  const [bubbleVisible, setBubbleVisible] = useState(true);
+  const [bubbleVisible, setBubbleVisible] = useState(false);
   const [resting, setResting] = useState(false);
 
   const speak = useCallback((nextPose: Pose = "head-tilt") => {
@@ -54,12 +54,6 @@ export function MokaGuide() {
       const match = sections.find(([, element]) => element === visible?.target);
       if (!match || activeSection.current === match[0]) return;
       activeSection.current = match[0];
-      pausedUntil.current = performance.now() + 4200;
-      setMessage(messages[match[0]][0]);
-      setBubbleVisible(true);
-      setPose(match[0] === "letter" ? "sit" : "head-tilt");
-      if (reactionTimer.current) clearTimeout(reactionTimer.current);
-      reactionTimer.current = setTimeout(() => setBubbleVisible(false), 4000);
     }, { threshold: [0.25, 0.5, 0.7], rootMargin: "-10% 0px -18%" });
     sections.forEach(([, element]) => element && observer.observe(element));
     return () => observer.disconnect();
@@ -103,15 +97,18 @@ export function MokaGuide() {
   }, [resting]);
 
   useEffect(() => {
-    if (resting) return;
-    const greeting = setTimeout(() => setBubbleVisible(false), 5000);
-    const chatter = setInterval(() => speak(reactions[Math.floor(Math.random() * reactions.length)]), 12000);
-    return () => {
-      clearTimeout(greeting);
-      clearInterval(chatter);
+    const hideWhileReading = () => {
+      setBubbleVisible(false);
+      setPose("idle");
+      pausedUntil.current = 0;
       if (reactionTimer.current) clearTimeout(reactionTimer.current);
     };
-  }, [resting, speak]);
+    window.addEventListener("scroll", hideWhileReading, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", hideWhileReading);
+      if (reactionTimer.current) clearTimeout(reactionTimer.current);
+    };
+  }, []);
 
   if (resting) {
     return <button className="moka-guide-wake" type="button" onClick={() => setResting(false)}>モカを呼ぶ <span aria-hidden="true">♡</span></button>;
