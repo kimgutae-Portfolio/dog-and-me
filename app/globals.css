@@ -1999,8 +1999,11 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .moka-footer small { opacity: .55; }
 .moka-guide-layer { position: fixed; z-index: 90; inset: auto 0 12px; height: 210px; overflow: hidden; pointer-events: none; }
 .moka-guide { width: 174px; height: 174px; position: absolute; left: 0; bottom: 0; will-change: transform; pointer-events: auto; }
-.moka-guide-character { width: 174px; height: 174px; padding: 0; display: block; border: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 10px 9px rgba(43,35,29,.2)); }
+.moka-guide-character { width: 174px; height: 174px; padding: 0; position: relative; display: block; overflow: hidden; border: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 10px 9px rgba(43,35,29,.2)); }
 .moka-guide-character img { width: 100%; height: 100%; display: block; object-fit: contain; user-select: none; }
+.moka-guide-walk-sprite { position: absolute; inset: 0; display: none; background-image: url('/film/moka/character/moka-walk-strip.png'); background-repeat: no-repeat; background-size: 400% 100%; background-position: 0 0; animation: moka-guide-walk-legs .68s steps(1,end) infinite, moka-guide-walk-bob .34s ease-in-out infinite alternate; }
+.moka-guide[data-moving="true"] .moka-guide-walk-sprite { display: block; }
+.moka-guide[data-moving="true"] .moka-guide-pose { display: none; }
 .moka-guide-bubble { width: max-content; max-width: 230px; min-width: 156px; padding: 13px 35px 13px 15px; position: absolute; z-index: 2; left: 50%; bottom: 148px; opacity: 0; color: #4c4540; border: 1px solid rgba(76,69,64,.14); border-radius: 18px 18px 18px 4px; background: rgba(255,252,244,.96); box-shadow: 0 12px 32px rgba(48,40,34,.14); font-family: var(--font-serif); font-size: 13px; line-height: 1.65; transform: translate(-18%,10px) scale(.96); transition: opacity .35s ease, transform .45s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
 .moka-guide-bubble::after { content: ""; width: 12px; height: 12px; position: absolute; left: 24px; bottom: -7px; border-right: 1px solid rgba(76,69,64,.14); border-bottom: 1px solid rgba(76,69,64,.14); background: rgba(255,252,244,.96); transform: rotate(45deg); }
 .moka-guide-bubble.is-visible { opacity: 1; transform: translate(-18%,0) scale(1); pointer-events: auto; }
@@ -2008,6 +2011,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .moka-guide[data-direction="left"] .moka-guide-bubble.is-visible { transform: translate(-58%,0) scale(1) scaleX(-1); }
 .moka-guide-bubble button { width: 28px; height: 28px; padding: 0; position: absolute; top: 4px; right: 4px; border: 0; border-radius: 50%; color: #8d8178; background: transparent; cursor: pointer; }
 .moka-guide-wake { position: fixed; z-index: 90; right: 18px; bottom: 18px; padding: 11px 15px; border: 1px solid rgba(64,59,53,.18); border-radius: 999px; color: #5b524c; background: rgba(255,251,242,.94); box-shadow: 0 9px 28px rgba(48,40,34,.13); font-family: var(--font-serif); font-size: 11px; cursor: pointer; }
+@keyframes moka-guide-walk-legs { 0%,24.99% { background-position: 0 0; } 25%,49.99% { background-position: 33.333% 0; } 50%,74.99% { background-position: 66.666% 0; } 75%,100% { background-position: 100% 0; } }
+@keyframes moka-guide-walk-bob { from { margin-top: 0; } to { margin-top: -2px; } }
 
 /* Miru moving-storybook sample */
 .miru-book-demo { color: #403b35; background: #f8f3ea; }

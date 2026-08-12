@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /* eslint-disable @next/next/no-img-element -- Transparent character frames are animation sprites. */
 
 const framePath = "/film/moka/character/frames";
-const walkFrames = ["walk-01", "walk-02", "walk-03", "walk-04"] as const;
 const reactions = ["head-tilt", "paw-wave", "speak-open"] as const;
 
 const messages: Record<string, string[]> = {
@@ -15,14 +14,14 @@ const messages: Record<string, string[]> = {
   letter: ["いつもの毎日が、宝物だったんだ。", "最後まで見てくれて、ありがとう。"],
 };
 
-type Pose = typeof walkFrames[number] | typeof reactions[number] | "idle" | "sit";
+type Pose = typeof reactions[number] | "idle" | "sit";
 
 export function MokaGuide() {
   const guideRef = useRef<HTMLDivElement>(null);
   const activeSection = useRef("cover");
   const pausedUntil = useRef(0);
   const reactionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pose, setPose] = useState<Pose>("walk-01");
+  const [pose, setPose] = useState<Pose>("idle");
   const [message, setMessage] = useState(messages.cover[0]);
   const [bubbleVisible, setBubbleVisible] = useState(true);
   const [resting, setResting] = useState(false);
@@ -74,14 +73,13 @@ export function MokaGuide() {
 
     let x = Math.min(window.innerWidth * 0.7, window.innerWidth - 230);
     let direction = -1;
-    let frame = 0;
     let previous = performance.now();
-    let frameAt = previous;
     let animationId = 0;
     const move = (now: number) => {
       const delta = Math.min(now - previous, 34);
       previous = now;
       if (now >= pausedUntil.current) {
+        guide.dataset.moving = "true";
         const characterWidth = window.innerWidth <= 640 ? 126 : 174;
         const minX = window.innerWidth <= 640 ? 4 : 20;
         const maxX = Math.max(minX, window.innerWidth - characterWidth - minX);
@@ -92,11 +90,8 @@ export function MokaGuide() {
         }
         guide.style.transform = `translate3d(${x}px,0,0) scaleX(${direction > 0 ? 1 : -1})`;
         guide.dataset.direction = direction > 0 ? "right" : "left";
-        if (now - frameAt > 190) {
-          frame = (frame + 1) % walkFrames.length;
-          setPose(walkFrames[frame]);
-          frameAt = now;
-        }
+      } else {
+        guide.dataset.moving = "false";
       }
       animationId = requestAnimationFrame(move);
     };
@@ -127,7 +122,8 @@ export function MokaGuide() {
           <button type="button" onClick={() => setResting(true)} aria-label="モカを休ませる">×</button>
         </div>
         <button className="moka-guide-character" type="button" onClick={() => speak(reactions[Math.floor(Math.random() * reactions.length)])} aria-label="モカに話しかける">
-          <img src={`${framePath}/${pose}.png`} alt="" draggable={false} />
+          <span className="moka-guide-walk-sprite" aria-hidden="true" />
+          <img className="moka-guide-pose" src={`${framePath}/${pose}.png`} alt="" draggable={false} />
         </button>
       </div>
     </aside>
