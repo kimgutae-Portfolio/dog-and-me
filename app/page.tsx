@@ -341,6 +341,93 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="storybook-personal-site section" id="personal-site">
+        <div className="shell">
+          <div className="storybook-heading storybook-personal-site-heading">
+            <div>
+              <p className="eyebrow">A WEBSITE JUST FOR YOUR DOG</p>
+              <h2>
+                完成した物語を、
+                <br />
+                その子だけのホームページに。
+              </h2>
+            </div>
+            <p>
+              映像を受け取って終わりではありません。
+              <br />
+              いつでも会いに行ける、小さな居場所としてお届けします。
+            </p>
+          </div>
+
+          <div className="storybook-personal-site-grid">
+            <div className="storybook-site-window" aria-label="モカの個人ホームページのイメージ">
+              <div className="storybook-site-window-bar" aria-hidden="true">
+                <i /><i /><i />
+                <span>MOKA&apos;S MEMORY SITE</span>
+              </div>
+              <div className="storybook-site-window-hero">
+                <Image
+                  src="/film/moka/05-storybook-lantern.webp"
+                  alt="モカの個人ホームページに表示された夕暮れの物語"
+                  fill
+                  sizes="(max-width: 900px) 92vw, 55vw"
+                />
+                <div className="storybook-site-window-shade" aria-hidden="true" />
+                <div className="storybook-site-window-copy">
+                  <span>A STORY FOR MOKA</span>
+                  <strong>モカと、五つの記憶</strong>
+                  <small>いつもの日々をめぐる物語</small>
+                </div>
+                <div className="storybook-site-character" aria-hidden="true">
+                  <div>ぼくの思い出、<br />見ていってね。</div>
+                  <Image
+                    src="/film/moka/character/frames/head-tilt.png"
+                    alt=""
+                    width={362}
+                    height={362}
+                  />
+                </div>
+              </div>
+              <div className="storybook-site-window-bottom" aria-hidden="true">
+                <span>COMPLETE FILM</span>
+                <span>PHOTO ALBUM</span>
+                <span>FAMILY LETTER</span>
+              </div>
+            </div>
+
+            <div className="storybook-personal-site-copy">
+              <p className="storybook-personal-site-lead">
+                スマートフォンでもパソコンでも開ける専用ページに、完成した動く絵本と、その物語をつくった写真を一つにまとめます。
+              </p>
+              <ol className="storybook-personal-site-features">
+                <li>
+                  <span>01</span>
+                  <div><strong>完成した動く絵本</strong><p>約1分の映像を、いつでもその場で再生できます。</p></div>
+                </li>
+                <li>
+                  <span>02</span>
+                  <div><strong>思い出の写真アルバム</strong><p>元の写真も描き下ろしたページも、一つの写真帖として残します。</p></div>
+                </li>
+                <li>
+                  <span>03</span>
+                  <div><strong>家族からの短い手紙</strong><p>その子へ伝えたい言葉を、物語の最後にそっと添えられます。</p></div>
+                </li>
+                <li>
+                  <span>04</span>
+                  <div><strong>歩いて、話しかけるうちの子</strong><p>描き起こしたキャラクターがページを歩き、思い出を案内します。</p></div>
+                </li>
+              </ol>
+              <div className="storybook-personal-site-actions">
+                <Link className="button button-outline" href="/film/moka-demo">
+                  モカのホームページを体験する →
+                </Link>
+                <p>専用URLで、ご家族にも共有できます。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="storybook-method section" id="memory-story">
         <div className="shell">
           <div className="storybook-heading storybook-method-summary light">
