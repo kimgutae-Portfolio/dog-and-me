@@ -1832,6 +1832,89 @@ export function StudioClient() {
               </section>
             )}
 
+            {(order.status === "customer_review" ||
+              order.status === "revision_requested" ||
+              revisions.length > 0) && (
+              <section className="studio-card revision-card" id="revision">
+                <div className="card-head">
+                  <div>
+                    <p className="eyebrow">REVISION REQUEST</p>
+                    <h2>映像の修正について</h2>
+                  </div>
+                  <span>
+                    残り{revisionsRemaining}回 / 全{order.revision_limit}回
+                  </span>
+                </div>
+                {revisions.length > 0 && (
+                  <div className="revision-history">
+                    {revisions.map((revision) => (
+                      <article key={revision.id}>
+                        <span>
+                          {revision.status === "open" ? "対応中" : "反映済み"}
+                        </span>
+                        <strong>{revision.category}</strong>
+                        <p>{revision.body}</p>
+                      </article>
+                    ))}
+                  </div>
+                )}
+                {order.status === "customer_review" &&
+                  canOperateOrder &&
+                  revisionsRemaining > 0 &&
+                  !hasOpenRevisions && (
+                    <form className="revision-form" onSubmit={requestRevision}>
+                      <select
+                        value={revisionCategory}
+                        onChange={(event) =>
+                          setRevisionCategory(event.target.value)
+                        }
+                      >
+                        <option>絵の動き</option>
+                        <option>主人公の描かれ方</option>
+                        <option>リード・服・小物</option>
+                        <option>BGM・字幕</option>
+                        <option>その他</option>
+                      </select>
+                      <textarea
+                        required
+                        rows={4}
+                        value={revisionBody}
+                        onChange={(event) =>
+                          setRevisionBody(event.target.value)
+                        }
+                        placeholder="例：リードが2本に見える場面を、1本だけ自然に首輪へつながるよう修正してください。"
+                      />
+                      <button className="button button-primary" type="submit">
+                        修正を依頼する →
+                      </button>
+                    </form>
+                  )}
+                {order.status === "customer_review" &&
+                  revisionsRemaining === 0 && (
+                    <aside className="revision-limit-note">
+                      <strong>プラン内の修正2回を使用しました。</strong>
+                      <span>
+                        追加の変更をご希望の場合は、担当者とのメッセージからご相談ください。
+                      </span>
+                    </aside>
+                  )}
+                {(order.status === "revision_requested" ||
+                  hasOpenRevisions) && (
+                  <aside className="revision-limit-note">
+                    <strong>修正内容をお預かりしています。</strong>
+                    <span>
+                      反映後、新しい確認映像をこの画面でお知らせします。
+                    </span>
+                  </aside>
+                )}
+                {readOnlyPreview && (
+                  <p className="readonly-preview-note">
+                    閲覧専用プレビューでは修正を依頼できません。
+                  </p>
+                )}
+              </section>
+            )}
+
             {delivery && (
               <section className="delivery-card" id="delivery">
                 <div>
@@ -2102,88 +2185,6 @@ export function StudioClient() {
               )
             )}
 
-            {(order.status === "customer_review" ||
-              order.status === "revision_requested" ||
-              revisions.length > 0) && (
-              <section className="studio-card revision-card" id="revision">
-                <div className="card-head">
-                  <div>
-                    <p className="eyebrow">REVISION REQUEST</p>
-                    <h2>映像の修正について</h2>
-                  </div>
-                  <span>
-                    残り{revisionsRemaining}回 / 全{order.revision_limit}回
-                  </span>
-                </div>
-                {revisions.length > 0 && (
-                  <div className="revision-history">
-                    {revisions.map((revision) => (
-                      <article key={revision.id}>
-                        <span>
-                          {revision.status === "open" ? "対応中" : "反映済み"}
-                        </span>
-                        <strong>{revision.category}</strong>
-                        <p>{revision.body}</p>
-                      </article>
-                    ))}
-                  </div>
-                )}
-                {order.status === "customer_review" &&
-                  canOperateOrder &&
-                  revisionsRemaining > 0 &&
-                  !hasOpenRevisions && (
-                    <form className="revision-form" onSubmit={requestRevision}>
-                      <select
-                        value={revisionCategory}
-                        onChange={(event) =>
-                          setRevisionCategory(event.target.value)
-                        }
-                      >
-                        <option>絵の動き</option>
-                        <option>主人公の描かれ方</option>
-                        <option>リード・服・小物</option>
-                        <option>BGM・字幕</option>
-                        <option>その他</option>
-                      </select>
-                      <textarea
-                        required
-                        rows={4}
-                        value={revisionBody}
-                        onChange={(event) =>
-                          setRevisionBody(event.target.value)
-                        }
-                        placeholder="例：リードが2本に見える場面を、1本だけ自然に首輪へつながるよう修正してください。"
-                      />
-                      <button className="button button-primary" type="submit">
-                        修正を依頼する →
-                      </button>
-                    </form>
-                  )}
-                {order.status === "customer_review" &&
-                  revisionsRemaining === 0 && (
-                    <aside className="revision-limit-note">
-                      <strong>プラン内の修正2回を使用しました。</strong>
-                      <span>
-                        追加の変更をご希望の場合は、担当者とのメッセージからご相談ください。
-                      </span>
-                    </aside>
-                  )}
-                {(order.status === "revision_requested" ||
-                  hasOpenRevisions) && (
-                  <aside className="revision-limit-note">
-                    <strong>修正内容をお預かりしています。</strong>
-                    <span>
-                      反映後、新しい確認映像をこの画面でお知らせします。
-                    </span>
-                  </aside>
-                )}
-                {readOnlyPreview && (
-                  <p className="readonly-preview-note">
-                    閲覧専用プレビューでは修正を依頼できません。
-                  </p>
-                )}
-              </section>
-            )}
           </>
         )}
       </div>
