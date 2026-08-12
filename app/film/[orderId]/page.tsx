@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { CustomerFilmSite } from "./CustomerFilmSite";
 
 export const metadata: Metadata = {
@@ -6,6 +7,20 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CustomerFilmPage() {
+// orderId is looked up as an orders.id UUID, so anything else can never resolve
+// to a real page. Without this guard the dynamic segment swallows every unknown
+// /film/* URL and answers 200 with a loading screen — a soft 404 that keeps
+// retired URLs (the old demo pages) alive in search results.
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function CustomerFilmPage({
+  params,
+}: {
+  params: Promise<{ orderId: string }>;
+}) {
+  const { orderId } = await params;
+  if (!UUID_PATTERN.test(orderId)) notFound();
+
   return <CustomerFilmSite />;
 }

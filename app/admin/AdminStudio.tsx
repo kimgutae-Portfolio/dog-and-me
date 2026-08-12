@@ -732,6 +732,7 @@ export function AdminStudio() {
   const [exportProgress, setExportProgress] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [deleteConfirmNumber, setDeleteConfirmNumber] = useState("");
+  const [complimentaryReason, setComplimentaryReason] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [messageDraft, setMessageDraft] = useState("");
@@ -1353,6 +1354,7 @@ export function AdminStudio() {
       setConceptJsonStatus("");
       setCancelReason("");
       setDeleteConfirmNumber("");
+      setComplimentaryReason("");
     }
     setSelectedOrderId(orderId);
   };
@@ -2590,6 +2592,39 @@ export function AdminStudio() {
     setSaving(false);
   };
 
+  const grantComplimentary = async () => {
+    if (!order || !complimentaryReason.trim()) return;
+    if (
+      !window.confirm(
+        `${order.order_number} を無料で進行しますか？\n請求は行われず、金額は0円として記録されます。`,
+      )
+    )
+      return;
+    setSaving(true);
+    setError("");
+    const { error: compError } = await getSupabaseBrowserClient().rpc(
+      "admin_grant_complimentary_order",
+      { p_order_id: order.id, p_reason: complimentaryReason.trim() },
+    );
+    if (compError) {
+      setError(
+        compError.message.includes("only unpaid orders")
+          ? "すでに入金・返金の記録がある注文は無料にできません。"
+          : compError.message.includes("wait until the customer submits")
+            ? "お客様がお申し込みを送信してから設定してください。"
+            : compError.message.includes("cancelled orders")
+              ? "キャンセル済みの注文は無料にできません。"
+              : "無料進行に設定できませんでした。",
+      );
+    } else {
+      setComplimentaryReason("");
+      setNotice("この注文を無料進行に設定しました。制作へ進めます。");
+      await loadOrders();
+      await loadDetails(order.id);
+    }
+    setSaving(false);
+  };
+
   const cancelOrder = async () => {
     if (!order || !cancelReason.trim()) return;
     if (
@@ -3819,6 +3854,51 @@ export function AdminStudio() {
                             ? "お支払い案内を送る →"
                             : "進行状況を保存"}
                     </button>
+
+                    {order.campaign_id === "complimentary" ? (
+                      <aside className="admin-operation-note strong">
+                        <strong>無料進行の注文です。</strong>
+                        <span>
+                          請求は行われません。金額は0円として記録され、通常どおり制作工程へ進められます。
+                        </span>
+                      </aside>
+                    ) : (
+                      ["pending", "invoice_sent"].includes(
+                        order.payment_status,
+                      ) &&
+                      !["awaiting_materials", "cancelled"].includes(
+                        order.status,
+                      ) && (
+                        <details className="admin-complimentary">
+                          <summary>
+                            知人・関係者として無料で進行する（決済なし）
+                          </summary>
+                          <p>
+                            Stripeを経由せず、この注文を入金済みとして扱います。金額は0円で記録され、キャンペーン枠も消費しません。理由は記録に残ります。
+                          </p>
+                          <label>
+                            <span>無料にする理由</span>
+                            <textarea
+                              rows={2}
+                              value={complimentaryReason}
+                              maxLength={500}
+                              onChange={(event) =>
+                                setComplimentaryReason(event.target.value)
+                              }
+                              placeholder="例：知人への無償提供"
+                            />
+                          </label>
+                          <button
+                            className="button button-outline"
+                            type="button"
+                            disabled={saving || !complimentaryReason.trim()}
+                            onClick={grantComplimentary}
+                          >
+                            無料で進行する
+                          </button>
+                        </details>
+                      )
+                    )}
                   </section>
 
                   <section className="admin-card" id="admin-story">

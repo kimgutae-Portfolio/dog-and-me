@@ -48,8 +48,11 @@ export function MobileStickyCta() {
           )}
         </strong>
       </div>
+      {/* The price sits right beside this button, so the label stays a plain
+          action — "無料で始める" read as a contradiction next to ¥19,800. What is
+          free (everything up to seeing the proposals) is stated in the line above. */}
       <StartStoryLink className="button button-cream">
-        無料で始める <span aria-hidden="true">→</span>
+        物語をつくる <span aria-hidden="true">→</span>
       </StartStoryLink>
     </aside>
   );

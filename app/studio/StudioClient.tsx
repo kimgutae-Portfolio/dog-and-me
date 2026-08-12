@@ -522,8 +522,15 @@ export function StudioClient() {
           : item,
       ),
     );
-    const checkoutUrl = await startStripeCheckout(true, false);
-    if (checkoutUrl) {
+    // A complimentary order is already marked paid, so there is no checkout to
+    // prepare — confirm the selection without a payment step. Checking the
+    // status up front also keeps a genuine checkout failure (which returns null
+    // and sets its own error) from being mistaken for a free order.
+    const alreadyPaid = order.payment_status === "paid";
+    const checkoutUrl = alreadyPaid
+      ? null
+      : await startStripeCheckout(true, false);
+    if (alreadyPaid || checkoutUrl) {
       setNotice("");
       setConceptReceipt({ slot, title: conceptTitle, checkoutUrl });
     }
@@ -1049,8 +1056,10 @@ export function StudioClient() {
             </p>
             <h2 id="concept-receipt-title">物語案をお預かりしました。</h2>
             <p id="concept-receipt-copy">
-              「{conceptReceipt.title}
-              」で制作希望を送信しました。次に、制作を始めるためのお支払いへお進みください。
+              「{conceptReceipt.title}」で制作希望を送信しました。
+              {conceptReceipt.checkoutUrl
+                ? "次に、制作を始めるためのお支払いへお進みください。"
+                : "お支払いは不要です。担当者が内容を確認し、そのまま制作を進めます。"}
             </p>
             <aside>
               <strong>制作が始まる前なら変更できます</strong>
@@ -1058,24 +1067,36 @@ export function StudioClient() {
                 制作室が「絵本ページ制作」へ進む前は、もう一方の案を選んで再送信できます。
               </span>
             </aside>
-            <button
-              autoFocus
-              className="button button-primary"
-              type="button"
-              onClick={() => {
-                if (conceptReceipt.checkoutUrl)
-                  window.location.assign(conceptReceipt.checkoutUrl);
-              }}
-            >
-              お支払いへ進む →
-            </button>
-            <button
-              className="auth-text-button"
-              type="button"
-              onClick={() => setConceptReceipt(null)}
-            >
-              あとで支払う（制作室に戻る）
-            </button>
+            {conceptReceipt.checkoutUrl ? (
+              <>
+                <button
+                  autoFocus
+                  className="button button-primary"
+                  type="button"
+                  onClick={() =>
+                    window.location.assign(conceptReceipt.checkoutUrl as string)
+                  }
+                >
+                  お支払いへ進む →
+                </button>
+                <button
+                  className="auth-text-button"
+                  type="button"
+                  onClick={() => setConceptReceipt(null)}
+                >
+                  あとで支払う（制作室に戻る）
+                </button>
+              </>
+            ) : (
+              <button
+                autoFocus
+                className="button button-primary"
+                type="button"
+                onClick={() => setConceptReceipt(null)}
+              >
+                制作室に戻る →
+              </button>
+            )}
           </section>
         </div>
       )}
@@ -1165,19 +1186,21 @@ export function StudioClient() {
                 <strong>{order.order_number}</strong>
                 <small>受付 {formatDate(order.created_at)}</small>
                 <small>
-                  料金 ¥
-                  {new Intl.NumberFormat("ja-JP").format(order.quoted_price)}
-                  （税込）
+                  {order.quoted_price === 0
+                    ? "料金 無料"
+                    : `料金 ¥${new Intl.NumberFormat("ja-JP").format(order.quoted_price)}（税込）`}
                 </small>
                 <small>
                   お支払い{" "}
-                  {order.payment_status === "paid"
-                    ? "入金確認済み"
-                    : order.payment_status === "invoice_sent"
-                      ? "ご案内済み"
-                      : order.payment_status === "refunded"
-                        ? "返金済み"
-                        : "内容確認後にご案内"}
+                  {order.quoted_price === 0 && order.payment_status === "paid"
+                    ? "お支払いは不要です"
+                    : order.payment_status === "paid"
+                      ? "入金確認済み"
+                      : order.payment_status === "invoice_sent"
+                        ? "ご案内済み"
+                        : order.payment_status === "refunded"
+                          ? "返金済み"
+                          : "内容確認後にご案内"}
                 </small>
               </div>
             </div>

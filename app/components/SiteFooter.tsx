@@ -22,7 +22,7 @@ export function SiteFooter() {
             <p>SERVICE</p>
             <Link href="/aiken-omoide-douga">愛犬の動く絵本</Link>
             <Link href="/uchinoko-kinenbi-douga">うちの子記念日の物語</Link>
-            <Link href="/film/miru-demo">動くページ</Link>
+            <Link href="/film/moka-demo">動くページ</Link>
             <Link href="/#plans">プラン</Link>
             {APPLICATIONS_OPEN ? (
               <StartStoryLink>お申し込み</StartStoryLink>

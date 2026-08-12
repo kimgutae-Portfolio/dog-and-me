@@ -22,7 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
     category: "ペット・動く絵本制作",
     referrer: "origin-when-cross-origin",
     formatDetection: { email: false, address: false, telephone: false },
-    icons: { icon: "/og.png" },
+    // Icons come from app/icon.svg and app/apple-icon.png via Next's file
+    // conventions. Declaring them here too would emit duplicate <link> tags.
     robots: {
       index: true,
       follow: true,

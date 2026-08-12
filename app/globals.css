@@ -948,6 +948,17 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-operation-note.strong, .admin-operation-note.warning { display: grid; gap: 4px; border: 1px solid #b7c2b6; box-shadow: inset 0 0 0 4px rgba(104,128,107,.08); }
 .admin-operation-note.warning { border-color: #d5b2a3; background: #f6e8e1; box-shadow: inset 0 0 0 4px rgba(165,93,62,.07); }
 .admin-operation-note strong { color: var(--ink); font-size: 10px; }
+.admin-complimentary { margin-top: 18px; padding: 15px 17px; border: 1px dashed var(--line); background: rgba(255,255,255,.45); }
+.admin-complimentary > summary { color: var(--ink); font-size: 10px; font-weight: 700; cursor: pointer; }
+.admin-complimentary > p { margin: 10px 0 0; color: var(--muted); font-size: 9px; line-height: 1.8; }
+.admin-complimentary label { display: grid; gap: 7px; margin: 12px 0; }
+.admin-complimentary label > span { color: var(--ink); font-size: 10px; font-weight: 700; }
+.admin-complimentary textarea { width: 100%; padding: 11px; border: 1px solid var(--line); outline: 0; background: white; font-size: 10px; line-height: 1.7; resize: vertical; }
+.admin-complimentary textarea:focus { border-color: var(--sage); }
+@media (max-width: 640px) {
+  .admin-complimentary .button { width: 100%; }
+  .admin-complimentary textarea { font-size: 16px; }
+}
 .admin-danger-card { border: 1px solid #d5b2a3; box-shadow: inset 0 0 0 5px rgba(165,93,62,.05); }
 .admin-danger-card .card-head span { color: #a4402f; }
 .admin-danger-reason { display: grid; gap: 8px; margin: 16px 0; }

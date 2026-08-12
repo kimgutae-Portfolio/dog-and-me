@@ -7,7 +7,7 @@ import { LivePriceCard } from "./components/LivePriceCard";
 import { MobileStickyCta } from "./components/MobileStickyCta";
 import { StartStoryLink } from "./components/StartStoryLink";
 import { HomeStoryMotion } from "./components/HomeStoryMotion";
-import { MiruBeforeAfter } from "./film/miru-demo/MiruBeforeAfter";
+import { MiruBeforeAfter } from "./components/MiruBeforeAfter";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 import {
   APPLICATIONS_OPEN,
@@ -22,8 +22,11 @@ import {
 } from "./lib/site";
 import { getRequestOrigin } from "./lib/site-server";
 
+// `absolute` because the root layout's title template only applies to child
+// segments — a bare string here would render without the brand name, unlike
+// every other page on the site.
 export const metadata: Metadata = {
-  title: "愛犬が主人公になる、動く絵本制作",
+  title: { absolute: `愛犬が主人公になる、動く絵本制作｜${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
 };

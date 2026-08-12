@@ -164,7 +164,7 @@ export default function DogPhotoGuidePage() {
           <StartStoryLink className="button button-primary">
             物語を相談する →
           </StartStoryLink>
-          <Link className="button button-outline" href="/film/miru-demo">
+          <Link className="button button-outline" href="/film/moka-demo">
             動くページを見る
           </Link>
         </div>
