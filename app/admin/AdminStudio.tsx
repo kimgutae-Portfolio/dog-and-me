@@ -539,6 +539,54 @@ order.json의 expanded_stories에 지정된 중요한 이야기 3개는 각각 �
 }
 
 일반 5초 이야기에서는 motion_phase_2를 빈 문자열로 반환한다. gen4_story_prompts 배열은 정확히 5개이며 expanded_stories 3개는 각각 하나의 10초 프롬프트, 나머지 2개는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
+
+const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.0
+
+역할
+첨부한 order.json과 reference-photos의 고객 원본 사진을 기준으로, 이 강아지의 개인 홈페이지 안을 돌아다니며 말풍선으로 안내하는 투명 배경 캐릭터 프레임을 제작한다.
+
+중요한 사용 정책
+- 이 결과는 운영자가 개인 홈페이지에 직접 등록하는 내부 제작 자산이다.
+- 고객 확인·수정·승인 단계로 보내지 않는다.
+- 그림책 페이지나 영상의 고객 승인 상태와 관계없이 독립적으로 제작할 수 있다.
+- 캐릭터는 홈페이지에서 작게 표시되므로 실루엣, 얼굴, 목걸이와 대표 특징이 명확해야 한다.
+
+정체성 기준
+- order.json의 character_identity와 reference_photos를 먼저 읽는다.
+- 같은 강아지로 인식되도록 얼굴형, 눈 크기와 간격, 귀, 주둥이, 머리와 몸통 비율, 다리 길이, 털색과 미용 형태, 꼬리, 목줄·하네스·펜던트를 유지한다.
+- 여러 사진이 충돌하면 order.json의 preferred_identity_photo_ids와 primary 역할 사진을 우선한다.
+- 고객 사진에 없는 무늬, 액세서리, 옷, 표정 특징을 추가하지 않는다.
+
+출력 규격
+- 정확히 4열 × 3행, 총 12프레임의 단일 PNG 스프라이트 시트.
+- 투명 배경 RGBA PNG. 배경, 바닥, 그림자, 테두리, 격자선, 라벨, 글자, 말풍선 없음.
+- 모든 셀의 크기와 캐릭터 기준선, 크기, 여백을 동일하게 유지한다.
+- 신체와 꼬리, 귀, 발이 셀 경계를 넘거나 옆 셀에 침범하지 않게 한다.
+- 각 셀 가장자리에는 충분한 완전 투명 여백을 둔다.
+- 다른 셀의 몸, 꼬리, 움직임 선 또는 픽셀이 섞이지 않도록 최종 검수한다.
+
+프레임 순서 — 왼쪽에서 오른쪽
+1행: 오른쪽을 향한 걷기 contact / down / passing / up
+2행: 오른쪽을 향한 서 있기 / 앉기 / 고개 갸웃한 앉기 / 기쁜 표정과 작은 꼬리 흔들기
+3행: 말하기 입 닫힘 / 말하기 입 열림 / 앞발 인사 / 엎드려 쉬기
+
+스타일
+- order.json의 website_character_style을 적용한다.
+- 완성 그림책과 같은 밝고 맑은 일본 그림책풍 수채화.
+- 자연스러운 신체 비율, 섬세한 털, 깨끗한 실루엣. 과장된 치비나 3D 표현 금지.
+- 12프레임 모두 동일한 캐릭터 디자인과 액세서리를 유지한다.
+
+납품
+- website-character-sprite.png 한 장을 반환한다.
+- 이미지와 함께 아래 JSON만 제공한다.
+{
+  "asset_type": "website_character_sprite",
+  "layout": {"columns":4,"rows":3,"frame_count":12},
+  "identity_check":"passed",
+  "transparent_edge_check":"passed",
+  "cross_cell_bleed_check":"passed",
+  "customer_review_required":false
+}`;
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
 >;
@@ -697,6 +745,8 @@ export function AdminStudio() {
   const [stillInputKeys, setStillInputKeys] = useState<
     Record<string, number>
   >({});
+  const [characterSpriteFile, setCharacterSpriteFile] = useState<File | null>(null);
+  const [characterSpriteInputKey, setCharacterSpriteInputKey] = useState(0);
   const [clipInputKey, setClipInputKey] = useState(0);
   const [expandedStoryDraft, setExpandedStoryDraft] = useState<number[]>([]);
   const [bgmTracks, setBgmTracks] = useState<string[]>([]);
@@ -976,6 +1026,7 @@ export function AdminStudio() {
     const signable = loadedAssets.filter(
       (asset) =>
         asset.category === "source_image" ||
+        asset.category === "character_sprite" ||
         asset.category === "scene_still" ||
         asset.category === "render_clip" ||
         asset.category === "transition_clip" ||
@@ -1058,6 +1109,10 @@ export function AdminStudio() {
   );
   const sourceAssets = useMemo(
     () => assets.filter((asset) => asset.category === "source_image"),
+    [assets],
+  );
+  const characterSprite = useMemo(
+    () => assets.find((asset) => asset.category === "character_sprite") ?? null,
     [assets],
   );
   const selectedConcept = useMemo(
@@ -2034,6 +2089,146 @@ export function AdminStudio() {
       setExportProgress("");
       setExportingBundle(false);
     }
+  };
+
+  const downloadCharacterBundle = async () => {
+    const exportData = buildProductionExport();
+    if (!order || !exportData || sourceAssets.length === 0) {
+      setError("キャラクター制作には、注文情報と元写真が1枚以上必要です。");
+      return;
+    }
+    setExportingBundle(true);
+    setExportProgress(`キャラクター用写真を準備しています（0/${sourceAssets.length}）`);
+    setError("");
+    try {
+      const [{ strToU8 }, supabase] = await Promise.all([
+        import("fflate"),
+        Promise.resolve(getSupabaseBrowserClient()),
+      ]);
+      const root = `${safeArchiveSegment(order.order_number)}-website-character`;
+      const characterJson = {
+        schema_version: "wan-memory-website-character-input-1.0",
+        exported_at: new Date().toISOString(),
+        job: {
+          id: order.order_number,
+          pet_name: order.pet_name,
+          breed: order.breed,
+          age_text: order.age_text,
+          personality: order.personality,
+        },
+        website_character_style: {
+          medium: "luminous Japanese picture-book watercolor",
+          proportions: "natural dog proportions; readable at small website size",
+          background: "transparent RGBA",
+          layout: { columns: 4, rows: 3, frame_count: 12 },
+        },
+        character_identity: {
+          selected_appearance_description: productionFields.selectedAppearanceDescription,
+          owner_locked_traits: productionFields.ownerLockedTraits,
+          preferred_identity_photo_ids: productionFields.selectedAppearancePhotoIds,
+          primary_face_photo_id: productionFields.primaryFacePhotoId,
+          primary_body_photo_id: productionFields.primaryBodyPhotoId,
+          side_tail_photo_id: productionFields.sideTailPhotoId,
+        },
+        reference_photos: exportData.productionData.source_photos.map((photo) => ({
+          asset_id: photo.asset_id,
+          filename: photo.archive_filename,
+          archive_path: `reference-photos/${photo.archive_filename}`,
+          roles: photo.roles,
+        })),
+        requested_output: {
+          asset_type: "website_character_sprite",
+          filename: "website-character-sprite.png",
+          customer_review_required: false,
+          admin_only: true,
+          apply_to_private_website_automatically: true,
+        },
+      };
+      const files: Record<string, Uint8Array> = {
+        [`${root}/01_START_HERE.txt`]: strToU8([
+          "OPTIONAL · いつでも作れるホームページキャラクターです。",
+          "1. order.jsonとreference-photosをCodexへ添付します。",
+          "2. 02_PROMPT_WEBSITE_CHARACTER.txtをそのまま依頼文として使います。",
+          "3. 返された4×3の透明PNGスプライトを管理画面へ登録します。",
+          "4. 顧客確認には出さず、専用ホームページへ自動で反映されます。",
+        ].join("\n")),
+        [`${root}/02_PROMPT_WEBSITE_CHARACTER.txt`]: strToU8(WEBSITE_CHARACTER_PROMPT),
+        [`${root}/order.json`]: strToU8(JSON.stringify(characterJson, null, 2)),
+      };
+      for (let index = 0; index < exportData.archivePhotos.length; index += 1) {
+        const item = exportData.archivePhotos[index];
+        setExportProgress(`キャラクター用写真を準備しています（${index + 1}/${sourceAssets.length}）`);
+        const { data, error: downloadError } = await supabase.storage
+          .from("order-assets")
+          .download(item.asset.storage_path);
+        if (downloadError || !data) throw downloadError ?? new Error("download failed");
+        files[`${root}/reference-photos/${item.archiveFilename}`] = new Uint8Array(await data.arrayBuffer());
+      }
+      setExportProgress("キャラクター制作ZIPを作成しています…");
+      await saveOperatorZip(files, `${root}.zip`);
+      setNotice("ホームページキャラクター用のJSON・写真・専用プロンプトをまとめました。");
+    } catch (bundleError) {
+      console.error(bundleError);
+      setError("キャラクター制作データを準備できませんでした。もう一度お試しください。");
+    } finally {
+      setExportProgress("");
+      setExportingBundle(false);
+    }
+  };
+
+  const uploadCharacterSprite = async () => {
+    if (!order || !characterSpriteFile) return;
+    if (!["image/png", "image/webp"].includes(characterSpriteFile.type)) {
+      setError("キャラクター画像は透明PNGまたはWebPを選択してください。");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const extension = characterSpriteFile.type === "image/webp" ? "webp" : "png";
+    const path = `admin/${order.id}/character/website-character-${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from("order-assets")
+      .upload(path, characterSpriteFile, { contentType: characterSpriteFile.type, upsert: false });
+    if (uploadError) {
+      setError("キャラクタースプライトをアップロードできませんでした。");
+      setSaving(false);
+      return;
+    }
+    const { data, error: registerError } = await supabase.rpc("admin_register_character_sprite", {
+      p_order_id: order.id,
+      p_storage_path: path,
+      p_original_filename: characterSpriteFile.name,
+      p_mime_type: characterSpriteFile.type,
+      p_file_size: characterSpriteFile.size,
+    });
+    if (registerError || !data) {
+      await supabase.storage.from("order-assets").remove([path]);
+      setError("キャラクタースプライトを登録できませんでした。");
+      setSaving(false);
+      return;
+    }
+    const replacedPath = (data as { replaced_storage_path?: string | null }).replaced_storage_path;
+    if (replacedPath) await supabase.storage.from("order-assets").remove([replacedPath]);
+    setCharacterSpriteFile(null);
+    setCharacterSpriteInputKey((current) => current + 1);
+    setNotice("キャラクターを登録しました。顧客確認を行わず、専用ホームページへ自動反映されます。");
+    await loadDetails(order.id);
+    setSaving(false);
+  };
+
+  const deleteCharacterSprite = async () => {
+    if (!characterSprite || !order || !window.confirm("登録中のホームページキャラクターを削除しますか？")) return;
+    setSaving(true);
+    const supabase = getSupabaseBrowserClient();
+    const { data: storagePath, error: deleteError } = await supabase.rpc("admin_delete_character_sprite", { p_asset_id: characterSprite.id });
+    if (deleteError) setError("キャラクターを削除できませんでした。");
+    else {
+      if (storagePath) await supabase.storage.from("order-assets").remove([storagePath as string]);
+      setNotice("ホームページキャラクターを削除しました。");
+      await loadDetails(order.id);
+    }
+    setSaving(false);
   };
 
   const downloadRunwayBundle = async () => {
@@ -3686,7 +3881,7 @@ export function AdminStudio() {
                       </div>
                     </div>
                     <p className="admin-export-intro">
-                      注文の進行に合わせて必要なボタンだけが有効になります。各ZIPには、初めての担当者向け手順・そのまま送れる依頼文・JSON・必要な画像が入ります。
+                      STEP 1〜3は注文の進行に合わせて有効になります。ホームページキャラクターだけは、元写真があればどの工程でも制作・登録できます。
                     </p>
                     <div className="admin-stage-downloads">
                       <article className={conceptExportReady ? "ready" : "locked"}>
@@ -3782,6 +3977,48 @@ export function AdminStudio() {
                           </em>
                         )}
                       </article>
+                      <article className={sourceAssets.length > 0 ? "ready anytime" : "locked anytime"}>
+                        <header><span>OPTIONAL / ANYTIME</span><strong>ホームページキャラクター</strong></header>
+                        <p>顧客確認に出さない、専用サイト用の歩くキャラクターを作ります。</p>
+                        <small>内容：注文JSON、元写真、4×3透明スプライト専用プロンプト</small>
+                        <button
+                          className="button button-primary"
+                          type="button"
+                          disabled={saving || exportingBundle || sourceAssets.length === 0}
+                          onClick={() => void downloadCharacterBundle()}
+                        >
+                          {exportingBundle && sourceAssets.length > 0 ? "準備中…" : "キャラクター制作データをダウンロード"}
+                        </button>
+                        {sourceAssets.length === 0 && <em>元写真の登録後に利用できます</em>}
+                      </article>
+                    </div>
+                    <div className="admin-character-register">
+                      <div>
+                        <strong>完成したキャラクターを登録</strong>
+                        <p>4列×3行・12フレームの透明PNG / WebP。顧客画面の承認対象には追加されません。</p>
+                      </div>
+                      {characterSprite && assetUrls[characterSprite.id] && (
+                        <figure>
+                          {/* eslint-disable-next-line @next/next/no-img-element -- Signed private storage URL is operator-only and expires. */}
+                          <img src={assetUrls[characterSprite.id]} alt={`${order.pet_name}の登録済みホームページキャラクター`} />
+                          <figcaption>登録済み · ホームページへ自動反映</figcaption>
+                        </figure>
+                      )}
+                      <label className="admin-character-file">
+                        <span>{characterSprite ? "新しいスプライトに差し替える" : "スプライトを選択"}</span>
+                        <input
+                          key={characterSpriteInputKey}
+                          type="file"
+                          accept="image/png,image/webp"
+                          onChange={(event) => setCharacterSpriteFile(event.target.files?.[0] ?? null)}
+                        />
+                      </label>
+                      <div className="admin-character-actions">
+                        <button className="button button-primary" type="button" disabled={saving || !characterSpriteFile} onClick={() => void uploadCharacterSprite()}>
+                          {saving ? "登録中…" : characterSprite ? "差し替えて反映" : "登録して反映"}
+                        </button>
+                        {characterSprite && <button className="button button-outline" type="button" disabled={saving} onClick={() => void deleteCharacterSprite()}>登録を解除</button>}
+                      </div>
                     </div>
                     {exportProgress && (
                       <p className="admin-export-progress" role="status">

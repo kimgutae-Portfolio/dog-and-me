@@ -13,6 +13,7 @@ import type {
   MemoryOrder,
   OrderAsset,
 } from "../../lib/supabase/types";
+import { CustomerCharacterGuide } from "./CustomerCharacterGuide";
 
 type SignedImage = { id: string; url: string; caption: string | null };
 
@@ -25,6 +26,7 @@ export function CustomerFilmSite() {
   const [concept, setConcept] = useState<FilmConcept | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [images, setImages] = useState<SignedImage[]>([]);
+  const [characterSpriteUrl, setCharacterSpriteUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -116,6 +118,13 @@ export function CustomerFilmSite() {
           }))
           .filter((item) => item.url),
       );
+      const characterSprite = loadedAssets.find((asset) => asset.category === "character_sprite");
+      if (characterSprite) {
+        const { data } = await supabase.storage
+          .from("order-assets")
+          .createSignedUrl(characterSprite.storage_path, 3600);
+        setCharacterSpriteUrl(data?.signedUrl ?? "");
+      }
       setLoading(false);
     };
     load();
@@ -258,6 +267,7 @@ export function CustomerFilmSite() {
           {order.pet_name} · {new Date(order.created_at).getFullYear()}
         </span>
       </footer>
+      {characterSpriteUrl && <CustomerCharacterGuide spriteUrl={characterSpriteUrl} petName={order.pet_name} />}
     </main>
   );
 }
