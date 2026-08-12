@@ -110,6 +110,10 @@ const homeFaqs = [
     "モニター価格とは何ですか？",
     `初期${MEMORY_FILM_PRICING.launchLimit}組限定で、動く絵本の制作工程と品質を確認するための価格 ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）です。終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`,
   ],
+  [
+    "専用ものがたりサイトは、いつまで見られますか？",
+    "公開期限は設けておらず、追加の月額料金もありません。専用URLからいつでも見返せます。将来、新しい機能や別サービスが加わる場合も、現在お届けする専用サイトの閲覧はそのまま続けられます。",
+  ],
 ] as const;
 
 export default async function Home() {
@@ -358,8 +362,16 @@ export default async function Home() {
             <p>
               映像を受け取って終わりではありません。
               <br />
-              いつでも会いに行ける、小さな居場所としてお届けします。
+              公開期限を設けず、いつでも会いに行ける小さな居場所としてお届けします。
             </p>
+          </div>
+
+          <div className="storybook-site-lifetime" aria-label="専用サイトの利用期間と料金">
+            <span>YOUR SITE, ALWAYS THERE</span>
+            <strong>公開期限なし</strong>
+            <i aria-hidden="true" />
+            <strong>月額料金なし</strong>
+            <p>完成後も専用URLから、何度でもその子の物語を見返せます。</p>
           </div>
 
           <div className="storybook-personal-site-grid">
@@ -461,7 +473,7 @@ export default async function Home() {
                 <Link className="button button-outline" href="/film/moka-demo">
                   モカのホームページを体験する →
                 </Link>
-                <p>専用URLで、ご家族にも共有できます。</p>
+                <p>専用URLでご家族にも共有できます。将来追加される機能や別サービスは任意で、現在の専用サイトはそのままお使いいただけます。</p>
               </div>
             </div>
           </div>
@@ -566,7 +578,7 @@ export default async function Home() {
               <p className="eyebrow">ONE STORYBOOK PLAN</p>
               <h2>物語から、完成ページまで。</h2>
             </div>
-            <p>二つの物語案、絵本ページ、約1分の映像、専用サイトを含みます。</p>
+            <p>二つの物語案、絵本ページ、約1分の映像、公開期限・月額料金なしの専用サイトを含みます。</p>
           </div>
           <div className="pricing-grid">
             <LivePriceCard />

@@ -1924,6 +1924,12 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-memory-scroll-note { margin: 4px 0 0; display: flex; justify-content: center; gap: 12px; color: #777067; font-size: 8px; letter-spacing: .12em; }
 .storybook-personal-site { position: relative; overflow: hidden; background: #f6f0e7; }
 .storybook-personal-site::before { content: ""; width: 520px; height: 520px; position: absolute; right: -180px; bottom: -190px; border-radius: 50%; background: radial-gradient(circle,rgba(192,132,128,.15),transparent 68%); pointer-events: none; }
+.storybook-site-lifetime { margin: -12px 0 48px; padding: 21px 26px; position: relative; display: grid; grid-template-columns: auto auto 1px auto 1fr; align-items: center; gap: 18px; overflow: hidden; color: #fffaf2; border: 1px solid rgba(255,255,255,.12); background: linear-gradient(120deg,#394744,#4f5b54); box-shadow: 0 16px 42px rgba(48,58,49,.13); }
+.storybook-site-lifetime::after { content: ""; width: 180px; height: 180px; position: absolute; right: -75px; top: -100px; border-radius: 50%; background: rgba(217,185,170,.14); }
+.storybook-site-lifetime > span { color: #d9b9aa; font-size: 7px; font-weight: 800; letter-spacing: .18em; }
+.storybook-site-lifetime > strong { font-family: var(--font-serif); font-size: 19px; font-weight: 400; letter-spacing: .05em; white-space: nowrap; }
+.storybook-site-lifetime > i { width: 1px; height: 28px; display: block; background: rgba(255,255,255,.22); }
+.storybook-site-lifetime > p { margin: 0; color: rgba(255,255,255,.67); font-size: 10px; line-height: 1.75; text-align: right; }
 .storybook-personal-site-grid { display: grid; grid-template-columns: 1.18fr .82fr; align-items: center; gap: 78px; }
 .storybook-site-window { min-width: 0; position: relative; border: 1px solid rgba(64,59,53,.2); border-radius: 4px; overflow: hidden; background: #fffaf2; box-shadow: 0 34px 90px rgba(63,49,40,.2); transform: perspective(1300px) rotateY(2deg) rotateX(.5deg); transition: transform .7s cubic-bezier(.2,.8,.2,1), box-shadow .7s ease; }
 .storybook-personal-site.is-section-active .storybook-site-window { transform: perspective(1300px) rotateY(-1deg) translateY(-5px); box-shadow: 0 42px 110px rgba(63,49,40,.25); }
@@ -2249,6 +2255,11 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-film-meta { padding: 18px; }
   .storybook-film-meta strong { font-size: 18px; }
   .storybook-personal-site-grid { gap: 36px; }
+  .storybook-site-lifetime { margin: -6px 0 34px; padding: 19px 18px; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+  .storybook-site-lifetime > span { grid-column: 1 / -1; }
+  .storybook-site-lifetime > strong { font-size: 17px; }
+  .storybook-site-lifetime > i { display: none; }
+  .storybook-site-lifetime > p { padding-top: 10px; grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,.15); font-size: 11px; text-align: left; }
   .storybook-site-window { margin: 0 -10px; width: calc(100% + 20px); }
   .storybook-site-window-bar { height: 36px; }
   .storybook-site-window-collage { aspect-ratio: 4/3.5; }

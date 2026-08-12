@@ -38,7 +38,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /"@type":"FAQPage"/);
   assert.match(
     html,
-    /<link rel="icon" href="https:\/\/www\.wanmemory\.com\/og\.png/,
+    /<link rel="icon" href="https:\/\/www\.wanmemory\.com\/icon\.svg/,
   );
   const jsonLdMatch = html.match(
     /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
@@ -54,7 +54,7 @@ test("server-renders the Japanese landing page", async () => {
       .availability,
     "https://schema.org/InStock",
   );
-  assert.equal(structuredData.at(-1).mainEntity.length, 10);
+  assert.equal(structuredData.at(-1).mainEntity.length, 11);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.match(html, /物語をつくる/);
   assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
@@ -64,6 +64,10 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /二つの物語案/);
   assert.match(html, /専用ページで受け取る/);
   assert.match(html, /専用ものがたりサイト/);
+  assert.match(html, /公開期限なし/);
+  assert.match(html, /月額料金なし/);
+  assert.match(html, /現在の専用サイトはそのままお使いいただけます/);
+  assert.match(html, /専用ものがたりサイトは、いつまで見られますか/);
   assert.match(html, /hero-owner-dog-rainy-home\.png/);
   assert.match(html, /物語案の確認までは無料/);
   assert.match(html, /通常10〜14営業日が目安/);
@@ -214,6 +218,7 @@ test("server-renders public support and legal pages", async () => {
   assert.match(legalHtml, /クレジットカード決済（Stripe）/);
   assert.match(legalHtml, /決済後、制作着手前.*全額返金/);
   assert.match(legalHtml, /通常10〜14営業日/);
+  assert.match(legalHtml, /公開期限・月額利用料なし/);
 
   const contactResponse = await render("/contact");
   const contactHtml = await contactResponse.text();
@@ -237,7 +242,6 @@ test("keeps private product routes out of search results", async () => {
     "/story",
     "/studio",
     "/admin",
-    "/film/order-demo",
   ]) {
     const response = await render(path);
     const html = await response.text();
@@ -290,7 +294,6 @@ test("server-renders the connected MVP routes", async () => {
     "/story",
     "/studio",
     "/admin",
-    "/film/order-demo",
     "/film/moka-demo",
     "/memory/share-demo",
   ]) {
