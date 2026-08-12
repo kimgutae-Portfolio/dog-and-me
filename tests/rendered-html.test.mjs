@@ -363,6 +363,21 @@ test("adds the animated character to the share-code website", async () => {
   assert.match(payload, /character:/);
 });
 
+test("guards generated character sprites against frame-edge bleed", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const studio = await readFile(
+    new URL("app/admin/AdminStudio.tsx", root),
+    "utf8",
+  );
+
+  assert.match(studio, /WEBSITE CHARACTER SPRITE PRODUCTION v1\.1/);
+  assert.match(studio, /transparent_gutter_percent: 8/);
+  assert.match(studio, /black_white_magenta_background_check/);
+  assert.match(studio, /forbid_cross_cell_bleed: true/);
+  assert.match(studio, /forbid_colored_edge_halo: true/);
+  assert.match(studio, /isolated_frame_preview/);
+});
+
 test("uses the default social image when a memory URL is unavailable", async () => {
   const response = await render("/api/memory/share-demo/og");
   assert.equal(response.status, 307);

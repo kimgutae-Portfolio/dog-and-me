@@ -482,7 +482,7 @@ order.json의 expanded_stories에 지정된 중요한 이야기 3개는 각각 �
 
 일반 5초 이야기에서는 motion_phase_2를 빈 문자열로 반환한다. gen4_story_prompts 배열은 정확히 5개이며 expanded_stories 3개는 각각 하나의 10초 프롬프트, 나머지 2개는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
 
-const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.0
+const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.1
 
 역할
 첨부한 order.json과 reference-photos의 고객 원본 사진을 기준으로, 이 강아지의 개인 홈페이지 안을 돌아다니며 말풍선으로 안내하는 투명 배경 캐릭터 프레임을 제작한다.
@@ -502,10 +502,18 @@ const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION
 출력 규격
 - 정확히 4열 × 3행, 총 12프레임의 단일 PNG 스프라이트 시트.
 - 투명 배경 RGBA PNG. 배경, 바닥, 그림자, 테두리, 격자선, 라벨, 글자, 말풍선 없음.
+- 투명 배경처럼 보이는 흰색·회색·체커보드 무늬를 그리지 말고 실제 알파 채널을 사용한다.
 - 모든 셀의 크기와 캐릭터 기준선, 크기, 여백을 동일하게 유지한다.
-- 신체와 꼬리, 귀, 발이 셀 경계를 넘거나 옆 셀에 침범하지 않게 한다.
-- 각 셀 가장자리에는 충분한 완전 투명 여백을 둔다.
-- 다른 셀의 몸, 꼬리, 움직임 선 또는 픽셀이 섞이지 않도록 최종 검수한다.
+- 각 셀을 서로 완전히 독립된 캔버스로 취급한다. 한 셀의 신체, 꼬리, 귀, 발, 털, 그림자, 움직임 선, 색상 잔상은 다른 셀로 절대 넘어가면 안 된다.
+- 캐릭터의 모든 불투명 픽셀은 각 셀 중앙의 안전영역 안에 둔다. 셀의 상·하·좌·우 가장자리마다 셀 크기의 최소 8%를 완전 투명 여백으로 확보한다.
+- 귀 끝, 꼬리 끝, 발끝과 수채화 번짐까지 안전영역 안에 포함한다. 셀 경계에 닿거나 잘린 털은 실패로 간주한다.
+- 캐릭터 실루엣 바깥에는 반투명 회색·분홍·파랑·주황 픽셀이나 이전 배경색의 얇은 띠가 남지 않게 한다.
+- 특히 2행의 앉기와 고개 갸웃한 앉기, 3행의 앞발 인사와 엎드려 쉬기는 좌우 셀 조각이 붙기 쉬우므로 귀·등·꼬리 주변을 확대 검수한다.
+
+필수 경계 검수
+- 완성 시트를 12개의 동일한 셀로 가상 분리해 각 셀을 단독으로 확인한다.
+- 각 셀을 흰색, 검은색, 밝은 자홍색 배경 위에 각각 합성해 사각 조각, 색 테두리, 이웃 프레임 픽셀, 가짜 투명 배경이 보이지 않는지 검사한다.
+- 한 픽셀이라도 셀 경계에 닿거나 다른 프레임 조각이 보이면 해당 프레임을 다시 정리한 뒤 최종 이미지를 반환한다.
 
 프레임 순서 — 왼쪽에서 오른쪽
 1행: 오른쪽을 향한 걷기 contact / down / passing / up
@@ -524,7 +532,10 @@ const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION
 {
   "asset_type": "website_character_sprite",
   "layout": {"columns":4,"rows":3,"frame_count":12},
+  "transparent_gutter_percent":8,
   "identity_check":"passed",
+  "isolated_frame_preview_check":"passed",
+  "black_white_magenta_background_check":"passed",
   "transparent_edge_check":"passed",
   "cross_cell_bleed_check":"passed",
   "customer_review_required":false
@@ -2029,7 +2040,7 @@ export function AdminStudio() {
       ]);
       const root = `${safeArchiveSegment(order.order_number)}-website-character`;
       const characterJson = {
-        schema_version: "wan-memory-website-character-input-1.0",
+        schema_version: "wan-memory-website-character-input-1.1",
         exported_at: new Date().toISOString(),
         job: {
           id: order.order_number,
@@ -2043,6 +2054,13 @@ export function AdminStudio() {
           proportions: "natural dog proportions; readable at small website size",
           background: "transparent RGBA",
           layout: { columns: 4, rows: 3, frame_count: 12 },
+          frame_safety: {
+            transparent_gutter_percent: 8,
+            keep_all_opaque_pixels_inside_safe_area: true,
+            forbid_cross_cell_bleed: true,
+            forbid_colored_edge_halo: true,
+            forbid_fake_transparency_pattern: true,
+          },
         },
         character_identity: {
           selected_appearance_description: productionFields.selectedAppearanceDescription,
@@ -2064,6 +2082,14 @@ export function AdminStudio() {
           customer_review_required: false,
           admin_only: true,
           apply_to_private_website_automatically: true,
+          required_checks: [
+            "isolated_frame_preview",
+            "black_background",
+            "white_background",
+            "magenta_background",
+            "transparent_edge",
+            "cross_cell_bleed",
+          ],
         },
       };
       const files: Record<string, Uint8Array> = {
