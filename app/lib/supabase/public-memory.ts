@@ -27,6 +27,9 @@ export type SharedMemoryPayload = {
     caption: string | null;
     sort_order: number;
   }>;
+  character: {
+    storage_path: string;
+  } | null;
 };
 
 const shareCodePattern = /^[a-f0-9]{64}$/i;

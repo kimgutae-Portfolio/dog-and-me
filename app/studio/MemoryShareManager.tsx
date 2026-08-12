@@ -327,10 +327,10 @@ export function MemoryShareManager({
 
       <div className="family-share-panel">
         <div>
-          <p className="eyebrow">FAMILY SHARE LINK</p>
-          <h3>家族はログインせずに閲覧できます。</h3>
+          <p className="eyebrow">YOUR DOG&apos;S WEBSITE</p>
+          <h3>このURLが、その子だけのホームページです。</h3>
           <p>
-            共有URLを知っている方だけが、完成映像と選んだ写真を閲覧できます。ページは検索結果に表示されません。
+            ご家族も同じURLから、ログインせずに完成映像・写真・キャラクターを楽しめます。検索結果には表示されません。
           </p>
         </div>
         {!delivery ? (
@@ -373,6 +373,16 @@ export function MemoryShareManager({
               >
                 LINEなどで共有
               </button>
+              {share?.active && shareUrl && (
+                <a
+                  className="button button-cream"
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  ホームページを開く ↗
+                </a>
+              )}
             </div>
             <button
               className="share-rotate"

@@ -22,6 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
     category: "ペット・動く絵本制作",
     referrer: "origin-when-cross-origin",
     formatDetection: { email: false, address: false, telephone: false },
+    icons: { icon: "/og.png" },
     robots: {
       index: true,
       follow: true,

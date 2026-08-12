@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "../../lib/supabase/client";
 import type { SharedMemoryPayload } from "../../lib/supabase/public-memory";
+import { CustomerCharacterGuide } from "../../film/[orderId]/CustomerCharacterGuide";
 
 type SharedImage = SharedMemoryPayload["images"][number] & { url: string };
 
@@ -15,6 +16,7 @@ export function SharedMemorySite() {
   const [memory, setMemory] = useState<SharedMemoryPayload | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [images, setImages] = useState<SharedImage[]>([]);
+  const [characterSpriteUrl, setCharacterSpriteUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -35,7 +37,8 @@ export function SharedMemorySite() {
       const paths = [
         loaded.delivery.video_storage_path,
         ...loaded.images.map((image) => image.storage_path),
-      ].filter(Boolean);
+        loaded.character?.storage_path,
+      ].filter((path): path is string => Boolean(path));
       const { data: signed } = await supabase.storage
         .from("order-assets")
         .createSignedUrls(paths, 900);
@@ -59,6 +62,11 @@ export function SharedMemorySite() {
             url: urlByPath.get(image.storage_path) ?? "",
           }))
           .filter((image) => image.url),
+      );
+      setCharacterSpriteUrl(
+        loaded.character?.storage_path
+          ? (urlByPath.get(loaded.character.storage_path) ?? "")
+          : "",
       );
       setLoading(false);
     };
@@ -88,10 +96,10 @@ export function SharedMemorySite() {
         <Link className="brand" href="/">
           <span className="brand-mark">WM</span>
           <span className="brand-type">
-            WAN MEMORY<small>PRIVATE STORYBOOK SITE</small>
+            WAN MEMORY<small>PERSONAL STORYBOOK SITE</small>
           </span>
         </Link>
-        <span className="shared-memory-badge">専用ものがたりサイト</span>
+        <span className="shared-memory-badge">その子だけのものがたりサイト</span>
       </header>
       <section className="private-film-hero shared-memory-hero">
         {heroImage && (
@@ -211,6 +219,12 @@ export function SharedMemorySite() {
           {order.pet_name} · {new Date(order.created_at).getFullYear()}
         </span>
       </footer>
+      {characterSpriteUrl && (
+        <CustomerCharacterGuide
+          spriteUrl={characterSpriteUrl}
+          petName={order.pet_name}
+        />
+      )}
     </main>
   );
 }

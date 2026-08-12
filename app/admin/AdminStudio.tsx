@@ -173,64 +173,6 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
   transition_video_count: 0,
   transition_page_count: 0,
 } as const;
-const MEMORY_STORYBOOK_PRODUCTION_PROMPT = `WAN MEMORY STORYBOOK PRODUCTION v2.0
-
-역할
-너는 WAN MEMORY의 그림책 제작 담당자다. 첨부된 order.json과 물語별 original 사진을 읽고, 고객의 실제 사진을 그대로 움직이는 대신 사진 속 사실과 기억을 수채·과슈 질감의 새로운 움직이는 그림책으로 재구성한다.
-
-입력 자료
-- order.json: job, style, production_protocol, stories, output_plan을 먼저 읽는다.
-- stories/01-title/original/부터 stories/05-title/original/까지: 해당 물語에 연결된 고객 원본 사진이다.
-- 파일명에 primary가 포함된 사진은 그 물語의 얼굴·체형·구도·장면 사실 기준이다.
-- support 사진은 primary와 충돌하지 않는 세부만 보충한다.
-
-가장 중요한 원본 사진 규칙
-1. 고객 사진은 원래 비율과 해상도 그대로 사용하며, 단순한 영감용 참고 이미지가 아니라 동일 개체를 고정하는 정체성 기준으로 사용한다.
-2. primary 사진의 강아지는 반드시 같은 강아지로 인식되어야 한다. 얼굴, 눈 크기와 간격, 눈꺼풀, 귀, 주둥이 길이, 체형, 털색과 털 배치, 꼬리 모양, 목줄과 보이는 액세서리를 가능한 한 그대로 유지한다.
-3. 그림책 화풍으로 바꾸는 것은 강아지의 정체성을 바꾸는 것이 아니다. 강아지는 사진과 같은 개체로 유지하고, 배경·조명·구도·질감만 그림책에 맞게 재구성한다.
-4. 고객 사진을 패딩, 블러, 크롭, 레터박스 처리해서 16:9 복사본을 만들지 않는다.
-5. 고객 원본 사진을 최종 영상처럼 그대로 Runway에 보내지는 않지만, 그림책 페이지를 만들 때는 강아지 정체성의 강한 이미지 레퍼런스로 사용한다.
-6. 16:9는 원본 사진의 변환 결과가 아니라, 네가 새로 만드는 그림책 페이지의 출력 비율이다.
-7. 한 물語의 장소·계절·목줄·소품·털 특징을 다른 물語에서 가져오지 않는다.
-8. 고객이 제공하지 않은 사실, 사람, 감정, 장소, 사건을 확정적으로 추가하지 않는다.
-
-그림책 화풍과 정체성
-- 강아지는 자연스러운 비율을 유지한 부드러운 painted dog로 그린다.
-- 배경은 이야기의 장소와 계절이 읽히는 풍부한 수채·과슈 그림으로 만든다.
-- 사진처럼 지나치게 실사화하지 않고, 과장된 애니메이션 눈·왜곡된 주둥이·새로운 털 무늬를 만들지 않는다.
-- primary 사진의 얼굴, 눈 크기, 눈꺼풀, 귀, 주둥이, 털색, 꼬리, 목줄 등 보이는 특징을 유지한다. primary는 느슨한 영감이 아니라 identity lock이다.
-- 눈물자국, 새로운 액세서리, 사람 얼굴, 다른 동물은 사진이나 order.json에 근거가 없으면 추가하지 않는다.
-- 그림 안에 자막·로고·워터마크를 직접 넣지 않는다. 문장은 편집 단계에서 추가한다.
-
-이야기 페이지 제작
-- stories의 5개 물語를 모두 포함한다. 누락하거나 순서를 바꾸지 않는다.
-- 각 물語마다 새로운 16:9 그림책 페이지 1장을 계획한다. 영상 단계에서는 expanded_stories의 3개는 Gen-4 10초 1편씩, 나머지 2개는 Gen-4 5초 1편씩 사용한다.
-- 한 장면에는 중심 행동 1개만 둔다. 작은 바람, 꽃잎, 물결, 커튼, 빛, 털끝처럼 움직임이 제한된 연출을 우선한다.
-- 이야기 문장은 order.json의 문장과 고객 사실을 우선하며, 화면을 가리지 않는 짧은 일본어 한 문장으로 정리한다.
-- 페이지를 만들기 전에 primary 사진과 story text가 서로 맞는지 확인한다. 결과가 다른 개처럼 보이면 승인하지 말고 정체성 레퍼런스를 강화해 다시 생성한다.
-
-Runway 규칙
-- 이야기 페이지: 승인된 16:9 그림책 페이지 이미지 + Gen-4. expanded_stories는 10초 1편, 나머지는 5초 1편이다.
-- raw 고객 사진은 최종 Runway 입력으로 사용하지 않지만, 그림책 페이지 생성 단계에서는 동일 개체를 유지하기 위한 핵심 레퍼런스로 사용한다.
-- 카메라 이동과 피사체 변형은 최소화한다. 눈·입·다리·꼬리의 큰 형태 변화, 새 물체 생성, 얼굴 변형, 갑작스러운 줌은 금지한다.
-- 결과가 이상하면 프롬프트를 길게 늘리지 말고, 페이지 그림을 먼저 수정한 뒤 다시 영상화한다.
-
-반드시 반환할 결과
-1. memory_storybook_production_checklist: 5개 이야기가 모두 포함됐는지 확인.
-2. story_source_checklist: 각 primary/support 사진, 사용 이유, 충돌 여부.
-3. story_page_image_plan: 이야기별 16:9 그림책 페이지의 장면·구도·화풍·문장.
-4. gen4_scene_prompts: 5개 이야기 페이지의 Gen-4 5초 프롬프트.
-5. missing_information_only_if_blocking: 제작을 실제로 막는 경우에만 추가 질문.
-6. people_photo_assessment: 사람이 포함된 원본을 어떻게 안전하게 처리했는지.
-
-최종 검수
-- 5개 이야기 페이지가 모두 존재하는가?
-- 모든 16:9 이미지가 고객 원본의 패딩·블러 복사본이 아니라 새 그림책 페이지인가?
-- 각 이야기가 자기 물語의 사진과 사실만 사용했는가?
-- 강아지 얼굴·체형·털·꼬리·목줄이 이야기마다 불필요하게 바뀌지 않았는가?
-- Runway에는 승인된 그림책 페이지 이미지만 전달되는가?
-- 막히지 않은 질문을 추가로 만들지 않았는가?
-`;
 const CONCEPT_PROPOSAL_PROMPT = `WAN MEMORY STORY CONCEPT PROPOSAL v1.0
 
 첨부한 order.json과 stories/01~05의 고객 원본 사진을 읽고 고객에게 제시할 구성안 A와 B를 작성해줘.
@@ -1938,26 +1880,6 @@ export function AdminStudio() {
       photos: sourcePhotos,
     };
     return { productionData, manifest, archivePhotos };
-  };
-
-  const copyProductionJson = async () => {
-    if (!order) return;
-    if (!selectedConcept) {
-      setError("お客様が選んだ物語案を確認してから制作用データを作成してください。");
-      return;
-    }
-    const exportData = buildProductionExport();
-    if (!exportData) return;
-    try {
-      await navigator.clipboard.writeText(
-        JSON.stringify(exportData.productionData, null, 2),
-      );
-      setNotice("アカウントの連絡先を除いた分析・制作用JSONをコピーしました。");
-    } catch {
-      setError(
-        "制作用JSONをコピーできませんでした。ブラウザのクリップボード権限をご確認ください。",
-      );
-    }
   };
 
   const saveOperatorZip = async (

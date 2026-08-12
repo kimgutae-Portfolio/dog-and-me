@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -242,13 +244,18 @@ export function StudioClient() {
       return;
     }
     let attempts = 0;
-    void loadOrders({ silent: true });
+    const firstRefresh = window.setTimeout(() => {
+      void loadOrders({ silent: true });
+    }, 0);
     const interval = window.setInterval(() => {
       attempts += 1;
       void loadOrders({ silent: true });
       if (attempts >= 10) window.clearInterval(interval);
     }, 2000);
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearTimeout(firstRefresh);
+      window.clearInterval(interval);
+    };
   }, [loadOrders, order?.payment_status, paymentResult, user]);
   const finalAsset = useMemo(
     () =>
@@ -342,12 +349,6 @@ export function StudioClient() {
   useEffect(() => {
     let cancelled = false;
     const photos = assets.filter((asset) => asset.category === "source_image");
-    if (!photos.length) {
-      setSourcePhotoUrls({});
-      return () => {
-        cancelled = true;
-      };
-    }
     void Promise.all(
       photos.map(async (asset) => {
         const { data } = await getSupabaseBrowserClient()
@@ -1930,7 +1931,7 @@ export function StudioClient() {
                     className="button button-cream"
                     href={`/film/${order.id}`}
                   >
-                    専用ものがたりサイトを見る →
+                    納品内容を確認する →
                   </Link>
                 </div>
                 <div className="delivery-player">

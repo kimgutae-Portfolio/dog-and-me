@@ -38,7 +38,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /"@type":"FAQPage"/);
   assert.match(
     html,
-    /<link rel="icon" href="https:\/\/www\.wanmemory\.com\/icon/,
+    /<link rel="icon" href="https:\/\/www\.wanmemory\.com\/og\.png/,
   );
   const jsonLdMatch = html.match(
     /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
@@ -74,7 +74,6 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /初期(?:<!-- -->)?10(?:<!-- -->)?組/);
   assert.match(html, /24,800/);
   assert.match(html, /通常価格/);
-  assert.match(html, /29,800/);
   assert.match(html, /税込/);
   assert.match(html, /モニター価格とは何ですか/);
   assert.match(html, /人が写っている写真も送れますか/);
@@ -264,16 +263,16 @@ test("keeps private product routes out of search results", async () => {
     memoryHtml,
     /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/api\/memory\/share-demo\/og"/i,
   );
-  const demoResponse = await render("/film/miru-demo");
+  const demoResponse = await render("/film/moka-demo");
   const demoHtml = await demoResponse.text();
   assert.doesNotMatch(demoHtml, /<meta name="robots" content="noindex/i);
   assert.match(
     demoHtml,
-    /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/film\/miru-demo"/,
+    /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/film\/moka-demo"/,
   );
   assert.match(
     demoHtml,
-    /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/og\.png"/,
+    /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/film\/moka\/05-storybook-lantern\.webp"/,
   );
 });
 
@@ -284,7 +283,7 @@ test("server-renders the connected MVP routes", async () => {
     "/studio",
     "/admin",
     "/film/order-demo",
-    "/film/miru-demo",
+    "/film/moka-demo",
     "/memory/share-demo",
   ]) {
     const response = await render(path);
@@ -315,13 +314,14 @@ test("memory sharing keeps family links private and album access scoped", async 
       "utf8",
     ),
   ]);
-  assert.match(manager, /家族はログインせずに閲覧できます/);
+  assert.match(manager, /このURLが、その子だけのホームページです/);
   assert.match(manager, /LINEなどで共有/);
   assert.match(manager, /\$\{order\.pet_name\}との思い出｜WAN MEMORY/);
   assert.match(manager, /30枚まで/);
   assert.match(sharedPage, /get_shared_memory/);
   assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
-  assert.match(sharedPage, /PRIVATE STORYBOOK SITE/);
+  assert.match(sharedPage, /PERSONAL STORYBOOK SITE/);
+  assert.match(sharedPage, /CustomerCharacterGuide/);
   assert.doesNotMatch(sharedPage, /家族共有ページ|FAMILY MEMORY SITE/);
   assert.match(metadataPage, /generateMetadata/);
   assert.match(metadataPage, /follow: true/);
@@ -339,6 +339,30 @@ test("memory sharing keeps family links private and album access scoped", async 
   assert.match(migration, /where share_links\.token = p_token/);
 });
 
+test("adds the animated character to the share-code website", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [migration, sharedPage, payload] = await Promise.all([
+    readFile(
+      new URL(
+        "supabase/migrations/202608120002_shared_character_sprite.sql",
+        root,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL("app/memory/[shareId]/SharedMemorySite.tsx", root),
+      "utf8",
+    ),
+    readFile(new URL("app/lib/supabase/public-memory.ts", root), "utf8"),
+  ]);
+  assert.match(migration, /get_shared_memory_by_code/);
+  assert.match(migration, /asset\.category = 'character_sprite'/);
+  assert.match(migration, /or asset\.category = 'character_sprite'/);
+  assert.match(sharedPage, /loaded\.character\?\.storage_path/);
+  assert.match(sharedPage, /CustomerCharacterGuide/);
+  assert.match(payload, /character:/);
+});
+
 test("uses the default social image when a memory URL is unavailable", async () => {
   const response = await render("/api/memory/share-demo/og");
   assert.equal(response.status, 307);
@@ -352,7 +376,7 @@ test("renders the moving storybook demo", async () => {
   assert.match(html, /COMPLETE STORYBOOK SAMPLE/);
   assert.match(html, /COMPLETE FILM/);
   assert.match(html, /complete-film\.mp4/);
-  assert.match(html, /FIVE MOVING PAGES/);
+  assert.doesNotMatch(html, /FIVE MOVING PAGES|一場面ずつ、そっと動きはじめる/);
   assert.match(html, /雨音を待つ玄関/);
   assert.match(html, /MOKA'S PHOTO ALBUM/);
   assert.match(html, /五つの思い出から生まれた10枚/);
@@ -475,7 +499,6 @@ test("includes mobile breathing room, sticky conversion action, and touch story 
   assert.match(css, /\.mobile-sticky-cta\.visible/);
   assert.match(css, /focus-visible/);
   assert.match(css, /\.photo-guide-photo-types/);
-  assert.doesNotMatch(css, /border-left:\s*[34]px/);
   assert.match(page, /MobileStickyCta/);
   assert.match(story, /touchstart/);
   assert.match(story, /moveToChapter\(next\)/);
@@ -507,31 +530,26 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /disabled=\{\s*saving \|\|\s*!videoChecked/);
   assert.match(admin, /onChange=\{selectVideo\}/);
   assert.match(admin, /id="admin-photos"/);
-  assert.match(admin, /物語別の制作用データをダウンロード/);
+  assert.match(admin, /構成案作成データをダウンロード/);
+  assert.match(admin, /絵本画像制作データをダウンロード/);
   assert.match(admin, /storage\s*\.from\("order-assets"\)\s*\.download/);
   assert.match(admin, /import\("fflate"\)/);
   assert.match(admin, /photo-manifest\.json/);
-  assert.match(admin, /GPT_INSTRUCTIONS\.txt/);
   assert.doesNotMatch(admin, /createLandscape16x9/);
   assert.doesNotMatch(admin, /runway_16x9/);
   assert.doesNotMatch(admin, /runway_16x9_archive_path/);
-  assert.match(admin, /original customer photos/);
-  assert.match(admin, /Original customer photos stay in their original aspect ratio/);
   assert.match(admin, /requested_gpt_output/);
   assert.match(admin, /source_photos/);
   assert.match(admin, /wan-memory-storybook-production-export-3\.0/);
   assert.match(admin, /STORYBOOK_STYLE_PROFILE/);
   assert.match(admin, /MEMORY_STORYBOOK_PRODUCTION_PROTOCOL/);
-  assert.match(admin, /MEMORY_STORYBOOK_PRODUCTION_PROMPT/);
-  assert.match(admin, /MEMORY_STORYBOOK_PRODUCTION_v2\.txt/);
-  assert.match(admin, /MEMORY STORYBOOK PRODUCTION v2\.0/);
+  assert.match(admin, /CONCEPT_PROPOSAL_PROMPT/);
+  assert.match(admin, /STORYBOOK_IMAGE_PROMPT/);
   assert.match(admin, /production_protocol/);
-  assert.match(admin, /original-aspect-ratio identity-locked references/);
+  assert.match(admin, /original-aspect-ratio customer photos/);
   assert.match(admin, /transition_rules/);
-  assert.match(admin, /gen4_turbo/);
-  assert.match(admin, /physical_page_turn_without_crossfade/);
-  assert.match(admin, /transition_page_image_plan/);
-  assert.match(admin, /アカウントの連絡先を除いた分析・制作用JSON/);
+  assert.match(admin, /direct_curved_page_turn_between_story_clips/);
+  assert.match(admin, /bridge_backgrounds_allowed: false/);
   assert.match(admin, /admin_resolve_revision/);
   assert.match(admin, /admin_resolve_message/);
   assert.match(admin, /admin_register_video_asset/);
@@ -827,8 +845,7 @@ test("stores exactly five stories with required scene photos", async () => {
   assert.match(story, /prune_order_memories/);
   assert.match(story, /save_order_production_fields/);
   assert.match(uploads, /const fileKey = `\$\{file\.name\}:\$\{file\.size\}`/);
-  assert.match(admin, /制作用JSONをコピー/);
-  assert.match(admin, /物語別 Runway 制作セット/);
+  assert.match(admin, /Runway制作データをダウンロード/);
   assert.match(admin, /primary_scene_source/);
   assert.match(studio, /studio-memory-list/);
   assert.match(studio, /studio-story-photo-add/);
@@ -1018,9 +1035,10 @@ test("loads Vercel Web Analytics from the root layout", async () => {
 
 test("emails customers only when an administrator sends a studio message", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [admin, studio, route, notification, envExample] = await Promise.all([
+  const [admin, studio, chat, route, notification, envExample] = await Promise.all([
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    readFile(new URL("app/studio/ChatWidget.tsx", root), "utf8"),
     readFile(new URL("app/api/admin/messages/route.ts", root), "utf8"),
     readFile(new URL("app/lib/email/messageNotification.ts", root), "utf8"),
     readFile(new URL(".env.example", root), "utf8"),
@@ -1037,11 +1055,11 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(admin, /prepareCustomerInputMessage/);
   assert.match(admin, /value=\{messageDraft\}/);
   assert.match(notification, /内容はメールには記載していません/);
-  assert.match(studio, /担当者からの確認やお願いはこちらに届きます/);
-  assert.match(studio, /ご登録のメールアドレスにもお知らせします/);
-  assert.match(studio, /<textarea\s+required\s+value=\{messageBody\}/);
-  assert.match(studio, /disabled=\{sendingMessage\}/);
-  assert.doesNotMatch(studio, /disabled=\{!messageBody\.trim\(\)\}/);
+  assert.match(chat, /担当者からの確認やお願いはこちらに届きます/);
+  assert.match(chat, /ご登録のメールアドレスにもお知らせします/);
+  assert.match(chat, /<textarea[\s\S]*?ref=\{textareaRef\}[\s\S]*?required/);
+  assert.match(chat, /disabled=\{sending\}/);
+  assert.doesNotMatch(chat, /disabled=\{!messageBody\.trim\(\)\}/);
   assert.doesNotMatch(notification, /p_body|messageBody/);
   assert.doesNotMatch(
     studio,

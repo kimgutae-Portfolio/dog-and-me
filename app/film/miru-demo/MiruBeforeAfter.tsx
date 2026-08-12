@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useRef, useState } from "react";
 
 type MiruBeforeAfterProps = {

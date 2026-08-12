@@ -34,6 +34,16 @@ function friendlyError(message: string) {
   return "処理を完了できませんでした。少し時間をおいてお試しください。";
 }
 
+function initialUrlError() {
+  if (typeof window === "undefined" || !window.location.hash) return "";
+  const description = new URLSearchParams(window.location.hash.slice(1)).get(
+    "error_description",
+  );
+  return description
+    ? friendlyError(decodeURIComponent(description.replace(/\+/g, " ")))
+    : "";
+}
+
 export function AuthPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -53,7 +63,7 @@ export function AuthPanel() {
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialUrlError);
   const [signupConfirmationEmail, setSignupConfirmationEmail] = useState("");
   const [mfaPending, setMfaPending] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
@@ -69,9 +79,7 @@ export function AuthPanel() {
   useEffect(() => {
     if (!window.location.hash) return;
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    const description = hashParams.get("error_description");
-    if (!description) return;
-    setError(friendlyError(decodeURIComponent(description.replace(/\+/g, " "))));
+    if (!hashParams.get("error_description")) return;
     window.history.replaceState(
       null,
       "",
