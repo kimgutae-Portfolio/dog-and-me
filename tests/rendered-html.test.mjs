@@ -476,6 +476,8 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(authPanel, /パスワード（確認）/);
   assert.match(authPanel, /確認用パスワードが一致していません。/);
   assert.match(authPanel, /パスワードを忘れた方はこちら/);
+  assert.match(authPanel, /\/api\/auth\/password-reset/);
+  assert.doesNotMatch(authPanel, /resetPasswordForEmail/);
   assert.match(authPanel, /setSignupConfirmationEmail\(email\.trim\(\)\)/);
   assert.match(authPanel, /role="alertdialog"/);
   assert.match(authPanel, /確認メールを送信しました。/);
@@ -530,6 +532,34 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(storyWizard, /onClick=\{\(\) => goToStep\(item\.step\)\}/);
   assert.match(storyWizard, /if \(step === 1\) \{/);
   assert.match(migration, /add column if not exists primary_pet_name text/);
+});
+
+test("sends branded password recovery without exposing account existence", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [route, email, migration] = await Promise.all([
+    readFile(new URL("app/api/auth/password-reset/route.ts", root), "utf8"),
+    readFile(
+      new URL("app/lib/email/messageNotification.ts", root),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "supabase/migrations/202608120003_password_reset_rate_limit.sql",
+        root,
+      ),
+      "utf8",
+    ),
+  ]);
+  assert.match(route, /admin\.auth\.admin\.generateLink/);
+  assert.match(route, /type: "recovery"/);
+  assert.match(route, /password_reset_request_allowed/);
+  assert.match(route, /if \(allowed !== true\) return Response\.json\(\{ ok: true \}\)/);
+  assert.match(route, /process\.env\.SITE_ORIGIN/);
+  assert.match(email, /WAN MEMORY｜パスワード再設定のご案内/);
+  assert.match(email, /新しいパスワードを設定する/);
+  assert.match(email, /escapeHtml\(recoveryUrl\)/);
+  assert.match(migration, /interval '2 minutes'/);
+  assert.match(migration, /grant execute .* to service_role/);
 });
 
 test("concept selection requires an explicit send and stays editable before production", async () => {

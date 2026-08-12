@@ -10,6 +10,73 @@ type CustomerMessageNotificationResult =
 
 const EMAIL_SUBJECT = "WAN MEMORY｜新しいメッセージが届いています";
 
+function escapeHtml(value: string) {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[character] ?? character,
+  );
+}
+
+export async function sendPasswordResetNotification({
+  to,
+  recoveryUrl,
+  idempotencyKey,
+}: {
+  to: string;
+  recoveryUrl: string;
+  idempotencyKey: string;
+}): Promise<CustomerMessageNotificationResult> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM_EMAIL?.trim();
+  if (!apiKey || !from) return { sent: false, reason: "not_configured" };
+
+  const safeRecoveryUrl = escapeHtml(recoveryUrl);
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject: "WAN MEMORY｜パスワード再設定のご案内",
+      html: `
+        <div style="margin:0;background:#f5f1e8;padding:40px 16px;color:#303a31;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans JP',sans-serif">
+          <div style="max-width:560px;margin:0 auto;overflow:hidden;border:1px solid #e3ddd1;border-radius:22px;background:#fff;box-shadow:0 18px 50px rgba(48,58,49,.09)">
+            <div style="padding:24px 32px;color:#fff;background:#303a31">
+              <p style="margin:0;font-size:14px;font-weight:700;letter-spacing:.16em">WAN MEMORY</p>
+              <p style="margin:5px 0 0;font-size:10px;letter-spacing:.12em;color:#d9b9aa">MOVING STORYBOOKS FOR YOUR DOG</p>
+            </div>
+            <div style="padding:36px 32px 32px">
+              <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:.15em;color:#ad6f70">PASSWORD RESET</p>
+              <h1 style="margin:0 0 18px;font-size:25px;font-weight:600;line-height:1.55">新しいパスワードを設定してください</h1>
+              <p style="margin:0 0 26px;font-size:15px;line-height:1.9;color:#5f625d">WAN MEMORYの制作室で使用するパスワードの再設定を受け付けました。下のボタンから新しいパスワードを設定できます。</p>
+              <a href="${safeRecoveryUrl}" style="display:block;border-radius:999px;background:#ad6f70;padding:15px 24px;color:#fff;text-align:center;text-decoration:none;font-size:15px;font-weight:700">新しいパスワードを設定する</a>
+              <div style="margin-top:26px;padding:18px;border-radius:14px;background:#f5f1e8">
+                <p style="margin:0;font-size:12px;line-height:1.8;color:#6e706b">この操作にお心当たりがない場合は、ボタンを押さずにこのメールを破棄してください。パスワードは変更されません。</p>
+              </div>
+              <p style="margin:24px 0 0;font-size:11px;line-height:1.8;color:#858780">安全のため、このリンクは一度だけ使用できます。WAN MEMORYがメールでパスワードをお尋ねすることはありません。</p>
+            </div>
+          </div>
+          <p style="max-width:560px;margin:18px auto 0;text-align:center;font-size:10px;line-height:1.7;color:#8b8b86">このメールはWAN MEMORYのパスワード再設定に関する自動通知です。</p>
+        </div>
+      `,
+      text: `WAN MEMORY｜パスワード再設定のご案内\n\n新しいパスワードを設定するには、以下のリンクを開いてください。\n\n${recoveryUrl}\n\nこの操作にお心当たりがない場合は、このメールを破棄してください。パスワードは変更されません。`,
+    }),
+  });
+
+  return response.ok ? { sent: true } : { sent: false, reason: "provider_error" };
+}
+
 export async function sendCustomerMessageNotification({
   to,
   studioUrl,

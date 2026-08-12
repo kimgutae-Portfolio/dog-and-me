@@ -135,15 +135,14 @@ export function AuthPanel() {
 
     try {
       if (mode === "reset") {
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-          email,
-          {
-            redirectTo: `${window.location.origin}/auth?mode=update-password&next=${encodeURIComponent("/studio")}`,
-          },
-        );
-        if (resetError) throw resetError;
+        const response = await fetch("/api/auth/password-reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        if (!response.ok) throw new Error("password reset email unavailable");
         setMessage(
-          "再設定メールを送りました。メール内のリンクから新しいパスワードを設定してください。",
+          "登録済みのメールアドレスには、WAN MEMORYから再設定メールをお送りします。メール内のボタンから新しいパスワードを設定してください。",
         );
         return;
       }
