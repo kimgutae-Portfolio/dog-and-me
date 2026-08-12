@@ -229,31 +229,25 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="storybook-intro section" id="about">
-        <div className="shell storybook-intro-grid">
+      <aside className="storybook-quick-facts" aria-label="料金と納期のご案内">
+        <div className="shell">
           <div>
-            <p className="eyebrow">NOT A RE-CREATION, A NEW STORY</p>
-            <h2>
-              写真を再現するのではなく、
-              <br />
-              記憶から物語を描く。
-            </h2>
+            <span>MONITOR PRICE</span>
+            <strong>¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）</strong>
           </div>
           <div>
-            <p>
-              毛並みやしっぽを実写のように完璧に再現することより、ご家族が知っている表情や、あの日の空気を一冊の絵本として残すことを大切にします。
-            </p>
-            <p>
-              一場面ずつ同じ画材と色で描き、動画では犬を大きく演技させません。花びら、水面、光、まばたき。ページがそっと息をするような動きに整えます。
-            </p>
-            <ul>
-              <li>やわらかな水彩・ガッシュ</li>
-              <li>物語をつなぐ短い文章</li>
-              <li>人の目で一場面ずつ確認</li>
-            </ul>
+            <span>PAYMENT</span>
+            <strong>物語案の確認までは無料</strong>
           </div>
+          <div>
+            <span>DELIVERY</span>
+            <strong>お支払い後 10〜14営業日</strong>
+          </div>
+          <StartStoryLink className="storybook-quick-facts-link">
+            まずは無料で始める <span aria-hidden="true">→</span>
+          </StartStoryLink>
         </div>
-      </section>
+      </aside>
 
       <section className="storybook-film-showcase section" id="sample-film">
         <div className="shell">
@@ -287,6 +281,32 @@ export default async function Home() {
               <strong>モカと、五つの記憶</strong>
               <Link href="/film/moka-demo">作品ページで写真と全場面を見る →</Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="storybook-intro section" id="about">
+        <div className="shell storybook-intro-grid">
+          <div>
+            <p className="eyebrow">NOT A RE-CREATION, A NEW STORY</p>
+            <h2>
+              写真を再現するのではなく、
+              <br />
+              記憶から物語を描く。
+            </h2>
+          </div>
+          <div>
+            <p>
+              毛並みやしっぽを実写のように完璧に再現することより、ご家族が知っている表情や、あの日の空気を一冊の絵本として残すことを大切にします。
+            </p>
+            <p>
+              一場面ずつ同じ画材と色で描き、動画では犬を大きく演技させません。花びら、水面、光、まばたき。ページがそっと息をするような動きに整えます。
+            </p>
+            <ul>
+              <li>やわらかな水彩・ガッシュ</li>
+              <li>物語をつなぐ短い文章</li>
+              <li>人の目で一場面ずつ確認</li>
+            </ul>
           </div>
         </div>
       </section>

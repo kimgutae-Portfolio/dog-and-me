@@ -64,6 +64,13 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /二つの物語案/);
   assert.match(html, /専用ページで受け取る/);
   assert.match(html, /専用ものがたりサイト/);
+  assert.match(html, /物語案の確認までは無料/);
+  assert.match(html, /お支払い後 10〜14営業日/);
+  assert.ok(
+    html.indexOf("A COMPLETE MOVING STORYBOOK") <
+      html.indexOf("NOT A RE-CREATION, A NEW STORY"),
+    "the completed film should be the first full section after the hero",
+  );
   assert.doesNotMatch(
     html,
     /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
@@ -438,6 +445,10 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(startStoryLink, /user \? "\/story" : START_STORY_HREF/);
   assert.match(startStoryLink, /if \(!loading\) return/);
   assert.match(storyWizard, /profile\?\.primary_pet_name/);
+  assert.match(storyWizard, /まずは、いちばん書きやすい思い出を1つだけ/);
+  assert.match(storyWizard, /今日はここまで保存して閉じる/);
+  assert.match(storyWizard, /if \(!showAllMemoryCards && index > 0\) return null/);
+  assert.match(storyWizard, /書き方に迷ったら、例を見る/);
   assert.match(
     storyWizard,
     /petName: parsed\.petName\?\.trim\(\) \|\| preferredPetName/,
@@ -839,7 +850,7 @@ test("stores exactly five stories with required scene photos", async () => {
   assert.match(rules, /cardinality\(coalesce\(p_client_keys/);
   assert.match(story, /const MIN_MEMORY_COUNT = 5/);
   assert.match(story, /const MAX_MEMORY_COUNT = 5/);
-  assert.match(story, /5つの思い出を教えてください/);
+  assert.match(story, /まずは、いちばん書きやすい思い出を1つだけ/);
   assert.match(story, /その子らしい反応を書く/);
   assert.match(story, /この物語の場面写真/);
   assert.match(story, /save_order_memory_entry/);
@@ -920,7 +931,7 @@ test("uses story-specific photo sources and requires operator approval", async (
   assert.match(sourceLock, /確認済みの写真は変更できません/);
   assert.match(sourceLock, /five stories are required before source approval/);
 
-  assert.match(story, /各物語には、その日の写真を1枚/);
+  assert.match(story, /タイトル・30文字ほどのお話・写真1枚で完了します/);
   assert.match(story, /FIXED_FILM_STYLE/);
   assert.doesNotMatch(story, /referencePhotosComplete/);
   assert.match(story, /仕上がりの表現について確認しました/);

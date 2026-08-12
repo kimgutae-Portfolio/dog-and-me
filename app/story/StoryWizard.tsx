@@ -644,6 +644,21 @@ export function StoryWizard() {
     () => draft.memories.every(isMemoryReady),
     [draft.memories],
   );
+  const completedMemoryCount = useMemo(
+    () => draft.memories.filter(isMemoryReady).length,
+    [draft.memories],
+  );
+  const showAllMemoryCards = useMemo(
+    () =>
+      completedMemoryCount > 0 ||
+      draft.memories.slice(1).some(
+        (memory) =>
+          memory.title.trim() ||
+          memory.description.trim() ||
+          memory.photoKeys.length > 0,
+      ),
+    [completedMemoryCount, draft.memories],
+  );
 
   const missingFields = useMemo<MissingField[]>(() => {
     const missing: MissingField[] = [];
@@ -1115,23 +1130,55 @@ export function StoryWizard() {
               <p className="eyebrow">STORIES & PHOTOS</p>
               <h1 id="step-title">物語にしたい日と、その日の一枚。</h1>
               <p className="step-lead">
-                映像の長さと読みやすさを揃えるため、5つの思い出を教えてください。各物語には、その日の写真を1枚だけ添えれば受付できます。
+                まずは、いちばん書きやすい思い出を1つだけ。入力内容と写真は自動保存されるので、残りはあとから少しずつ続けられます。
               </p>
+              <aside
+                className={
+                  completedMemoryCount > 0
+                    ? "first-memory-start complete"
+                    : "first-memory-start"
+                }
+                aria-live="polite"
+              >
+                <div className="first-memory-start-copy">
+                  <span>{completedMemoryCount > 0 ? "FIRST MEMORY SAVED" : "START WITH ONE MEMORY"}</span>
+                  <strong>
+                    {completedMemoryCount > 0
+                      ? "最初の思い出を保存できました。"
+                      : "今日は、まず1つ書ければ大丈夫です。"}
+                  </strong>
+                  <p>
+                    {completedMemoryCount > 0
+                      ? "このまま次の思い出へ進んでも、いったん閉じて後日続けても大丈夫です。"
+                      : "タイトル・30文字ほどのお話・写真1枚で完了します。きれいな文章にする必要はありません。"}
+                  </p>
+                  {completedMemoryCount > 0 && (
+                    <Link className="first-memory-save-exit" href="/">
+                      今日はここまで保存して閉じる
+                    </Link>
+                  )}
+                </div>
+                <div className="first-memory-progress" aria-label={`思い出 ${completedMemoryCount} / ${draft.memories.length} 完了`}>
+                  <strong>{completedMemoryCount}</strong>
+                  <span>/ {draft.memories.length} 完了</span>
+                  <i><b style={{ width: `${(completedMemoryCount / draft.memories.length) * 100}%` }} /></i>
+                </div>
+              </aside>
               {photoSelectionNotice && (
                 <aside className="photo-selection-feedback" role="status">
                   <strong>写真を更新しました。</strong>
                   <span>{photoSelectionNotice}</span>
                 </aside>
               )}
-              <section
+              <details
                 className="memory-writing-guide"
-                aria-labelledby="memory-writing-guide-title"
               >
-                <div>
-                  <p className="eyebrow">WRITING GUIDE</p>
-                  <h2 id="memory-writing-guide-title">物語の種になる伝え方</h2>
-                </div>
-                <ol>
+                <summary>
+                  <span><small>WRITING GUIDE</small><strong>書き方に迷ったら、例を見る</strong></span>
+                  <i aria-hidden="true">＋</i>
+                </summary>
+                <div className="memory-writing-guide-content">
+                  <ol>
                   <li>
                     <span>01</span>
                     <div>
@@ -1159,13 +1206,15 @@ export function StoryWizard() {
                       </p>
                     </div>
                   </li>
-                </ol>
-                <p>
-                  例：「去年の春、家族になって初めて桜の道を歩きました。ミルは舞う花びらを見上げ、知らない季節を一つずつ覚えているようでした。」
-                </p>
-              </section>
+                  </ol>
+                  <p>
+                    例：「去年の春、家族になって初めて桜の道を歩きました。ミルは舞う花びらを見上げ、知らない季節を一つずつ覚えているようでした。」
+                  </p>
+                </div>
+              </details>
               <div className="memory-entry-list">
                 {draft.memories.map((memory, index) => {
+                  if (!showAllMemoryCards && index > 0) return null;
                   const complete = isMemoryReady(memory);
                   const expanded = activeMemoryKey === memory.clientKey;
                   return (
@@ -1445,7 +1494,7 @@ export function StoryWizard() {
                   完成映像は、はじまり・5つの物語・おわりのメッセージで構成します。
                   <br />
                   入力できた物語：
-                  {draft.memories.filter(isMemoryReady).length} /{" "}
+                  {completedMemoryCount} /{" "}
                   {draft.memories.length}項目 · 写真{totalLinkedPhotoCount}枚
                   <br />
                   {allMemoryEntriesComplete
