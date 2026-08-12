@@ -1997,6 +1997,17 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .moka-footer > div { display: flex; align-items: center; gap: 12px; }
 .moka-footer p { margin: 0; font-family: var(--font-serif); font-size: 10px; letter-spacing: .1em; }
 .moka-footer small { opacity: .55; }
+.moka-guide-layer { position: fixed; z-index: 90; inset: auto 0 12px; height: 210px; overflow: hidden; pointer-events: none; }
+.moka-guide { width: 174px; height: 174px; position: absolute; left: 0; bottom: 0; will-change: transform; pointer-events: auto; }
+.moka-guide-character { width: 174px; height: 174px; padding: 0; display: block; border: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 10px 9px rgba(43,35,29,.2)); }
+.moka-guide-character img { width: 100%; height: 100%; display: block; object-fit: contain; user-select: none; }
+.moka-guide-bubble { width: max-content; max-width: 230px; min-width: 156px; padding: 13px 35px 13px 15px; position: absolute; z-index: 2; left: 50%; bottom: 148px; opacity: 0; color: #4c4540; border: 1px solid rgba(76,69,64,.14); border-radius: 18px 18px 18px 4px; background: rgba(255,252,244,.96); box-shadow: 0 12px 32px rgba(48,40,34,.14); font-family: var(--font-serif); font-size: 13px; line-height: 1.65; transform: translate(-18%,10px) scale(.96); transition: opacity .35s ease, transform .45s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.moka-guide-bubble::after { content: ""; width: 12px; height: 12px; position: absolute; left: 24px; bottom: -7px; border-right: 1px solid rgba(76,69,64,.14); border-bottom: 1px solid rgba(76,69,64,.14); background: rgba(255,252,244,.96); transform: rotate(45deg); }
+.moka-guide-bubble.is-visible { opacity: 1; transform: translate(-18%,0) scale(1); pointer-events: auto; }
+.moka-guide[data-direction="left"] .moka-guide-bubble { transform: translate(-58%,10px) scale(.96) scaleX(-1); }
+.moka-guide[data-direction="left"] .moka-guide-bubble.is-visible { transform: translate(-58%,0) scale(1) scaleX(-1); }
+.moka-guide-bubble button { width: 28px; height: 28px; padding: 0; position: absolute; top: 4px; right: 4px; border: 0; border-radius: 50%; color: #8d8178; background: transparent; cursor: pointer; }
+.moka-guide-wake { position: fixed; z-index: 90; right: 18px; bottom: 18px; padding: 11px 15px; border: 1px solid rgba(64,59,53,.18); border-radius: 999px; color: #5b524c; background: rgba(255,251,242,.94); box-shadow: 0 9px 28px rgba(48,40,34,.13); font-family: var(--font-serif); font-size: 11px; cursor: pointer; }
 
 /* Miru moving-storybook sample */
 .miru-book-demo { color: #403b35; background: #f8f3ea; }
@@ -2135,6 +2146,11 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .moka-album-grid figcaption { margin-top: auto; }
   .moka-letter { min-height: 460px; padding: 70px 24px; }
   .moka-footer { padding: 28px 18px; align-items: stretch; flex-direction: column; gap: 24px; }
+  .moka-guide-layer { bottom: max(4px,env(safe-area-inset-bottom)); height: 162px; }
+  .moka-guide { width: 126px; height: 126px; }
+  .moka-guide-character { width: 126px; height: 126px; }
+  .moka-guide-bubble { max-width: 185px; min-width: 140px; bottom: 106px; padding: 11px 31px 11px 13px; font-size: 11px; }
+  .moka-guide-wake { right: 12px; bottom: max(12px,env(safe-area-inset-bottom)); }
   .miru-book-nav { height: 72px; padding: 0 18px; }
   .miru-book-nav > span { display: none; }
   .miru-book-nav > a:last-child { font-size: 7px; }
@@ -2191,6 +2207,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .moka-guide { will-change: auto; }
   .storybook-motion-ready [data-story-reveal] { opacity: 1 !important; filter: none !important; transform: none !important; }
   .storybook-hero-image, .storybook-film-frame, .storybook-directions .section-heading-row, .process-head, .pricing-heading { animation: none !important; transform: none !important; }
   .storybook-hero-copy .eyebrow, .storybook-hero-copy h1, .storybook-hero-copy > p:not(.eyebrow), .storybook-hero-actions { opacity: 1 !important; filter: none !important; transform: none !important; }

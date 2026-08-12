@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StartStoryLink } from "../../components/StartStoryLink";
+import { MokaGuide } from "./MokaGuide";
 
 /* eslint-disable @next/next/no-img-element -- Static WebP album assets preserve their original aspect ratios. */
 
@@ -89,7 +90,7 @@ export default function MokaDemoPage() {
         </div>
       </section>
 
-      <section className="moka-album">
+      <section className="moka-album" id="moka-album">
         <div className="moka-shell">
           <div className="moka-heading">
             <div>
@@ -120,7 +121,7 @@ export default function MokaDemoPage() {
         </div>
       </section>
 
-      <section className="moka-letter">
+      <section className="moka-letter" id="moka-letter">
         <p>03 / A LETTER FOR MOKA</p>
         <blockquote>
           モカへ。<br />雨の日も、遠くへ出かけた日も、<br />何気ない朝も、ぜんぶ大切な物語だよ。
@@ -135,6 +136,7 @@ export default function MokaDemoPage() {
         </div>
         <StartStoryLink className="button button-cream">うちの子の物語を相談する →</StartStoryLink>
       </footer>
+      <MokaGuide />
     </main>
   );
 }
