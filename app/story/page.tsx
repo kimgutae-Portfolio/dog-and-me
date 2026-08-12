@@ -32,7 +32,7 @@ export default function StoryPage() {
             お申し込みフォームは現在閉じています。受付開始まで、動く絵本の完成デモとサービス内容をご覧ください。
           </p>
           <div className="info-actions">
-            <Link className="button button-primary" href="/film/miru-demo">
+            <Link className="button button-primary" href="/film/moka-demo">
               動くページを見る →
             </Link>
             <Link className="button button-outline" href="/">

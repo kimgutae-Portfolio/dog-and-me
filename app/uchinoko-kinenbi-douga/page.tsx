@@ -132,7 +132,7 @@ export default function UchinokoKinenbiPage() {
         <p>
           約1分の動く絵本に加え、写真とメッセージをまとめる専用ページもプランに含まれます。検索結果には表示されず、専用URLから何度でも物語を開けます。
         </p>
-        <Link className="text-link" href="/film/miru-demo">
+        <Link className="text-link" href="/film/moka-demo">
           完成ページの表現を見る →
         </Link>
       </section>

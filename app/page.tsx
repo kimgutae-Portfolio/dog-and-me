@@ -6,7 +6,6 @@ import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
 import { MobileStickyCta } from "./components/MobileStickyCta";
 import { StartStoryLink } from "./components/StartStoryLink";
-import { MiruBeforeAfter } from "./film/miru-demo/MiruBeforeAfter";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 import {
   APPLICATIONS_OPEN,
@@ -30,21 +29,21 @@ export const metadata: Metadata = {
 const storyPages = [
   {
     number: "01",
-    label: "春風から届いた手紙",
-    sentence: "春の日、小さな手紙が届きました。",
-    image: "/film/miru/01-spring-letter.jpg",
+    label: "雨音を待つ玄関",
+    sentence: "雨の日も、扉の向こうを静かに待っていた。",
+    image: "/film/moka/01-storybook-rain.webp",
   },
   {
     number: "02",
-    label: "桜色の旅",
-    sentence: "ひとひらは、知らない青へ。",
-    image: "/film/miru/02-color-journey.jpg",
+    label: "はじめての電車旅",
+    sentence: "小さな駅で、知らない景色が動きはじめた。",
+    image: "/film/moka/02-storybook-train.webp",
   },
   {
     number: "03",
-    label: "はじめての波",
-    sentence: "その先で、はじめての波に出会いました。",
-    image: "/film/miru/03-first-wave.jpg",
+    label: "パンの香る朝",
+    sentence: "いつもの朝には、好きな匂いとまなざしがある。",
+    image: "/film/moka/03-storybook-bread.webp",
   },
 ] as const;
 
@@ -163,7 +162,7 @@ export default async function Home() {
       <section className="storybook-hero" aria-labelledby="hero-title">
         <Image
           className="storybook-hero-image"
-          src="/film/miru/01-spring-letter.jpg"
+          src="/film/moka/05-storybook-lantern.webp"
           alt=""
           fill
           priority
@@ -200,12 +199,12 @@ export default async function Home() {
                 {PRELAUNCH_CTA}
               </span>
             )}
-            <Link className="text-link" href="/film/miru-demo">
-              動くページを見る <span aria-hidden="true">↗</span>
+            <Link className="text-link" href="/film/moka-demo">
+              モカの完成作品を見る <span aria-hidden="true">↗</span>
             </Link>
           </div>
           <span className="storybook-hero-note">
-            PICTURE BOOK 01 · 春風から届いた手紙
+            STORYBOOK SAMPLE · モカと、五つの記憶
           </span>
         </div>
       </section>
@@ -236,54 +235,39 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="storybook-comparison section" id="comparison">
+      <section className="storybook-film-showcase section" id="sample-film">
         <div className="shell">
           <div className="storybook-heading">
             <div>
-              <p className="eyebrow">FROM PHOTO TO STORYBOOK</p>
+              <p className="eyebrow">A COMPLETE MOVING STORYBOOK</p>
               <h2>
-                写真から、
+                モカの記憶が、
                 <br />
-                絵本の一場面へ。
+                一冊の映像になる。
               </h2>
             </div>
             <p>
-              中央のつまみを左右に動かすと、
+              五つの思い出を、水彩の絵と小さな動き、
               <br />
-              お預かりした写真と描き下ろしたページを見比べられます。
+              短い文章でつないだ約1分の完成作品です。
             </p>
           </div>
-          <div className="storybook-comparison-grid">
-            <article className="storybook-comparison-card">
-              <div className="storybook-comparison-card-head">
-                <span>STORY 01</span>
-                <h3>桜道ではじめての春</h3>
-                <p>お客様の写真をもとに、春風のページを描きました。</p>
-              </div>
-              <MiruBeforeAfter
-                beforeSrc="/film/miru/customer-01-cherry-path.jpg"
-                afterSrc="/film/miru/01-spring-letter.jpg"
-                beforeAlt="ミルの桜道の元写真"
-                afterAlt="ミルが描かれた春の絵本ページ"
-              />
-            </article>
-            <article className="storybook-comparison-card">
-              <div className="storybook-comparison-card-head">
-                <span>STORY 03</span>
-                <h3>はじめての波</h3>
-                <p>海辺で出会った小さな波を、絵本のページに仕立てます。</p>
-              </div>
-              <MiruBeforeAfter
-                beforeSrc="/film/miru/customer-02-sea-wave.jpg"
-                afterSrc="/film/miru/03-first-wave.jpg"
-                beforeAlt="ミルの海辺の元写真"
-                afterAlt="ミルが描かれた海の絵本ページ"
-              />
-            </article>
+          <div className="storybook-film-frame">
+            <video
+              controls
+              preload="metadata"
+              playsInline
+              poster="/film/moka/05-storybook-lantern.webp"
+              aria-label="モカと五つの記憶の完成映像"
+            >
+              <source src="/film/moka/complete-film.mp4" type="video/mp4" />
+            </video>
+            <div className="storybook-film-meta">
+              <span>COMPLETE FILM · 00:54</span>
+              <strong>モカと、五つの記憶</strong>
+              <Link href="/film/moka-demo">作品ページで写真と全場面を見る →</Link>
+            </div>
           </div>
-          <p className="storybook-comparison-note">
-            桜色の旅は物語のつなぎとなるページとして、そのまま絵本の流れに組み込みます。
-          </p>
         </div>
       </section>
 
@@ -291,15 +275,15 @@ export default async function Home() {
         <div className="shell">
           <div className="storybook-heading">
             <div>
-              <p className="eyebrow">MIRU AND A PETAL OF SPRING</p>
+              <p className="eyebrow">FIVE MEMORIES OF MOKA</p>
               <h2>
-                一枚の花びらが、
+                雨の日も、旅の日も、
                 <br />
-                五つの記憶をつないでいく。
+                モカらしい一ページに。
               </h2>
             </div>
             <p>
-              ミルのテストストーリー「ひとひらの春」より。
+              モカの完成作品「モカと、五つの記憶」より。
               <br />
               絵・動き・文章を同じ世界観でつなぎます。
             </p>
@@ -308,9 +292,12 @@ export default async function Home() {
             {storyPages.map((page, index) => (
               <li key={page.number} className={index === 0 ? "featured" : ""}>
                 <figure>
-                  <img
+                  <Image
                     src={page.image}
                     alt={`動く絵本「${page.label}」の場面`}
+                    width={1672}
+                    height={941}
+                    sizes="(max-width: 640px) calc(100vw - 64px), (max-width: 1200px) 50vw, 1160px"
                   />
                   <figcaption>
                     <span>{page.number}</span>
@@ -323,9 +310,9 @@ export default async function Home() {
           </ol>
           <Link
             className="button button-outline storybook-preview-link"
-            href="/film/miru-demo"
+            href="/film/moka-demo"
           >
-            ミルの動くページを見る →
+            モカの作品ページを見る →
           </Link>
         </div>
       </section>

@@ -60,7 +60,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
   assert.match(html, /写真を再現するのではなく/);
   assert.match(html, /水彩・ガッシュ/);
-  assert.match(html, /一枚の花びらが/);
+  assert.match(html, /モカの記憶が/);
   assert.match(html, /二つの物語案/);
   assert.match(html, /専用ページで受け取る/);
   assert.match(html, /専用ものがたりサイト/);
@@ -68,8 +68,8 @@ test("server-renders the Japanese landing page", async () => {
     html,
     /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
   );
-  assert.match(html, /動くページを見る/);
-  assert.match(html, /ミルのテストストーリー/);
+  assert.match(html, /モカの完成作品を見る/);
+  assert.match(html, /モカの完成作品/);
   assert.match(html, /動く絵本/);
   assert.match(html, /初期(?:<!-- -->)?10(?:<!-- -->)?組/);
   assert.match(html, /24,800/);
@@ -87,7 +87,7 @@ test("server-renders the Japanese landing page", async () => {
   );
   assert.match(html, /BGM・場面ごとの物語字幕/);
   assert.doesNotMatch(html, /少し先で、待っているね|ナレーション・字幕/);
-  assert.match(html, /MIRU AND A PETAL OF SPRING/);
+  assert.match(html, /FIVE MEMORIES OF MOKA/);
   assert.doesNotMatch(html, /メモリーショート/);
   assert.doesNotMatch(html, /MEMORIAL SIGNATURE|49,800/);
   assert.doesNotMatch(
@@ -118,7 +118,7 @@ test("serves crawl controls and an absolute public sitemap", async () => {
   );
   const sitemap = await sitemapResponse.text();
   assert.match(sitemap, /<loc>http:\/\/localhost<\/loc>/);
-  assert.match(sitemap, /<loc>http:\/\/localhost\/film\/miru-demo<\/loc>/);
+  assert.match(sitemap, /<loc>http:\/\/localhost\/film\/moka-demo<\/loc>/);
   for (const path of ["contact", "terms", "privacy", "legal"]) {
     assert.match(
       sitemap,
@@ -346,17 +346,17 @@ test("uses the default social image when a memory URL is unavailable", async () 
 });
 
 test("renders the moving storybook demo", async () => {
-  const response = await render("/film/miru-demo");
+  const response = await render("/film/moka-demo");
   const html = await response.text();
-  assert.match(html, /ミルと、ひとひらの春/);
-  assert.match(html, /STORYBOOK SAMPLE/);
-  assert.match(html, /FROM PHOTO TO STORYBOOK/);
-  assert.match(html, /元写真と絵本ページの比較位置/);
-  assert.match(html, /customer-01-cherry-path\.jpg/);
-  assert.match(html, /A PAGE COMES ALIVE/);
-  assert.match(html, /春風から届いた手紙/);
-  assert.match(html, /ひとひらが/);
-  assert.match(html, /5秒の制作テスト/);
+  assert.match(html, /モカと、/);
+  assert.match(html, /COMPLETE STORYBOOK SAMPLE/);
+  assert.match(html, /COMPLETE FILM/);
+  assert.match(html, /complete-film\.mp4/);
+  assert.match(html, /FIVE MOVING PAGES/);
+  assert.match(html, /雨音を待つ玄関/);
+  assert.match(html, /MOKA'S PHOTO ALBUM/);
+  assert.match(html, /五つの思い出から生まれた10枚/);
+  assert.doesNotMatch(html, /FROM PHOTO TO STORYBOOK|before-after|比較位置/);
 });
 
 test("starter preview was removed", async () => {
