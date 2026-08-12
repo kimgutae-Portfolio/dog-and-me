@@ -437,8 +437,13 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(authPanel, /requestedMode\(searchParams\.get\("mode"\)\)/);
   assert.match(
     authPanel,
-    /loading \|\| \(user && !searchParams\.get\("confirmed"\)\)/,
+    /mode !== "update-password" && !searchParams\.get\("confirmed"\)/,
   );
+  assert.match(authPanel, /event !== "PASSWORD_RECOVERY"/);
+  assert.match(authPanel, /auth\.updateUser\(\{/);
+  assert.match(authPanel, /パスワード（確認）/);
+  assert.match(authPanel, /確認用パスワードが一致していません。/);
+  assert.match(authPanel, /パスワードを忘れた方はこちら/);
   assert.match(authPanel, /setSignupConfirmationEmail\(email\.trim\(\)\)/);
   assert.match(authPanel, /role="alertdialog"/);
   assert.match(authPanel, /確認メールを送信しました。/);
