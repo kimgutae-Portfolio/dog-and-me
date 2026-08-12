@@ -24,44 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-const scenes = [
-  {
-    number: "01",
-    title: "雨音を待つ玄関",
-    sentence: "雨の日も、扉の向こうを静かに待っていた。",
-    video: "/film/moka/01-rainy-entryway.mp4",
-    poster: "/film/moka/01-storybook-rain.webp",
-  },
-  {
-    number: "02",
-    title: "はじめての電車旅",
-    sentence: "小さな駅で、知らない景色が動きはじめた。",
-    video: "/film/moka/02-first-train-trip.mp4",
-    poster: "/film/moka/02-storybook-train.webp",
-  },
-  {
-    number: "03",
-    title: "パンの香る朝",
-    sentence: "いつもの朝には、好きな匂いとまなざしがある。",
-    video: "/film/moka/03-bread-morning.mp4",
-    poster: "/film/moka/03-storybook-bread.webp",
-  },
-  {
-    number: "04",
-    title: "銀杏色の散歩道",
-    sentence: "足もといっぱいの秋が、歩くたびに揺れた。",
-    video: "/film/moka/04-autumn-ginkgo.mp4",
-    poster: "/film/moka/04-storybook-autumn.webp",
-  },
-  {
-    number: "05",
-    title: "灯りを眺める夕べ",
-    sentence: "一日の終わりを、やわらかな灯りと分け合った。",
-    video: "/film/moka/05-lantern-evening.mp4",
-    poster: "/film/moka/05-storybook-lantern.webp",
-  },
-] as const;
-
 const album = [
   { src: "/film/moka/01-storybook-rain.webp", title: "雨音を待つ玄関", width: 1672, height: 941 },
   { src: "/film/moka/10-lantern-evening.webp", title: "灯りを眺める夕べ", width: 1448, height: 1086 },
@@ -127,37 +89,11 @@ export default function MokaDemoPage() {
         </div>
       </section>
 
-      <section className="moka-scenes">
-        <div className="moka-shell">
-          <div className="moka-heading">
-            <div>
-              <p>02 / FIVE MOVING PAGES</p>
-              <h2>一場面ずつ、<br />そっと動きはじめる。</h2>
-            </div>
-            <span>各ページの動きを個別にご覧いただけます</span>
-          </div>
-          <ol className="moka-scene-grid">
-            {scenes.map((scene) => (
-              <li key={scene.number}>
-                <video controls preload="metadata" playsInline poster={scene.poster} aria-label={`${scene.title}の映像`}>
-                  <source src={scene.video} type="video/mp4" />
-                </video>
-                <div>
-                  <span>{scene.number}</span>
-                  <h3>{scene.title}</h3>
-                  <p>{scene.sentence}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       <section className="moka-album">
         <div className="moka-shell">
           <div className="moka-heading">
             <div>
-              <p>03 / MOKA&apos;S PHOTO ALBUM</p>
+              <p>02 / MOKA&apos;S PHOTO ALBUM</p>
               <h2>モカの時間を、<br />一つの写真帖に。</h2>
             </div>
             <span>五つの思い出から生まれた10枚</span>
@@ -165,7 +101,7 @@ export default function MokaDemoPage() {
           <p className="moka-album-intro">
             制作に使った写真も、物語のために描いた一場面も、ここでは区別せずモカのアルバムとして並べています。
           </p>
-          <ol className="moka-album-grid">
+          <ol className="moka-album-grid" aria-label="モカの写真アルバム。スマートフォンでは左右にスワイプできます。">
             {album.map((photo, index) => (
               <li key={photo.src}>
                 <figure>
@@ -185,7 +121,7 @@ export default function MokaDemoPage() {
       </section>
 
       <section className="moka-letter">
-        <p>04 / A LETTER FOR MOKA</p>
+        <p>03 / A LETTER FOR MOKA</p>
         <blockquote>
           モカへ。<br />雨の日も、遠くへ出かけた日も、<br />何気ない朝も、ぜんぶ大切な物語だよ。
         </blockquote>

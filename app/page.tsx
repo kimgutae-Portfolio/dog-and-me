@@ -6,6 +6,8 @@ import { SiteHeader } from "./components/SiteHeader";
 import { LivePriceCard } from "./components/LivePriceCard";
 import { MobileStickyCta } from "./components/MobileStickyCta";
 import { StartStoryLink } from "./components/StartStoryLink";
+import { HomeStoryMotion } from "./components/HomeStoryMotion";
+import { MiruBeforeAfter } from "./film/miru-demo/MiruBeforeAfter";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 import {
   APPLICATIONS_OPEN,
@@ -32,18 +34,35 @@ const storyPages = [
     label: "雨音を待つ玄関",
     sentence: "雨の日も、扉の向こうを静かに待っていた。",
     image: "/film/moka/01-storybook-rain.webp",
+    original: "/film/moka/06-rainy-entryway.webp",
   },
   {
     number: "02",
     label: "はじめての電車旅",
     sentence: "小さな駅で、知らない景色が動きはじめた。",
     image: "/film/moka/02-storybook-train.webp",
+    original: "/film/moka/07-first-train-trip.webp",
   },
   {
     number: "03",
     label: "パンの香る朝",
     sentence: "いつもの朝には、好きな匂いとまなざしがある。",
     image: "/film/moka/03-storybook-bread.webp",
+    original: "/film/moka/08-bread-morning.webp",
+  },
+  {
+    number: "04",
+    label: "銀杏色の散歩道",
+    sentence: "足もといっぱいの秋が、歩くたびに揺れた。",
+    image: "/film/moka/04-storybook-autumn.webp",
+    original: "/film/moka/09-autumn-ginkgo.webp",
+  },
+  {
+    number: "05",
+    label: "灯りを眺める夕べ",
+    sentence: "一日の終わりを、やわらかな灯りと分け合った。",
+    image: "/film/moka/05-storybook-lantern.webp",
+    original: "/film/moka/10-lantern-evening.webp",
   },
 ] as const;
 
@@ -158,6 +177,7 @@ export default async function Home() {
       />
       <SiteHeader />
       <MobileStickyCta />
+      <HomeStoryMotion />
 
       <section className="storybook-hero" aria-labelledby="hero-title">
         <Image
@@ -283,31 +303,35 @@ export default async function Home() {
               </h2>
             </div>
             <p>
-              モカの完成作品「モカと、五つの記憶」より。
+              カードを横に送り、中央のつまみを左右に動かすと、
               <br />
-              絵・動き・文章を同じ世界観でつなぎます。
+              元の写真と描き下ろしたページを見比べられます。
             </p>
           </div>
-          <ol className="storybook-page-grid">
-            {storyPages.map((page, index) => (
-              <li key={page.number} className={index === 0 ? "featured" : ""}>
-                <figure>
-                  <Image
-                    src={page.image}
-                    alt={`動く絵本「${page.label}」の場面`}
-                    width={1672}
-                    height={941}
-                    sizes="(max-width: 640px) calc(100vw - 64px), (max-width: 1200px) 50vw, 1160px"
-                  />
-                  <figcaption>
-                    <span>{page.number}</span>
-                    <strong>{page.label}</strong>
-                  </figcaption>
-                </figure>
-                <blockquote>{page.sentence}</blockquote>
-              </li>
-            ))}
-          </ol>
+          <div className="storybook-memory-scroll" aria-label="モカの五つの思い出">
+            <ol className="storybook-memory-track">
+              {storyPages.map((page) => (
+                <li key={page.number}>
+                  <figure>
+                    <MiruBeforeAfter
+                      beforeSrc={page.original}
+                      afterSrc={page.image}
+                      beforeAlt={`${page.label}の元写真`}
+                      afterAlt={`動く絵本「${page.label}」の完成ページ`}
+                    />
+                    <figcaption>
+                      <span>{page.number}</span>
+                      <strong>{page.label}</strong>
+                    </figcaption>
+                  </figure>
+                  <blockquote>{page.sentence}</blockquote>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <p className="storybook-memory-scroll-note">
+            <span aria-hidden="true">←</span> 横にスクロールして5つの思い出を見る <span aria-hidden="true">→</span>
+          </p>
           <Link
             className="button button-outline storybook-preview-link"
             href="/film/moka-demo"

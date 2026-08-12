@@ -66,6 +66,7 @@ export function MiruBeforeAfter({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      aria-label={`${beforeAlt}と${afterAlt}の比較`}
     >
       <img className="miru-before-after-image" src={afterSrc} alt={afterAlt} />
       <div
@@ -73,7 +74,12 @@ export function MiruBeforeAfter({
         style={{ width: `${position}%` }}
         aria-hidden="true"
       >
-        <img className="miru-before-after-image" src={beforeSrc} alt="" />
+        <img
+          className="miru-before-after-image"
+          src={beforeSrc}
+          alt=""
+          style={{ width: position > 0 ? `${10000 / position}%` : "100%" }}
+        />
       </div>
       <div
         className="miru-before-after-label miru-before-after-label-before"
