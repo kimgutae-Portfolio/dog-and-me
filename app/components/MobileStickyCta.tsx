@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../lib/site";
 import { StartStoryLink } from "./StartStoryLink";
 
@@ -31,13 +32,24 @@ export function MobileStickyCta() {
       aria-label="お申し込み"
     >
       <div>
-        <p>{APPLICATIONS_OPEN ? "MOVING STORYBOOK" : "COMING SOON"}</p>
+        <p>
+          {APPLICATIONS_OPEN
+            ? `MONITOR PRICE · 物語案の確認までは無料`
+            : "COMING SOON"}
+        </p>
         <strong>
-          {APPLICATIONS_OPEN ? "先着10組 モニター受付中" : PRELAUNCH_CTA}
+          {APPLICATIONS_OPEN ? (
+            <>
+              ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}
+              <span>（税込）</span>
+            </>
+          ) : (
+            PRELAUNCH_CTA
+          )}
         </strong>
       </div>
       <StartStoryLink className="button button-cream">
-        物語をつくる <span aria-hidden="true">→</span>
+        無料で始める <span aria-hidden="true">→</span>
       </StartStoryLink>
     </aside>
   );

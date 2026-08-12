@@ -229,26 +229,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <aside className="storybook-quick-facts" aria-label="料金と納期のご案内">
-        <div className="shell">
-          <div>
-            <span>MONITOR PRICE</span>
-            <strong>¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）</strong>
-          </div>
-          <div>
-            <span>PAYMENT</span>
-            <strong>物語案の確認までは無料</strong>
-          </div>
-          <div>
-            <span>DELIVERY</span>
-            <strong>お支払い後 10〜14営業日</strong>
-          </div>
-          <StartStoryLink className="storybook-quick-facts-link">
-            まずは無料で始める <span aria-hidden="true">→</span>
-          </StartStoryLink>
-        </div>
-      </aside>
-
       <section className="storybook-film-showcase section" id="sample-film">
         <div className="shell">
           <div className="storybook-heading">

@@ -66,7 +66,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /専用ものがたりサイト/);
   assert.match(html, /hero-owner-dog-rainy-home\.png/);
   assert.match(html, /物語案の確認までは無料/);
-  assert.match(html, /お支払い後 10〜14営業日/);
+  assert.match(html, /通常10〜14営業日が目安/);
   assert.ok(
     html.indexOf("A COMPLETE MOVING STORYBOOK") <
       html.indexOf("NOT A RE-CREATION, A NEW STORY"),
@@ -534,16 +534,21 @@ test("concept selection requires an explicit send and stays editable before prod
 
 test("includes mobile breathing room, sticky conversion action, and touch story snapping", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [css, page, story] = await Promise.all([
+  const [css, page, story, mobileCta] = await Promise.all([
     readFile(new URL("app/globals.css", root), "utf8"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/components/ScrollMemoryStory.tsx", root), "utf8"),
+    readFile(new URL("app/components/MobileStickyCta.tsx", root), "utf8"),
   ]);
   assert.match(css, /\.shell \{ width: calc\(100% - 40px\); \}/);
   assert.match(css, /\.mobile-sticky-cta\.visible/);
   assert.match(css, /focus-visible/);
   assert.match(css, /\.photo-guide-photo-types/);
   assert.match(page, /MobileStickyCta/);
+  assert.doesNotMatch(page, /storybook-quick-facts/);
+  assert.match(mobileCta, /MEMORY_FILM_PRICING\.launchPrice/);
+  assert.match(mobileCta, /物語案の確認までは無料/);
+  assert.match(mobileCta, /無料で始める/);
   assert.match(story, /touchstart/);
   assert.match(story, /moveToChapter\(next\)/);
 });
