@@ -299,7 +299,10 @@ def transition_spec(previous_kind, next_kind):
 
 def page_curl_filter(previous_label, input_index, duration, offset, output_label):
     """A bowed paper edge plus a neutral shadow, instead of a PPT-style wipe."""
-    boundary = "W*(1-P)+sin(Y/H*PI)*W*0.08*sin(P*PI)"
+    # FFmpeg xfade exposes P as 1 at the start and 0 at the end. Moving the
+    # boundary with W*P keeps A fully visible first, then reveals B exactly
+    # once from right to left. W*(1-P) flashes B, returns to A, then cuts to B.
+    boundary = "W*P+sin(Y/H*PI)*W*0.08*sin(P*PI)"
     expression = (
         f"if(lt(X,{boundary}),A,"
         f"if(lt(X,{boundary}+5),if(eq(PLANE,0),235,128),"

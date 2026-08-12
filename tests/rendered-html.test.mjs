@@ -939,6 +939,7 @@ test("stores storybook page sentences and burns them into the final video", asyn
   assert.match(assembler, /max_width = W - 360/);
   assert.match(assembler, /物語の文章を重ねています/);
   assert.match(assembler, /page_curl_filter/);
+  assert.match(assembler, /boundary = "W\*P\+/);
   assert.match(assembler, /tpad=start_mode=clone:start_duration=/);
   assert.match(assembler, /stop_mode=clone:stop_duration=/);
   assert.match(assembler, /CARD_DISSOLVE_SECONDS if first_story/);
