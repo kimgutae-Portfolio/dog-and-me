@@ -302,6 +302,8 @@ export type OrderMemory = {
 export type MemoryShare = {
   code: string;
   active: boolean;
+  customer_slug: string;
+  pet_slug: string;
 };
 
 export type FilmConcept = {

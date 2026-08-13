@@ -23,8 +23,15 @@ function shareRow(data: unknown): MemoryShare | null {
   if (!row || typeof row !== "object") return null;
   const candidate = row as Partial<MemoryShare>;
   return typeof candidate.code === "string" &&
-    typeof candidate.active === "boolean"
-    ? { code: candidate.code, active: candidate.active }
+    typeof candidate.active === "boolean" &&
+    typeof candidate.customer_slug === "string" &&
+    typeof candidate.pet_slug === "string"
+    ? {
+        code: candidate.code,
+        active: candidate.active,
+        customer_slug: candidate.customer_slug,
+        pet_slug: candidate.pet_slug,
+      }
     : null;
 }
 
@@ -41,6 +48,7 @@ export function MemoryShareManager({
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const [working, setWorking] = useState(false);
   const [notice, setNotice] = useState("");
+  const [copyPopup, setCopyPopup] = useState(false);
   const [error, setError] = useState("");
 
   const photos = useMemo(
@@ -56,7 +64,15 @@ export function MemoryShareManager({
   );
   const visiblePhotos = photos.filter((asset) => asset.album_visible);
   const shareUrl =
-    share?.code && origin ? `${origin}/memory/${share.code}` : "";
+    share?.customer_slug && share?.pet_slug && origin
+      ? `${origin}/${encodeURIComponent(share.customer_slug)}/${encodeURIComponent(share.pet_slug)}`
+      : "";
+
+  useEffect(() => {
+    if (!copyPopup) return;
+    const timer = window.setTimeout(() => setCopyPopup(false), 2400);
+    return () => window.clearTimeout(timer);
+  }, [copyPopup]);
 
   useEffect(() => {
     if (!photos.length) return;
@@ -210,8 +226,12 @@ export function MemoryShareManager({
 
   const copyShareUrl = async () => {
     if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
-    setNotice("共有URLをコピーしました。");
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopyPopup(true);
+    } catch {
+      setError("URLをコピーできませんでした。URLを長押ししてコピーしてください。");
+    }
   };
 
   const openShareSheet = async () => {
@@ -229,6 +249,15 @@ export function MemoryShareManager({
 
   return (
     <section className="studio-card memory-share-manager">
+      {copyPopup && (
+        <div className="share-copy-popup" role="status" aria-live="polite">
+          <span aria-hidden="true">✓</span>
+          <div>
+            <strong>URLをコピーしました</strong>
+            <small>ご家族へそのまま送れます。</small>
+          </div>
+        </div>
+      )}
       <div className="card-head">
         <div>
           <p className="eyebrow">MEMORY ALBUM &amp; FAMILY SHARE</p>

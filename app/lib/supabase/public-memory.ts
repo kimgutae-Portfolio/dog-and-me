@@ -33,6 +33,7 @@ export type SharedMemoryPayload = {
 };
 
 const shareCodePattern = /^[a-f0-9]{64}$/i;
+const personalSlugPattern = /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u;
 
 function getPublicMemoryClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -50,6 +51,28 @@ export async function getPublicSharedMemory(shareCode: string): Promise<SharedMe
   if (!supabase) return null;
 
   const { data, error } = await supabase.rpc("get_shared_memory_by_code", { p_share_code: shareCode });
+  if (error || !data || typeof data !== "object") return null;
+  return data as SharedMemoryPayload;
+}
+
+export async function getPublicSharedMemoryBySlug(
+  customerSlug: string,
+  petSlug: string,
+): Promise<SharedMemoryPayload | null> {
+  if (
+    !personalSlugPattern.test(customerSlug) ||
+    !personalSlugPattern.test(petSlug) ||
+    customerSlug.length > 80 ||
+    petSlug.length > 80
+  )
+    return null;
+  const supabase = getPublicMemoryClient();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase.rpc("get_shared_memory_by_slug", {
+    p_customer_slug: customerSlug,
+    p_pet_slug: petSlug,
+  });
   if (error || !data || typeof data !== "object") return null;
   return data as SharedMemoryPayload;
 }

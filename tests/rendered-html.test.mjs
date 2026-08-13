@@ -275,6 +275,14 @@ test("keeps private product routes out of search results", async () => {
     memoryHtml,
     /<meta property="og:image" content="https:\/\/www\.wanmemory\.com\/api\/memory\/share-demo\/og"/i,
   );
+  const personalSiteResponse = await render("/onse0613/moka");
+  const personalSiteHtml = await personalSiteResponse.text();
+  assert.equal(personalSiteResponse.status, 200);
+  assert.match(
+    personalSiteHtml,
+    /<meta name="robots" content="noindex, follow"\s*\/?\s*>/i,
+  );
+  assert.doesNotMatch(personalSiteHtml, /<link rel="canonical"/i);
   const demoResponse = await render("/film/moka-demo");
   const demoHtml = await demoResponse.text();
   assert.doesNotMatch(demoHtml, /<meta name="robots" content="noindex/i);
@@ -296,6 +304,7 @@ test("server-renders the connected MVP routes", async () => {
     "/admin",
     "/film/moka-demo",
     "/memory/share-demo",
+    "/onse0613/moka",
   ]) {
     const response = await render(path);
     assert.equal(response.status, 200, `${path} should render`);
@@ -311,6 +320,8 @@ test("memory sharing keeps family links private and album access scoped", async 
     publicMemory,
     socialImage,
     migration,
+    personalSite,
+    slugMigration,
   ] = await Promise.all([
     readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
     readFile(
@@ -324,6 +335,11 @@ test("memory sharing keeps family links private and album access scoped", async 
       new URL("supabase/migrations/202607170001_memory_sharing.sql", root),
       "utf8",
     ),
+    readFile(new URL("app/components/PersonalStorybookSite.tsx", root), "utf8"),
+    readFile(
+      new URL("supabase/migrations/202608130001_personal_site_slugs.sql", root),
+      "utf8",
+    ),
   ]);
   assert.match(manager, /このURLが、その子だけのホームページです/);
   assert.match(manager, /LINEなどで共有/);
@@ -331,8 +347,12 @@ test("memory sharing keeps family links private and album access scoped", async 
   assert.match(manager, /30枚まで/);
   assert.match(sharedPage, /get_shared_memory/);
   assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
-  assert.match(sharedPage, /PERSONAL STORYBOOK SITE/);
-  assert.match(sharedPage, /CustomerCharacterGuide/);
+  assert.match(sharedPage, /PersonalStorybookSite/);
+  assert.match(personalSite, /PERSONAL STORYBOOK SITE/);
+  assert.match(personalSite, /01 \/ COMPLETE FILM/);
+  assert.match(personalSite, /02 \/.*PHOTO ALBUM/);
+  assert.match(personalSite, /03 \/ A LETTER FOR/);
+  assert.doesNotMatch(personalSite, /THE STORY/);
   assert.doesNotMatch(sharedPage, /家族共有ページ|FAMILY MEMORY SITE/);
   assert.match(metadataPage, /generateMetadata/);
   assert.match(metadataPage, /follow: true/);
@@ -348,11 +368,16 @@ test("memory sharing keeps family links private and album access scoped", async 
   assert.match(migration, /manage_memory_share/);
   assert.match(migration, /order_assets_public_shared_select/);
   assert.match(migration, /where share_links\.token = p_token/);
+  assert.match(manager, /share-copy-popup/);
+  assert.match(manager, /URLをコピーしました/);
+  assert.match(manager, /customer_slug/);
+  assert.match(slugMigration, /get_shared_memory_by_slug/);
+  assert.match(slugMigration, /split_part\(profile\.email, '@', 1\)/);
 });
 
 test("adds the animated character to the share-code website", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, sharedPage, payload] = await Promise.all([
+  const [migration, sharedPage, personalSite, payload] = await Promise.all([
     readFile(
       new URL(
         "supabase/migrations/202608120002_shared_character_sprite.sql",
@@ -364,13 +389,15 @@ test("adds the animated character to the share-code website", async () => {
       new URL("app/memory/[shareId]/SharedMemorySite.tsx", root),
       "utf8",
     ),
+    readFile(new URL("app/components/PersonalStorybookSite.tsx", root), "utf8"),
     readFile(new URL("app/lib/supabase/public-memory.ts", root), "utf8"),
   ]);
   assert.match(migration, /get_shared_memory_by_code/);
   assert.match(migration, /asset\.category = 'character_sprite'/);
   assert.match(migration, /or asset\.category = 'character_sprite'/);
   assert.match(sharedPage, /loaded\.character\?\.storage_path/);
-  assert.match(sharedPage, /CustomerCharacterGuide/);
+  assert.match(sharedPage, /characterSpriteUrl/);
+  assert.match(personalSite, /CustomerCharacterGuide/);
   assert.match(payload, /character:/);
 });
 

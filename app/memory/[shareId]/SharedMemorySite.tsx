@@ -1,17 +1,21 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { PersonalStorybookSite } from "../../components/PersonalStorybookSite";
 import { getSupabaseBrowserClient } from "../../lib/supabase/client";
 import type { SharedMemoryPayload } from "../../lib/supabase/public-memory";
-import { CustomerCharacterGuide } from "../../film/[orderId]/CustomerCharacterGuide";
 
 type SharedImage = SharedMemoryPayload["images"][number] & { url: string };
 
-export function SharedMemorySite() {
+export function SharedMemorySite({
+  customerSlug,
+  petSlug,
+}: {
+  customerSlug?: string;
+  petSlug?: string;
+} = {}) {
   const params = useParams<{ shareId: string }>();
   const [memory, setMemory] = useState<SharedMemoryPayload | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
@@ -20,211 +24,72 @@ export function SharedMemorySite() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!params.shareId) return;
+  const loadSharedMemory = useCallback(async (rpc: string, rpcParams: Record<string, string>) => {
     const supabase = getSupabaseBrowserClient();
-    const load = async () => {
-      const { data, error: memoryError } = await supabase.rpc(
-        "get_shared_memory_by_code",
-        { p_share_code: params.shareId },
-      );
-      if (memoryError || !data) {
-        setError("このものがたりサイトは現在公開されていません。");
-        setLoading(false);
-        return;
-      }
-      const loaded = data as SharedMemoryPayload;
-      const paths = [
-        loaded.delivery.video_storage_path,
-        ...loaded.images.map((image) => image.storage_path),
-        loaded.character?.storage_path,
-      ].filter((path): path is string => Boolean(path));
-      const { data: signed } = await supabase.storage
-        .from("order-assets")
-        .createSignedUrls(paths, 900);
-      const urlByPath = new Map<string, string>();
-      signed?.forEach((item, index) => {
-        if (item.signedUrl) urlByPath.set(paths[index], item.signedUrl);
-      });
-      const finalVideoUrl =
-        urlByPath.get(loaded.delivery.video_storage_path) ?? "";
-      if (!finalVideoUrl) {
-        setError("映像を表示できません。専用URLの有効状態をご確認ください。");
-        setLoading(false);
-        return;
-      }
-      setMemory(loaded);
-      setVideoUrl(finalVideoUrl);
-      setImages(
-        loaded.images
-          .map((image) => ({
-            ...image,
-            url: urlByPath.get(image.storage_path) ?? "",
-          }))
-          .filter((image) => image.url),
-      );
-      setCharacterSpriteUrl(
-        loaded.character?.storage_path
-          ? (urlByPath.get(loaded.character.storage_path) ?? "")
-          : "",
-      );
+    const { data, error: memoryError } = await supabase.rpc(rpc, rpcParams);
+    if (memoryError || !data) {
+      setError("このものがたりサイトは現在公開されていません。");
       setLoading(false);
-    };
-    load();
-  }, [params.shareId]);
+      return;
+    }
+    const loaded = data as SharedMemoryPayload;
+    const paths = [loaded.delivery.video_storage_path, ...loaded.images.map((image) => image.storage_path), loaded.character?.storage_path]
+      .filter((path): path is string => Boolean(path));
+    const { data: signed } = await supabase.storage.from("order-assets").createSignedUrls(paths, 900);
+    const urlByPath = new Map<string, string>();
+    signed?.forEach((item, index) => {
+      if (item.signedUrl) urlByPath.set(paths[index], item.signedUrl);
+    });
+    const finalVideoUrl = urlByPath.get(loaded.delivery.video_storage_path) ?? "";
+    if (!finalVideoUrl) {
+      setError("映像を表示できません。専用URLの公開状態をご確認ください。");
+      setLoading(false);
+      return;
+    }
+    setMemory(loaded);
+    setVideoUrl(finalVideoUrl);
+    setImages(loaded.images.map((image) => ({ ...image, url: urlByPath.get(image.storage_path) ?? "" })).filter((image) => image.url));
+    setCharacterSpriteUrl(loaded.character?.storage_path ? urlByPath.get(loaded.character.storage_path) ?? "" : "");
+    setLoading(false);
+  }, []);
 
-  if (loading)
-    return <div className="wizard-loading">大切な思い出を準備しています…</div>;
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (customerSlug && petSlug) {
+        loadSharedMemory("get_shared_memory_by_slug", {
+          p_customer_slug: customerSlug,
+          p_pet_slug: petSlug,
+        });
+        return;
+      }
+      if (params.shareId)
+        loadSharedMemory("get_shared_memory_by_code", { p_share_code: params.shareId });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [customerSlug, loadSharedMemory, params.shareId, petSlug]);
+
+  if (loading) return <div className="wizard-loading">大切な思い出を準備しています…</div>;
   if (error || !memory)
     return (
       <main className="film-private-error shared-memory-error">
         <p className="eyebrow">PRIVATE MEMORY</p>
         <h1>ページを表示できません。</h1>
         <p>{error}</p>
-        <Link className="button button-primary" href="/">
-          WAN MEMORYへ戻る
-        </Link>
+        <Link className="button button-primary" href="/">WAN MEMORYへ戻る</Link>
       </main>
     );
 
-  const { order, delivery, concept } = memory;
-  const heroImage = images[0]?.url;
-
   return (
-    <main className="private-film-page shared-memory-page">
-      <header className="private-film-nav">
-        <Link className="brand" href="/">
-          <span className="brand-mark">WM</span>
-          <span className="brand-type">
-            WAN MEMORY<small>PERSONAL STORYBOOK SITE</small>
-          </span>
-        </Link>
-        <span className="shared-memory-badge">その子だけのものがたりサイト</span>
-      </header>
-      <section className="private-film-hero shared-memory-hero">
-        {heroImage && (
-          <div
-            className="shared-memory-hero-photo"
-            style={{ backgroundImage: `url(${heroImage})` }}
-          />
-        )}
-        <div className="private-film-glow" />
-        <div>
-          <p>PRIVATE MOVING STORYBOOK</p>
-          <h1>{delivery.title}</h1>
-          <span>
-            {order.pet_name} · {order.breed}
-          </span>
-        </div>
-      </section>
-
-      <section className="private-film-section">
-        <div className="private-film-heading">
-          <div>
-            <p>YOUR MOVING STORYBOOK</p>
-            <h2>
-              一緒に過ごした時間を、
-              <br />
-              一冊のような動く物語に。
-            </h2>
-          </div>
-          <span>閲覧専用 · 専用URL</span>
-        </div>
-        <div className="private-video-frame">
-          <video
-            src={videoUrl}
-            controls
-            controlsList="nodownload noplaybackrate"
-            disablePictureInPicture
-            playsInline
-            onContextMenu={(event) => event.preventDefault()}
-          />
-        </div>
-        <p className="private-video-note">
-          ダウンロード操作は提供していません。画面録画などを技術的に完全に防ぐことはできません。
-        </p>
-      </section>
-
-      <section className="private-film-quote">
-        <p>FOR {order.pet_name.toUpperCase()}</p>
-        <blockquote>
-          「
-          {order.message_to_pet ||
-            delivery.customer_message ||
-            "これからも、思い出の中で一緒に。"}
-          」
-        </blockquote>
-      </section>
-
-      {concept && (
-        <section className="private-film-section private-film-story">
-          <div className="private-film-heading">
-            <div>
-              <p>THE STORY</p>
-              <h2>{concept.title}</h2>
-            </div>
-            <span>{concept.tone}</span>
-          </div>
-          <p className="private-film-summary">{concept.summary}</p>
-          <ol>
-            {concept.scenes.map((scene, index) => (
-              <li key={`${index}-${scene}`}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <strong>{scene}</strong>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-
-      {images.length > 0 && (
-        <section className="private-film-section private-film-gallery">
-          <div className="private-film-heading">
-            <div>
-              <p>PHOTO MEMORIES</p>
-              <h2>
-                何度でも開ける、
-                <br />
-                思い出のアルバム。
-              </h2>
-            </div>
-            <span>{images.length} PHOTOS</span>
-          </div>
-          <div>
-            {images.map((image) => (
-              <figure key={image.id}>
-                <img
-                  src={image.url}
-                  alt={`${order.pet_name}の思い出写真`}
-                  draggable={false}
-                  onContextMenu={(event) => event.preventDefault()}
-                />
-                <figcaption>
-                  {image.caption || `${order.pet_name}との思い出`}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <footer className="private-film-footer">
-        <div>
-          <span className="brand-mark">WM</span>
-          <p>
-            WAN MEMORY<small>MOVING STORYBOOKS FOR YOUR DOG</small>
-          </p>
-        </div>
-        <span>
-          {order.pet_name} · {new Date(order.created_at).getFullYear()}
-        </span>
-      </footer>
-      {characterSpriteUrl && (
-        <CustomerCharacterGuide
-          spriteUrl={characterSpriteUrl}
-          petName={order.pet_name}
-        />
-      )}
-    </main>
+    <PersonalStorybookSite
+      title={memory.delivery.title}
+      petName={memory.order.pet_name}
+      breed={memory.order.breed}
+      purpose={memory.order.purpose}
+      createdAt={memory.order.created_at}
+      message={memory.order.message_to_pet || memory.delivery.customer_message || "これからも、思い出の中で一緒に。"}
+      videoUrl={videoUrl}
+      images={images}
+      characterSpriteUrl={characterSpriteUrl}
+    />
   );
 }
