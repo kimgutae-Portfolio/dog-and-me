@@ -3521,35 +3521,54 @@ export function AdminStudio() {
                               (a.memory_photo_sort_order ?? 99) -
                               (b.memory_photo_sort_order ?? 99),
                           );
-                        const primaryPhoto = storyPhotos[0] ?? null;
                         return (
                           <article key={memory.id}>
                             <strong>
                               STORY {String(memory.sort_order).padStart(2, "0")}
                             </strong>
-                            {primaryPhoto && assetUrls[primaryPhoto.id] ? (
-                              <a
-                                href={assetUrls[primaryPhoto.id]}
-                                target="_blank"
-                                rel="noreferrer"
+                            {storyPhotos.length > 0 ? (
+                              <div
+                                className="admin-reference-photo-list"
+                                aria-label={`${memory.title}に登録された写真 ${storyPhotos.length}枚`}
                               >
-                                <span
-                                  className="admin-photo-thumb"
-                                  role="img"
-                                  aria-label={`${memory.title}の基準写真`}
-                                  style={{
-                                    backgroundImage: `url(${assetUrls[primaryPhoto.id]})`,
-                                  }}
-                                />
-                              </a>
+                                {storyPhotos.map((photo, index) =>
+                                  assetUrls[photo.id] ? (
+                                    <a
+                                      href={assetUrls[photo.id]}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      title={photo.original_filename}
+                                      key={photo.id}
+                                    >
+                                      <span
+                                        className="admin-photo-thumb"
+                                        role="img"
+                                        aria-label={`${memory.title}の${index === 0 ? "基準写真" : `補助写真${index}`}`}
+                                        style={{
+                                          backgroundImage: `url(${assetUrls[photo.id]})`,
+                                        }}
+                                      />
+                                      <em>{index === 0 ? "基準" : `補助${index}`}</em>
+                                    </a>
+                                  ) : (
+                                    <span
+                                      className="admin-reference-photo-loading"
+                                      key={photo.id}
+                                    >
+                                      読み込み中
+                                    </span>
+                                  ),
+                                )}
+                              </div>
                             ) : (
                               <span className="admin-reference-empty">
                                 基準写真なし
                               </span>
                             )}
                             <small>
-                              {memory.title} · 基準1枚 + 補助
-                              {Math.max(0, storyPhotos.length - 1)}枚
+                              {memory.title} · 全{storyPhotos.length}枚（基準
+                              {storyPhotos.length > 0 ? 1 : 0}枚 + 補助
+                              {Math.max(0, storyPhotos.length - 1)}枚）
                             </small>
                           </article>
                         );

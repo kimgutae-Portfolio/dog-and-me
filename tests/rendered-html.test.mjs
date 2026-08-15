@@ -1048,7 +1048,11 @@ test("uses story-specific photo sources and requires operator approval", async (
   assert.match(admin, /p_status: "reviewing_materials"/);
   assert.match(admin, /物語と写真を承認する/);
   assert.match(admin, /物語ごとの制作素材チェック/);
+  assert.match(admin, /admin-reference-photo-list/);
+  assert.match(admin, /storyPhotos\.map/);
+  assert.match(admin, /全\{storyPhotos\.length\}枚/);
   assert.match(css, /\.memory-photo-role/);
+  assert.match(css, /\.admin-reference-photo-list/);
 });
 
 test("stores storybook page sentences and burns them into the final video", async () => {

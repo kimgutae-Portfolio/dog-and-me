@@ -2475,6 +2475,12 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-reference-photo-grid .admin-photo-thumb { width: 100%; height: 100%; display: block; }
 .admin-reference-empty { display: grid; place-items: center; color: var(--muted); background: #ded8cc; font-size: 9px; }
 .admin-reference-photo-grid article > small { margin-top: 7px; color: var(--muted); }
+.admin-reference-photo-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+.admin-reference-photo-list > a { min-width: 0; aspect-ratio: 1; position: relative; display: block; overflow: hidden; background: #ded8cc; }
+.admin-reference-photo-list .admin-photo-thumb { transition: transform .25s ease; }
+.admin-reference-photo-list > a:hover .admin-photo-thumb { transform: scale(1.04); }
+.admin-reference-photo-list em { padding: 4px 5px; position: absolute; right: 3px; bottom: 3px; color: white; background: rgba(37,44,38,.76); font-size: 6px; font-style: normal; letter-spacing: .06em; }
+.admin-reference-photo-loading { aspect-ratio: 1; display: grid; place-items: center; color: var(--muted); background: #ded8cc; font-size: 7px; }
 .admin-photo-analysis-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 @media (max-width: 900px) {
