@@ -3531,34 +3531,54 @@ export function AdminStudio() {
                                 className="admin-reference-photo-list"
                                 aria-label={`${memory.title}に登録された写真 ${storyPhotos.length}枚`}
                               >
-                                {storyPhotos.map((photo, index) =>
-                                  assetUrls[photo.id] ? (
-                                    <a
-                                      href={assetUrls[photo.id]}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      title={photo.original_filename}
-                                      key={photo.id}
-                                    >
-                                      <span
-                                        className="admin-photo-thumb"
-                                        role="img"
-                                        aria-label={`${memory.title}の${index === 0 ? "基準写真" : `補助写真${index}`}`}
-                                        style={{
-                                          backgroundImage: `url(${assetUrls[photo.id]})`,
-                                        }}
-                                      />
-                                      <em>{index === 0 ? "基準" : `補助${index}`}</em>
-                                    </a>
-                                  ) : (
-                                    <span
-                                      className="admin-reference-photo-loading"
-                                      key={photo.id}
-                                    >
-                                      読み込み中
-                                    </span>
-                                  ),
-                                )}
+                                {storyPhotos.map((photo, index) => (
+                                  <div
+                                    className="admin-reference-photo-choice"
+                                    key={photo.id}
+                                  >
+                                    {assetUrls[photo.id] ? (
+                                      <a
+                                        href={assetUrls[photo.id]}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        title={photo.original_filename}
+                                      >
+                                        <span
+                                          className="admin-photo-thumb"
+                                          role="img"
+                                          aria-label={`${memory.title}の写真${index + 1}`}
+                                          style={{
+                                            backgroundImage: `url(${assetUrls[photo.id]})`,
+                                          }}
+                                        />
+                                        <em>
+                                          {photo.memory_photo_sort_order === 1
+                                            ? "選択中"
+                                            : `写真${index + 1}`}
+                                        </em>
+                                      </a>
+                                    ) : (
+                                      <span className="admin-reference-photo-loading">
+                                        読み込み中
+                                      </span>
+                                    )}
+                                    {canManageStorySources &&
+                                      photo.memory_photo_sort_order !== 1 && (
+                                        <button
+                                          type="button"
+                                          disabled={saving}
+                                          onClick={() =>
+                                            void makeAdminStoryPhotoPrimary(
+                                              memory,
+                                              photo,
+                                            )
+                                          }
+                                        >
+                                          基準写真に選ぶ
+                                        </button>
+                                      )}
+                                  </div>
+                                ))}
                               </div>
                             ) : (
                               <span className="admin-reference-empty">
@@ -3566,9 +3586,7 @@ export function AdminStudio() {
                               </span>
                             )}
                             <small>
-                              {memory.title} · 全{storyPhotos.length}枚（基準
-                              {storyPhotos.length > 0 ? 1 : 0}枚 + 補助
-                              {Math.max(0, storyPhotos.length - 1)}枚）
+                              {memory.title} · 登録写真{storyPhotos.length}枚
                             </small>
                           </article>
                         );
@@ -3581,7 +3599,7 @@ export function AdminStudio() {
                       </div>
                       <div>
                         <dt>写真の使い方</dt>
-                        <dd>各物語の1枚目を基準にし、2〜3枚目は補助だけに使用</dd>
+                        <dd>担当者が全写真を確認し、各物語の基準写真を選択</dd>
                       </div>
                       <div>
                         <dt>映像としての再構成の確認</dt>

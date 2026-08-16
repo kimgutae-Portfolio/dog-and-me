@@ -551,7 +551,9 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(storyWizard, /memory\.photoKeys\.length >= 1/);
   assert.match(storyWizard, /物語にしたい日と、その日の一枚/);
   assert.match(storyWizard, /createMemoryDraft\("memory-5"\)/);
-  assert.match(storyWizard, /基準写真にする/);
+  assert.doesNotMatch(storyWizard, /基準写真にする/);
+  assert.match(storyWizard, /まず写真を1枚選び/);
+  assert.match(storyWizard, /別の表情や場面も追加できます/);
   assert.doesNotMatch(storyWizard, /この物語を削除|物語をもう1つ追加する/);
   assert.doesNotMatch(
     storyWizard,
@@ -979,7 +981,7 @@ test("stores exactly five stories with required scene photos", async () => {
   assert.match(admin, /primary_scene_source/);
   assert.match(studio, /studio-memory-list/);
   assert.match(studio, /studio-story-photo-add/);
-  assert.match(studio, /makeStoryPhotoPrimary/);
+  assert.doesNotMatch(studio, /makeStoryPhotoPrimary|基準写真に変更/);
   assert.match(studio, /order\.photo_analysis_status !== "approved"/);
   assert.match(admin, /storyScenes/);
   assert.match(admin, /5つすべての物語の場面/);
@@ -993,7 +995,7 @@ test("stores exactly five stories with required scene photos", async () => {
 
 test("uses story-specific photo sources and requires operator approval", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, sourceLock, story, admin, types, css] = await Promise.all([
+  const [migration, sourceLock, relaxedDescription, story, admin, types, css] = await Promise.all([
     readFile(
       new URL(
         "supabase/migrations/202608020002_story_scene_sources.sql",
@@ -1004,6 +1006,13 @@ test("uses story-specific photo sources and requires operator approval", async (
     readFile(
       new URL(
         "supabase/migrations/202608020003_five_story_source_lock.sql",
+        root,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "supabase/migrations/202608170001_relax_story_description_minimum.sql",
         root,
       ),
       "utf8",
@@ -1035,7 +1044,14 @@ test("uses story-specific photo sources and requires operator approval", async (
   assert.match(sourceLock, /確認済みの写真は変更できません/);
   assert.match(sourceLock, /five stories are required before source approval/);
 
-  assert.match(story, /タイトル・30文字ほどのお話・写真1枚を添えると/);
+  assert.match(story, /まず写真を1枚選び/);
+  assert.match(story, /Boolean\(memory\.description\.trim\(\)\)/);
+  assert.doesNotMatch(story, /30文字以上|基準写真にする/);
+  assert.match(relaxedDescription, /between 1 and 2000/);
+  assert.match(
+    relaxedDescription,
+    /create or replace function public\.save_order_memory_entry/,
+  );
   assert.match(story, /FIXED_FILM_STYLE/);
   assert.doesNotMatch(story, /referencePhotosComplete/);
   assert.match(story, /仕上がりの表現について確認しました/);
@@ -1050,9 +1066,13 @@ test("uses story-specific photo sources and requires operator approval", async (
   assert.match(admin, /物語ごとの制作素材チェック/);
   assert.match(admin, /admin-reference-photo-list/);
   assert.match(admin, /storyPhotos\.map/);
-  assert.match(admin, /全\{storyPhotos\.length\}枚/);
+  assert.match(admin, /登録写真\{storyPhotos\.length\}枚/);
+  assert.match(admin, /基準写真に選ぶ/);
+  assert.match(admin, /makeAdminStoryPhotoPrimary/);
   assert.match(css, /\.memory-photo-role/);
   assert.match(css, /\.admin-reference-photo-list/);
+  assert.match(css, /\.memory-photo-linker \{[^}]*order: -1/);
+  assert.match(css, /\.review-memory-photos/);
 });
 
 test("stores storybook page sentences and burns them into the final video", async () => {

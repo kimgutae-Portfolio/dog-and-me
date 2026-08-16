@@ -590,44 +590,6 @@ export function StudioClient() {
     }
   };
 
-  const makeStoryPhotoPrimary = async (
-    memory: OrderMemory,
-    assetId: string,
-  ) => {
-    if (!order || !canManageSourcePhotos || uploading) return;
-    const orderedIds = sourceAssets
-      .filter((asset) => asset.memory_id === memory.id)
-      .sort(
-        (a, b) =>
-          (a.memory_photo_sort_order ?? 99) -
-          (b.memory_photo_sort_order ?? 99),
-      )
-      .map((asset) => asset.id);
-    if (orderedIds[0] === assetId) return;
-    setUploading(true);
-    setError("");
-    const { error: primaryError } = await getSupabaseBrowserClient().rpc(
-      "assign_memory_photos",
-      {
-        p_order_id: order.id,
-        p_memory_id: memory.id,
-        p_asset_ids: [
-          assetId,
-          ...orderedIds.filter((id) => id !== assetId),
-        ],
-      },
-    );
-    if (primaryError) {
-      setError(
-        "基準写真を変更できませんでした。写真確認の状態をご確認ください。",
-      );
-    } else {
-      setNotice(`「${memory.title}」の基準写真を変更しました。`);
-      await Promise.all([loadDetails(order.id), loadOrders()]);
-    }
-    setUploading(false);
-  };
-
   const deleteStoryPhoto = async (memory: OrderMemory, asset: OrderAsset) => {
     if (!order || !canManageSourcePhotos || uploading || deletingPhotoId) return;
     const memoryPhotos = sourceAssets
@@ -638,18 +600,10 @@ export function StudioClient() {
           (b.memory_photo_sort_order ?? 99),
       );
     if (memoryPhotos.length <= 1) {
-      setError("各物語には基準写真が1枚必要です。別の写真を追加してから削除してください。");
+      setError("各物語には写真が1枚必要です。別の写真を追加してから削除してください。");
       return;
     }
-    if (
-      !window.confirm(
-        `「${memory.title}」からこの写真を削除しますか？${
-          asset.memory_photo_sort_order === 1
-            ? "次の写真が基準写真になります。"
-            : ""
-        }`,
-      )
-    )
+    if (!window.confirm(`「${memory.title}」からこの写真を削除しますか？`))
       return;
 
     const remainingIds = memoryPhotos
@@ -2037,14 +1991,7 @@ export function StudioClient() {
                           </small>
                           <div className="studio-story-photo-grid">
                             {memoryPhotos.map((asset) => (
-                              <article
-                                className={
-                                  asset.memory_photo_sort_order === 1
-                                    ? "primary"
-                                    : ""
-                                }
-                                key={asset.id}
-                              >
+                              <article key={asset.id}>
                                 {sourcePhotoUrls[asset.id] ? (
                                   <a
                                     href={sourcePhotoUrls[asset.id]}
@@ -2054,33 +2001,15 @@ export function StudioClient() {
                                   >
                                     <img
                                       src={sourcePhotoUrls[asset.id]}
-                                      alt={`${memory.title}の${asset.memory_photo_sort_order === 1 ? "基準写真" : "補助写真"}`}
+                                      alt={`${memory.title}の写真`}
                                     />
                                   </a>
                                 ) : (
                                   <span>読み込み中</span>
                                 )}
-                                <small>
-                                  {asset.memory_photo_sort_order === 1
-                                    ? "基準写真"
-                                    : `補助写真 ${(asset.memory_photo_sort_order ?? 2) - 1}`}
-                                </small>
+                                <small>写真</small>
                                 {canManageSourcePhotos && (
                                   <div className="studio-story-photo-actions">
-                                    {asset.memory_photo_sort_order !== 1 && (
-                                      <button
-                                        type="button"
-                                        disabled={uploading || Boolean(deletingPhotoId)}
-                                        onClick={() =>
-                                          void makeStoryPhotoPrimary(
-                                            memory,
-                                            asset.id,
-                                          )
-                                        }
-                                      >
-                                        基準写真に変更
-                                      </button>
-                                    )}
                                     <button
                                       className="studio-story-photo-delete"
                                       type="button"

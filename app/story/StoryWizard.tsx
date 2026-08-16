@@ -80,7 +80,7 @@ const createMemoryDraft = (clientKey: string): MemoryDraft => ({
 
 const isMemoryReady = (memory: MemoryDraft) =>
   Boolean(memory.title.trim()) &&
-  memory.description.trim().length >= 30 &&
+  Boolean(memory.description.trim()) &&
   memory.photoKeys.length >= 1;
 
 const emptyDraft: Draft = {
@@ -133,28 +133,35 @@ function normalizeDraft(
               : "";
           const description =
             typeof source.description === "string" ? source.description : "";
+          const photoKeys = Array.isArray(source.photoKeys)
+            ? source.photoKeys
+                .filter(
+                  (key): key is string =>
+                    typeof key === "string" &&
+                    (!validPhotoKeys || validPhotoKeys.has(key)),
+                )
+                .slice(0, MAX_PHOTOS_PER_MEMORY)
+            : [];
           return {
             ...createMemoryDraft(source.clientKey || `memory-${index + 1}`),
             ...source,
+            title:
+              source.title?.trim() === "大切な思い出" &&
+              !description.trim() &&
+              photoKeys.length === 0
+                ? ""
+                : source.title || "",
             description:
               legacyBehavior && !description.includes(legacyBehavior)
                 ? [description, legacyBehavior].filter(Boolean).join("\n")
                 : description,
-            photoKeys: Array.isArray(source.photoKeys)
-              ? source.photoKeys
-                  .filter(
-                    (key): key is string =>
-                      typeof key === "string" &&
-                      (!validPhotoKeys || validPhotoKeys.has(key)),
-                  )
-                  .slice(0, MAX_PHOTOS_PER_MEMORY)
-              : [],
+            photoKeys,
           };
         })
       : [
           {
             ...createMemoryDraft("memory-1"),
-            title: parsed.firstMeeting ? "はじめて会った日" : "大切な思い出",
+            title: parsed.firstMeeting ? "はじめて会った日" : "",
             description: parsed.favoriteMemory || parsed.firstMeeting || "",
           },
         ];
@@ -612,18 +619,6 @@ export function StoryWizard() {
     );
   };
 
-  const makePrimaryPhoto = (memoryKey: string, photoKey: string) => {
-    const memory = draft.memories.find((item) => item.clientKey === memoryKey);
-    if (!memory || memory.photoKeys[0] === photoKey) return;
-    updateMemory(memoryKey, "photoKeys", [
-      photoKey,
-      ...memory.photoKeys.filter((key) => key !== photoKey),
-    ]);
-    setPhotoSelectionNotice(
-      "基準写真を変更しました。確認画面にも新しい基準写真が表示されます。",
-    );
-  };
-
   const photoByKey = useMemo(
     () => new Map(photoFiles.map((photo) => [photo.clientKey, photo])),
     [photoFiles],
@@ -693,10 +688,10 @@ export function StoryWizard() {
           label: `思い出${number}のタイトル`,
           step: 1,
         });
-      if (memory.description.trim().length < 30)
+      if (!memory.description.trim())
         missing.push({
           key: `memory-${memory.clientKey}-description`,
-          label: `思い出${number}の詳しい内容（30文字以上）`,
+          label: `思い出${number}の詳しい内容`,
           step: 1,
         });
       if (memory.photoKeys.length < 1)
@@ -1150,7 +1145,7 @@ export function StoryWizard() {
                   <p>
                     {completedMemoryCount > 0
                       ? `五つのうち${completedMemoryCount}つが完成しました。思い出が重なるたび、物語の輪郭が見えてきます。`
-                      : "タイトル・30文字ほどのお話・写真1枚を添えると、物語の最初のページが形になります。"}
+                      : "まず写真を1枚選び、写真を見ながらタイトルと覚えていることを書いてみましょう。"}
                   </p>
                   {completedMemoryCount > 0 && (
                     <Link className="first-memory-save-exit" href="/">
@@ -1337,7 +1332,7 @@ export function StoryWizard() {
                             <label className="wide">
                               <span>
                                 そのときのことを詳しく教えてください{" "}
-                                <em>必須・30文字以上</em>
+                                <em>必須</em>
                               </span>
                               <textarea
                                 required
@@ -1355,12 +1350,12 @@ export function StoryWizard() {
                               />
                               <small
                                 className={
-                                  memory.description.trim().length >= 30
+                                  memory.description.trim().length > 0
                                     ? "field-count complete"
                                     : "field-count"
                                 }
                               >
-                                {memory.description.trim().length} / 30文字以上
+                                {memory.description.trim().length}文字
                               </small>
                             </label>
                           </div>
@@ -1369,7 +1364,7 @@ export function StoryWizard() {
                               この物語の場面写真 <em>1枚必須・最大3枚</em>
                             </legend>
                             <p>
-                              最初の1枚を、この物語の絵本ページと動きの基準写真として自動設定します。別の表情や背景も見せたい場合だけ、補助写真を2枚まで追加してください。
+                              先に写真を選ぶと、その日のことを思い出しながら書きやすくなります。最終的にどの写真を制作の基準にするかは、担当者がすべて確認して選びます。
                             </p>
                             <div className="memory-photo-grid">
                               {memory.photoKeys.map((photoKey, photoIndex) => {
@@ -1396,9 +1391,7 @@ export function StoryWizard() {
                                     </button>
                                     <div>
                                       <strong className="memory-photo-role">
-                                        {photoIndex === 0
-                                          ? "基準写真"
-                                          : `補助写真 ${photoIndex}`}
+                                        写真 {photoIndex + 1}
                                       </strong>
                                       {photo.status === "uploading" && (
                                         <em className="photo-save-state">
@@ -1417,21 +1410,6 @@ export function StoryWizard() {
                                           onClick={() => retryPhoto(photoKey)}
                                         >
                                           再試行
-                                        </button>
-                                      )}
-                                      {photoIndex > 0 && (
-                                        <button
-                                          type="button"
-                                          className="photo-primary-button"
-                                          disabled={photo.status === "uploading"}
-                                          onClick={() =>
-                                            makePrimaryPhoto(
-                                              memory.clientKey,
-                                              photoKey,
-                                            )
-                                          }
-                                        >
-                                          基準写真にする
                                         </button>
                                       )}
                                       <button
@@ -1463,7 +1441,7 @@ export function StoryWizard() {
                                   <small>
                                     {memory.photoKeys.length === 0
                                       ? "まず1枚だけ選んでください"
-                                      : "必要なときだけ補助写真を追加"}
+                                      : "別の表情や場面も追加できます"}
                                   </small>
                                 </label>
                               )}
@@ -1580,13 +1558,18 @@ export function StoryWizard() {
                         <span>{String(index + 1).padStart(2, "0")}</span>
                         <div>
                           <strong>{memory.title || "タイトル未入力"}</strong>
-                          {photoByKey.get(memory.photoKeys[0]) && (
-                            <img
-                              className="review-memory-primary-photo"
-                              src={photoByKey.get(memory.photoKeys[0])?.previewUrl}
-                              alt={`${memory.title || `物語 ${index + 1}`}の基準写真`}
-                            />
-                          )}
+                          <div className="review-memory-photos">
+                            {memory.photoKeys.map((photoKey, photoIndex) => {
+                              const photo = photoByKey.get(photoKey);
+                              return photo ? (
+                                <img
+                                  src={photo.previewUrl}
+                                  alt={`${memory.title || `物語 ${index + 1}`}の写真 ${photoIndex + 1}`}
+                                  key={photoKey}
+                                />
+                              ) : null;
+                            })}
+                          </div>
                           <p>
                             {memory.description || "詳しい内容が未入力です。"}
                           </p>
