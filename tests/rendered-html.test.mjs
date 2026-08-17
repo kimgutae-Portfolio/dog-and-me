@@ -1267,6 +1267,7 @@ test("stores storybook page sentences and burns them into the final video", asyn
   assert.match(renderRoute, /--captions-json/);
   assert.match(assembler, /make_story_caption_overlay/);
   assert.match(assembler, /burn_story_captions/);
+  assert.doesNotMatch(assembler, /expanded_clip_numbers/);
   assert.match(assembler, /wrap_ending_lines/);
   assert.match(assembler, /max_width = W - 360/);
   assert.match(assembler, /物語の文章を重ねています/);

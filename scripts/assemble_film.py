@@ -190,7 +190,6 @@ def burn_story_captions(
     out_path,
     total_duration,
     tmp_dir,
-    expanded_clip_numbers,
 ):
     """Burn approved scene sentences into the assembled storybook with soft caption fades."""
     if not any(caption.strip() for caption in captions):
@@ -565,7 +564,7 @@ def main():
             captioned_out = os.path.join(tmp, "captioned.mp4") if args.bgm else args.out
             burn_story_captions(
                 assembled_out, captions, caption_windows, captioned_out,
-                total_duration, tmp, expanded_clip_numbers,
+                total_duration, tmp,
             )
             video_for_audio = captioned_out
 
