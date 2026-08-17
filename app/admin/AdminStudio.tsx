@@ -2228,6 +2228,13 @@ export function AdminStudio() {
 
   const changePhotoAnalysisStatus = async (nextStatus: PhotoAnalysisStatus) => {
     if (!order) return false;
+    if (
+      nextStatus === "approved" &&
+      !window.confirm(
+        "物語と写真を承認すると、以後は写真の追加・削除・差し替えや承認の取り消しができません。内容を確認して承認しますか？",
+      )
+    )
+      return false;
     setSaving(true);
     setError("");
     const { error: statusError } = await getSupabaseBrowserClient().rpc(
@@ -3574,14 +3581,12 @@ export function AdminStudio() {
                         </button>
                       )}
                       {productionFields.photoAnalysisStatus === "approved" && (
-                        <button
-                          className="button button-outline"
-                          type="button"
-                          disabled={saving || customerInputPending}
-                          onClick={prepareCustomerInputMessage}
-                        >
-                          承認を取り消し、追加確認を連絡する
-                        </button>
+                        <aside className="admin-operation-note strong">
+                          <strong>制作素材は確定されています。</strong>
+                          <span>
+                            承認後は写真の追加・削除・差し替え、承認の取り消しはできません。
+                          </span>
+                        </aside>
                       )}
                     </div>
                     {customerInputPending && (

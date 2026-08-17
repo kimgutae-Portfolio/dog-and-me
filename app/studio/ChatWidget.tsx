@@ -38,8 +38,6 @@ export function ChatWidget({
   onMessageReceived,
   onMessagesRead,
   onRefreshMessages,
-  composeRequest,
-  onComposeRequestHandled,
 }: {
   order: MemoryOrder;
   currentUserId: string;
@@ -50,8 +48,6 @@ export function ChatWidget({
   onMessageReceived: (message: OrderMessage) => void;
   onMessagesRead: () => void;
   onRefreshMessages: () => void;
-  composeRequest?: { id: number; body: string } | null;
-  onComposeRequestHandled?: (id: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -89,28 +85,6 @@ export function ChatWidget({
   useEffect(() => {
     if (open) refreshMessagesRef.current();
   }, [open]);
-
-  useEffect(() => {
-    if (!composeRequest) return;
-    let focusFrame = 0;
-    const frame = window.requestAnimationFrame(() => {
-      setOpen(true);
-      focusFrame = window.requestAnimationFrame(() => {
-        if (!textareaRef.current) return;
-        textareaRef.current.value = composeRequest.body;
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(
-          composeRequest.body.length,
-          composeRequest.body.length,
-        );
-        onComposeRequestHandled?.(composeRequest.id);
-      });
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.cancelAnimationFrame(focusFrame);
-    };
-  }, [composeRequest, onComposeRequestHandled]);
 
   const unreadCount = useMemo(
     () =>

@@ -96,6 +96,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /このモカのデモは旧仕様の約54秒/);
   assert.match(html, /メインエピソードを選ぶ工程はありません/);
   assert.match(html, /送った写真は変更できますか/);
+  assert.match(html, /承認後は制作素材が確定するため/);
   assert.match(html, /うちの子の動く絵本/);
   assert.doesNotMatch(
     html,
@@ -1092,9 +1093,9 @@ test("stores exactly five stories with required scene photos", async () => {
   assert.match(css, /\.step-required-panel/);
 });
 
-test("uses story-specific photo sources and requires operator approval", async () => {
+test("uses story-specific photo sources and permanently freezes operator-approved photos", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, sourceLock, relaxedDescription, story, admin, types, css] = await Promise.all([
+  const [migration, sourceLock, approvalFreeze, relaxedDescription, story, admin, studio, types, css] = await Promise.all([
     readFile(
       new URL(
         "supabase/migrations/202608020002_story_scene_sources.sql",
@@ -1111,6 +1112,13 @@ test("uses story-specific photo sources and requires operator approval", async (
     ),
     readFile(
       new URL(
+        "supabase/migrations/202608170005_source_approval_freeze.sql",
+        root,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
         "supabase/migrations/202608170001_relax_story_description_minimum.sql",
         root,
       ),
@@ -1118,6 +1126,7 @@ test("uses story-specific photo sources and requires operator approval", async (
     ),
     readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/lib/supabase/types.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
@@ -1142,6 +1151,10 @@ test("uses story-specific photo sources and requires operator approval", async (
   assert.match(migration, /global_appearance_references', false/);
   assert.match(sourceLock, /確認済みの写真は変更できません/);
   assert.match(sourceLock, /five stories are required before source approval/);
+  assert.match(approvalFreeze, /enforce_source_approval_freeze_trigger/);
+  assert.match(approvalFreeze, /STORY SOURCE REVIEW approval cannot be revoked/);
+  assert.match(approvalFreeze, /承認済みの制作素材は変更できません/);
+  assert.match(approvalFreeze, /if public\.is_admin\(\) then/);
 
   assert.match(story, /まず写真を1枚選び/);
   assert.match(story, /Boolean\(memory\.description\.trim\(\)\)/);
@@ -1168,6 +1181,11 @@ test("uses story-specific photo sources and requires operator approval", async (
   assert.match(admin, /登録写真\{storyPhotos\.length\}枚/);
   assert.match(admin, /基準写真に選ぶ/);
   assert.match(admin, /makeAdminStoryPhotoPrimary/);
+  assert.match(admin, /以後は写真の追加・削除・差し替えや承認の取り消しができません/);
+  assert.doesNotMatch(admin, /承認を取り消し、追加確認を連絡する/);
+  assert.match(studio, /STORY SOURCE REVIEWで承認された写真です/);
+  assert.match(studio, /承認後は、写真の追加・削除・差し替えはできません/);
+  assert.doesNotMatch(studio, /写真の変更を相談する/);
   assert.match(css, /\.memory-photo-role/);
   assert.match(css, /\.admin-reference-photo-list/);
   assert.match(css, /\.memory-photo-linker \{[^}]*order: -1/);
@@ -1322,15 +1340,10 @@ test("emails customers only when an administrator sends a studio message", async
   assert.doesNotMatch(chat, /checked=\{open\}/);
   assert.match(chat, /onClick=\{\(\) => setOpen\(false\)\}/);
   assert.match(chat, /onClick=\{\(\) => setOpen\(\(current\) => !current\)\}/);
-  assert.match(chat, /composeRequest\.body/);
-  assert.match(chat, /onComposeRequestHandled\?\.\(composeRequest\.id\)/);
-  assert.match(studio, /写真の変更を相談する/);
-  assert.match(studio, /写真の変更について相談したいです/);
-  assert.match(studio, /photoProductionStarted/);
-  assert.match(studio, /担当者の確認完了前なら、写真を変更できます/);
-  assert.match(studio, /制作状況によって、納期や追加費用/);
-  assert.match(studio, /composeRequest=\{photoChangeComposeRequest\}/);
-  assert.match(studio, /onComposeRequestHandled=\{\(requestId\)/);
+  assert.doesNotMatch(chat, /composeRequest/);
+  assert.doesNotMatch(studio, /photoChangeComposeRequest|photoProductionStarted/);
+  assert.match(studio, /STORY SOURCE REVIEWの承認前まで写真を変更できます/);
+  assert.doesNotMatch(studio, /写真の変更を相談する/);
   assert.doesNotMatch(chat, /disabled=\{!messageBody\.trim\(\)\}/);
   assert.doesNotMatch(notification, /p_body|messageBody/);
   assert.doesNotMatch(

@@ -107,10 +107,6 @@ export function StudioClient() {
     Record<string, string>
   >({});
   const [sendingMessage, setSendingMessage] = useState(false);
-  const [photoChangeComposeRequest, setPhotoChangeComposeRequest] = useState<{
-    id: number;
-    body: string;
-  } | null>(null);
   const [revisionCategory, setRevisionCategory] = useState("絵の動き");
   const [revisionBody, setRevisionBody] = useState("");
   const [revisionMemoryIds, setRevisionMemoryIds] = useState<string[]>([]);
@@ -353,30 +349,6 @@ export function StudioClient() {
       order.photo_analysis_status !== "approved",
   );
   const canAddPhotos = canManageSourcePhotos;
-  const photoProductionStarted = Boolean(
-    order &&
-      (order.production_started_at ||
-        [
-          "production",
-          "customer_review",
-          "revision_requested",
-          "quality_check",
-          "delivered",
-        ].includes(order.status)),
-  );
-
-  const openPhotoChangeConsultation = () => {
-    setPhotoChangeComposeRequest({
-      id: Date.now(),
-      body: [
-        "写真の変更について相談したいです。",
-        "",
-        "変更したい物語：",
-        "変更したい写真・理由：",
-      ].join("\n"),
-    });
-  };
-
   useEffect(() => {
     let cancelled = false;
     const photos = assets.filter((asset) => asset.category === "source_image");
@@ -2259,40 +2231,25 @@ export function StudioClient() {
                   </aside>
                 ) : canOperateOrder ? (
                   <aside
-                    className={`photo-change-status ${canManageSourcePhotos ? "editable" : photoProductionStarted ? "production-started" : "locked"}`}
+                    className={`photo-change-status ${canManageSourcePhotos ? "editable" : "locked"}`}
                   >
                     <div>
                       <span className="photo-change-status-badge">
                         {canManageSourcePhotos
-                          ? "確認中・変更できます"
-                          : photoProductionStarted
-                            ? "制作開始済み"
-                            : "制作準備中"}
+                          ? "運営確認中・変更できます"
+                          : "写真確定済み"}
                       </span>
                       <strong>
                         {canManageSourcePhotos
-                          ? "担当者の確認完了前なら、写真を変更できます"
-                          : photoProductionStarted
-                            ? "写真を変更したい場合は、まず担当者へご相談ください"
-                            : "写真は確認済みです。変更希望は担当者が確認します"}
+                          ? "STORY SOURCE REVIEWの承認前まで写真を変更できます"
+                          : "STORY SOURCE REVIEWで承認された写真です"}
                       </strong>
                       <p>
                         {canManageSourcePhotos
-                          ? "写真の追加・削除はこの画面から行えます。確認完了後は直接変更できなくなります。"
-                          : photoProductionStarted
-                            ? "制作状況によって、納期や追加費用をご案内する場合があります。"
-                            : "まだ制作開始前のため、変更したい内容をメッセージでお知らせください。"}
+                          ? "承認されるまでは、この画面から写真を追加・削除できます。"
+                          : "承認後は、写真の追加・削除・差し替えはできません。"}
                       </p>
                     </div>
-                    {!canManageSourcePhotos && (
-                      <button
-                        className="button button-outline"
-                        type="button"
-                        onClick={openPhotoChangeConsultation}
-                      >
-                        写真の変更を相談する
-                      </button>
-                    )}
                   </aside>
                 ) : (
                   <p className="readonly-preview-note">
@@ -2327,12 +2284,6 @@ export function StudioClient() {
                 )
               }
               onRefreshMessages={() => void loadDetails(order.id)}
-              composeRequest={photoChangeComposeRequest}
-              onComposeRequestHandled={(requestId) =>
-                setPhotoChangeComposeRequest((current) =>
-                  current?.id === requestId ? null : current,
-                )
-              }
             />
 
             {canOperateOrder ? (
