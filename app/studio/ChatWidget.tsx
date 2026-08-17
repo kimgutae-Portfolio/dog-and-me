@@ -172,6 +172,11 @@ export function ChatWidget({
               type="button"
               className="chat-widget-close"
               aria-label="閉じる"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setOpen(false);
+              }}
               onClick={() => setOpen(false)}
             >
               ×
@@ -255,6 +260,12 @@ export function ChatWidget({
             ? "担当者とのメッセージ（未読あり）"
             : "担当者とのメッセージ"
         }
+        onPointerDown={(event) => {
+          if (!open) return;
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+        }}
         onClick={() => setOpen((current) => !current)}
       >
         <span className="chat-widget-toggle-icon" aria-hidden="true">

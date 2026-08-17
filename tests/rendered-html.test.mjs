@@ -1384,6 +1384,12 @@ test("emails customers only when an administrator sends a studio message", async
   assert.doesNotMatch(chat, /checked=\{open\}/);
   assert.match(chat, /onClick=\{\(\) => setOpen\(false\)\}/);
   assert.match(chat, /onClick=\{\(\) => setOpen\(\(current\) => !current\)\}/);
+  assert.equal(
+    (chat.match(/onPointerDown=/g) ?? []).length,
+    2,
+    "both visible chat close controls must close on pointer-down",
+  );
+  assert.match(chat, /event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);[\s\S]*?setOpen\(false\);/);
   assert.doesNotMatch(chat, /composeRequest/);
   assert.doesNotMatch(studio, /photoChangeComposeRequest|photoProductionStarted/);
   assert.match(studio, /STORY SOURCE REVIEWの承認前まで写真を変更できます/);
