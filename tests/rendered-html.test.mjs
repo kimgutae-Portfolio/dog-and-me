@@ -84,7 +84,8 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /モカの完成作品/);
   assert.match(html, /動く絵本/);
   assert.match(html, /初期(?:<!-- -->)?10(?:<!-- -->)?組/);
-  assert.match(html, /24,800/);
+  assert.match(html, /16,800/);
+  assert.match(html, /19,800/);
   assert.match(html, /通常価格/);
   assert.match(html, /税込/);
   assert.match(html, /モニター価格とは何ですか/);
@@ -940,6 +941,30 @@ test("counts storybook and video revisions as separate three-scene allowances", 
   assert.match(css, /\.revision-scene-picker/);
 });
 
+test("uses the lower launch and regular prices for new consultations", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [pricing, migration, legal] = await Promise.all([
+    readFile(new URL("app/lib/pricing.ts", root), "utf8"),
+    readFile(
+      new URL(
+        "supabase/migrations/202608170004_launch_price_16800.sql",
+        root,
+      ),
+      "utf8",
+    ),
+    readFile(new URL("app/legal/page.tsx", root), "utf8"),
+  ]);
+
+  assert.match(pricing, /launchPrice: 16_800/);
+  assert.match(pricing, /regularPrice: 19_800/);
+  assert.match(pricing, /launch-monitor-16800-10/);
+  assert.match(migration, /case when used < 10 then 16800 else 19800 end/);
+  assert.match(migration, /v_price := 16800/);
+  assert.match(migration, /status = 'awaiting_materials'/);
+  assert.match(legal, /モニター価格 ¥16,800/);
+  assert.match(legal, /受付終了後 ¥19,800/);
+});
+
 test("records first-ten production metrics through an admin-only RPC", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, admin, types] = await Promise.all([
@@ -1294,14 +1319,18 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(chat, /ご登録のメールアドレスにもお知らせします/);
   assert.match(chat, /<textarea[\s\S]*?ref=\{textareaRef\}[\s\S]*?required/);
   assert.match(chat, /disabled=\{sending\}/);
-  assert.match(chat, /checked=\{open\}/);
+  assert.doesNotMatch(chat, /checked=\{open\}/);
+  assert.match(chat, /onClick=\{\(\) => setOpen\(false\)\}/);
+  assert.match(chat, /onClick=\{\(\) => setOpen\(\(current\) => !current\)\}/);
   assert.match(chat, /composeRequest\.body/);
+  assert.match(chat, /onComposeRequestHandled\?\.\(composeRequest\.id\)/);
   assert.match(studio, /写真の変更を相談する/);
   assert.match(studio, /写真の変更について相談したいです/);
   assert.match(studio, /photoProductionStarted/);
   assert.match(studio, /担当者の確認完了前なら、写真を変更できます/);
   assert.match(studio, /制作状況によって、納期や追加費用/);
   assert.match(studio, /composeRequest=\{photoChangeComposeRequest\}/);
+  assert.match(studio, /onComposeRequestHandled=\{\(requestId\)/);
   assert.doesNotMatch(chat, /disabled=\{!messageBody\.trim\(\)\}/);
   assert.doesNotMatch(notification, /p_body|messageBody/);
   assert.doesNotMatch(

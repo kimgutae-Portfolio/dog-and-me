@@ -2328,6 +2328,11 @@ export function StudioClient() {
               }
               onRefreshMessages={() => void loadDetails(order.id)}
               composeRequest={photoChangeComposeRequest}
+              onComposeRequestHandled={(requestId) =>
+                setPhotoChangeComposeRequest((current) =>
+                  current?.id === requestId ? null : current,
+                )
+              }
             />
 
             {canOperateOrder ? (
