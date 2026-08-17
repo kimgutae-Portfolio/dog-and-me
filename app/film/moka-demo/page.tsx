@@ -73,7 +73,7 @@ export default function MokaDemoPage() {
               <p>01 / COMPLETE FILM</p>
               <h2>五つの記憶を、<br />一冊の映像に。</h2>
             </div>
-            <span>約54秒 · 画面を大きくしてお楽しみください</span>
+            <span>約39秒 · 画面を大きくしてお楽しみください</span>
           </div>
           <div className="moka-main-player">
             <video

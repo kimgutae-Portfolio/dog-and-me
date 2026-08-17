@@ -254,7 +254,7 @@ export default async function Home() {
             <p>
               五つの思い出を、水彩の絵と小さな動き、
               <br />
-              短い文章でつないだ完成作品です。このモカのデモは旧仕様の約54秒、現在の制作プランは約40秒です。
+              短い文章でつないだ完成作品です。現在の制作プランと同じ、5秒映像5本で仕上げた約39秒のデモです。
             </p>
           </div>
           <div className="storybook-film-frame">
@@ -268,7 +268,7 @@ export default async function Home() {
               <source src="/film/moka/complete-film.mp4" type="video/mp4" />
             </video>
             <div className="storybook-film-meta">
-              <span>COMPLETE FILM · 00:54</span>
+              <span>COMPLETE FILM · 00:39</span>
               <strong>モカと、五つの記憶</strong>
               <Link href="/film/moka-demo">作品ページで写真と全場面を見る →</Link>
             </div>

@@ -93,7 +93,8 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /人物のお顔は新しく生成せず/);
   assert.match(html, /物語案2案/);
   assert.match(html, /5つの物語を各5秒で制作/);
-  assert.match(html, /このモカのデモは旧仕様の約54秒/);
+  assert.match(html, /現在の制作プランと同じ、5秒映像5本で仕上げた約39秒のデモ/);
+  assert.match(html, /COMPLETE FILM · 00:39/);
   assert.match(html, /メインエピソードを選ぶ工程はありません/);
   assert.match(html, /送った写真は変更できますか/);
   assert.match(html, /担当者が個別に変更を許可すると/);
@@ -467,6 +468,7 @@ test("renders the moving storybook demo", async () => {
   assert.match(html, /COMPLETE STORYBOOK SAMPLE/);
   assert.match(html, /COMPLETE FILM/);
   assert.match(html, /complete-film\.mp4/);
+  assert.match(html, /約39秒/);
   assert.doesNotMatch(html, /FIVE MOVING PAGES|一場面ずつ、そっと動きはじめる/);
   assert.match(html, /雨音を待つ玄関/);
   assert.match(html, /MOKA'S PHOTO ALBUM/);
