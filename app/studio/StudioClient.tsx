@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChangeEvent,
   FormEvent,
+  MouseEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -30,6 +31,11 @@ import { ORDER_STATUS_LABELS } from "../lib/supabase/types";
 import { uploadOrderImages } from "../lib/supabase/uploads";
 import { ChatWidget } from "./ChatWidget";
 import { MemoryShareManager } from "./MemoryShareManager";
+import {
+  hasSeenPhotoUploadGuide,
+  PhotoUploadGuideDialog,
+  rememberPhotoUploadGuide,
+} from "../components/PhotoUploadGuideDialog";
 
 const journeySteps = [
   ["受付", "写真とお話をお預かり"],
@@ -102,6 +108,7 @@ export function StudioClient() {
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [pendingPhotoInputId, setPendingPhotoInputId] = useState("");
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [sourcePhotoUrls, setSourcePhotoUrls] = useState<
     Record<string, string>
@@ -350,6 +357,22 @@ export function StudioClient() {
           order.photo_analysis_status !== "approved")),
   );
   const canAddPhotos = canManageSourcePhotos;
+
+  const interceptFirstPhotoUpload = (
+    event: MouseEvent<HTMLLabelElement>,
+    inputId: string,
+  ) => {
+    if (hasSeenPhotoUploadGuide()) return;
+    event.preventDefault();
+    setPendingPhotoInputId(inputId);
+  };
+
+  const continueToFirstPhoto = () => {
+    const inputId = pendingPhotoInputId;
+    rememberPhotoUploadGuide();
+    setPendingPhotoInputId("");
+    window.setTimeout(() => document.getElementById(inputId)?.click(), 0);
+  };
   useEffect(() => {
     let cancelled = false;
     const photos = assets.filter((asset) => asset.category === "source_image");
@@ -2188,13 +2211,21 @@ export function StudioClient() {
                           </div>
                           {canAddPhotos && memoryPhotos.length < 3 && (
                             <label
+                              htmlFor={`studio-story-photo-input-${memory.id}`}
                               className={
                                 uploading
                                   ? "studio-story-photo-add disabled"
                                   : "studio-story-photo-add"
                               }
+                              onClick={(event) =>
+                                interceptFirstPhotoUpload(
+                                  event,
+                                  `studio-story-photo-input-${memory.id}`,
+                                )
+                              }
                             >
                               <input
+                                id={`studio-story-photo-input-${memory.id}`}
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                                 multiple
@@ -2315,6 +2346,11 @@ export function StudioClient() {
           </>
         )}
       </div>
+      <PhotoUploadGuideDialog
+        open={Boolean(pendingPhotoInputId)}
+        onClose={() => setPendingPhotoInputId("")}
+        onContinue={continueToFirstPhoto}
+      />
     </main>
   );
 }

@@ -644,10 +644,15 @@ test("includes mobile breathing room, sticky conversion action, and touch story 
 
 test("keeps customer and admin work practical and safe on mobile", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [css, studio, admin] = await Promise.all([
+  const [css, story, studio, admin, photoUploadGuide] = await Promise.all([
     readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+    readFile(
+      new URL("app/components/PhotoUploadGuideDialog.tsx", root),
+      "utf8",
+    ),
   ]);
   assert.match(css, /\.studio-next-action/);
   assert.match(css, /\.mobile-concept-submit/);
@@ -658,6 +663,13 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   );
   assert.match(css, /\.album-manager-actions button \{ min-height: 44px;/);
   assert.match(css, /\.admin-mobile-sections/);
+  assert.match(css, /\.photo-upload-guide-list/);
+  assert.match(story, /hasSeenPhotoUploadGuide/);
+  assert.match(studio, /hasSeenPhotoUploadGuide/);
+  assert.match(photoUploadGuide, /photo-upload-guide-seen:v1/);
+  assert.match(photoUploadGuide, /愛犬がはっきり見える写真を/);
+  assert.match(photoUploadGuide, /次回から、この案内は表示されません/);
+  assert.match(photoUploadGuide, /rememberPhotoUploadGuide/);
   assert.match(studio, /NEXT ACTION · 今やること/);
   assert.match(studio, /hasPendingConceptChange/);
   assert.match(studio, /id="materials"/);

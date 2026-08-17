@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
+import {
+  hasSeenPhotoUploadGuide,
+  PhotoUploadGuideDialog,
+  rememberPhotoUploadGuide,
+} from "../components/PhotoUploadGuideDialog";
 import { CONSENT_VERSIONS } from "../lib/consent";
 import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
@@ -230,11 +235,27 @@ export function StoryWizard() {
   const [photoSelectionNotice, setPhotoSelectionNotice] = useState("");
   const [activeMemoryKey, setActiveMemoryKey] = useState("memory-1");
   const [stepValidationAttempted, setStepValidationAttempted] = useState(false);
+  const [pendingPhotoInputId, setPendingPhotoInputId] = useState("");
   const photoFilesRef = useRef<PhotoDraft[]>([]);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const photoPreviewDialogRef = useRef<HTMLElement>(null);
   const memoryCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const saveSequenceRef = useRef(0);
+
+  const openPhotoInput = (inputId: string) => {
+    if (hasSeenPhotoUploadGuide()) {
+      document.getElementById(inputId)?.click();
+      return;
+    }
+    setPendingPhotoInputId(inputId);
+  };
+
+  const continueToFirstPhoto = () => {
+    const inputId = pendingPhotoInputId;
+    rememberPhotoUploadGuide();
+    setPendingPhotoInputId("");
+    window.setTimeout(() => document.getElementById(inputId)?.click(), 0);
+  };
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?mode=signup&next=/story");
@@ -1427,9 +1448,14 @@ export function StoryWizard() {
                               })}
                               {memory.photoKeys.length <
                                 MAX_PHOTOS_PER_MEMORY && (
-                                <label
+                                <button
+                                  type="button"
                                   className="memory-photo-add"
-                                  htmlFor={`memory-photo-input-${memory.clientKey}`}
+                                  onClick={() =>
+                                    openPhotoInput(
+                                      `memory-photo-input-${memory.clientKey}`,
+                                    )
+                                  }
                                 >
                                   <span
                                     className="upload-mark"
@@ -1443,7 +1469,7 @@ export function StoryWizard() {
                                       ? "まず1枚だけ選んでください"
                                       : "別の表情や場面も追加できます"}
                                   </small>
-                                </label>
+                                </button>
                               )}
                             </div>
                             <input
@@ -1893,6 +1919,11 @@ export function StoryWizard() {
           </section>
         </div>
       )}
+      <PhotoUploadGuideDialog
+        open={Boolean(pendingPhotoInputId)}
+        onClose={() => setPendingPhotoInputId("")}
+        onContinue={continueToFirstPhoto}
+      />
     </main>
   );
 }
