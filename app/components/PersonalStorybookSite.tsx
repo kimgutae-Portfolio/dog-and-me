@@ -78,7 +78,7 @@ export function PersonalStorybookSite({
               <p>01 / COMPLETE FILM</p>
               <h2>大切な時間を、<br />一冊の映像に。</h2>
             </div>
-            <span>画面を大きくしてお楽しみください</span>
+            <span>画面を大きくしてお楽しみください。</span>
           </div>
           <div className="moka-main-player personal-storybook-player">
             {videoUrl ? (
