@@ -54,7 +54,7 @@ test("server-renders the Japanese landing page", async () => {
       .availability,
     "https://schema.org/InStock",
   );
-  assert.equal(structuredData.at(-1).mainEntity.length, 11);
+  assert.equal(structuredData.at(-1).mainEntity.length, 12);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.match(html, /物語をつくる/);
   assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
@@ -91,6 +91,10 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /人が写っている写真も送れますか/);
   assert.match(html, /人物のお顔は新しく生成せず/);
   assert.match(html, /物語案2案/);
+  assert.match(html, /5つの物語を各5秒で制作/);
+  assert.match(html, /このモカのデモは旧仕様の約54秒/);
+  assert.match(html, /メインエピソードを選ぶ工程はありません/);
+  assert.match(html, /送った写真は変更できますか/);
   assert.match(html, /うちの子の動く絵本/);
   assert.doesNotMatch(
     html,
@@ -1191,6 +1195,9 @@ test("stores storybook page sentences and burns them into the final video", asyn
   assert.match(admin, /全5本 · 各5秒/);
   assert.match(admin, /total_story_video_seconds: 25/);
   assert.doesNotMatch(admin, /10秒にする重要な物語/);
+  assert.match(studio, /5つの物語を各5秒で制作/);
+  assert.match(studio, /完成約40秒/);
+  assert.match(studio, /絵本と映像はそれぞれ3場面まで修正/);
   assert.match(css, /\.stills-story-caption/);
 });
 

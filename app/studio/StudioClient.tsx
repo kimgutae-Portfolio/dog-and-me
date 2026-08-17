@@ -37,9 +37,9 @@ const journeySteps = [
   ["物語案の提案", "つながり方の異なる2案をご提案"],
   ["1案選択", "お客様が方向性を決定"],
   ["絵本確認", "全ページと文章をご確認"],
-  ["動画制作", "絵に小さな動きを追加"],
-  ["確認・修正", "完成前の最終確認"],
-  ["お届け", "完成した動く絵本と専用サイトを納品"],
+  ["動画制作", "5つの物語を各5秒で制作"],
+  ["確認・修正", "約40秒の映像を最終確認"],
+  ["お届け", "動く絵本と期限なしの専用サイトを納品"],
 ] as const;
 
 const statusStep: Record<MemoryOrder["status"], number> = {
@@ -459,7 +459,7 @@ export function StudioClient() {
       case "production":
         return {
           title: "動く絵本を制作しています",
-          copy: "担当者が承認された絵に小さな動きと文章、BGMを重ねています。",
+          copy: "承認された5枚の絵を各5秒で動かし、約40秒の作品へ文章とBGMを重ねています。",
           href: "#messages",
           label: "担当者へ連絡する",
         };
@@ -1032,7 +1032,7 @@ export function StudioClient() {
           <div>
             <strong>ご相談と写真を受け付けました。</strong>
             <p>
-              ここから追加写真、物語案の選択、絵本ページの確認、お届けまで進められます。
+              ここから写真の確認、物語案の選択、絵本ページと約40秒の完成映像の確認、お届けまで進められます。
             </p>
           </div>
         </div>
@@ -1187,6 +1187,9 @@ export function StudioClient() {
                 <p className="eyebrow">YOUR STORYBOOK STUDIO</p>
                 <h1>{order.pet_name}ちゃんの制作室</h1>
                 <p>写真の追加から完成まで、ひとつずつ進めます。</p>
+                <small className="studio-plan-summary">
+                  5つの物語を各5秒で制作 · 完成約40秒 · 絵本と映像はそれぞれ3場面まで修正
+                </small>
               </div>
               <div className="order-meta">
                 <span>ORDER</span>
@@ -1329,7 +1332,10 @@ export function StudioClient() {
                   </div>
                   <div>
                     <dt>制作内容</dt>
-                    <dd>{order.pet_name}ちゃんの動く絵本</dd>
+                    <dd>
+                      {order.pet_name}ちゃんの動く絵本
+                      <small>5つの物語 · 各5秒 · 完成約40秒</small>
+                    </dd>
                   </div>
                   <div>
                     <dt>お支払い金額</dt>
@@ -1815,9 +1821,9 @@ export function StudioClient() {
                   <p>
                     {order.status === "revision_requested"
                       ? "お送りいただいた修正内容を反映しています。新しい確認映像が届くまで、こちらが現在の版です。"
-                      : order.customer_approved_at
-                        ? `確定受付 ${formatDateTime(order.customer_approved_at)}。担当者が最終納品の準備を進めています。`
-                        : "この映像は確認用です。修正を依頼するか、問題がなければ「この映像で確定する」を押してください。"}
+                        : order.customer_approved_at
+                          ? `確定受付 ${formatDateTime(order.customer_approved_at)}。担当者が最終納品の準備を進めています。`
+                        : "5つの物語を各5秒でつないだ約40秒の確認映像です。修正を依頼するか、問題がなければ「この映像で確定する」を押してください。"}
                   </p>
                   <div className="revision-allowance">
                     <strong>映像の場面修正</strong>
