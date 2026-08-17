@@ -1488,6 +1488,21 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .studio-story-photo-actions button { margin-top: 0; }
 .studio-story-photo-grid button:disabled { opacity: .45; cursor: not-allowed; }
 .studio-story-photo-grid .studio-story-photo-delete { border-color: var(--line); color: var(--muted); }
+.photo-change-status { margin-top: 16px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid #c7bdae; background: #f1ece3; }
+.photo-change-status > div { min-width: 0; display: grid; gap: 7px; }
+.photo-change-status-badge { width: fit-content; padding: 4px 8px; color: #715849; background: #e5d9ca; font-size: 7px; font-weight: 800; letter-spacing: .08em; }
+.photo-change-status strong { font-family: var(--font-serif); font-size: 13px; font-weight: 400; line-height: 1.5; }
+.photo-change-status p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.75; }
+.photo-change-status .button { flex: 0 0 auto; min-height: 42px; white-space: nowrap; }
+.photo-change-status.editable { border-color: #aebcab; background: #edf2ea; }
+.photo-change-status.editable .photo-change-status-badge { color: #355139; background: #d8e5d5; }
+.photo-change-status.production-started { border-color: #d0afa0; background: #f4e9e2; }
+.photo-change-status.production-started .photo-change-status-badge { color: #7b3f31; background: #ecd4c9; }
+
+@media (max-width: 640px) {
+  .photo-change-status { align-items: stretch; flex-direction: column; }
+  .photo-change-status .button { width: 100%; }
+}
 .admin-stills-flow { margin: 14px 0; padding: 10px 12px; list-style: none; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.45); }
 .admin-stills-flow li { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 8px; line-height: 1.5; }
 .admin-stills-flow strong { width: 21px; height: 21px; flex: 0 0 21px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 9px; }

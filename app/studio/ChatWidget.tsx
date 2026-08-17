@@ -38,6 +38,7 @@ export function ChatWidget({
   onMessageReceived,
   onMessagesRead,
   onRefreshMessages,
+  composeRequest,
 }: {
   order: MemoryOrder;
   currentUserId: string;
@@ -48,6 +49,7 @@ export function ChatWidget({
   onMessageReceived: (message: OrderMessage) => void;
   onMessagesRead: () => void;
   onRefreshMessages: () => void;
+  composeRequest?: { id: number; body: string } | null;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -86,6 +88,27 @@ export function ChatWidget({
   useEffect(() => {
     if (open) refreshMessagesRef.current();
   }, [open]);
+
+  useEffect(() => {
+    if (!composeRequest) return;
+    let focusFrame = 0;
+    const frame = window.requestAnimationFrame(() => {
+      setOpen(true);
+      focusFrame = window.requestAnimationFrame(() => {
+        if (!textareaRef.current) return;
+        textareaRef.current.value = composeRequest.body;
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(
+          composeRequest.body.length,
+          composeRequest.body.length,
+        );
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(focusFrame);
+    };
+  }, [composeRequest]);
 
   const unreadCount = useMemo(
     () =>
@@ -161,6 +184,7 @@ export function ChatWidget({
         className="chat-widget-control"
         id={toggleId}
         type="checkbox"
+        checked={open}
         onChange={(event) => setOpen(event.currentTarget.checked)}
         aria-hidden="true"
         tabIndex={-1}

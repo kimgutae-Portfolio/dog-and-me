@@ -107,6 +107,10 @@ export function StudioClient() {
     Record<string, string>
   >({});
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [photoChangeComposeRequest, setPhotoChangeComposeRequest] = useState<{
+    id: number;
+    body: string;
+  } | null>(null);
   const [revisionCategory, setRevisionCategory] = useState("絵の動き");
   const [revisionBody, setRevisionBody] = useState("");
   const [approvalChecked, setApprovalChecked] = useState(false);
@@ -345,6 +349,29 @@ export function StudioClient() {
       order.photo_analysis_status !== "approved",
   );
   const canAddPhotos = canManageSourcePhotos;
+  const photoProductionStarted = Boolean(
+    order &&
+      (order.production_started_at ||
+        [
+          "production",
+          "customer_review",
+          "revision_requested",
+          "quality_check",
+          "delivered",
+        ].includes(order.status)),
+  );
+
+  const openPhotoChangeConsultation = () => {
+    setPhotoChangeComposeRequest({
+      id: Date.now(),
+      body: [
+        "写真の変更について相談したいです。",
+        "",
+        "変更したい物語：",
+        "変更したい写真・理由：",
+      ].join("\n"),
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -1367,7 +1394,7 @@ export function StudioClient() {
                       ? "お預かりした5つの物語をつなぐ2案から、心に近い1案を選んでください。"
                       : order.status === "stills_review"
                         ? "動画にする前の絵本ページと物語文をご用意しました。内容をご確認ください。"
-                        : "進行が変わると、この制作室でお知らせします。写真の追加や基準写真の変更は、担当者の素材確認が終わる前まで行えます。"}
+                        : "進行が変わると、この制作室でお知らせします。写真の追加や削除は、担当者の素材確認が終わる前まで行えます。"}
                 </p>
                 <span className="estimate">
                   予定完成日：{formatDate(order.due_date)}
@@ -2020,7 +2047,7 @@ export function StudioClient() {
                                       }
                                       title={
                                         memoryPhotos.length <= 1
-                                          ? "基準写真が1枚必要です"
+                                          ? "写真が1枚必要です"
                                           : "この写真を削除"
                                       }
                                       onClick={() =>
@@ -2080,13 +2107,46 @@ export function StudioClient() {
                       入力の続きを開く →
                     </Link>
                   </aside>
-                ) : !canAddPhotos && (
+                ) : canOperateOrder ? (
+                  <aside
+                    className={`photo-change-status ${canManageSourcePhotos ? "editable" : photoProductionStarted ? "production-started" : "locked"}`}
+                  >
+                    <div>
+                      <span className="photo-change-status-badge">
+                        {canManageSourcePhotos
+                          ? "確認中・変更できます"
+                          : photoProductionStarted
+                            ? "制作開始済み"
+                            : "制作準備中"}
+                      </span>
+                      <strong>
+                        {canManageSourcePhotos
+                          ? "担当者の確認完了前なら、写真を変更できます"
+                          : photoProductionStarted
+                            ? "写真を変更したい場合は、まず担当者へご相談ください"
+                            : "写真は確認済みです。変更希望は担当者が確認します"}
+                      </strong>
+                      <p>
+                        {canManageSourcePhotos
+                          ? "写真の追加・削除はこの画面から行えます。確認完了後は直接変更できなくなります。"
+                          : photoProductionStarted
+                            ? "制作状況によって、納期や追加費用をご案内する場合があります。"
+                            : "まだ制作開始前のため、変更したい内容をメッセージでお知らせください。"}
+                      </p>
+                    </div>
+                    {!canManageSourcePhotos && (
+                      <button
+                        className="button button-outline"
+                        type="button"
+                        onClick={openPhotoChangeConsultation}
+                      >
+                        写真の変更を相談する
+                      </button>
+                    )}
+                  </aside>
+                ) : (
                   <p className="readonly-preview-note">
-                    {readOnlyPreview
-                      ? "閲覧専用プレビューでは写真を追加できません。"
-                      : order.photo_analysis_status === "approved"
-                        ? "写真は担当者確認済みのため固定されています。変更が必要な場合は、メッセージで担当者へご連絡ください。"
-                        : "現在の制作工程では写真を変更できません。"}
+                    閲覧専用プレビューでは写真を変更できません。
                   </p>
                 )}
               </section>
@@ -2117,6 +2177,7 @@ export function StudioClient() {
                 )
               }
               onRefreshMessages={() => void loadDetails(order.id)}
+              composeRequest={photoChangeComposeRequest}
             />
 
             {canOperateOrder ? (

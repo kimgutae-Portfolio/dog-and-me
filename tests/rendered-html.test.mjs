@@ -1213,6 +1213,14 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(chat, /ご登録のメールアドレスにもお知らせします/);
   assert.match(chat, /<textarea[\s\S]*?ref=\{textareaRef\}[\s\S]*?required/);
   assert.match(chat, /disabled=\{sending\}/);
+  assert.match(chat, /checked=\{open\}/);
+  assert.match(chat, /composeRequest\.body/);
+  assert.match(studio, /写真の変更を相談する/);
+  assert.match(studio, /写真の変更について相談したいです/);
+  assert.match(studio, /photoProductionStarted/);
+  assert.match(studio, /担当者の確認完了前なら、写真を変更できます/);
+  assert.match(studio, /制作状況によって、納期や追加費用/);
+  assert.match(studio, /composeRequest=\{photoChangeComposeRequest\}/);
   assert.doesNotMatch(chat, /disabled=\{!messageBody\.trim\(\)\}/);
   assert.doesNotMatch(notification, /p_body|messageBody/);
   assert.doesNotMatch(
