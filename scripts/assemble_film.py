@@ -31,7 +31,6 @@ W, H = 1920, 1080
 FPS = 24
 SOURCE_CLIP_SECONDS = 5.0  # legacy bridge source length
 SHORT_STORY_CLIP_SECONDS = 5.0
-EXPANDED_STORY_CLIP_SECONDS = 10.0
 BRIDGE_CLIP_SECONDS = 1.6
 PAGE_CURL_SECONDS = 0.95
 BRIDGE_DISSOLVE_SECONDS = 0.28
@@ -398,8 +397,6 @@ def main():
                      help='e.g. "2,3" "4,5" "6" — one group per memory block')
     ap.add_argument("--ending-clip", required=True, type=int)
     ap.add_argument("--bridge-clips", nargs="*", type=int, default=[])
-    ap.add_argument("--expanded-clips", nargs="*", type=int, default=[],
-                    help="1-based clip numbers that are continuous 10-second stories")
     # Kept as a no-op compatibility flag for older local command lines.
     ap.add_argument("--continuation-clips", nargs="*", type=int, default=[])
     ap.add_argument("--kicker", default="A MOVING STORYBOOK")
@@ -430,7 +427,6 @@ def main():
 
     memory_groups = [[int(x) for x in g.split(",")] for g in args.memory_clips]
     bridge_clip_numbers = set(args.bridge_clips)
-    expanded_clip_numbers = set(args.expanded_clips)
     order_dir = args.order_dir
 
     def clip_path(n):
@@ -461,11 +457,7 @@ def main():
                 clip_duration = BRIDGE_CLIP_SECONDS
                 clip_kind = "bridge"
             else:
-                clip_duration = (
-                    EXPANDED_STORY_CLIP_SECONDS
-                    if n in expanded_clip_numbers
-                    else SHORT_STORY_CLIP_SECONDS
-                )
+                clip_duration = SHORT_STORY_CLIP_SECONDS
                 normalize_story_clip(
                     clip_path(n), clip_mp4, clip_duration, start_hold, end_hold
                 )

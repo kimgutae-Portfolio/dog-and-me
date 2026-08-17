@@ -1591,7 +1591,7 @@ export function StoryWizard() {
                     <div>
                       <dt>映像の仕様</dt>
                       <dd>
-                        約1分・{FIXED_ASPECT_RATIO}・{FIXED_FILM_STYLE}
+                        約40秒・{FIXED_ASPECT_RATIO}・{FIXED_FILM_STYLE}
                         <br />
                         BGMと場面ごとの物語字幕は担当ディレクターが整えます
                       </dd>

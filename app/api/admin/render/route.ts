@@ -21,7 +21,7 @@ const ASSEMBLE_SCRIPT = path.join(process.cwd(), "scripts", "assemble_film.py");
 // Title/ending fades overlap static cards. Only the four story-to-story page
 // turns add dedicated time because both adjacent motion clips hold still.
 const PROFESSIONAL_STORYBOOK_DURATION_SECONDS =
-  3 + 40 + 7 + 4 * 0.95;
+  3 + 25 + 7 + 4 * 0.95;
 
 type RequestItem = { clipAssetId: string; role: RenderClipRole };
 
@@ -232,28 +232,6 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const { data: orderSettings, error: orderSettingsError } = await supabase
-    .from("orders")
-    .select("expanded_story_sort_orders")
-    .eq("id", orderId)
-    .maybeSingle();
-  const expandedStorySortOrders = Array.isArray(
-    orderSettings?.expanded_story_sort_orders,
-  )
-    ? (orderSettings.expanded_story_sort_orders as number[])
-    : [];
-  if (
-    orderSettingsError ||
-    expandedStorySortOrders.length !== 3 ||
-    new Set(expandedStorySortOrders).size !== 3 ||
-    expandedStorySortOrders.some((value) => value < 0 || value > 4)
-  ) {
-    return Response.json(
-      { error: "expanded_story_selection_missing" },
-      { status: 400 },
-    );
-  }
-  const expandedStorySet = new Set(expandedStorySortOrders);
   const expectedSlots = Array.from({ length: 5 }, (_, storySortOrder) => ({
     storySortOrder,
     renderTake: 1,
@@ -387,13 +365,6 @@ export async function POST(request: NextRequest) {
         const memoryClips = ordered
           .slice(1, -1)
           .map((_, index) => String(index + 2));
-        const expandedClipNumbers = ordered
-          .map((clip, index) =>
-            expandedStorySet.has(clip.scene_sort_order)
-              ? String(index + 1)
-              : null,
-          )
-          .filter((value): value is string => Boolean(value));
         const args = [
           "--order-dir",
           workDir,
@@ -403,8 +374,6 @@ export async function POST(request: NextRequest) {
           ...(memoryClips.length ? memoryClips : ["1"]),
           "--ending-clip",
           String(ordered.length),
-          "--expanded-clips",
-          ...expandedClipNumbers,
           "--kicker",
           kicker,
           "--title",
@@ -452,8 +421,7 @@ export async function POST(request: NextRequest) {
           throw new Error(`保存に失敗しました: ${uploadError.message}`);
         uploadedPath = storagePath;
 
-        // Five chapters use five story clips. The three selected chapters use
-        // one continuous 10-second clip; the other two use one 5-second clip.
+        // Five chapters use five continuous 5-second story clips.
         const durationSeconds = PROFESSIONAL_STORYBOOK_DURATION_SECONDS;
         const { data: assetId, error: registerError } = await supabase.rpc(
           "admin_register_assembled_film",

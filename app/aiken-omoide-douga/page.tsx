@@ -7,7 +7,7 @@ import { createGuideStructuredData } from "../lib/seo";
 
 const title = "愛犬の写真からつくる動く絵本";
 const description =
-  "愛犬の5つのエピソードと場面写真から、水彩とガッシュで描く約1分の動く絵本をオーダーメイド制作します。";
+  "愛犬の5つのエピソードと場面写真から、水彩とガッシュで描く約40秒の動く絵本をオーダーメイド制作します。";
 export const metadata: Metadata = {
   title,
   description,
@@ -81,7 +81,7 @@ export default function AikenOmoideDougaPage() {
           <li>水彩とガッシュで統一した絵本ページ</li>
           <li>5つの物語と場面写真から物語案を2案</li>
           <li>動画化の前に全ページと文章を確認</li>
-          <li>約1分・BGMと物語字幕つき</li>
+          <li>約40秒・BGMと物語字幕つき</li>
         </ul>
       </section>
       <section>

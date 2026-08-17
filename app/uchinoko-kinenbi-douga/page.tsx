@@ -7,7 +7,7 @@ import { createGuideStructuredData } from "../lib/seo";
 
 const title = "うちの子記念日を動く絵本に";
 const description =
-  "愛犬が家族になった日から今までの写真とエピソードを、その子が主人公になる約1分の動く絵本へ。";
+  "愛犬が家族になった日から今までの写真とエピソードを、その子が主人公になる約40秒の動く絵本へ。";
 export const metadata: Metadata = {
   title,
   description,
@@ -130,7 +130,7 @@ export default function UchinokoKinenbiPage() {
       <section>
         <h2>完成後も、絵本を開ける場所</h2>
         <p>
-          約1分の動く絵本に加え、写真とメッセージをまとめる専用ページもプランに含まれます。検索結果には表示されず、専用URLから何度でも物語を開けます。
+          約40秒の動く絵本に加え、写真とメッセージをまとめる専用ページもプランに含まれます。検索結果には表示されず、専用URLから何度でも物語を開けます。
         </p>
         <Link className="text-link" href="/film/moka-demo">
           完成ページの表現を見る →

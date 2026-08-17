@@ -155,8 +155,8 @@ const STORYBOOK_STYLE_PROFILE = {
 } as const;
 const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
   id: "MEMORY STORYBOOK PRODUCTION",
-  version: "2.0",
-  prompt_filename: "MEMORY_STORYBOOK_PRODUCTION_v2.txt",
+  version: "3.0",
+  prompt_filename: "MEMORY_STORYBOOK_PRODUCTION_v3.txt",
   source_photo_policy:
     "Use customer photos as identity-locked references in their original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories; never pad, blur, crop, or send the raw photo directly to Runway.",
   page_image_policy:
@@ -165,10 +165,8 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
     count: 5,
     model: "gen4",
     duration_seconds: 5,
-    expanded_story_duration_seconds: 10,
-    expanded_story_count: 3,
-    expanded_story_rule:
-      "The three selected important stories are one continuous 10-second clip each; the remaining two stories are one continuous 5-second clip each.",
+    duration_rule:
+      "Every story is produced as one continuous 5-second clip. No story selection or extended clip is used.",
   },
   transition_video_count: 0,
   transition_page_count: 0,
@@ -371,22 +369,13 @@ story_caption 규칙
   "embedded_text_check": "passed"
 }`;
 
-const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v3.2
+const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v4.0
 
 첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
 
-order.json의 expanded_stories에 지정된 중요한 이야기 3개는 각각 하나의 10초 Gen-4 프롬프트로 작성한다. 나머지 이야기 2개는 각각 하나의 5초 Gen-4 프롬프트로 작성한다. 총 5개의 이미지 투 비디오 프롬프트를 Runway가 명확하게 이해하도록 영어로 작성한다.
+이야기 1~5를 각각 하나의 5초 Gen-4 프롬프트로 작성한다. 총 5개의 이미지 투 비디오 프롬프트를 Runway가 명확하게 이해하도록 영어로 작성한다. 메인 에피소드나 중요 이야기를 별도로 고르지 않으며, 모든 이야기는 동일한 5초 규격이다.
 
-중요 이야기를 여러 take로 분리하지 않는다. 연결 배경 이미지와 연결 영상은 만들지 않는다.
-
-중요 이야기의 10초 프롬프트 규칙
-- expanded_stories로 지정된 중요한 이야기는 승인 이미지 한 장을 사용하여 하나의 연속된 10초 영상으로 만든다.
-- 10초 영상 안에서 사건의 시작과 이어지는 마무리를 하나의 작은 연속 행동으로 보여준다.
-- 서로 관계없는 두 행동을 나열하지 않는다.
-- motion phase 2는 motion phase 1을 반복하거나 처음 상태로 되돌리지 않고 자연스럽게 이어받아야 한다.
-- 두 phase 모두 동일한 승인 이미지의 구도, 강아지 정체성, 기존 진행 방향과 camera-facing facial view를 유지한다.
-- 중간 전환, 컷, 디졸브 또는 페이지 넘김을 프롬프트에 넣지 않는다.
-- 최종 편집에서는 서로 다른 이야기 사이에만 곡면 책장 넘김을 사용한다.
+한 이야기를 여러 take로 분리하지 않는다. 연결 배경 이미지와 연결 영상은 만들지 않는다. 각 5초 영상 안에서 하나의 작고 분명한 행동이 시작되어 자연스럽게 안정되는 흐름으로 설계한다.
 
 핵심 연출 목표
 - 강아지가 실제로 살아 움직이는 영상으로 보이게 한다.
@@ -417,9 +406,8 @@ order.json의 expanded_stories에 지정된 중요한 이야기 3개는 각각 �
 - 눈동자만 좌우로 움직이거나 eye darting, eye rolling, wandering pupils, crossed eyes를 만들지 않는다. 눈 깜빡임은 필요한 이야기에서만 한 번 천천히 허용한다.
 - 눈 확대, 눈꺼풀 변형, 과도한 반짝임, 새 눈물자국, 말하는 입, 갑작스러운 미소, 과장된 헐떡임을 만들지 않는다.
 
-영상 길이별 동작 구성
-중요 이야기 10초: 0.0~0.4초 자세 유지, 0.4~4.5초 motion phase 1, 4.5~8.8초 연결되는 motion phase 2, 8.8~10.0초 처음 상태로 되돌아가지 않는 자연스러운 감속과 안정.
-일반 이야기 5초: 0.0~0.3초 자세 유지, 0.3~4.2초 primary action, 4.2~5.0초 자연스러운 감속과 안정.
+5초 동작 구성
+0.0~0.3초 승인 이미지의 자세를 안정적으로 유지하고, 0.3~4.2초 하나의 primary action을 분명하게 수행한 뒤, 4.2~5.0초 처음 상태로 강제 복귀하지 않고 자연스럽게 감속·안정한다.
 모든 영상은 끊김 없는 single continuous shot이며, 첫 프레임을 오래 정지시키거나 처음 위치로 강제 복귀시키지 않는다.
 
 카메라와 배경 규칙
@@ -445,9 +433,9 @@ order.json의 expanded_stories에 지정된 중요한 이야기 3개는 각각 �
 
 전체 5개 프롬프트 검수
 - gen4_story_prompts 배열이 정확히 5개이고 이야기 1~5가 각각 한 번씩 포함되는가?
-- expanded_stories 3개만 duration_seconds가 10이고 나머지 2개만 5인가?
+- 모든 이야기의 duration_seconds가 5인가?
 - 하나의 이야기가 여러 take로 나뉘지 않았는가?
-- 중요한 이야기의 motion phase 1과 2가 하나의 사건으로 자연스럽게 연결되는가?
+- 각 이야기에서 하나의 primary action이 5초 안에 자연스럽게 시작되고 안정되는가?
 - 각 행동이 승인 이미지의 자세와 보이는 신체 구조로 가능한가?
 - 걷는 장면에 실제 다리 관절 운동과 배경 기준 위치 변화가 포함되는가?
 - 앉거나 누운 장면에 단순 blink가 아닌 실제 몸통 또는 체중 움직임이 있는가?
@@ -459,28 +447,24 @@ order.json의 expanded_stories에 지정된 중요한 이야기 3개는 각각 �
   "gen4_story_prompts": [
     {
       "story_number": 1,
-      "expanded_story": true,
-      "chapter_role": "expanded | single",
       "title": "",
       "pose_assessment": "standing | walking | sitting | lying",
       "facial_view": "front | three-quarter | side",
       "story_beat": "",
       "primary_dog_action": "",
-      "motion_phase_1": "",
-      "motion_phase_2": "",
       "articulated_body_motion": "",
       "secondary_motions": [""],
       "environment_motion": "",
       "background_reference_for_position": "",
       "camera_motion": "locked",
       "identity_and_face_safety": "",
-      "duration_seconds": 10,
+      "duration_seconds": 5,
       "prompt": ""
     }
   ]
 }
 
-일반 5초 이야기에서는 motion_phase_2를 빈 문자열로 반환한다. gen4_story_prompts 배열은 정확히 5개이며 expanded_stories 3개는 각각 하나의 10초 프롬프트, 나머지 2개는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
+gen4_story_prompts 배열은 정확히 5개이며 모든 이야기는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
 
 const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.1
 
@@ -701,7 +685,6 @@ export function AdminStudio() {
   const [characterSpriteFile, setCharacterSpriteFile] = useState<File | null>(null);
   const [characterSpriteInputKey, setCharacterSpriteInputKey] = useState(0);
   const [clipInputKey, setClipInputKey] = useState(0);
-  const [expandedStoryDraft, setExpandedStoryDraft] = useState<number[]>([]);
   const [bgmTracks, setBgmTracks] = useState<string[]>([]);
   const [renderAvailable, setRenderAvailable] = useState(false);
   const [filmTitle, setFilmTitle] = useState("");
@@ -1114,21 +1097,13 @@ export function AdminStudio() {
       (asset, index) =>
         asset.scene_sort_order === index && Boolean(asset.story_caption?.trim()),
     );
-  const expandedStorySortOrders = useMemo(
-    () =>
-      Array.isArray(order?.expanded_story_sort_orders)
-        ? [...order.expanded_story_sort_orders].sort((a, b) => a - b)
-        : [],
-    [order?.expanded_story_sort_orders],
-  );
   const runwayExportReady = Boolean(
     sourceExportReady &&
       selectedConcept &&
       order?.payment_status === "paid" &&
       order?.stills_approved_at &&
       sceneStills.length === 5 &&
-      allSceneCaptionsReady &&
-      expandedStorySortOrders.length === 3,
+      allSceneCaptionsReady,
   );
   const reviewVideos = useMemo(
     () => assets.filter((asset) => asset.category === "review_video"),
@@ -1173,7 +1148,6 @@ export function AdminStudio() {
   );
   const allRenderClipsReady =
     sceneStills.length === 5 &&
-    expandedStorySortOrders.length === 3 &&
     requiredRenderSlots.length === 5 &&
     requiredRenderSlots.every(({ still, take }) =>
       clipByStillAndTake.has(`${still.id}:${take}`),
@@ -1181,7 +1155,7 @@ export function AdminStudio() {
   const assemblyClipCount = requiredRenderSlots.filter(({ still, take }) =>
     clipByStillAndTake.has(`${still.id}:${take}`),
   ).length;
-  const estimatedSeconds = 54;
+  const estimatedSeconds = 39;
   const openMessages = useMemo(
     () =>
       messages.filter(
@@ -1307,11 +1281,6 @@ export function AdminStudio() {
       setStillCaptions({});
       setStillInputKeys({});
       setClipInputKey((current) => current + 1);
-      setExpandedStoryDraft(
-        Array.isArray(order.expanded_story_sort_orders)
-          ? [...order.expanded_story_sort_orders].sort((a, b) => a - b)
-          : [],
-      );
       setFilmTitle(`${order.pet_name}の、小さなものがたり`);
       // The customer's own words to their dog are the right starting point for
       // the ending card; the operator edits from there.
@@ -1714,9 +1683,6 @@ export function AdminStudio() {
           position: photo.story_photo_position,
           archive_path: photo.archive_path,
         }));
-      const expandedMotion = expandedStorySortOrders.includes(
-        memory.sort_order - 1,
-      );
       return {
         id: storyId,
         number: memory.sort_order,
@@ -1734,19 +1700,18 @@ export function AdminStudio() {
         main_motif: null,
         main_motif_instruction:
           "Derive one visual motif from this story without adding customer facts.",
-        expanded_motion: expandedMotion,
         runway_clip_count: 1,
         output: {
           page_image_filename: `${storyId}.png`,
           runway_clip_filenames: [`${storyId}.mp4`],
           runway_model: "gen4",
-          runway_duration_seconds: expandedMotion ? 10 : 5,
+          runway_duration_seconds: 5,
         },
       };
     });
     const transitions: never[] = [];
     const productionData = {
-      schema_version: "wan-memory-storybook-production-export-3.0",
+      schema_version: "wan-memory-storybook-production-export-4.0",
       exported_at: new Date().toISOString(),
       job: {
         id: order.order_number,
@@ -1776,17 +1741,12 @@ export function AdminStudio() {
       transitions,
       output_plan: {
         story_count: stories.length,
-        expanded_story_count: expandedStorySortOrders.length,
-        expanded_story_sort_orders: expandedStorySortOrders,
         runway_clip_count: stories.length,
         story_model: "gen4",
         story_duration_seconds: 5,
-        expanded_story_duration_seconds: 10,
-        total_story_video_seconds:
-          stories.filter((story) => story.expanded_motion).length * 10 +
-          stories.filter((story) => !story.expanded_motion).length * 5,
+        total_story_video_seconds: stories.length * 5,
         story_duration_policy:
-          "expanded_stories=10s single continuous clip; other_stories=5s single continuous clip",
+          "all_stories=5s single continuous clip; no expanded-story selection",
         transition_count: 0,
         transition_video_count: 0,
         title_card_seconds: 3,
@@ -2185,7 +2145,7 @@ export function AdminStudio() {
     const exportData = buildProductionExport();
     if (!order || !exportData || !runwayExportReady) {
       setError(
-        "絵本ページの承認後、重要な物語を3つ選んで保存するとダウンロードできます。",
+        "5枚の絵本ページをお客様が承認するとダウンロードできます。",
       );
       return;
     }
@@ -2199,7 +2159,7 @@ export function AdminStudio() {
       ]);
       const root = `${safeArchiveSegment(order.order_number)}-03-runway-prompts`;
       const runwayData = {
-        schema_version: "wan-memory-runway-prompt-input-3.2",
+        schema_version: "wan-memory-runway-prompt-input-4.0",
         exported_at: new Date().toISOString(),
         job: exportData.productionData.job,
         style: exportData.productionData.style,
@@ -2208,29 +2168,14 @@ export function AdminStudio() {
         stories: exportData.productionData.stories,
         transition_rules: exportData.productionData.transition_rules,
         transitions: exportData.productionData.transitions,
-        expanded_story_sort_orders: expandedStorySortOrders,
-        expanded_stories: sceneStills
-          .filter((still) =>
-            expandedStorySortOrders.includes(still.scene_sort_order),
-          )
-          .map((still) => ({
-            story_number: still.scene_sort_order + 1,
-            title: still.scene_title,
-            expanded_story: true,
-            chapter_role: "expanded",
-            clip_count: 1,
-            duration_seconds: 10,
-          })),
         output_plan: {
           story_count: 5,
           runway_clip_count: 5,
-          expanded_story_count: 3,
           story_model: "gen4",
           story_duration_seconds: 5,
-          expanded_story_duration_seconds: 10,
-          total_story_video_seconds: 40,
+          total_story_video_seconds: 25,
           story_duration_policy:
-            "expanded_stories=10s single continuous clip; other_stories=5s single continuous clip",
+            "all_stories=5s single continuous clip; no expanded-story selection",
           transition_video_count: 0,
           transition_page_count: 0,
           final_editing:
@@ -2244,9 +2189,9 @@ export function AdminStudio() {
             "STEP 3 · 顧客承認後のRunway制作データです。",
             "1. order.jsonとapproved-pagesの5枚をCodexへ添付します。",
             "2. 02_PROMPT_RUNWAY.txtをそのまま依頼文として使います。",
-            "3. CodexがStory用Runwayプロンプトを合計5本作ります。重要な3物語は各10秒、残り2物語は各5秒です。接続背景や接続映像は作りません。",
-            "4. 重要な物語も複数takeに分けず、1本の10秒動画の中で始まりから自然なまとまりまで続く一つの行動として設計します。",
-            "5. Story 5本をGen-4で、重要な3本は10秒・残り2本は5秒で制作します。",
+            "3. CodexがStory用Runwayプロンプトを合計5本作ります。5物語すべて各5秒です。メインエピソードの選択、接続背景、接続映像はありません。",
+            "4. 各物語を複数takeに分けず、1本の5秒動画の中で一つの行動が自然に始まり、落ち着くように設計します。",
+            "5. Story 5本をGen-4で、すべて5秒で制作します。",
             "6. 完成した5本を管理画面の各物語1本スロットへ登録します。物語間のページめくりは自動編集されます。",
           ].join("\n"),
         ),
@@ -2835,44 +2780,6 @@ export function AdminStudio() {
     setSaving(false);
   };
 
-  const toggleExpandedStory = (sortOrder: number) => {
-    setError("");
-    setExpandedStoryDraft((current) => {
-      if (current.includes(sortOrder)) {
-        return current.filter((value) => value !== sortOrder);
-      }
-      if (current.length >= 3) {
-        setError("重要な物語は3つまで選択できます。");
-        return current;
-      }
-      return [...current, sortOrder].sort((a, b) => a - b);
-    });
-  };
-
-  const saveExpandedStories = async () => {
-    if (!order || expandedStoryDraft.length !== 3 || saving) return;
-    setSaving(true);
-    setError("");
-    const { error: saveError } = await getSupabaseBrowserClient().rpc(
-      "admin_set_expanded_story_slots",
-      {
-        p_order_id: order.id,
-        p_sort_orders: expandedStoryDraft,
-      },
-    );
-    if (saveError) {
-      setError(
-        "重要な物語を保存できませんでした。選択状態を確認して、もう一度お試しください。",
-      );
-    } else {
-      setNotice(
-        "重要な物語3つを保存しました。選んだ物語はRunwayで10秒、その他は5秒の1本として制作します。",
-      );
-      await Promise.all([loadOrders(), loadDetails(order.id)]);
-    }
-    setSaving(false);
-  };
-
   const uploadRenderClip = async (
     still: OrderAsset,
     file: File,
@@ -2959,7 +2866,7 @@ export function AdminStudio() {
     if (!order || !canRenderFilm || rendering) return;
     if (!allRenderClipsReady) {
       setError(
-        "重要な物語3つを選び、5つの物語クリップをすべて登録してください。",
+        "5つの5秒物語クリップをすべて登録してください。",
       );
       return;
     }
@@ -3595,7 +3502,7 @@ export function AdminStudio() {
                     <dl className="admin-story">
                       <div>
                         <dt>制作単位</dt>
-                        <dd>{memories.length}物語 · 重要な3物語は2クリップ</dd>
+                        <dd>{memories.length}物語 · 各1クリップ（5秒）</dd>
                       </div>
                       <div>
                         <dt>写真の使い方</dt>
@@ -3980,54 +3887,7 @@ export function AdminStudio() {
                       <article className={runwayExportReady ? "ready" : "locked"}>
                         <header><span>STEP 3</span><strong>Runway制作へ進む</strong></header>
                         <p>5枚の絵本ページを顧客が承認した後に使用します。</p>
-                        <small>内容：承認画像5枚、重要な3物語の指定、Gen-4用プロンプト5本</small>
-                        {order.stills_approved_at && sceneStills.length === 5 && (
-                          <div className="admin-expanded-story-picker">
-                            <strong>10秒にする重要な物語を3つ選択</strong>
-                            <div>
-                              {sceneStills.map((still) => {
-                                const selected = expandedStoryDraft.includes(
-                                  still.scene_sort_order,
-                                );
-                                return (
-                                  <button
-                                    key={`expanded-${still.id}`}
-                                    type="button"
-                                    className={selected ? "selected" : ""}
-                                    aria-pressed={selected}
-                                    disabled={saving || !canRenderFilm}
-                                    onClick={() =>
-                                      toggleExpandedStory(
-                                        still.scene_sort_order,
-                                      )
-                                    }
-                                  >
-                                    <span>
-                                      物語{still.scene_sort_order + 1}
-                                    </span>
-                                    {still.scene_title ?? "場面"}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            <button
-                              className="button button-outline"
-                              type="button"
-                              disabled={
-                                saving ||
-                                !canRenderFilm ||
-                                expandedStoryDraft.length !== 3 ||
-                                JSON.stringify(expandedStoryDraft) ===
-                                  JSON.stringify(expandedStorySortOrders)
-                              }
-                              onClick={() => void saveExpandedStories()}
-                            >
-                              {saving
-                                ? "保存中…"
-                                : `重要な物語を保存（${expandedStoryDraft.length}/3）`}
-                            </button>
-                          </div>
-                        )}
+                        <small>内容：承認画像5枚、各5秒のGen-4用プロンプト5本</small>
                         <button
                           className="button button-primary"
                           type="button"
@@ -4038,7 +3898,7 @@ export function AdminStudio() {
                         </button>
                         {!runwayExportReady && (
                           <em>
-                            顧客承認後、重要な物語3つを保存すると有効
+                            5枚の絵本ページを顧客が承認すると有効
                           </em>
                         )}
                       </article>
@@ -4797,7 +4657,7 @@ export function AdminStudio() {
                           5つの物語へ、合計5本のクリップを追加します。
                         </strong>
                         <span>
-                          重要な3物語は各10秒の1本で完結します。残り2物語は各5秒で、物語の間だけページをめくります。
+                          5物語すべて各5秒の1本で完結し、物語の間だけページをめくります。
                         </span>
                       </aside>
                     )}
@@ -4814,7 +4674,7 @@ export function AdminStudio() {
                                 ? "お客様による現在版の同意記録が必要です。"
                                 : !order.stills_approved_at
                                   ? "お客様が絵本ページと文章を承認するまで編集できません。"
-                                  : "進行状況を「約1分の映像を制作しています」へ進めてください。"}
+                                  : "進行状況を「約40秒の映像を制作しています」へ進めてください。"}
                         </span>
                       </aside>
                     )}
@@ -4822,7 +4682,7 @@ export function AdminStudio() {
                     {renderAvailable && sceneStills.length > 0 && (
                       <>
                         <p className="admin-render-section-label">
-                          STORY · Gen-4（重要3本は10秒・他2本は5秒、合計5本）
+                          STORY · Gen-4（全5本 · 各5秒）
                         </p>
                         <div className="admin-render-clips">
                           {sceneStills.map((still) => {
@@ -4865,11 +4725,7 @@ export function AdminStudio() {
                                         className={clip ? "ready" : ""}
                                       >
                                         <span>
-                                          {expandedStorySortOrders.includes(
-                                            still.scene_sort_order,
-                                          )
-                                            ? "Gen-4 · 10秒で完結"
-                                            : "Gen-4 · 5秒で完結"}
+                                          Gen-4 · 5秒で完結
                                         </span>
                                         {clip ? (
                                           <>
@@ -5031,7 +4887,7 @@ export function AdminStudio() {
                         </div>
                         {assemblyClipCount > 0 && !allRenderClipsReady && (
                           <p className="admin-operation-note">
-                            5つの物語クリップ（重要な3本は10秒、その他2本は5秒）がすべて揃うと編集を開始できます。
+                            5つの5秒物語クリップがすべて揃うと編集を開始できます。
                           </p>
                         )}
                         {renderProgress && (

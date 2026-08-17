@@ -891,14 +891,6 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-stage-downloads small { margin-bottom: 14px; color: var(--muted); font-size: 7px; line-height: 1.7; }
 .admin-stage-downloads .button { width: 100%; min-height: 44px; margin-top: auto; padding-inline: 8px; font-size: 8px; }
 .admin-stage-downloads em { margin-top: 7px; color: var(--muted); font-size: 7px; font-style: normal; text-align: center; }
-.admin-expanded-story-picker { margin: 0 0 14px; padding: 10px; display: grid; gap: 8px; border: 1px solid rgba(157,92,62,.25); background: rgba(255,255,255,.5); }
-.admin-expanded-story-picker > strong { font-size: 9px; line-height: 1.5; }
-.admin-expanded-story-picker > div { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px; }
-.admin-expanded-story-picker > div > button { min-width: 0; padding: 7px; display: grid; gap: 2px; border: 1px solid var(--line); background: #f8f5ee; color: var(--ink); font: inherit; font-size: 7px; line-height: 1.4; text-align: left; cursor: pointer; }
-.admin-expanded-story-picker > div > button span { color: var(--muted); font-size: 6px; }
-.admin-expanded-story-picker > div > button.selected { border-color: #667d66; background: #e6eee2; box-shadow: inset 3px 0 0 #667d66; }
-.admin-expanded-story-picker > div > button:disabled { cursor: not-allowed; opacity: .55; }
-.admin-stage-downloads .admin-expanded-story-picker .button { min-height: 36px; margin-top: 0; }
 .admin-character-register { margin: 0 0 14px; padding: 18px; display: grid; grid-template-columns: minmax(220px,1fr) minmax(180px,.55fr); gap: 16px 22px; align-items: center; border: 1px solid rgba(158,112,76,.3); background: #f4ede2; }
 .admin-character-register > div:first-child strong { font-family: var(--font-serif); font-size: 17px; font-weight: 400; }
 .admin-character-register > div:first-child p { margin: 7px 0 0; color: var(--muted); font-size: 8px; line-height: 1.7; }

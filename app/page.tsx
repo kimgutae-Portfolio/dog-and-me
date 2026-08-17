@@ -72,7 +72,7 @@ const storyPages = [
 const homeFaqs = [
   [
     "どんな映像になりますか？",
-    "愛犬を写真そっくりの実写として再現するのではなく、その子の特徴や表情をやわらかな水彩・ガッシュで描き、花びら、光、水、しっぽなどに小さな動きを加えた約1分の『動く絵本』です。",
+    "愛犬を写真そっくりの実写として再現するのではなく、その子の特徴や表情をやわらかな水彩・ガッシュで描き、花びら、光、水、しっぽなどに小さな動きを加えた約40秒の『動く絵本』です。",
   ],
   [
     "写真は何枚必要ですか？",
@@ -250,7 +250,7 @@ export default async function Home() {
             <p>
               五つの思い出を、水彩の絵と小さな動き、
               <br />
-              短い文章でつないだ約1分の完成作品です。
+              短い文章でつないだ約40秒の完成作品です。
             </p>
           </div>
           <div className="storybook-film-frame">
@@ -454,7 +454,7 @@ export default async function Home() {
               <ol className="storybook-personal-site-features">
                 <li>
                   <span>01</span>
-                  <div><strong>完成した動く絵本</strong><p>約1分の映像を、いつでもその場で再生できます。</p></div>
+                  <div><strong>完成した動く絵本</strong><p>約40秒の映像を、いつでもその場で再生できます。</p></div>
                 </li>
                 <li>
                   <span>02</span>
@@ -550,7 +550,7 @@ export default async function Home() {
               [
                 "06",
                 "完成前の作品を確認する",
-                "BGMと文章を含む約1分の映像をご確認いただき、映像は合計3場面まで修正できます。",
+                "BGMと文章を含む約40秒の映像をご確認いただき、映像は合計3場面まで修正できます。",
               ],
               [
                 "07",
@@ -578,7 +578,7 @@ export default async function Home() {
               <p className="eyebrow">ONE STORYBOOK PLAN</p>
               <h2>物語から、完成ページまで。</h2>
             </div>
-            <p>二つの物語案、絵本ページ、約1分の映像、公開期限・月額料金なしの専用サイトを含みます。</p>
+            <p>二つの物語案、絵本ページ、約40秒の映像、公開期限・月額料金なしの専用サイトを含みます。</p>
           </div>
           <div className="pricing-grid">
             <LivePriceCard />

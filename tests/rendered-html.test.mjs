@@ -672,7 +672,7 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.doesNotMatch(admin, /runway_16x9_archive_path/);
   assert.match(admin, /requested_gpt_output/);
   assert.match(admin, /source_photos/);
-  assert.match(admin, /wan-memory-storybook-production-export-3\.0/);
+  assert.match(admin, /wan-memory-storybook-production-export-4\.0/);
   assert.match(admin, /STORYBOOK_STYLE_PROFILE/);
   assert.match(admin, /MEMORY_STORYBOOK_PRODUCTION_PROTOCOL/);
   assert.match(admin, /CONCEPT_PROPOSAL_PROMPT/);
@@ -826,7 +826,15 @@ test("requires a fresh scene-stills publication before video production", async 
 
 test("keeps displayed policy dates and stored consent versions aligned", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [consent, terms, privacy, migration, storybookMigration, revisionMigration] =
+  const [
+    consent,
+    terms,
+    privacy,
+    migration,
+    storybookMigration,
+    revisionMigration,
+    fiveSecondMigration,
+  ] =
     await Promise.all([
       readFile(new URL("app/lib/consent.ts", root), "utf8"),
       readFile(new URL("app/terms/page.tsx", root), "utf8"),
@@ -852,13 +860,20 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
         ),
         "utf8",
       ),
+      readFile(
+        new URL(
+          "supabase/migrations/202608170003_five_second_story_clips.sql",
+          root,
+        ),
+        "utf8",
+      ),
     ]);
-  assert.match(consent, /terms: "2026-08-17-scene-revision-v1"/);
+  assert.match(consent, /terms: "2026-08-17-five-second-stories-v1"/);
   assert.match(consent, /privacy: "2026-07-27"/);
-  assert.match(consent, /aiNotice: "2026-08-17-scene-revision-v1"/);
+  assert.match(consent, /aiNotice: "2026-08-17-five-second-stories-v1"/);
   assert.match(
     terms,
-    /場面ごとの修正枠・決済・キャンセル案内更新：2026年8月17日（同意版\s*2026-08-17-scene-revision-v1）/,
+    /全5物語を各5秒で制作する映像仕様・場面ごとの修正枠・決済・キャンセル案内更新：2026年8月17日（同意版\s*2026-08-17-five-second-stories-v1）/,
   );
   assert.match(
     privacy,
@@ -873,6 +888,8 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
   assert.match(storybookMigration, /accept_order_consents/);
   assert.match(revisionMigration, /2026-08-17-scene-revision-v1/);
   assert.match(revisionMigration, /order_has_current_consents/);
+  assert.match(fiveSecondMigration, /2026-08-17-five-second-stories-v1/);
+  assert.match(fiveSecondMigration, /drop function if exists public\.admin_set_expanded_story_slots/);
 });
 
 test("counts storybook and video revisions as separate three-scene allowances", async () => {
@@ -1169,7 +1186,11 @@ test("stores storybook page sentences and burns them into the final video", asyn
   assert.match(assembler, /CARD_DISSOLVE_SECONDS if first_story/);
   assert.match(assembler, /ENDING_DISSOLVE_SECONDS if last_story/);
   assert.doesNotMatch(assembler, /PHOTO_HOLD_SECONDS/);
-  assert.match(renderRoute, /3 \+ 40 \+ 7 \+ 4 \* 0\.95/);
+  assert.match(renderRoute, /3 \+ 25 \+ 7 \+ 4 \* 0\.95/);
+  assert.doesNotMatch(renderRoute, /expanded_story_selection_missing/);
+  assert.match(admin, /全5本 · 各5秒/);
+  assert.match(admin, /total_story_video_seconds: 25/);
+  assert.doesNotMatch(admin, /10秒にする重要な物語/);
   assert.match(css, /\.stills-story-caption/);
 });
 
