@@ -758,6 +758,15 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .revision-history article strong { font-size: 10px; }
 .revision-history article p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.7; }
 .revision-form { display: grid; grid-template-columns: 180px 1fr auto; gap: 12px; align-items: start; }
+.revision-scene-picker { margin: 0; padding: 15px; grid-column: 1 / -1; border: 1px solid #c9beaf; background: rgba(255,255,255,.5); }
+.revision-scene-picker legend { padding: 0 7px; color: var(--ink); font-size: 10px; font-weight: 700; }
+.revision-scene-picker > div { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; }
+.revision-scene-picker label { min-height: 46px; padding: 9px; display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: #fbfaf5; cursor: pointer; }
+.revision-scene-picker label:has(input:checked) { border-color: var(--rust); background: #f6e9df; }
+.revision-scene-picker label:has(input:disabled) { cursor: not-allowed; opacity: .45; }
+.revision-scene-picker input { flex: 0 0 auto; }
+.revision-scene-picker label span { overflow: hidden; font-size: 8px; line-height: 1.5; text-overflow: ellipsis; }
+.revision-scene-picker > small { margin-top: 9px; display: block; color: var(--rust); font-size: 8px; font-weight: 700; text-align: right; }
 .revision-limit-note { padding: 17px 19px; display: grid; gap: 6px; border: 1px solid #d2beaa; background: #f2ece2; box-shadow: inset 0 0 0 4px rgba(183,139,102,.08); }
 .revision-limit-note strong { font-size: 10px; }
 .revision-limit-note span { color: var(--muted); font-size: 9px; line-height: 1.7; }
@@ -962,6 +971,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-complimentary textarea { width: 100%; padding: 11px; border: 1px solid var(--line); outline: 0; background: white; font-size: 10px; line-height: 1.7; resize: vertical; }
 .admin-complimentary textarea:focus { border-color: var(--sage); }
 @media (max-width: 640px) {
+  .revision-scene-picker > div { grid-template-columns: 1fr; }
+  .revision-scene-picker label { min-height: 48px; }
   .admin-complimentary .button { width: 100%; }
   .admin-complimentary textarea { font-size: 16px; }
 }

@@ -113,6 +113,7 @@ export function StudioClient() {
   } | null>(null);
   const [revisionCategory, setRevisionCategory] = useState("絵の動き");
   const [revisionBody, setRevisionBody] = useState("");
+  const [revisionMemoryIds, setRevisionMemoryIds] = useState<string[]>([]);
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [approvingReview, setApprovingReview] = useState(false);
   const [sceneStillUrls, setSceneStillUrls] = useState<Record<string, string>>(
@@ -121,6 +122,9 @@ export function StudioClient() {
   const [stillsApprovalChecked, setStillsApprovalChecked] = useState(false);
   const [approvingStills, setApprovingStills] = useState(false);
   const [stillsChangeBody, setStillsChangeBody] = useState("");
+  const [stillsChangeMemoryIds, setStillsChangeMemoryIds] = useState<string[]>(
+    [],
+  );
   const [sendingStillsChange, setSendingStillsChange] = useState(false);
   const [acceptingConsent, setAcceptingConsent] = useState(false);
   const [consentTermsChecked, setConsentTermsChecked] = useState(false);
@@ -719,27 +723,39 @@ export function StudioClient() {
 
   const requestRevision = async (event: FormEvent) => {
     event.preventDefault();
-    if (!order || !canOperateOrder || !revisionBody.trim()) return;
+    if (
+      !order ||
+      !canOperateOrder ||
+      !revisionBody.trim() ||
+      revisionMemoryIds.length === 0 ||
+      revisionMemoryIds.length > revisionsRemaining
+    )
+      return;
     const { error: revisionError } = await getSupabaseBrowserClient().rpc(
       "request_order_revision",
       {
         p_order_id: order.id,
         p_category: revisionCategory,
         p_body: revisionBody.trim(),
+        p_memory_ids: revisionMemoryIds,
       },
     );
     if (revisionError) {
       setError(
-        revisionError.message.includes("revision limit reached")
-          ? "プラン内の修正回数を使い切っています。追加のご希望はメッセージでご相談ください。"
+        revisionError.message.includes("revision scene limit reached")
+          ? "選択した場面数が、残りの映像修正枠を超えています。"
           : revisionError.message.includes("previous revision is still open")
             ? "前回の修正対応が完了するまでお待ちください。"
+            : revisionError.message.includes("revision scenes required")
+              ? "修正する場面を選んでください。"
             : "修正依頼を送信できませんでした。",
       );
       return;
     }
+    const requestedSceneCount = revisionMemoryIds.length;
     setRevisionBody("");
-    setNotice("修正依頼を受け付けました。");
+    setRevisionMemoryIds([]);
+    setNotice(`映像${requestedSceneCount}場面の修正依頼を受け付けました。`);
     await notifyAdminFromCustomer(order.id, "customer_revision", `${Date.now()}`);
     await Promise.all([loadOrders(), loadDetails(order.id)]);
   };
@@ -937,6 +953,8 @@ export function StudioClient() {
       !order ||
       !canOperateOrder ||
       !stillsChangeBody.trim() ||
+      stillsChangeMemoryIds.length === 0 ||
+      stillsChangeMemoryIds.length > stillsChangesRemaining ||
       sendingStillsChange ||
       order.status !== "stills_review"
     )
@@ -945,20 +963,28 @@ export function StudioClient() {
     setError("");
     const { error: changeError } = await getSupabaseBrowserClient().rpc(
       "request_stills_change",
-      { p_order_id: order.id, p_body: stillsChangeBody.trim() },
+      {
+        p_order_id: order.id,
+        p_body: stillsChangeBody.trim(),
+        p_memory_ids: stillsChangeMemoryIds,
+      },
     );
     if (changeError) {
       setError(
         changeError.message.includes("previous stills change")
           ? "前回の調整内容を反映しています。新しい絵本ページが届くまでお待ちください。"
-          : changeError.message.includes("stills revision limit reached")
-            ? "絵本ページの調整2回を使い切っています。追加のご希望はメッセージでご相談ください。"
+          : changeError.message.includes("stills revision scene limit reached")
+            ? "選択した場面数が、残りの絵本ページ修正枠を超えています。"
+            : changeError.message.includes("stills revision scenes required")
+              ? "修正する絵本ページを選んでください。"
             : "調整のご希望を送信できませんでした。もう一度お試しください。",
       );
     } else {
+      const requestedSceneCount = stillsChangeMemoryIds.length;
       setStillsChangeBody("");
+      setStillsChangeMemoryIds([]);
       setNotice(
-        "調整のご希望をお送りしました。新しい絵本ページをお待ちください。",
+        `絵本ページ${requestedSceneCount}場面の調整希望をお送りしました。`,
       );
       await notifyAdminFromCustomer(order.id, "stills_change_requested", `${Date.now()}`);
       await Promise.all([loadOrders(), loadDetails(order.id)]);
@@ -1586,7 +1612,7 @@ export function StudioClient() {
                     <span>
                       {order.stills_approved_at
                         ? `確定受付 ${formatDateTime(order.stills_approved_at)}`
-                        : `調整のご依頼 残り${stillsChangesRemaining}回 / 全${order.stills_revision_limit}回`}
+                        : `絵本ページ修正 残り${stillsChangesRemaining}場面 / 全${order.stills_revision_limit}場面`}
                     </span>
                   </div>
                   <p className="stills-review-lead">
@@ -1662,10 +1688,56 @@ export function StudioClient() {
                             <p className="stills-change-lead">
                               <strong>調整をご希望の場合</strong>
                               <small>
-                                気になる場面と直したい内容を教えてください。担当者が作り直してもう一度お見せします（残り
-                                {stillsChangesRemaining}回）。
+                                修正するページを選び、直したい内容をまとめてください。1ページにつき1場面分を使用します。
                               </small>
                             </p>
+                            <fieldset className="revision-scene-picker">
+                              <legend>
+                                修正する絵本ページ · 残り
+                                {stillsChangesRemaining}場面
+                              </legend>
+                              <div>
+                                {memories.map((memory) => {
+                                  const selected =
+                                    stillsChangeMemoryIds.includes(memory.id);
+                                  const disabled =
+                                    !selected &&
+                                    stillsChangeMemoryIds.length >=
+                                      stillsChangesRemaining;
+                                  return (
+                                    <label key={memory.id}>
+                                      <input
+                                        type="checkbox"
+                                        checked={selected}
+                                        disabled={disabled}
+                                        onChange={() =>
+                                          setStillsChangeMemoryIds((current) =>
+                                            selected
+                                              ? current.filter(
+                                                  (id) => id !== memory.id,
+                                                )
+                                              : [...current, memory.id],
+                                          )
+                                        }
+                                      />
+                                      <span>
+                                        STORY {memory.sort_order} · {memory.title}
+                                      </span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <small>
+                                今回 {stillsChangeMemoryIds.length}場面使用 ·
+                                送信後の残り
+                                {Math.max(
+                                  0,
+                                  stillsChangesRemaining -
+                                    stillsChangeMemoryIds.length,
+                                )}
+                                場面
+                              </small>
+                            </fieldset>
                             <textarea
                               required
                               rows={3}
@@ -1680,19 +1752,21 @@ export function StudioClient() {
                               className="button button-outline"
                               type="submit"
                               disabled={
-                                sendingStillsChange || !stillsChangeBody.trim()
+                                sendingStillsChange ||
+                                !stillsChangeBody.trim() ||
+                                stillsChangeMemoryIds.length === 0
                               }
                             >
                               {sendingStillsChange
                                 ? "送信中…"
-                                : "調整を依頼する →"}
+                                : `${stillsChangeMemoryIds.length}場面の調整を依頼する →`}
                             </button>
                           </form>
                         ) : (
                           <aside className="revision-limit-note">
                             <strong>
-                              絵本ページの調整{order.stills_revision_limit}
-                              回を使用しました。
+                              絵本ページの修正枠
+                              {order.stills_revision_limit}場面を使用しました。
                             </strong>
                             <span>
                               追加のご希望は、担当者とのメッセージからご相談ください。
@@ -1746,9 +1820,10 @@ export function StudioClient() {
                         : "この映像は確認用です。修正を依頼するか、問題がなければ「この映像で確定する」を押してください。"}
                   </p>
                   <div className="revision-allowance">
-                    <strong>プラン内の修正</strong>
+                    <strong>映像の場面修正</strong>
                     <span>
-                      残り {revisionsRemaining}回 / 全{order.revision_limit}回
+                      残り {revisionsRemaining}場面 / 全{order.revision_limit}
+                      場面
                     </span>
                   </div>
                 </div>
@@ -1847,7 +1922,8 @@ export function StudioClient() {
                     <h2>映像の修正について</h2>
                   </div>
                   <span>
-                    残り{revisionsRemaining}回 / 全{order.revision_limit}回
+                    映像修正 残り{revisionsRemaining}場面 / 全
+                    {order.revision_limit}場面
                   </span>
                 </div>
                 {revisions.length > 0 && (
@@ -1857,7 +1933,22 @@ export function StudioClient() {
                         <span>
                           {revision.status === "open" ? "対応中" : "反映済み"}
                         </span>
-                        <strong>{revision.category}</strong>
+                        <strong>
+                          {revision.category} · {revision.scene_count ?? 1}場面
+                        </strong>
+                        {(revision.memory_ids?.length ?? 0) > 0 && (
+                          <small>
+                            {(revision.memory_ids ?? [])
+                              .map(
+                                (memoryId) =>
+                                  memories.find(
+                                    (memory) => memory.id === memoryId,
+                                  )?.title,
+                              )
+                              .filter(Boolean)
+                              .join(" / ")}
+                          </small>
+                        )}
                         <p>{revision.body}</p>
                       </article>
                     ))}
@@ -1868,6 +1959,50 @@ export function StudioClient() {
                   revisionsRemaining > 0 &&
                   !hasOpenRevisions && (
                     <form className="revision-form" onSubmit={requestRevision}>
+                      <fieldset className="revision-scene-picker">
+                        <legend>
+                          修正する映像場面 · 残り{revisionsRemaining}場面
+                        </legend>
+                        <div>
+                          {memories.map((memory) => {
+                            const selected = revisionMemoryIds.includes(
+                              memory.id,
+                            );
+                            const disabled =
+                              !selected &&
+                              revisionMemoryIds.length >= revisionsRemaining;
+                            return (
+                              <label key={memory.id}>
+                                <input
+                                  type="checkbox"
+                                  checked={selected}
+                                  disabled={disabled}
+                                  onChange={() =>
+                                    setRevisionMemoryIds((current) =>
+                                      selected
+                                        ? current.filter(
+                                            (id) => id !== memory.id,
+                                          )
+                                        : [...current, memory.id],
+                                    )
+                                  }
+                                />
+                                <span>
+                                  STORY {memory.sort_order} · {memory.title}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <small>
+                          今回 {revisionMemoryIds.length}場面使用 · 送信後の残り
+                          {Math.max(
+                            0,
+                            revisionsRemaining - revisionMemoryIds.length,
+                          )}
+                          場面
+                        </small>
+                      </fieldset>
                       <select
                         value={revisionCategory}
                         onChange={(event) =>
@@ -1889,15 +2024,24 @@ export function StudioClient() {
                         }
                         placeholder="例：リードが2本に見える場面を、1本だけ自然に首輪へつながるよう修正してください。"
                       />
-                      <button className="button button-primary" type="submit">
-                        修正を依頼する →
+                      <button
+                        className="button button-primary"
+                        type="submit"
+                        disabled={
+                          revisionMemoryIds.length === 0 ||
+                          !revisionBody.trim()
+                        }
+                      >
+                        {revisionMemoryIds.length}場面の修正を依頼する →
                       </button>
                     </form>
                   )}
                 {order.status === "customer_review" &&
                   revisionsRemaining === 0 && (
                     <aside className="revision-limit-note">
-                      <strong>プラン内の修正2回を使用しました。</strong>
+                      <strong>
+                        映像の修正枠{order.revision_limit}場面を使用しました。
+                      </strong>
                       <span>
                         追加の変更をご希望の場合は、担当者とのメッセージからご相談ください。
                       </span>

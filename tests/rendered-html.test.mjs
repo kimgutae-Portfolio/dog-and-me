@@ -826,7 +826,7 @@ test("requires a fresh scene-stills publication before video production", async 
 
 test("keeps displayed policy dates and stored consent versions aligned", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [consent, terms, privacy, migration, storybookMigration] =
+  const [consent, terms, privacy, migration, storybookMigration, revisionMigration] =
     await Promise.all([
       readFile(new URL("app/lib/consent.ts", root), "utf8"),
       readFile(new URL("app/terms/page.tsx", root), "utf8"),
@@ -845,13 +845,20 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
         ),
         "utf8",
       ),
+      readFile(
+        new URL(
+          "supabase/migrations/202608170002_scene_based_revision_allowances.sql",
+          root,
+        ),
+        "utf8",
+      ),
     ]);
-  assert.match(consent, /terms: "2026-08-02-storybook-v1"/);
+  assert.match(consent, /terms: "2026-08-17-scene-revision-v1"/);
   assert.match(consent, /privacy: "2026-07-27"/);
-  assert.match(consent, /aiNotice: "2026-08-02-storybook-v1"/);
+  assert.match(consent, /aiNotice: "2026-08-17-scene-revision-v1"/);
   assert.match(
     terms,
-    /動く絵本・決済・キャンセル案内更新：2026年8月2日（同意版\s*2026-08-02-storybook-v1）/,
+    /場面ごとの修正枠・決済・キャンセル案内更新：2026年8月17日（同意版\s*2026-08-17-scene-revision-v1）/,
   );
   assert.match(
     privacy,
@@ -864,6 +871,52 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
   assert.match(storybookMigration, /create_memory_order/);
   assert.match(storybookMigration, /save_memory_order_draft/);
   assert.match(storybookMigration, /accept_order_consents/);
+  assert.match(revisionMigration, /2026-08-17-scene-revision-v1/);
+  assert.match(revisionMigration, /order_has_current_consents/);
+});
+
+test("counts storybook and video revisions as separate three-scene allowances", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [migration, studio, admin, types, pricing, terms, legal, css] =
+    await Promise.all([
+      readFile(
+        new URL(
+          "supabase/migrations/202608170002_scene_based_revision_allowances.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+      readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+      readFile(new URL("app/lib/supabase/types.ts", root), "utf8"),
+      readFile(new URL("app/components/LivePriceCard.tsx", root), "utf8"),
+      readFile(new URL("app/terms/page.tsx", root), "utf8"),
+      readFile(new URL("app/legal/page.tsx", root), "utf8"),
+      readFile(new URL("app/globals.css", root), "utf8"),
+    ]);
+
+  assert.match(migration, /alter column revision_limit set default 3/);
+  assert.match(migration, /alter column stills_revision_limit set default 3/);
+  assert.match(migration, /p_memory_ids uuid\[\]/);
+  assert.match(migration, /revision_used \+ v_scene_count/);
+  assert.match(migration, /stills_revision_used \+ v_scene_count/);
+  assert.match(migration, /revision scene limit reached/);
+  assert.match(migration, /stills revision scene limit reached/);
+  assert.match(migration, /revoke insert, update, delete on public\.revision_requests/);
+  assert.match(studio, /revisionMemoryIds/);
+  assert.match(studio, /stillsChangeMemoryIds/);
+  assert.match(studio, /p_memory_ids: revisionMemoryIds/);
+  assert.match(studio, /p_memory_ids: stillsChangeMemoryIds/);
+  assert.match(studio, /今回 \{revisionMemoryIds\.length\}場面使用/);
+  assert.match(studio, /今回 \{stillsChangeMemoryIds\.length\}場面使用/);
+  assert.match(admin, /revision\.scene_count \?\? 1/);
+  assert.match(types, /memory_ids: string\[\] \| null/);
+  assert.match(types, /scene_count: number \| null/);
+  assert.match(pricing, /絵本3場面まで修正/);
+  assert.match(pricing, /完成映像も3場面まで修正/);
+  assert.match(terms, /合計3場面/);
+  assert.match(legal, /絵本ページと物語文の修正3場面/);
+  assert.match(css, /\.revision-scene-picker/);
 });
 
 test("records first-ten production metrics through an admin-only RPC", async () => {

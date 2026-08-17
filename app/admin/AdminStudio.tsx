@@ -3715,7 +3715,7 @@ export function AdminStudio() {
                       <strong>
                         {order.revision_used}/{order.revision_limit}
                       </strong>
-                      <span>使用済み修正回数</span>
+                      <span>使用済み映像修正場面</span>
                     </div>
                   </aside>
 
@@ -4510,7 +4510,7 @@ export function AdminStudio() {
                         {sceneStills.length}枚 · 確認版{" "}
                         {order.stills_review_version} · 調整{" "}
                         {order.stills_revision_used}/
-                        {order.stills_revision_limit}回
+                        {order.stills_revision_limit}場面
                       </span>
                     </div>
                     <aside className="admin-operation-note strong">
@@ -5094,7 +5094,7 @@ export function AdminStudio() {
                         <h3>修正依頼</h3>
                       </div>
                       <span>
-                        {order.revision_used}/{order.revision_limit}回使用
+                        {order.revision_used}/{order.revision_limit}場面使用
                       </span>
                     </div>
                     {revisions.length ? (
@@ -5115,7 +5115,23 @@ export function AdminStudio() {
                               </span>
                               <small>{formatDate(revision.created_at)}</small>
                             </div>
-                            <strong>{revision.category}</strong>
+                            <strong>
+                              {revision.category} · {revision.scene_count ?? 1}
+                              場面
+                            </strong>
+                            {(revision.memory_ids?.length ?? 0) > 0 && (
+                              <small>
+                                {(revision.memory_ids ?? [])
+                                  .map(
+                                    (memoryId) =>
+                                      memories.find(
+                                        (memory) => memory.id === memoryId,
+                                      )?.title,
+                                  )
+                                  .filter(Boolean)
+                                  .join(" / ")}
+                              </small>
+                            )}
                             <p>{revision.body}</p>
                             {revision.status === "open" && (
                               <button
@@ -5137,7 +5153,7 @@ export function AdminStudio() {
                     )}
                     <p className="admin-operation-note">
                       修正版を「完成前の確認映像」として公開してから、該当依頼を対応完了にしてください。上限はDBでも
-                      {order.revision_limit}回に制限されています。
+                      映像は合計{order.revision_limit}場面に制限されています。
                     </p>
                   </section>
 

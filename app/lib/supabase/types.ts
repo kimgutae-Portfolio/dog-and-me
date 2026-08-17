@@ -352,6 +352,8 @@ export type RevisionRequest = {
   user_id: string;
   category: string;
   body: string;
+  memory_ids: string[] | null;
+  scene_count: number | null;
   status: "open" | "resolved";
   created_at: string;
   resolved_at: string | null;

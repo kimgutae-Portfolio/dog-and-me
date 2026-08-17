@@ -79,10 +79,10 @@ export function LivePriceCard() {
         <li>5つのエピソードから物語案2案</li>
         <li>選んだ1案の場面構成と文章</li>
         <li>水彩・ガッシュの絵本ページ制作</li>
-        <li>全ページの事前確認・調整2回</li>
+        <li>全ページの事前確認・絵本3場面まで修正</li>
         <li>約1分の動く絵本映像</li>
         <li>BGM・場面ごとの物語字幕</li>
-        <li>完成映像の修正2回</li>
+        <li>完成映像も3場面まで修正</li>
         <li>公開期限・月額料金なしの専用ものがたりサイト</li>
       </ul>
       <p className="price-style-note">
