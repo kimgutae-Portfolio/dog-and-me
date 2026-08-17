@@ -345,8 +345,9 @@ export function StudioClient() {
   const canManageSourcePhotos = Boolean(
     canOperateOrder &&
       order &&
-      ["materials_submitted", "reviewing_materials"].includes(order.status) &&
-      order.photo_analysis_status !== "approved",
+      (order.source_photo_change_open ||
+        (["materials_submitted", "reviewing_materials"].includes(order.status) &&
+          order.photo_analysis_status !== "approved")),
   );
   const canAddPhotos = canManageSourcePhotos;
   useEffect(() => {
@@ -2235,19 +2236,25 @@ export function StudioClient() {
                   >
                     <div>
                       <span className="photo-change-status-badge">
-                        {canManageSourcePhotos
+                        {order.source_photo_change_open
+                          ? "担当者が写真変更を許可しました"
+                          : canManageSourcePhotos
                           ? "運営確認中・変更できます"
                           : "写真確定済み"}
                       </span>
                       <strong>
-                        {canManageSourcePhotos
+                        {order.source_photo_change_open
+                          ? "現在の決済・制作状況にかかわらず写真を変更できます"
+                          : canManageSourcePhotos
                           ? "STORY SOURCE REVIEWの承認前まで写真を変更できます"
                           : "STORY SOURCE REVIEWで承認された写真です"}
                       </strong>
                       <p>
-                        {canManageSourcePhotos
+                        {order.source_photo_change_open
+                          ? "変更後は担当者が写真を再確認します。必要な写真を追加・削除してください。"
+                          : canManageSourcePhotos
                           ? "承認されるまでは、この画面から写真を追加・削除できます。"
-                          : "承認後は、写真の追加・削除・差し替えはできません。"}
+                          : "承認後に変更が必要な場合は、担当者が変更権限を開くと再び編集できます。"}
                       </p>
                     </div>
                   </aside>

@@ -9,9 +9,9 @@
 ## 입력 자료
 
 - `order.json`: `job`, `style`, `production_protocol`, `stories`, `transition_rules`, `transitions`, `output_plan`을 먼저 읽는다.
-- `stories/01-title/original/`부터 `stories/05-title/original/`까지: 해당 물語에 연결된 고객 원본 사진이다.
-- 파일명에 `primary`가 포함된 사진은 그 물語의 얼굴·체형·구도·장면 사실을 고정하는 정체성 기준이다.
-- `support` 사진은 `primary`와 충돌하지 않는 세부만 보충한다.
+- `stories/01-title/original/`부터 `stories/05-title/original/`까지: 관리자가 각 물語에서 선택한 고객 원본 사진 1장만 들어 있다.
+- 파일명에 `primary`가 포함된 사진은 그 물語의 얼굴·체형·구도·장면 사실을 고정하는 유일한 정체성 기준이다.
+- 고객이 올린 다른 후보 사진은 제작 ZIP에 포함되지 않으며, 다른 물語의 사진을 보조 자료로 사용하지 않는다.
 
 ## 가장 중요한 원본 사진 규칙
 
@@ -23,6 +23,7 @@
 6. 16:9는 원본 사진의 변환 결과가 아니라, 새로 만드는 그림책 페이지의 출력 비율이다.
 7. 한 물語의 장소·계절·목줄·소품·털 특징을 다른 물語에서 가져오지 않는다.
 8. 고객이 제공하지 않은 사실, 사람, 감정, 장소, 사건을 확정적으로 추가하지 않는다.
+9. 각 물語에는 `primary` 1장만 사용한다. 미선택 사진이나 보조 사진을 찾거나 요청하거나 추론하지 않는다.
 
 ## 그림책 화풍과 정체성
 
@@ -59,7 +60,7 @@
 ## 반드시 반환할 결과
 
 1. `memory_storybook_production_checklist`: 5개 이야기와 4개 연결 페이지가 모두 포함됐는지 확인
-2. `story_source_checklist`: 각 primary/support 사진, 사용 이유, 충돌 여부
+2. `story_source_checklist`: 각 물語에 선택된 primary 사진 1장과 사용 이유
 3. `story_page_image_plan`: 이야기별 16:9 그림책 페이지의 장면·구도·화풍·문장
 4. `transition_page_image_plan`: 연결 페이지별 배경·색·모티프·움직임
 5. `gen4_scene_prompts`: 5개 이야기 페이지의 Gen-4 5초 프롬프트

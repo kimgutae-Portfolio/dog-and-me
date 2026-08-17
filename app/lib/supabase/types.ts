@@ -118,6 +118,9 @@ export type MemoryOrder = {
   photo_analysis_status: PhotoAnalysisStatus | null;
   photo_analysis_approved_at: string | null;
   photo_analysis_approved_by: string | null;
+  source_photo_change_open: boolean;
+  source_photo_change_opened_at: string | null;
+  source_photo_change_opened_by: string | null;
   customer_approved_at: string | null;
   customer_approved_by: string | null;
   customer_approved_review_asset_id: string | null;

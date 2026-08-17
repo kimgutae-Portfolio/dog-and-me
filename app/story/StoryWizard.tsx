@@ -54,8 +54,8 @@ type Draft = {
   aiReconstructionAcknowledged: boolean;
 };
 
-// Each story is also a production unit: every order has the same five-story
-// rhythm, with one indispensable scene photo and up to two supporting photos.
+// Each story is also a production unit. Customers may upload up to three
+// candidates, but the administrator selects exactly one production photo.
 const MIN_MEMORY_COUNT = 5;
 const MAX_MEMORY_COUNT = 5;
 const MAX_TOTAL_PHOTOS = MAX_MEMORY_COUNT * 3;

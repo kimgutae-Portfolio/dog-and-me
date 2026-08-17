@@ -158,7 +158,7 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
   version: "3.0",
   prompt_filename: "MEMORY_STORYBOOK_PRODUCTION_v3.txt",
   source_photo_policy:
-    "Use customer photos as identity-locked references in their original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories; never pad, blur, crop, or send the raw photo directly to Runway.",
+    "Use only the one administrator-selected primary customer photo for each story as its identity-locked reference in the original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories; never add unselected photos, pad, blur, crop, or send the raw photo directly to Runway.",
   page_image_policy:
     "Recompose only the scene, background, lighting, and painted treatment into a new 16:9 watercolor-and-gouache storybook page. The dog must remain recognizably the same dog as the primary reference.",
   story_pages: {
@@ -173,11 +173,12 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
 } as const;
 const CONCEPT_PROPOSAL_PROMPT = `WAN MEMORY STORY CONCEPT PROPOSAL v1.0
 
-첨부한 order.json과 stories/01~05의 고객 원본 사진을 읽고 고객에게 제시할 구성안 A와 B를 작성해줘.
+첨부한 order.json과 stories/01~05에 각각 한 장씩 들어 있는 관리자가 선택한 메인 사진만 읽고 고객에게 제시할 구성안 A와 B를 작성해줘.
 
 규칙
 - 아직 그림, 이미지 생성 프롬프트, Runway 프롬프트를 만들지 않는다.
 - 고객이 제공한 5개 이야기를 모두 포함한다.
+- 각 이야기의 메인 사진 1장만 참고하고, 미선택 사진이나 다른 이야기의 사진을 보조 자료로 추론하지 않는다.
 - 고객이 제공하지 않은 사람, 장소, 사건, 감정을 사실처럼 추가하지 않는다.
 - A안과 B안은 연결 방식과 감정의 흐름이 분명히 달라야 한다.
 - 움직이는 수채·과슈 그림책을 전제로 한다.
@@ -194,18 +195,19 @@ const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v2.0
 
 첨부 자료
 - order.json
-- stories/01~05의 고객 원본 사진
+- stories/01~05의 관리자가 선택한 메인 사진 각 1장
 - style_reference.png: 모든 페이지에 공통으로 적용할 화풍 기준 이미지
 
-첨부한 order.json의 selected_concept와 stories/01~05의 고객 원본 사진을 읽고, 고객 확인용 그림책 페이지를 실제로 제작해줘.
+첨부한 order.json의 selected_concept와 stories/01~05의 메인 사진을 읽고, 고객 확인용 그림책 페이지를 실제로 제작해줘.
 
 style_reference.png는 화풍만 참고한다.
 style_reference.png에 등장하는 강아지, 체형, 포즈, 목줄, 벚꽃, 꽃잎, 강, 산책로, 계절, 장소, 사물, 사건은 어떤 이야기에도 가져오지 않는다.
 
 진행 방법
 - 이야기 01부터 05까지 반드시 한 번에 한 이야기씩 순서대로 처리한다.
-- 각 이야기의 primary 사진을 해당 장면의 강아지 정체성, 신체 비율, 액세서리, 중심 행동, 구도 기준으로 사용한다.
-- support 사진은 primary와 충돌하지 않는 세부만 보충한다.
+- 각 이야기에는 관리자가 선택한 primary 사진 1장만 첨부된다.
+- 해당 primary 사진만 강아지 정체성, 신체 비율, 액세서리, 중심 행동, 장소와 구도의 기준으로 사용한다.
+- 다른 이야기의 사진이나 고객이 올린 미선택 사진을 참고하거나 특징을 섞지 않는다.
 - style_reference.png는 색감, 수채 표현, 선묘, 종이 질감, 배경 묘사 방식에만 사용한다.
 - 각 이야기마다 원본 사진을 직접 변형한 이미지가 아닌 새로운 16:9 그림책 페이지 이미지 1장을 제작한다.
 - 원본 사진의 종횡비는 그대로 읽고, 크롭·패딩·블러 확장 없이 새로운 16:9 장면으로 재구성한다.
@@ -214,8 +216,6 @@ style_reference.png에 등장하는 강아지, 체형, 포즈, 목줄, 벚꽃, �
 입력 이미지 역할
 - Image 1: primary reference
   - 강아지 정체성, 체형, 액세서리, 행동, 장면 구성의 최우선 기준
-- Image 2~3: support reference
-  - primary와 충돌하지 않는 세부만 참고
 - style_reference.png: style-only reference
   - 화풍만 참고하고 내용이나 강아지 외형은 절대 복사하지 않음
 
@@ -231,7 +231,7 @@ style_reference.png에 등장하는 강아지, 체형, 포즈, 목줄, 벚꽃, �
 - 꼬리의 길이, 말림, 방향을 유지한다.
 - 목줄, 하네스, 옷 등 보이는 액세서리의 형태와 색상을 유지한다.
 - 액세서리에 있는 글자나 브랜드 표시는 재현하지 않는다.
-- support 사진 때문에 primary의 외형이나 비율을 변경하지 않는다.
+- 다른 이야기의 사진이나 style_reference.png 때문에 primary의 외형이나 비율을 변경하지 않는다.
 
 금지되는 강아지 표현
 - 과장된 애니메이션 눈
@@ -311,7 +311,7 @@ Luminous Japanese picture-book watercolor illustration, watercolor-dominant rend
 
 1. order.json에서 이야기 번호, 제목, selected_concept 장면, 시기, 장소, 고객 설명을 확인한다.
 2. primary 사진을 원본 종횡비로 확인한다.
-3. support 사진이 있으면 primary와 충돌하지 않는 세부만 확인한다.
+3. 이 이야기에는 primary 외의 고객 사진이 없으며 다른 사진을 찾거나 요청하지 않는다.
 4. style_reference.png의 화풍만 확인한다.
 5. 새로운 16:9 그림책 페이지를 제작한다.
 6. 제작된 이미지를 primary와 비교해 아래 항목을 검수한다.
@@ -349,7 +349,7 @@ story_caption 규칙
 - 각 이미지의 story 번호
 - order.json의 이야기 제목을 그대로 사용한 scene_title
 - 일본어 story_caption
-- 사용한 primary 및 support 파일
+- 사용한 primary 파일
 - primary 기준 정체성 유지 여부
 - style_reference 기준 화풍 유지 여부
 - 인물 얼굴 정책 준수 여부
@@ -362,7 +362,6 @@ story_caption 규칙
   "scene_title": "order.json의 해당 이야기 제목",
   "story_caption": "고객 확인용 일본어 한 문장",
   "primary_used": "사용한 primary 파일명",
-  "support_used": [],
   "identity_check": "passed",
   "style_check": "passed",
   "people_policy_check": "passed",
@@ -1205,8 +1204,9 @@ export function AdminStudio() {
     productionFields.photoAnalysisStatus === "approved";
   const canManageStorySources = Boolean(
     order &&
-      ["materials_submitted", "reviewing_materials"].includes(order.status) &&
-      !photoAnalysisApproved,
+      (order.source_photo_change_open ||
+        (["materials_submitted", "reviewing_materials"].includes(order.status) &&
+          !photoAnalysisApproved)),
   );
   const conceptPublishingStatusValid = Boolean(
     order &&
@@ -1603,7 +1603,7 @@ export function AdminStudio() {
         a.album_sort_order - b.album_sort_order
       );
     });
-    const archivePhotos = orderedSourceAssets.map((asset, index) => {
+    const allArchivePhotos = orderedSourceAssets.map((asset, index) => {
       const memory =
         memories.find((item) => item.id === asset.memory_id) ?? null;
       const photoPosition = asset.memory_photo_sort_order ?? 1;
@@ -1631,6 +1631,9 @@ export function AdminStudio() {
         photoPosition,
       };
     });
+    const archivePhotos = allArchivePhotos.filter(
+      (photo) => photo.memory && photo.photoPosition === 1,
+    );
     const sourcePhotos = archivePhotos.map(
       ({
         asset,
@@ -1711,7 +1714,7 @@ export function AdminStudio() {
     });
     const transitions: never[] = [];
     const productionData = {
-      schema_version: "wan-memory-storybook-production-export-4.0",
+      schema_version: "wan-memory-storybook-production-export-4.1",
       exported_at: new Date().toISOString(),
       job: {
         id: order.order_number,
@@ -1761,11 +1764,11 @@ export function AdminStudio() {
         "Account email, phone number, postal address, and customer profile name are not included. Customer-written story text may still contain personal information and must be handled only for this order.",
       story_source_rules: {
         story_count: memories.length,
-        photos_per_story: "1-3",
+        photos_per_story: 1,
         primary_source_rule:
-          "The first photo in every story is the required composition and identity anchor for that story only.",
-        supporting_source_rule:
-          "Photos 2-3 are optional supporting references. Do not combine details that conflict with the primary source.",
+          "Use only the single administrator-selected primary photo supplied for each story. It is the sole composition, scene-fact, and identity reference for that story.",
+        unselected_photo_rule:
+          "Customer-uploaded photos that were not selected by the administrator are excluded from this production export and must not be inferred or requested as supporting references.",
         global_appearance_reference: false,
         operator_approved_at: productionFields.photoAnalysisApprovedAt,
       },
@@ -1818,7 +1821,7 @@ export function AdminStudio() {
         .map((message) => message.body),
       requested_gpt_output: {
         current_stage:
-          "Read job, style, production_protocol, and stories first. Lock each story's primary dog identity to the original-aspect-ratio customer photos and create five new 16:9 storybook page images. Do not create bridge backgrounds or transition videos; the editor turns directly from one approved story page to the next.",
+          "Read job, style, production_protocol, and stories first. Use only the one administrator-selected primary photo supplied for each story, lock the dog's identity to that original-aspect-ratio photo, and create five new 16:9 storybook page images. Do not seek or infer supporting photos. Do not create bridge backgrounds or transition videos; the editor turns directly from one approved story page to the next.",
         required_sections: [
           "memory_storybook_production_checklist",
           "story_source_checklist",
@@ -1852,7 +1855,7 @@ export function AdminStudio() {
         : null,
       photos: sourcePhotos,
     };
-    return { productionData, manifest, archivePhotos };
+    return { productionData, manifest, archivePhotos, allArchivePhotos };
   };
 
   const saveOperatorZip = async (
@@ -1887,6 +1890,12 @@ export function AdminStudio() {
   ) => {
     const exportData = buildProductionExport();
     if (!order || !exportData || sourceAssets.length === 0) return;
+    if (exportData.archivePhotos.length !== memories.length) {
+      setError(
+        "各物語の基準写真を1枚ずつ選んでから、制作データをダウンロードしてください。",
+      );
+      return;
+    }
     const ready = stage === "concept" ? conceptExportReady : illustrationExportReady;
     if (!ready) {
       setError(
@@ -1897,7 +1906,9 @@ export function AdminStudio() {
       return;
     }
     setExportingBundle(true);
-    setExportProgress(`写真を準備しています（0/${sourceAssets.length}）`);
+    setExportProgress(
+      `選択した基準写真を準備しています（0/${exportData.archivePhotos.length}）`,
+    );
     setError("");
     try {
       const [{ strToU8 }, supabase] = await Promise.all([
@@ -1913,17 +1924,19 @@ export function AdminStudio() {
           ? [
               "STEP 1 · A/B物語案を作るデータです。",
               "1. order.jsonとstoriesフォルダを確認します。",
-              "2. このZIPと02_PROMPT_CONCEPT_PROPOSAL.txtをCodexへ添付します。",
-              "3. 返されたA/B案のタイトル・トーン・概要・5場面を管理画面へ入力します。",
-              "4. この段階では画像やRunwayプロンプトを作りません。",
+              "2. 各storyフォルダには、管理者が選んだ基準写真が1枚だけ入っています。未選択写真は構成案に使用しません。",
+              "3. このZIPと02_PROMPT_CONCEPT_PROPOSAL.txtをCodexへ添付します。",
+              "4. 返されたA/B案のタイトル・トーン・概要・5場面を管理画面へ入力します。",
+              "5. この段階では画像やRunwayプロンプトを作りません。",
             ].join("\n")
           : [
               "STEP 2 · 顧客確認用の絵本ページを作るデータです。",
               "1. order.jsonのselected_conceptを確認します。",
-              "2. Codexへorder.json、style_reference.png（画風基準画像・別途用意）、対象のstoryフォルダを添付し、01から05まで順番に制作します。",
-              "3. 02_PROMPT_STORYBOOK_IMAGES.txtをそのまま依頼文として使います。",
-              "4. 完成した5枚を管理画面へアップロードし、顧客確認へ公開します。",
-              "5. この段階ではRunwayプロンプトを作りません。",
+              "2. 各storyフォルダには、管理者が選んだ基準写真が1枚だけ入っています。未選択写真は制作に使用しません。",
+              "3. Codexへorder.json、style_reference.png（画風基準画像・別途用意）、対象のstoryフォルダを添付し、01から05まで順番に制作します。",
+              "4. 02_PROMPT_STORYBOOK_IMAGES.txtをそのまま依頼文として使います。",
+              "5. 完成した5枚を管理画面へアップロードし、顧客確認へ公開します。",
+              "6. この段階ではRunwayプロンプトを作りません。",
             ].join("\n");
       const orderJson =
         stage === "concept"
@@ -1955,7 +1968,7 @@ export function AdminStudio() {
       for (let index = 0; index < exportData.archivePhotos.length; index += 1) {
         const item = exportData.archivePhotos[index];
         setExportProgress(
-          `写真を準備しています（${index + 1}/${sourceAssets.length}）`,
+          `選択した基準写真を準備しています（${index + 1}/${exportData.archivePhotos.length}）`,
         );
         const { data, error: downloadError } = await supabase.storage
           .from("order-assets")
@@ -2032,10 +2045,10 @@ export function AdminStudio() {
           primary_body_photo_id: productionFields.primaryBodyPhotoId,
           side_tail_photo_id: productionFields.sideTailPhotoId,
         },
-        reference_photos: exportData.productionData.source_photos.map((photo) => ({
-          asset_id: photo.asset_id,
-          filename: photo.archive_filename,
-          archive_path: `reference-photos/${photo.archive_filename}`,
+        reference_photos: exportData.allArchivePhotos.map((photo) => ({
+          asset_id: photo.asset.id,
+          filename: photo.archiveFilename,
+          archive_path: `reference-photos/${photo.archiveFilename}`,
           roles: photo.roles,
         })),
         requested_output: {
@@ -2065,8 +2078,8 @@ export function AdminStudio() {
         [`${root}/02_PROMPT_WEBSITE_CHARACTER.txt`]: strToU8(WEBSITE_CHARACTER_PROMPT),
         [`${root}/order.json`]: strToU8(JSON.stringify(characterJson, null, 2)),
       };
-      for (let index = 0; index < exportData.archivePhotos.length; index += 1) {
-        const item = exportData.archivePhotos[index];
+      for (let index = 0; index < exportData.allArchivePhotos.length; index += 1) {
+        const item = exportData.allArchivePhotos[index];
         setExportProgress(`キャラクター用写真を準備しています（${index + 1}/${sourceAssets.length}）`);
         const { data, error: downloadError } = await supabase.storage
           .from("order-assets")
@@ -2231,7 +2244,7 @@ export function AdminStudio() {
     if (
       nextStatus === "approved" &&
       !window.confirm(
-        "物語と写真を承認すると、以後は写真の追加・削除・差し替えや承認の取り消しができません。内容を確認して承認しますか？",
+        "物語と写真を承認しますか？ 写真変更の許可中であれば、承認と同時に変更権限も閉じます。",
       )
     )
       return false;
@@ -2260,6 +2273,47 @@ export function AdminStudio() {
     }
     setSaving(false);
     return true;
+  };
+
+  const setSourcePhotoChangeOpen = async (open: boolean) => {
+    if (!order || saving) return;
+    if (
+      open &&
+      !window.confirm(
+        "このお客様の写真変更を許可しますか？ 決済・制作状況にかかわらず写真を追加・削除でき、変更後はSTORY SOURCE REVIEWの再承認が必要になります。",
+      )
+    )
+      return;
+    setSaving(true);
+    setError("");
+    const { error: permissionError } = await getSupabaseBrowserClient().rpc(
+      "admin_set_source_photo_change_open",
+      {
+        p_order_id: order.id,
+        p_open: open,
+      },
+    );
+    if (permissionError) {
+      setError("写真変更の許可状態を更新できませんでした。");
+    } else {
+      const notification = open
+        ? await notifyCustomerByMessage(
+            order.id,
+            "写真変更を受け付けられる状態にしました。現在の決済・制作状況にかかわらず、制作室から写真を追加・削除できます。変更後は担当者が内容を再確認します。",
+          )
+        : null;
+      setNotice(
+        open
+          ? notification?.saved
+            ? notification.notificationSent
+              ? "写真変更を許可し、お客様へチャットとメールでお知らせしました。"
+              : "写真変更を許可し、チャットでお知らせしました。メール通知は送れませんでした。"
+            : "写真変更を許可しましたが、お客様への通知に失敗しました。チャットから手動でお知らせしてください。"
+          : "お客様の写真変更許可を終了しました。",
+      );
+      await Promise.all([loadOrders(), loadDetails(order.id)]);
+    }
+    setSaving(false);
   };
 
   const makeAdminStoryPhotoPrimary = async (
@@ -3544,6 +3598,32 @@ export function AdminStudio() {
                       </div>
                     </dl>
                     <div className="admin-photo-analysis-actions">
+                      <button
+                        className={
+                          order.source_photo_change_open
+                            ? "button button-outline"
+                            : "button button-primary"
+                        }
+                        type="button"
+                        disabled={saving}
+                        onClick={() =>
+                          void setSourcePhotoChangeOpen(
+                            !order.source_photo_change_open,
+                          )
+                        }
+                      >
+                        {order.source_photo_change_open
+                          ? "写真変更の許可を終了する"
+                          : "このお客様の写真変更を許可する"}
+                      </button>
+                      {order.source_photo_change_open && (
+                        <aside className="admin-operation-note warning">
+                          <strong>写真変更を許可中です。</strong>
+                          <span>
+                            お客様は決済・制作状況にかかわらず写真を変更できます。変更後は再承認するまで次の制作工程が停止します。
+                          </span>
+                        </aside>
+                      )}
                       {productionFields.photoAnalysisStatus ===
                         "pending_operator_review" && (
                         <>
@@ -3584,7 +3664,7 @@ export function AdminStudio() {
                         <aside className="admin-operation-note strong">
                           <strong>制作素材は確定されています。</strong>
                           <span>
-                            承認後は写真の追加・削除・差し替え、承認の取り消しはできません。
+                            通常は写真を変更できません。必要な場合は上のボタンから、このお客様だけ変更を許可できます。
                           </span>
                         </aside>
                       )}
@@ -4104,7 +4184,7 @@ export function AdminStudio() {
                                       <small>
                                         {asset.memory_photo_sort_order === 1
                                           ? "基準写真"
-                                          : `補助写真 ${(asset.memory_photo_sort_order ?? 2) - 1}`} · {asset.original_filename}
+                                          : `候補写真 ${(asset.memory_photo_sort_order ?? 2) - 1}`} · {asset.original_filename}
                                       </small>
                                     </a>
                                     {canManageStorySources &&
@@ -4126,7 +4206,7 @@ export function AdminStudio() {
                                 ))}
                               </div>
                               <p className="admin-memory-check">
-                                1枚目だけでこの物語の構図・季節・場所が分かるか確認します。補助写真は不足する特徴だけを見るために使います。
+                                制作とダウンロードには「基準写真」の1枚だけを使用します。ほかの写真は基準写真を選ぶための候補で、制作AIには渡しません。
                               </p>
                             </article>
                           );
