@@ -1429,11 +1429,8 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(chat, /\{!open && \([\s\S]*?className="chat-widget-toggle"[\s\S]*?onClick=\{\(\) => setOpen\(true\)\}/);
   assert.doesNotMatch(chat, /onPointerDown=/);
   assert.doesNotMatch(chat, /setOpen\(\(current\) => !current\)/);
-  assert.match(chat, /const mountedChatWidgets = new Map/);
-  assert.match(chat, /activateChatWidget\(instanceId\)/);
-  assert.match(chat, /if \(!isActive\) setOpen\(false\)/);
-  assert.match(chat, /return mounted && active \? createPortal/);
-  assert.match(chat, /if \(!active\) return;[\s\S]*?\.channel\(`/);
+  assert.doesNotMatch(chat, /createPortal|document\.body|mountedChatWidgets/);
+  assert.match(chat, /return widget;/);
   assert.doesNotMatch(chat, /composeRequest/);
   assert.doesNotMatch(studio, /photoChangeComposeRequest|photoProductionStarted/);
   assert.match(studio, /const optimisticId = `pending-\$\{crypto\.randomUUID\(\)\}`/);

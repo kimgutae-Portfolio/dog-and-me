@@ -9,20 +9,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { createPortal } from "react-dom";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { MemoryOrder, OrderMessage } from "../lib/supabase/types";
-
-// Next.js can keep a previous route tree mounted while navigating. Portals
-// from those preserved trees remain under document.body, so without a single
-// owner every visit to /studio leaves another floating chat control behind.
-const mountedChatWidgets = new Map<symbol, (active: boolean) => void>();
-
-function activateChatWidget(activeId: symbol) {
-  mountedChatWidgets.forEach((setActive, instanceId) => {
-    setActive(instanceId === activeId);
-  });
-}
 
 function formatTime(value: string) {
   // Realtime postgres_changes payloads carry Postgres's native timestamp
@@ -61,9 +49,6 @@ export function ChatWidget({
   onRefreshMessages: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [active, setActive] = useState(false);
-  const instanceIdRef = useRef(Symbol("wan-memory-chat-widget"));
   const panelId = useId();
   const threadRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -75,26 +60,6 @@ export function ChatWidget({
   // controls may be read-only (for example while an admin previews the page),
   // but that must not hide the customer's conversation composer.
   const canCompose = canOperate || currentUserId === order.user_id;
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setMounted(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  useEffect(() => {
-    const instanceId = instanceIdRef.current;
-    mountedChatWidgets.set(instanceId, (isActive) => {
-      setActive(isActive);
-      if (!isActive) setOpen(false);
-    });
-    activateChatWidget(instanceId);
-
-    return () => {
-      mountedChatWidgets.delete(instanceId);
-      const fallbackId = Array.from(mountedChatWidgets.keys()).at(-1);
-      if (fallbackId) activateChatWidget(fallbackId);
-    };
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -122,7 +87,6 @@ export function ChatWidget({
   );
 
   useEffect(() => {
-    if (!active) return;
     const supabase = getSupabaseBrowserClient();
     // The topic includes a random suffix so this always gets a brand-new
     // channel object. supabase-js reuses an existing channel by exact topic
@@ -149,7 +113,7 @@ export function ChatWidget({
       supabase.removeChannel(channel);
     };
     // The callback refs above keep this channel stable while the parent rerenders.
-  }, [active, order.id]);
+  }, [order.id]);
 
   useEffect(() => {
     if (!open || unreadCount === 0) return;
@@ -305,7 +269,8 @@ export function ChatWidget({
     </div>
   );
 
-  // Render outside the studio content stack so fixed positioning and pointer
-  // events cannot be intercepted by the mobile action bar or card layers.
-  return mounted && active ? createPortal(widget, document.body) : null;
+  // Keep the fixed widget inside the active route tree. Next.js preserves
+  // previous route trees during navigation; a body portal would escape their
+  // hidden state and leave every preserved chat floating on screen.
+  return widget;
 }
