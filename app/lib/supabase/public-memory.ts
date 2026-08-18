@@ -43,7 +43,14 @@ export function getPublicMemoryClient() {
   if (!url || !publishableKey) return null;
 
   return createClient(url, publishableKey, {
-    auth: { persistSession: false, detectSessionInUrl: false },
+    global: {
+      headers: { Authorization: `Bearer ${publishableKey}` },
+    },
+    auth: {
+      persistSession: false,
+      detectSessionInUrl: false,
+      autoRefreshToken: false,
+    },
   });
 }
 

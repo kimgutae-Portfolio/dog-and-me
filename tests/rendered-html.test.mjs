@@ -388,6 +388,8 @@ test("delivered personal sites stay public and album access stays scoped", async
     /\/api\/memory\/\$\{encodeURIComponent\(shareId\)\}\/og/,
   );
   assert.match(publicMemory, /get_shared_memory/);
+  assert.match(publicMemory, /Authorization: `Bearer \$\{publishableKey\}`/);
+  assert.match(publicMemory, /autoRefreshToken: false/);
   assert.match(publicMemory, /createSignedUrl\(path, 90\)/);
   assert.match(socialImage, /Content-Type/);
   assert.match(socialImage, /X-Robots-Tag/);
