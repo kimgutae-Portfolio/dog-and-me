@@ -331,6 +331,7 @@ test("delivered personal sites stay public and album access stays scoped", async
     slugMigration,
     publicSiteMigration,
     autoPublishMigration,
+    deliveredSiteMigration,
   ] = await Promise.all([
     readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
     readFile(
@@ -355,6 +356,10 @@ test("delivered personal sites stay public and album access stays scoped", async
     ),
     readFile(
       new URL("supabase/migrations/202608180003_auto_publish_delivered_personal_sites.sql", root),
+      "utf8",
+    ),
+    readFile(
+      new URL("supabase/migrations/202608180004_delivered_sites_are_public.sql", root),
       "utf8",
     ),
   ]);
@@ -411,6 +416,9 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(autoPublishMigration, /after insert or update of status on public\.orders/);
   assert.match(autoPublishMigration, /perform public\.ensure_public_personal_site\(new\.id\)/);
   assert.match(autoPublishMigration, /select id from public\.orders where status = 'delivered'/);
+  assert.match(deliveredSiteMigration, /delivered_memory_for_order/);
+  assert.match(deliveredSiteMigration, /orders\.status = 'delivered'/);
+  assert.doesNotMatch(deliveredSiteMigration, /link\.active|share_links\.active/);
 });
 
 test("adds the animated character to the share-code website", async () => {
