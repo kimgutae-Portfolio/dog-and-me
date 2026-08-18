@@ -67,6 +67,7 @@ export function MemoryShareManager({
     share?.customer_slug && share?.pet_slug && origin
       ? `${origin}/${encodeURIComponent(share.customer_slug)}/${encodeURIComponent(share.pet_slug)}`
       : "";
+  const siteReady = order.status === "delivered" && Boolean(delivery);
 
   useEffect(() => {
     if (!copyPopup) return;
@@ -111,14 +112,14 @@ export function MemoryShareManager({
   );
 
   useEffect(() => {
-    if (!delivery) return;
+    if (!siteReady) return;
     const timer = window.setTimeout(() => {
       manageShare("get").catch(() =>
         setError("共有リンクの情報を読み込めませんでした。"),
       );
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [delivery, manageShare]);
+  }, [siteReady, manageShare]);
 
   const updatePhoto = async (
     asset: OrderAsset,
@@ -328,7 +329,7 @@ export function MemoryShareManager({
             ご家族も同じURLから、ログインせずに完成映像・写真・キャラクターを楽しめます。検索結果には表示されません。
           </p>
         </div>
-        {!delivery ? (
+        {!siteReady ? (
           <div className="family-share-waiting">
             <strong>完成映像の納品後に利用できます</strong>
             <small>完成すると、専用ホームページが自動で公開されます。</small>

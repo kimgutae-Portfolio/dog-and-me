@@ -330,6 +330,7 @@ test("delivered personal sites stay public and album access stays scoped", async
     personalSite,
     slugMigration,
     publicSiteMigration,
+    autoPublishMigration,
   ] = await Promise.all([
     readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
     readFile(
@@ -350,6 +351,10 @@ test("delivered personal sites stay public and album access stays scoped", async
     ),
     readFile(
       new URL("supabase/migrations/202608180002_always_public_personal_sites.sql", root),
+      "utf8",
+    ),
+    readFile(
+      new URL("supabase/migrations/202608180003_auto_publish_delivered_personal_sites.sql", root),
       "utf8",
     ),
   ]);
@@ -385,12 +390,16 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(manager, /customer_slug/);
   assert.match(manager, /完成すると、専用ホームページが自動で公開されます/);
   assert.match(manager, /公開期限や月額料金なく/);
+  assert.match(manager, /order\.status === "delivered"/);
   assert.doesNotMatch(manager, /共有を停止する|家族共有を始める|共有URLを新しく発行する/);
   assert.match(slugMigration, /get_shared_memory_by_slug/);
   assert.match(slugMigration, /split_part\(profile\.email, '@', 1\)/);
   assert.match(publicSiteMigration, /alter column active set default true/);
   assert.match(publicSiteMigration, /set active = true/);
   assert.doesNotMatch(publicSiteMigration, /set active = false|set token =/);
+  assert.match(autoPublishMigration, /after insert or update of status on public\.orders/);
+  assert.match(autoPublishMigration, /perform public\.ensure_public_personal_site\(new\.id\)/);
+  assert.match(autoPublishMigration, /select id from public\.orders where status = 'delivered'/);
 });
 
 test("adds the animated character to the share-code website", async () => {
