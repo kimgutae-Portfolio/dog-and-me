@@ -219,7 +219,21 @@ export function StudioClient() {
     setMemories((memoryResult.data ?? []) as OrderMemory[]);
     setConcepts((conceptResult.data ?? []) as FilmConcept[]);
     setDelivery((deliveryResult.data as Delivery | null) ?? null);
-    setMessages((messageResult.data ?? []) as OrderMessage[]);
+    const fetchedMessages = (messageResult.data ?? []) as OrderMessage[];
+    setMessages((current) => {
+      // A refresh may have started before a just-sent message was inserted.
+      // Merge instead of replacing so that a late response cannot erase the
+      // customer's optimistic/confirmed message from the open conversation.
+      const merged = new Map(
+        current
+          .filter((message) => message.order_id === orderId)
+          .map((message) => [message.id, message]),
+      );
+      fetchedMessages.forEach((message) => merged.set(message.id, message));
+      return [...merged.values()].sort((a, b) =>
+        a.created_at.localeCompare(b.created_at),
+      );
+    });
     setRevisions((revisionResult.data ?? []) as RevisionRequest[]);
     setVideoUrl("");
     setReviewVideoUrl("");
@@ -677,6 +691,20 @@ export function StudioClient() {
       sendingMessage
     )
       return false;
+    const trimmedBody = body.trim();
+    const optimisticId = `pending-${crypto.randomUUID()}`;
+    const optimisticMessage: OrderMessage = {
+      id: optimisticId,
+      order_id: order.id,
+      sender_id: user.id,
+      body: trimmedBody,
+      status: "open",
+      resolved_at: null,
+      resolved_by: null,
+      read_at: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((current) => [...current, optimisticMessage]);
     setSendingMessage(true);
     setError("");
     try {
@@ -685,22 +713,30 @@ export function StudioClient() {
         .insert({
           order_id: order.id,
           sender_id: user.id,
-          body: body.trim(),
+          body: trimmedBody,
         })
         .select("*")
         .single();
       if (messageError) {
+        setMessages((current) =>
+          current.filter((message) => message.id !== optimisticId),
+        );
         setError("メッセージを送信できませんでした。");
         return false;
       }
       if (insertedMessage) {
-        setMessages((current) =>
-          current.some((message) => message.id === insertedMessage.id)
-            ? current
-            : [...current, insertedMessage as OrderMessage].sort((a, b) =>
-                a.created_at.localeCompare(b.created_at),
-              ),
-        );
+        setMessages((current) => {
+          const withoutOptimistic = current.filter(
+            (message) => message.id !== optimisticId,
+          );
+          return withoutOptimistic.some(
+            (message) => message.id === insertedMessage.id,
+          )
+            ? withoutOptimistic
+            : [...withoutOptimistic, insertedMessage as OrderMessage].sort(
+                (a, b) => a.created_at.localeCompare(b.created_at),
+              );
+        });
       }
       setNotice("担当者へメッセージを送りました。");
       // Notification and refresh are deliberately best-effort: neither can
@@ -710,6 +746,9 @@ export function StudioClient() {
       return true;
     } catch (caught) {
       console.error(caught);
+      setMessages((current) =>
+        current.filter((message) => message.id !== optimisticId),
+      );
       setError("メッセージを送信できませんでした。通信状態をご確認ください。");
       return false;
     } finally {

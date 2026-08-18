@@ -1431,6 +1431,10 @@ test("emails customers only when an administrator sends a studio message", async
   assert.doesNotMatch(chat, /setOpen\(\(current\) => !current\)/);
   assert.doesNotMatch(chat, /composeRequest/);
   assert.doesNotMatch(studio, /photoChangeComposeRequest|photoProductionStarted/);
+  assert.match(studio, /const optimisticId = `pending-\$\{crypto\.randomUUID\(\)\}`/);
+  assert.match(studio, /setMessages\(\(current\) => \[\.\.\.current, optimisticMessage\]\)/);
+  assert.match(studio, /current[\s\S]*?filter\(\(message\) => message\.order_id === orderId\)[\s\S]*?fetchedMessages\.forEach/);
+  assert.match(studio, /message\.id !== optimisticId/);
   assert.match(studio, /STORY SOURCE REVIEWの承認前まで写真を変更できます/);
   assert.match(studio, /担当者が写真変更を許可しました/);
   assert.doesNotMatch(studio, /写真の変更を相談する/);
