@@ -1426,10 +1426,16 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(chat, /disabled=\{sending\}/);
   assert.doesNotMatch(chat, /checked=\{open\}/);
   assert.match(chat, /className="chat-widget-close"[\s\S]*?onClick=\{\(event\) => \{[\s\S]*?event\.stopPropagation\(\);[\s\S]*?setOpen\(false\);/);
-  assert.match(chat, /\{!open && \([\s\S]*?className="chat-widget-toggle"[\s\S]*?onClick=\{\(\) => setOpen\(true\)\}/);
+  assert.match(chat, /\{activeInstance && !open && \([\s\S]*?className="chat-widget-toggle"[\s\S]*?onClick=\{\(\) => setOpen\(true\)\}/);
   assert.doesNotMatch(chat, /onPointerDown=/);
   assert.doesNotMatch(chat, /setOpen\(\(current\) => !current\)/);
   assert.doesNotMatch(chat, /createPortal|document\.body|mountedChatWidgets/);
+  assert.match(chat, /useLayoutEffect/);
+  assert.match(chat, /new MutationObserver\(syncActiveInstance\)/);
+  assert.match(chat, /instances\.at\(-1\) === element/);
+  assert.match(chat, /data-chat-active=\{activeInstance \? "true" : "false"\}/);
+  assert.match(chat, /activeInstance && !open/);
+  assert.match(chat, /if \(!activeInstance\) return;[\s\S]*?\.channel\(`/);
   assert.match(chat, /return widget;/);
   assert.doesNotMatch(chat, /composeRequest/);
   assert.doesNotMatch(studio, /photoChangeComposeRequest|photoProductionStarted/);
