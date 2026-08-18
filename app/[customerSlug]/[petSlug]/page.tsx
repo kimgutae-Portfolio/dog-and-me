@@ -33,5 +33,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PersonalMemoryPage({ params }: PageProps) {
   const { customerSlug, petSlug } = await params;
-  return <SharedMemorySite customerSlug={customerSlug} petSlug={petSlug} />;
+  const initialMemory = await getPublicSharedMemoryBySlug(
+    customerSlug,
+    petSlug,
+  ).catch(() => null);
+  return (
+    <SharedMemorySite
+      customerSlug={customerSlug}
+      petSlug={petSlug}
+      initialMemory={initialMemory}
+    />
+  );
 }

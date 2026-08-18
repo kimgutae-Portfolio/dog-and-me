@@ -366,6 +366,12 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(sharedPage, /getPublicMemoryClient/);
   assert.doesNotMatch(sharedPage, /getSupabaseBrowserClient/);
   assert.match(sharedPage, /ページ情報を読み込めませんでした/);
+  assert.match(sharedPage, /initialMemory\?: SharedMemoryPayload \| null/);
+  assert.match(personalSite, /PERSONAL STORYBOOK SITE/);
+  assert.match(
+    await readFile(new URL("app/[customerSlug]/[petSlug]/page.tsx", root), "utf8"),
+    /initialMemory=\{initialMemory\}/,
+  );
   assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
   assert.match(sharedPage, /PersonalStorybookSite/);
   assert.match(personalSite, /PERSONAL STORYBOOK SITE/);

@@ -14,9 +14,11 @@ type SharedImage = SharedMemoryPayload["images"][number] & { url: string };
 export function SharedMemorySite({
   customerSlug,
   petSlug,
+  initialMemory,
 }: {
   customerSlug?: string;
   petSlug?: string;
+  initialMemory?: SharedMemoryPayload | null;
 } = {}) {
   const params = useParams<{ shareId: string }>();
   const [memory, setMemory] = useState<SharedMemoryPayload | null>(null);
@@ -28,25 +30,32 @@ export function SharedMemorySite({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadSharedMemory = useCallback(async (rpc: string, rpcParams: Record<string, string>) => {
+  const loadSharedMemory = useCallback(async (
+    rpc: string,
+    rpcParams: Record<string, string>,
+    preloaded?: SharedMemoryPayload | null,
+  ) => {
     const supabase = getPublicMemoryClient();
     if (!supabase) {
       setError("ページ情報を読み込めませんでした。時間をおいてもう一度お試しください。");
       setLoading(false);
       return;
     }
-    const { data, error: memoryError } = await supabase.rpc(rpc, rpcParams);
-    if (memoryError) {
-      setError("ページ情報を読み込めませんでした。時間をおいてもう一度お試しください。");
-      setLoading(false);
-      return;
+    let loaded = preloaded ?? null;
+    if (!loaded) {
+      const { data, error: memoryError } = await supabase.rpc(rpc, rpcParams);
+      if (memoryError) {
+        setError("ページ情報を読み込めませんでした。時間をおいてもう一度お試しください。");
+        setLoading(false);
+        return;
+      }
+      if (!data) {
+        setError("このものがたりサイトは現在公開されていません。");
+        setLoading(false);
+        return;
+      }
+      loaded = data as SharedMemoryPayload;
     }
-    if (!data) {
-      setError("このものがたりサイトは現在公開されていません。");
-      setLoading(false);
-      return;
-    }
-    const loaded = data as SharedMemoryPayload;
     const paths = [loaded.delivery.video_storage_path, ...loaded.images.map((image) => image.storage_path), loaded.character?.storage_path]
       .filter((path): path is string => Boolean(path));
     const { data: signed } = await supabase.storage.from("order-assets").createSignedUrls(paths, 900);
@@ -70,6 +79,10 @@ export function SharedMemorySite({
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      if (initialMemory) {
+        loadSharedMemory("", {}, initialMemory);
+        return;
+      }
       if (customerSlug && petSlug) {
         loadSharedMemory("get_shared_memory_by_slug", {
           p_customer_slug: customerSlug,
@@ -81,7 +94,7 @@ export function SharedMemorySite({
         loadSharedMemory("get_shared_memory_by_code", { p_share_code: params.shareId });
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [customerSlug, loadSharedMemory, params.shareId, petSlug]);
+  }, [customerSlug, initialMemory, loadSharedMemory, params.shareId, petSlug]);
 
   const loadMoreImages = async () => {
     if (!memory || loadingMore || loadedImageCount >= memory.album_total) return;
