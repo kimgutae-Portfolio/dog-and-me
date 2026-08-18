@@ -20,6 +20,8 @@ export function SharedMemorySite({
   const [memory, setMemory] = useState<SharedMemoryPayload | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [images, setImages] = useState<SharedImage[]>([]);
+  const [loadedImageCount, setLoadedImageCount] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [characterSpriteUrl, setCharacterSpriteUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,6 +51,7 @@ export function SharedMemorySite({
     setMemory(loaded);
     setVideoUrl(finalVideoUrl);
     setImages(loaded.images.map((image) => ({ ...image, url: urlByPath.get(image.storage_path) ?? "" })).filter((image) => image.url));
+    setLoadedImageCount(loaded.images.length);
     setCharacterSpriteUrl(loaded.character?.storage_path ? urlByPath.get(loaded.character.storage_path) ?? "" : "");
     setLoading(false);
   }, []);
@@ -67,6 +70,43 @@ export function SharedMemorySite({
     }, 0);
     return () => window.clearTimeout(timer);
   }, [customerSlug, loadSharedMemory, params.shareId, petSlug]);
+
+  const loadMoreImages = async () => {
+    if (!memory || loadingMore || loadedImageCount >= memory.album_total) return;
+    setLoadingMore(true);
+    const supabase = getSupabaseBrowserClient();
+    const rpc = customerSlug && petSlug
+      ? "get_shared_album_page_by_slug"
+      : "get_shared_album_page_by_code";
+    const rpcParams = customerSlug && petSlug
+      ? {
+          p_customer_slug: customerSlug,
+          p_pet_slug: petSlug,
+          p_offset: loadedImageCount,
+          p_limit: 30,
+        }
+      : {
+          p_share_code: params.shareId,
+          p_offset: loadedImageCount,
+          p_limit: 30,
+        };
+    const { data, error: pageError } = await supabase.rpc(rpc, rpcParams);
+    const page = Array.isArray(data)
+      ? (data as SharedMemoryPayload["images"])
+      : [];
+    if (!pageError && page.length) {
+      const { data: signed } = await supabase.storage
+        .from("order-assets")
+        .createSignedUrls(page.map((image) => image.storage_path), 900);
+      const next = page.flatMap((image, index) => {
+        const url = signed?.[index]?.signedUrl;
+        return url ? [{ ...image, url }] : [];
+      });
+      setImages((current) => [...current, ...next]);
+      setLoadedImageCount((current) => current + page.length);
+    }
+    setLoadingMore(false);
+  };
 
   if (loading) return <div className="wizard-loading">大切な思い出を準備しています…</div>;
   if (error || !memory)
@@ -89,6 +129,9 @@ export function SharedMemorySite({
       message={memory.order.message_to_pet || memory.delivery.customer_message || "これからも、思い出の中で一緒に。"}
       videoUrl={videoUrl}
       images={images}
+      albumTotal={memory.album_total}
+      albumBusy={loadingMore}
+      onLoadMore={loadedImageCount < memory.album_total ? loadMoreImages : undefined}
       characterSpriteUrl={characterSpriteUrl}
     />
   );

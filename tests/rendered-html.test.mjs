@@ -351,7 +351,7 @@ test("memory sharing keeps family links private and album access scoped", async 
   assert.match(manager, /このURLが、その子だけのホームページです/);
   assert.match(manager, /LINEなどで共有/);
   assert.match(manager, /\$\{order\.pet_name\}との思い出｜WAN MEMORY/);
-  assert.match(manager, /30枚まで/);
+  assert.match(manager, /専用ホームページからいつでも追加できます/);
   assert.match(sharedPage, /get_shared_memory/);
   assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
   assert.match(sharedPage, /PersonalStorybookSite/);
@@ -408,6 +408,46 @@ test("adds the animated character to the share-code website", async () => {
   assert.match(payload, /character:/);
 });
 
+test("keeps delivered albums growing with storybook pages first", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [migration, customerSite, personalSite, uploads, demo] =
+    await Promise.all([
+      readFile(
+        new URL(
+          "supabase/migrations/202608180001_lifetime_photo_album.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(
+        new URL("app/film/[orderId]/CustomerFilmSite.tsx", root),
+        "utf8",
+      ),
+      readFile(
+        new URL("app/components/PersonalStorybookSite.tsx", root),
+        "utf8",
+      ),
+      readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
+      readFile(new URL("app/film/moka-demo/page.tsx", root), "utf8"),
+    ]);
+
+  assert.match(migration, /'album_photo'/);
+  assert.match(migration, /register_lifetime_album_photo/);
+  assert.match(migration, /p_file_size > 20971520/);
+  assert.match(migration, /v_daily_count >= 50/);
+  assert.match(migration, /5368709120/);
+  assert.match(migration, /album_page_for_order/);
+  assert.match(migration, /when 'scene_still' then 0 when 'source_image' then 1 else 2/);
+  assert.match(customerSite, /\[\.\.\.sceneStills, \.\.\.sourceImages, \.\.\.loadedAlbumAssets\]/);
+  assert.match(customerSite, /uploadLifetimeAlbumImages/);
+  assert.match(personalSite, /新しい思い出を追加/);
+  assert.match(personalSite, /続きの写真を見る/);
+  assert.match(uploads, /LIFETIME_ALBUM_MAX_EDGE = 2400/);
+  assert.match(uploads, /canvas\.toBlob\(resolve, "image\/jpeg", 0\.84\)/);
+  assert.match(demo, /STORYBOOK PAGE/);
+  assert.match(demo, /完成後も写真を追加できます/);
+});
+
 test("guards generated character sprites against frame-edge bleed", async () => {
   const { readFile } = await import("node:fs/promises");
   const studio = await readFile(
@@ -415,7 +455,7 @@ test("guards generated character sprites against frame-edge bleed", async () => 
     "utf8",
   );
 
-  assert.match(studio, /WEBSITE CHARACTER SPRITE PRODUCTION v1\.1/);
+  assert.match(studio, /WEBSITE CHARACTER SPRITE PRODUCTION v1\.2/);
   assert.match(studio, /transparent_gutter_percent: 8/);
   assert.match(studio, /black_white_magenta_background_check/);
   assert.match(studio, /forbid_cross_cell_bleed: true/);

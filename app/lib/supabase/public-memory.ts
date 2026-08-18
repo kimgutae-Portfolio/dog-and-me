@@ -26,7 +26,9 @@ export type SharedMemoryPayload = {
     storage_path: string;
     caption: string | null;
     sort_order: number;
+    kind: "scene_still" | "source_image" | "album_photo";
   }>;
+  album_total: number;
   character: {
     storage_path: string;
   } | null;

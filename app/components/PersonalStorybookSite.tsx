@@ -3,12 +3,14 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
+import { ChangeEvent } from "react";
 import { CustomerCharacterGuide } from "../film/[orderId]/CustomerCharacterGuide";
 
-type AlbumImage = {
+export type AlbumImage = {
   id: string;
   url: string;
   caption: string | null;
+  kind: "scene_still" | "source_image" | "album_photo";
 };
 
 type Props = {
@@ -20,6 +22,13 @@ type Props = {
   message: string;
   videoUrl: string;
   images: AlbumImage[];
+  albumTotal?: number;
+  canManageAlbum?: boolean;
+  albumBusy?: boolean;
+  albumNotice?: string;
+  onAlbumUpload?: (files: File[]) => void;
+  onAlbumDelete?: (imageId: string) => void;
+  onLoadMore?: () => void;
   characterSpriteUrl?: string;
   backHref?: string;
   backLabel?: string;
@@ -34,11 +43,24 @@ export function PersonalStorybookSite({
   message,
   videoUrl,
   images,
+  albumTotal = images.length,
+  canManageAlbum = false,
+  albumBusy = false,
+  albumNotice = "",
+  onAlbumUpload,
+  onAlbumDelete,
+  onLoadMore,
   characterSpriteUrl = "",
   backHref = "/",
   backLabel = "WAN MEMORYへ戻る ↗",
 }: Props) {
   const heroImage = images[0]?.url;
+  const hasMoreImages = images.length < albumTotal;
+  const chooseAlbumPhotos = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (files.length) onAlbumUpload?.(files);
+  };
 
   return (
     <main className="moka-demo personal-storybook-site">
@@ -100,7 +122,7 @@ export function PersonalStorybookSite({
         </div>
       </section>
 
-      {images.length > 0 && (
+      {(images.length > 0 || canManageAlbum) && (
         <section className="moka-album">
           <div className="moka-shell">
             <div className="moka-heading">
@@ -108,11 +130,31 @@ export function PersonalStorybookSite({
                 <p>02 / {petName.toUpperCase()}&apos;S PHOTO ALBUM</p>
                 <h2>{petName}の時間を、<br />一つの写真帖に。</h2>
               </div>
-              <span>{images.length}枚の思い出</span>
+              <span>{albumTotal}枚の思い出</span>
             </div>
-            <p className="moka-album-intro">
-              ご家族が選んだ大切な写真を、その子だけのアルバムとして並べています。
-            </p>
+            <div className="lifetime-album-head">
+              <p className="moka-album-intro">
+                物語のために描いた場面から始まり、制作に使った写真、完成後の日々の写真へ。これからも育っていく、その子だけのアルバムです。
+              </p>
+              {canManageAlbum && (
+                <label className={albumBusy ? "lifetime-album-upload busy" : "lifetime-album-upload"}>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                    multiple
+                    disabled={albumBusy}
+                    onChange={chooseAlbumPhotos}
+                  />
+                  <strong>{albumBusy ? "写真を追加しています…" : "新しい思い出を追加"}</strong>
+                  <small>1枚20MBまで · 一度に50枚まで</small>
+                </label>
+              )}
+            </div>
+            {albumNotice && (
+              <p className="lifetime-album-notice" role="status" aria-live="polite">
+                {albumNotice}
+              </p>
+            )}
             <ol className="moka-album-grid" aria-label={`${petName}の写真アルバム。スマートフォンでは左右にスワイプできます。`}>
               {images.map((image, index) => (
                 <li key={image.id}>
@@ -126,12 +168,41 @@ export function PersonalStorybookSite({
                     />
                     <figcaption>
                       <span>{String(index + 1).padStart(2, "0")}</span>
-                      {image.caption || `${petName}との思い出`}
+                      <span className="album-photo-copy">
+                        <em>
+                          {image.kind === "scene_still"
+                            ? "STORYBOOK PAGE"
+                            : image.kind === "album_photo"
+                              ? "NEW MEMORY"
+                              : "MEMORY PHOTO"}
+                        </em>
+                        {image.caption || `${petName}との思い出`}
+                      </span>
                     </figcaption>
+                    {canManageAlbum && image.kind === "album_photo" && (
+                      <button
+                        className="lifetime-album-delete"
+                        type="button"
+                        disabled={albumBusy}
+                        onClick={() => onAlbumDelete?.(image.id)}
+                      >
+                        この写真を削除
+                      </button>
+                    )}
                   </figure>
                 </li>
               ))}
             </ol>
+            {hasMoreImages && onLoadMore && (
+              <button
+                className="button button-outline lifetime-album-more"
+                type="button"
+                disabled={albumBusy}
+                onClick={onLoadMore}
+              >
+                続きの写真を見る（残り{albumTotal - images.length}枚）
+              </button>
+            )}
           </div>
         </section>
       )}

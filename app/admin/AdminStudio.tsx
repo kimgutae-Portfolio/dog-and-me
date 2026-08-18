@@ -465,7 +465,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v4.0
 
 gen4_story_prompts 배열은 정확히 5개이며 모든 이야기는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
 
-const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.1
+const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.2
 
 역할
 첨부한 order.json과 reference-photos의 고객 원본 사진을 기준으로, 이 강아지의 개인 홈페이지 안을 돌아다니며 말풍선으로 안내하는 투명 배경 캐릭터 프레임을 제작한다.
@@ -478,8 +478,12 @@ const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION
 
 정체성 기준
 - order.json의 character_identity와 reference_photos를 먼저 읽는다.
-- 같은 강아지로 인식되도록 얼굴형, 눈 크기와 간격, 귀, 주둥이, 머리와 몸통 비율, 다리 길이, 털색과 미용 형태, 꼬리, 목줄·하네스·펜던트를 유지한다.
-- 여러 사진이 충돌하면 order.json의 preferred_identity_photo_ids와 primary 역할 사진을 우선한다.
+- character_identity 안의 null, 빈 문자열, 빈 배열은 지정되지 않은 값으로 보고 무시한다.
+- 같은 강아지로 인식되도록 얼굴형, 눈 크기와 간격, 귀, 주둥이, 머리와 몸통 비율, 다리 길이, 털색과 미용 형태, 꼬리를 유지한다.
+- 사진에 보이는 목걸이·목줄·펜던트는 강아지의 대표 특징으로 유지한다.
+- 하네스는 캐릭터 정체성에 포함하지 않고 모든 프레임에서 제거한다. reference_photos, selected_appearance_description, owner_locked_traits에 하네스가 있더라도 반영하지 않는다.
+- 하네스를 제거한 자리에는 새로운 옷이나 액세서리를 만들지 말고, 주변에서 확인되는 털색과 털의 흐름을 이어 자연스러운 몸통으로 표현한다.
+- 여러 사진이 충돌하면 order.json.character_identity.preferred_identity_photo_ids와 primary 역할 사진을 우선한다.
 - 고객 사진에 없는 무늬, 액세서리, 옷, 표정 특징을 추가하지 않는다.
 
 출력 규격
@@ -2015,7 +2019,7 @@ export function AdminStudio() {
       ]);
       const root = `${safeArchiveSegment(order.order_number)}-website-character`;
       const characterJson = {
-        schema_version: "wan-memory-website-character-input-1.1",
+        schema_version: "wan-memory-website-character-input-1.2",
         exported_at: new Date().toISOString(),
         job: {
           id: order.order_number,
@@ -2028,6 +2032,10 @@ export function AdminStudio() {
           medium: "luminous Japanese picture-book watercolor",
           proportions: "natural dog proportions; readable at small website size",
           background: "transparent RGBA",
+          accessory_policy: {
+            preserve_visible_collar_necklace_and_pendant: true,
+            exclude_harness_from_all_frames: true,
+          },
           layout: { columns: 4, rows: 3, frame_count: 12 },
           frame_safety: {
             transparent_gutter_percent: 8,

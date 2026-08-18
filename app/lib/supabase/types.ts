@@ -179,7 +179,8 @@ export type OrderAsset = {
     | "review_video"
     | "final_video"
     | "thumbnail"
-    | "character_sprite";
+    | "character_sprite"
+    | "album_photo";
   storage_path: string;
   original_filename: string;
   mime_type: string;

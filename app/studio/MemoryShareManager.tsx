@@ -134,20 +134,12 @@ export function MemoryShareManager({
       .eq("id", asset.id)
       .eq("order_id", order.id);
     if (updateError)
-      setError(
-        updateError.message.includes("30")
-          ? "アルバムに表示できる写真は30枚までです。"
-          : "写真の設定を保存できませんでした。",
-      );
+      setError("写真の設定を保存できませんでした。");
     else await onChanged();
     setWorking(false);
   };
 
   const togglePhoto = async (asset: OrderAsset) => {
-    if (!asset.album_visible && visiblePhotos.length >= 30) {
-      setError("アルバムに表示できる写真は30枚までです。");
-      return;
-    }
     await updatePhoto(asset, { album_visible: !asset.album_visible });
   };
 
@@ -263,10 +255,10 @@ export function MemoryShareManager({
           <p className="eyebrow">MEMORY ALBUM &amp; FAMILY SHARE</p>
           <h2>写真アルバムと家族共有</h2>
         </div>
-        <span>{visiblePhotos.length} / 30枚を表示</span>
+        <span>制作時の写真 {visiblePhotos.length}枚を表示</span>
       </div>
       <p className="memory-manager-lead">
-        アルバムに載せる写真を選び、順番と短い説明を整えられます。編集できるのはお客様だけです。
+        制作に使った写真の掲載順と短い説明を整えられます。完成後の新しい写真は、専用ホームページからいつでも追加できます。
       </p>
       {notice && (
         <p className="memory-manager-message">

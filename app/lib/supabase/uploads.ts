@@ -5,6 +5,17 @@ import type { OrderAsset, StoryDraftAsset } from "./types";
 
 const HEIC_TYPES = new Set(["image/heic", "image/heif"]);
 const HEIC_EXTENSIONS = /\.(heic|heif)$/i;
+const ALBUM_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+]);
+const ALBUM_IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|heic|heif)$/i;
+export const MAX_LIFETIME_ALBUM_FILE_BYTES = 20 * 1024 * 1024;
+export const MAX_LIFETIME_ALBUM_DAILY_FILES = 50;
+const LIFETIME_ALBUM_MAX_EDGE = 2400;
 
 async function normalizeImage(file: File): Promise<File> {
   if (!HEIC_TYPES.has(file.type) && !HEIC_EXTENSIONS.test(file.name)) return file;
@@ -13,6 +24,95 @@ async function normalizeImage(file: File): Promise<File> {
   const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
   const jpeg = Array.isArray(converted) ? converted[0] : converted;
   return new File([jpeg], file.name.replace(HEIC_EXTENSIONS, ".jpg"), { type: "image/jpeg" });
+}
+
+async function prepareLifetimeAlbumImage(originalFile: File): Promise<File> {
+  if (
+    (!ALBUM_IMAGE_TYPES.has(originalFile.type) &&
+      !ALBUM_IMAGE_EXTENSIONS.test(originalFile.name)) ||
+    originalFile.size <= 0
+  ) {
+    throw new Error("JPEG、PNG、WebP、HEICの写真を選んでください。");
+  }
+  if (originalFile.size > MAX_LIFETIME_ALBUM_FILE_BYTES) {
+    throw new Error("写真1枚の上限は20MBです。");
+  }
+
+  const normalized = await normalizeImage(originalFile);
+  const bitmap = await createImageBitmap(normalized, {
+    imageOrientation: "from-image",
+  });
+  const scale = Math.min(
+    1,
+    LIFETIME_ALBUM_MAX_EDGE / Math.max(bitmap.width, bitmap.height),
+  );
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    throw new Error("写真をアルバム用に整えられませんでした。");
+  }
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, width, height);
+  context.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.84),
+  );
+  if (!blob || blob.size > MAX_LIFETIME_ALBUM_FILE_BYTES) {
+    throw new Error("写真をアルバム用に整えられませんでした。");
+  }
+  const baseName =
+    originalFile.name.replace(/\.[^.]+$/, "").replace(/[\\/]/g, "-") ||
+    "memory";
+  return new File([blob], `${baseName}.jpg`, {
+    type: "image/jpeg",
+    lastModified: originalFile.lastModified,
+  });
+}
+
+export async function uploadLifetimeAlbumImages(
+  supabase: SupabaseClient,
+  userId: string,
+  orderId: string,
+  originalFiles: File[],
+  onProgress?: (completed: number, total: number) => void,
+) {
+  if (originalFiles.length > MAX_LIFETIME_ALBUM_DAILY_FILES) {
+    throw new Error("一度に追加できる写真は50枚までです。");
+  }
+  for (let index = 0; index < originalFiles.length; index += 1) {
+    const file = await prepareLifetimeAlbumImage(originalFiles[index]);
+    const path = `${userId}/${orderId}/album/${crypto.randomUUID()}.jpg`;
+    const { error: uploadError } = await supabase.storage
+      .from("order-assets")
+      .upload(path, file, {
+        contentType: file.type,
+        cacheControl: "31536000",
+        upsert: false,
+      });
+    if (uploadError) throw uploadError;
+
+    const { error: registerError } = await supabase.rpc(
+      "register_lifetime_album_photo",
+      {
+        p_order_id: orderId,
+        p_storage_path: path,
+        p_original_filename: file.name,
+        p_mime_type: file.type,
+        p_file_size: file.size,
+      },
+    );
+    if (registerError) {
+      await supabase.storage.from("order-assets").remove([path]);
+      throw registerError;
+    }
+    onProgress?.(index + 1, originalFiles.length);
+  }
 }
 
 export type UploadedStoryDraftImage = {
