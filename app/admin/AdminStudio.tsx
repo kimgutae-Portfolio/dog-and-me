@@ -155,12 +155,12 @@ const STORYBOOK_STYLE_PROFILE = {
 } as const;
 const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
   id: "MEMORY STORYBOOK PRODUCTION",
-  version: "3.0",
-  prompt_filename: "MEMORY_STORYBOOK_PRODUCTION_v3.txt",
+  version: "3.1",
+  prompt_filename: "MEMORY_STORYBOOK_PRODUCTION_v3_1.txt",
   source_photo_policy:
     "Use only the one administrator-selected primary customer photo for each story as its identity-locked reference in the original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories; never add unselected photos, pad, blur, crop, or send the raw photo directly to Runway.",
   page_image_policy:
-    "Recompose only the scene, background, lighting, and painted treatment into a new 16:9 watercolor-and-gouache storybook page. The dog must remain recognizably the same dog as the primary reference.",
+    "Keep the dog as faithful as possible to the primary reference while recomposing the scene into a new 16:9 watercolor-and-gouache storybook page. Remove every person completely and reconstruct the vacated area as a simple, natural continuation of the existing environment without adding replacement objects.",
   story_pages: {
     count: 5,
     model: "gen4",
@@ -191,7 +191,7 @@ const CONCEPT_PROPOSAL_PROMPT = `WAN MEMORY STORY CONCEPT PROPOSAL v1.0
   "concept_b": {"title":"","tone":"","summary":"","story_scenes":[{"story_number":1,"story_title":"","text":""},{"story_number":2,"story_title":"","text":""},{"story_number":3,"story_title":"","text":""},{"story_number":4,"story_title":"","text":""},{"story_number":5,"story_title":"","text":""}]}
 }`;
 
-const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v2.0
+const STORYBOOK_IMAGE_PROMPT = `WAN MEMORY STORYBOOK PAGE PRODUCTION v2.1
 
 첨부 자료
 - order.json
@@ -220,6 +220,7 @@ style_reference.png에 등장하는 강아지, 체형, 포즈, 목줄, 벚꽃, �
   - 화풍만 참고하고 내용이나 강아지 외형은 절대 복사하지 않음
 
 강아지 정체성 규칙
+- 사람이나 배경을 제거·재구성하는 것보다 강아지를 primary 사진과 최대한 동일하게 유지하는 것이 항상 우선이다.
 - primary 사진에 나타난 동일한 강아지로 인식되어야 한다.
 - 얼굴형, 자연스러운 눈 크기와 간격, 눈꺼풀, 시선, 귀의 형태와 위치를 유지한다.
 - 주둥이의 길이와 폭, 코의 크기와 형태를 유지한다.
@@ -296,8 +297,13 @@ Luminous Japanese picture-book watercolor illustration, watercolor-dominant rend
 
 사람 표현 규칙
 - order.json의 people_policy를 반드시 확인하고 따른다.
-- face_usage_policy가 faces_never_generated_or_used_back_views_only이면 사람의 얼굴을 생성하지 않는다.
-- 이 경우 사람과 아기는 완전한 뒷모습 또는 얼굴이 완전히 가려진 방향으로만 표현한다.
+- primary 사진에 사람이 있더라도 최종 이미지에는 사람을 전혀 표현하지 않는다.
+- 얼굴만 가리거나 뒷모습·손·팔·다리·발·옷·실루엣을 남기지 말고, 사람과 사람의 그림자를 완전히 제거한다.
+- 사람이 있던 자리를 다른 물건으로 채우지 않는다.
+- 사람이 있던 공간은 원래 장소의 벽, 바닥, 잔디, 길, 하늘처럼 사진에서 확인되는 환경이 자연스럽게 이어지도록 단순하게 재구성한다.
+- 사람을 제거하기 위해 강아지의 얼굴, 몸, 털, 자세, 비율, 액세서리를 바꾸지 않는다.
+- 사람이 강아지 일부를 가리고 있다면 보이는 강아지의 특징과 신체 비율을 우선하고, 가려진 부분을 과장하거나 다른 품종처럼 추정하지 않는다.
+- 사람이 강아지를 안고 있어 원래 자세를 그대로 유지할 수 없다면, 확인되는 강아지의 비율을 보존하면서 같은 장소에 자연스럽게 앉거나 서 있는 최소한의 자세로 재구성한다.
 - 원본에 없는 사람은 추가하지 않는다.
 
 이미지 내 문자 금지
@@ -324,6 +330,7 @@ Luminous Japanese picture-book watercolor illustration, watercolor-dominant rend
    - 꼬리
    - 목줄, 하네스, 의상
    - 중심 행동과 구도
+   - 사람 제거 과정에서 강아지의 정체성과 신체 비율이 달라지지 않았는지
 7. style_reference.png와 비교해 아래 항목을 검수한다.
    - 투명한 수채 레이어
    - 섬세한 선묘
@@ -352,7 +359,8 @@ story_caption 규칙
 - 사용한 primary 파일
 - primary 기준 정체성 유지 여부
 - style_reference 기준 화풍 유지 여부
-- 인물 얼굴 정책 준수 여부
+- 사람 완전 제거 정책 준수 여부
+- 모든 사람이 완전히 제거되고 빈 공간이 자연스러운 배경으로 이어졌는지 여부
 - 이미지 안에 문자나 로고가 없는지 여부
 
 각 이미지마다 다음 형식으로 반환한다.
@@ -1814,7 +1822,13 @@ export function AdminStudio() {
       message_to_pet: order.message_to_pet,
       avoid_notes: order.avoid_notes,
       people_policy: {
-        face_usage_policy: "faces_never_generated_or_used_back_views_only",
+        face_usage_policy: "people_fully_removed_no_human_rendering",
+        human_removal_policy:
+          "remove_all_people_bodies_clothing_silhouettes_and_shadows",
+        background_reconstruction_policy:
+          "continue_the_existing_natural_environment_without_replacement_objects",
+        dog_identity_priority:
+          "preserve_the_primary_dog_as_faithfully_as_possible_before_background_reconstruction",
         contains_people: order.contains_people,
         people_handling: order.people_handling,
         contains_minors: order.contains_minors,
@@ -4093,7 +4107,7 @@ export function AdminStudio() {
                         <dt>人物写真の取り扱い</dt>
                         <dd>
                           {order.contains_people === null
-                            ? "固定ポリシー：お顔は使用せず、後ろ姿などのみ"
+                            ? "固定ポリシー：人物は描かず、愛犬だけの自然な場面へ再構成"
                             : `旧形式の記録：${order.contains_people ? "人物あり" : "人物なし"} · ${peopleHandlingLabel(order.people_handling)} · 未成年者${order.contains_minors ? "あり" : "なし"}`}
                         </dd>
                       </div>

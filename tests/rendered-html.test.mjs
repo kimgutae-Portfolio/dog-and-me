@@ -90,7 +90,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /税込/);
   assert.match(html, /モニター価格とは何ですか/);
   assert.match(html, /人が写っている写真も送れますか/);
-  assert.match(html, /人物のお顔は新しく生成せず/);
+  assert.match(html, /完成イラストでは人物をすべて除き/);
   assert.match(html, /物語案2案/);
   assert.match(html, /5つの物語を各5秒で制作/);
   assert.match(html, /現在の制作プランと同じ、5秒映像5本で仕上げた約39秒のデモ/);
@@ -802,8 +802,8 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(story, /hasSeenPhotoUploadGuide/);
   assert.match(studio, /hasSeenPhotoUploadGuide/);
   assert.match(photoUploadGuide, /photo-upload-guide-seen:v1/);
-  assert.match(photoUploadGuide, /愛犬がよく見える写真を/);
-  assert.match(photoUploadGuide, /この案内は初回だけ表示されます/);
+  assert.match(photoUploadGuide, /愛犬だけが写った写真が/);
+  assert.match(photoUploadGuide, /背景の再構成が不自然になる場合があります/);
   assert.match(photoUploadGuide, /rememberPhotoUploadGuide/);
   assert.match(css, /\.photo-guide-backdrop \{[^}]*z-index: 1200;/);
   assert.match(css, /\.photo-guide-backdrop \{[^}]*place-items: center;/);
@@ -1186,6 +1186,8 @@ test("records and enforces consolidated photo-rights and external-service consen
   assert.match(story, /photo_rights_consent_accepted/);
   assert.match(studio, /p_people_policy_version/);
   assert.match(admin, /人物写真の取り扱い/);
+  assert.match(admin, /people_fully_removed_no_human_rendering/);
+  assert.match(admin, /사람이 있던 자리를 다른 물건으로 채우지 않는다/);
   assert.match(privacy, /人物が写っている写真の取り扱い/);
   assert.match(privacy, /外部サービスでのデータの取り扱い/);
   assert.doesNotMatch(story, /広告利用や当社のAI学習には使用しません/);

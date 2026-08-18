@@ -63,28 +63,28 @@ export function PhotoUploadGuideDialog({
         <div className="photo-guide-content">
           <p className="eyebrow">FIRST PHOTO GUIDE</p>
           <h2 id="photo-upload-guide-title">
-            愛犬がよく見える写真を
-            <br />1枚入れてください。
+            愛犬だけが写った写真が、
+            <br />いちばんきれいに仕上がります。
           </h2>
           <p>
-            担当者が候補から制作に使う1枚を選びます。この案内は初回だけ表示されます。
+            顔・体・毛色がよく見える写真ほど、その子らしさを活かして描けます。
           </p>
           <ul className="photo-upload-guide-list">
             <li>
-              <strong>◎ おすすめ</strong>
-              <span>顔・体・毛色が明るく、ピントが合っている</span>
+              <strong>◎ いちばんおすすめ</strong>
+              <span>愛犬だけが明るく、はっきり写っている写真</span>
             </li>
             <li>
-              <strong>○ 家族写真</strong>
-              <span>送れますが、愛犬だけが見える写真も1枚追加</span>
+              <strong>○ 人物と一緒</strong>
+              <span>人物を除き、愛犬だけの場面として制作します</span>
             </li>
             <li>
-              <strong>△ 避ける</strong>
-              <span>暗い・ぼけている・顔や体が隠れている写真</span>
+              <strong>△ ご注意</strong>
+              <span>人物で隠れた部分や背景の再構成が不自然になる場合があります</span>
             </li>
           </ul>
           <aside>
-            人物のお顔はAIイラストに使用・生成しません。
+            迷ったら、愛犬だけが写った写真を1枚入れてください。
           </aside>
         </div>
         <footer>
