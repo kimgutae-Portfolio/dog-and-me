@@ -1261,6 +1261,16 @@ export function StudioClient() {
               </div>
             </div>
 
+            {canOperateOrder && order.status === "delivered" && (
+              <MemoryShareManager
+                key={order.id}
+                order={order}
+                delivery={delivery}
+                assets={assets}
+                onChanged={() => loadDetails(order.id)}
+              />
+            )}
+
             {!consentCurrent &&
               !["delivered", "cancelled"].includes(order.status) && (
                 <aside className="studio-consent-renewal" id="consent-renewal">
@@ -2373,7 +2383,7 @@ export function StudioClient() {
               onRefreshMessages={() => void loadDetails(order.id)}
             />
 
-            {canOperateOrder ? (
+            {canOperateOrder && order.status !== "delivered" ? (
               <MemoryShareManager
                 key={order.id}
                 order={order}
@@ -2381,7 +2391,7 @@ export function StudioClient() {
                 assets={assets}
                 onChanged={() => loadDetails(order.id)}
               />
-            ) : (
+            ) : !canOperateOrder ? (
               delivery && (
                 <aside className="studio-card readonly-preview-note">
                   <strong>専用ものがたりサイト</strong>
@@ -2390,7 +2400,7 @@ export function StudioClient() {
                   </span>
                 </aside>
               )
-            )}
+            ) : null}
 
           </>
         )}

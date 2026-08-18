@@ -367,6 +367,8 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(manager, /LINEなどで共有/);
   assert.match(manager, /\$\{order\.pet_name\}との思い出｜WAN MEMORY/);
   assert.match(manager, /専用ホームページからいつでも追加できます/);
+  assert.match(manager, /写真を追加・アルバムを管理/);
+  assert.match(manager, /\/film\/\$\{order\.id\}#photo-album/);
   assert.match(sharedPage, /get_shared_memory/);
   assert.match(sharedPage, /getPublicMemoryClient/);
   assert.doesNotMatch(sharedPage, /getSupabaseBrowserClient/);
@@ -386,6 +388,7 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(personalSite, /PERSONAL STORYBOOK SITE/);
   assert.match(personalSite, /01 \/ COMPLETE FILM/);
   assert.match(personalSite, /02 \/.*PHOTO ALBUM/);
+  assert.match(personalSite, /id="photo-album"/);
   assert.match(personalSite, /03 \/ A LETTER FOR/);
   assert.doesNotMatch(personalSite, /THE STORY/);
   assert.doesNotMatch(sharedPage, /家族共有ページ|FAMILY MEMORY SITE/);

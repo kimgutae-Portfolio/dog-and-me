@@ -225,6 +225,65 @@ export function MemoryShareManager({
           </div>
         </div>
       )}
+      <div className="family-share-panel">
+        <div>
+          <p className="eyebrow">YOUR DOG&apos;S WEBSITE</p>
+          <h3>このURLが、その子だけのホームページです。</h3>
+          <p>
+            ご家族も同じURLから、ログインせずに完成映像・写真・キャラクターを楽しめます。検索結果には表示されません。
+          </p>
+        </div>
+        {!siteReady ? (
+          <div className="family-share-waiting">
+            <strong>完成映像の納品後に利用できます</strong>
+            <small>完成すると、専用ホームページが自動で公開されます。</small>
+          </div>
+        ) : (
+          <div className="family-share-controls">
+            <div className="share-status">
+              <span className="active">公開中</span>
+              <code>{shareUrl || "専用URLを準備しています…"}</code>
+            </div>
+            <div>
+              <a
+                className="button album-manage-button"
+                href={`/film/${order.id}#photo-album`}
+              >
+                写真を追加・アルバムを管理
+              </a>
+              <button
+                className="button button-primary"
+                type="button"
+                disabled={working || !shareUrl}
+                onClick={copyShareUrl}
+              >
+                URLをコピー
+              </button>
+              <button
+                className="button button-outline"
+                type="button"
+                disabled={working || !shareUrl}
+                onClick={openShareSheet}
+              >
+                LINEなどで共有
+              </button>
+              {shareUrl && (
+                <a
+                  className="button button-cream"
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  ホームページを開く ↗
+                </a>
+              )}
+            </div>
+            <small>
+              写真の追加はログイン中のご本人だけが行えます。公開期限や月額料金なく、このURLをそのまま使い続けられます。
+            </small>
+          </div>
+        )}
+      </div>
       <div className="card-head">
         <div>
           <p className="eyebrow">MEMORY ALBUM &amp; FAMILY SHARE</p>
@@ -321,59 +380,6 @@ export function MemoryShareManager({
         </p>
       )}
 
-      <div className="family-share-panel">
-        <div>
-          <p className="eyebrow">YOUR DOG&apos;S WEBSITE</p>
-          <h3>このURLが、その子だけのホームページです。</h3>
-          <p>
-            ご家族も同じURLから、ログインせずに完成映像・写真・キャラクターを楽しめます。検索結果には表示されません。
-          </p>
-        </div>
-        {!siteReady ? (
-          <div className="family-share-waiting">
-            <strong>完成映像の納品後に利用できます</strong>
-            <small>完成すると、専用ホームページが自動で公開されます。</small>
-          </div>
-        ) : (
-          <div className="family-share-controls">
-            <div className="share-status">
-              <span className="active">公開中</span>
-              <code>{shareUrl || "専用URLを準備しています…"}</code>
-            </div>
-            <div>
-              <button
-                className="button button-primary"
-                type="button"
-                disabled={working || !shareUrl}
-                onClick={copyShareUrl}
-              >
-                URLをコピー
-              </button>
-              <button
-                className="button button-outline"
-                type="button"
-                disabled={working || !shareUrl}
-                onClick={openShareSheet}
-              >
-                LINEなどで共有
-              </button>
-              {shareUrl && (
-                <a
-                  className="button button-cream"
-                  href={shareUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  ホームページを開く ↗
-                </a>
-              )}
-            </div>
-            <small>
-              完成後は公開期限や月額料金なく、このURLをそのまま使い続けられます。
-            </small>
-          </div>
-        )}
-      </div>
     </section>
   );
 }

@@ -123,7 +123,7 @@ export function PersonalStorybookSite({
       </section>
 
       {(images.length > 0 || canManageAlbum) && (
-        <section className="moka-album">
+        <section className="moka-album" id="photo-album">
           <div className="moka-shell">
             <div className="moka-heading">
               <div>
