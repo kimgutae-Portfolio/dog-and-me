@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { PersonalStorybookSite } from "../../components/PersonalStorybookSite";
-import { getSupabaseBrowserClient } from "../../lib/supabase/client";
-import type { SharedMemoryPayload } from "../../lib/supabase/public-memory";
+import {
+  getPublicMemoryClient,
+  type SharedMemoryPayload,
+} from "../../lib/supabase/public-memory";
 
 type SharedImage = SharedMemoryPayload["images"][number] & { url: string };
 
@@ -27,9 +29,19 @@ export function SharedMemorySite({
   const [error, setError] = useState("");
 
   const loadSharedMemory = useCallback(async (rpc: string, rpcParams: Record<string, string>) => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = getPublicMemoryClient();
+    if (!supabase) {
+      setError("ページ情報を読み込めませんでした。時間をおいてもう一度お試しください。");
+      setLoading(false);
+      return;
+    }
     const { data, error: memoryError } = await supabase.rpc(rpc, rpcParams);
-    if (memoryError || !data) {
+    if (memoryError) {
+      setError("ページ情報を読み込めませんでした。時間をおいてもう一度お試しください。");
+      setLoading(false);
+      return;
+    }
+    if (!data) {
       setError("このものがたりサイトは現在公開されていません。");
       setLoading(false);
       return;
@@ -74,7 +86,11 @@ export function SharedMemorySite({
   const loadMoreImages = async () => {
     if (!memory || loadingMore || loadedImageCount >= memory.album_total) return;
     setLoadingMore(true);
-    const supabase = getSupabaseBrowserClient();
+    const supabase = getPublicMemoryClient();
+    if (!supabase) {
+      setLoadingMore(false);
+      return;
+    }
     const rpc = customerSlug && petSlug
       ? "get_shared_album_page_by_slug"
       : "get_shared_album_page_by_code";

@@ -159,12 +159,9 @@ export function StudioClient() {
     }
     const loadedOrders = (data ?? []) as MemoryOrder[];
     setOrders(loadedOrders);
-    const activeOrder = loadedOrders.find(
-      (item) => !["delivered", "cancelled"].includes(item.status),
-    );
     const nextId = loadedOrders.some((order) => order.id === requestedOrderId)
       ? requestedOrderId
-      : (activeOrder?.id ?? loadedOrders[0]?.id ?? "");
+      : (loadedOrders[0]?.id ?? "");
     setSelectedOrderId((current) =>
       current && loadedOrders.some((order) => order.id === current)
         ? current

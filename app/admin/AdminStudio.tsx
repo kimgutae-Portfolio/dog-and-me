@@ -5269,7 +5269,9 @@ export function AdminStudio() {
                           <aside className="admin-operation-note warning">
                             <strong>まだ最終納品できません。</strong>
                             <span>
-                              {order.payment_status !== "paid"
+                              {order.status === "delivered"
+                                ? "この注文はすでに最終納品済みです。現在の完成映像はお客様の制作室と専用ホームページで確認できます。"
+                                : order.payment_status !== "paid"
                                 ? "入金確認が必要です。"
                                 : !consentCurrent
                                   ? "お客様が制作室へログインし、画面上部の「現在の同意内容を確認する」から3項目を記録する必要があります。"

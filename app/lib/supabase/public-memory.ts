@@ -37,7 +37,7 @@ export type SharedMemoryPayload = {
 const shareCodePattern = /^[a-f0-9]{64}$/i;
 const personalSlugPattern = /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u;
 
-function getPublicMemoryClient() {
+export function getPublicMemoryClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !publishableKey) return null;

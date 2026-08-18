@@ -363,6 +363,9 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(manager, /\$\{order\.pet_name\}との思い出｜WAN MEMORY/);
   assert.match(manager, /専用ホームページからいつでも追加できます/);
   assert.match(sharedPage, /get_shared_memory/);
+  assert.match(sharedPage, /getPublicMemoryClient/);
+  assert.doesNotMatch(sharedPage, /getSupabaseBrowserClient/);
+  assert.match(sharedPage, /ページ情報を読み込めませんでした/);
   assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
   assert.match(sharedPage, /PersonalStorybookSite/);
   assert.match(personalSite, /PERSONAL STORYBOOK SITE/);
@@ -987,12 +990,11 @@ test("sends customers directly to the current consent record", async () => {
   assert.match(studio, /if \(\s*!consentCurrent[\s\S]*?href: "#consent-renewal"/);
   assert.match(studio, /title: "現在の同意内容を確認"/);
   assert.match(studio, /3項目の同意を注文に記録する/);
-  assert.match(
-    studio,
-    /const activeOrder = loadedOrders\.find\([\s\S]*?!\["delivered", "cancelled"\]\.includes\(item\.status\)/,
-  );
-  assert.match(studio, /activeOrder\?\.id \?\? loadedOrders\[0\]\?\.id/);
   assert.match(admin, /お客様が制作室へログインし、画面上部の「現在の同意内容を確認する」/);
+  assert.match(
+    admin,
+    /order\.status === "delivered"[\s\S]*?この注文はすでに最終納品済みです。現在の完成映像はお客様の制作室と専用ホームページで確認できます。/,
+  );
 });
 
 test("counts storybook and video revisions as separate three-scene allowances", async () => {
