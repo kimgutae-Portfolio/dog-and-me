@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { CustomerFilmSite } from "./CustomerFilmSite";
+import { notFound, redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "専用ものがたりサイト",
@@ -22,5 +21,5 @@ export default async function CustomerFilmPage({
   const { orderId } = await params;
   if (!UUID_PATTERN.test(orderId)) notFound();
 
-  return <CustomerFilmSite />;
+  redirect(`/studio?order=${encodeURIComponent(orderId)}`);
 }

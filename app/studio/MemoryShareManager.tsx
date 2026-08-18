@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
+import { uploadLifetimeAlbumImages } from "../lib/supabase/uploads";
 import type {
   Delivery,
   MemoryOrder,
@@ -47,6 +48,7 @@ export function MemoryShareManager({
   );
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const [working, setWorking] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [notice, setNotice] = useState("");
   const [copyPopup, setCopyPopup] = useState(false);
   const [error, setError] = useState("");
@@ -63,6 +65,21 @@ export function MemoryShareManager({
     [assets],
   );
   const visiblePhotos = photos.filter((asset) => asset.album_visible);
+  const addedPhotos = useMemo(
+    () =>
+      assets
+        .filter((asset) => asset.category === "album_photo")
+        .sort(
+          (a, b) =>
+            a.album_sort_order - b.album_sort_order ||
+            a.created_at.localeCompare(b.created_at),
+        ),
+    [assets],
+  );
+  const previewPhotos = useMemo(
+    () => [...photos, ...addedPhotos],
+    [addedPhotos, photos],
+  );
   const shareUrl =
     share?.customer_slug && share?.pet_slug && origin
       ? `${origin}/${encodeURIComponent(share.customer_slug)}/${encodeURIComponent(share.pet_slug)}`
@@ -76,22 +93,23 @@ export function MemoryShareManager({
   }, [copyPopup]);
 
   useEffect(() => {
-    if (!photos.length) return;
+    if (!previewPhotos.length) return;
     const supabase = getSupabaseBrowserClient();
     supabase.storage
       .from("order-assets")
       .createSignedUrls(
-        photos.map((asset) => asset.storage_path),
+        previewPhotos.map((asset) => asset.storage_path),
         3600,
       )
       .then(({ data }) => {
         const next: Record<string, string> = {};
         data?.forEach((result, index) => {
-          if (result.signedUrl) next[photos[index].id] = result.signedUrl;
+          if (result.signedUrl)
+            next[previewPhotos[index].id] = result.signedUrl;
         });
         setPreviewUrls(next);
       });
-  }, [photos]);
+  }, [previewPhotos]);
 
   const manageShare = useCallback(
     async (action: "get" | "enable" | "disable" | "rotate") => {
@@ -191,6 +209,59 @@ export function MemoryShareManager({
     setWorking(false);
   };
 
+  const uploadAlbumPhotos = async (files: File[]) => {
+    if (!files.length || working || !siteReady) return;
+    setWorking(true);
+    setError("");
+    setNotice(`0 / ${files.length}枚を追加しています…`);
+    setUploadProgress(0);
+    try {
+      await uploadLifetimeAlbumImages(
+        getSupabaseBrowserClient(),
+        order.user_id,
+        order.id,
+        files,
+        (completed, total) => {
+          setUploadProgress(Math.round((completed / total) * 100));
+          setNotice(`${completed} / ${total}枚を追加しています…`);
+        },
+      );
+      setNotice(`${files.length}枚の新しい思い出を追加しました。`);
+      await onChanged();
+    } catch (caught) {
+      setError(
+        caught && typeof caught === "object" && "message" in caught
+          ? String(caught.message)
+          : "写真を追加できませんでした。",
+      );
+    } finally {
+      setWorking(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const deleteAddedPhoto = async (asset: OrderAsset) => {
+    if (!window.confirm("この写真をアルバムから削除しますか？")) return;
+    setWorking(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const { error: storageError } = await supabase.storage
+      .from("order-assets")
+      .remove([asset.storage_path]);
+    const { error: recordError } = storageError
+      ? { error: storageError }
+      : await supabase.rpc("delete_lifetime_album_photo", {
+          p_asset_id: asset.id,
+        });
+    if (storageError || recordError)
+      setError("写真を削除できませんでした。もう一度お試しください。");
+    else {
+      setNotice("写真をアルバムから削除しました。");
+      await onChanged();
+    }
+    setWorking(false);
+  };
+
   const copyShareUrl = async () => {
     if (!shareUrl) return;
     try {
@@ -225,7 +296,7 @@ export function MemoryShareManager({
           </div>
         </div>
       )}
-      <div className="family-share-panel">
+      <div className="family-share-panel" id="personal-homepage">
         <div>
           <p className="eyebrow">YOUR DOG&apos;S WEBSITE</p>
           <h3>このURLが、その子だけのホームページです。</h3>
@@ -245,12 +316,24 @@ export function MemoryShareManager({
               <code>{shareUrl || "専用URLを準備しています…"}</code>
             </div>
             <div>
-              <a
-                className="button album-manage-button"
-                href={`/film/${order.id}#photo-album`}
-              >
-                写真を追加・アルバムを管理
-              </a>
+              <label className="button album-manage-button">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  multiple
+                  disabled={working}
+                  onChange={(event) => {
+                    const files = Array.from(event.currentTarget.files ?? []);
+                    event.currentTarget.value = "";
+                    void uploadAlbumPhotos(files);
+                  }}
+                />
+                <span>
+                  {working && uploadProgress > 0
+                    ? `写真を追加中 ${uploadProgress}%`
+                    : "新しい写真を追加"}
+                </span>
+              </label>
               <button
                 className="button button-primary"
                 type="button"
@@ -284,16 +367,6 @@ export function MemoryShareManager({
           </div>
         )}
       </div>
-      <div className="card-head">
-        <div>
-          <p className="eyebrow">MEMORY ALBUM &amp; FAMILY SHARE</p>
-          <h2>写真アルバムと家族共有</h2>
-        </div>
-        <span>制作時の写真 {visiblePhotos.length}枚を表示</span>
-      </div>
-      <p className="memory-manager-lead">
-        制作に使った写真の掲載順と短い説明を整えられます。完成後の新しい写真は、専用ホームページからいつでも追加できます。
-      </p>
       {notice && (
         <p className="memory-manager-message">
           {notice}
@@ -307,6 +380,73 @@ export function MemoryShareManager({
           {error}
         </p>
       )}
+      {siteReady && (
+        <div className="studio-lifetime-album" id="studio-album-manager">
+          <div className="card-head">
+            <div>
+              <p className="eyebrow">GROWING PHOTO ALBUM</p>
+              <h2>完成後の写真を、この制作室で管理</h2>
+            </div>
+            <span>追加した写真 {addedPhotos.length}枚</span>
+          </div>
+          <p className="memory-manager-lead">
+            上の「新しい写真を追加」から、その後の日々も残せます。追加した写真は専用ホームページの写真帖へ自動で反映されます。
+          </p>
+          {addedPhotos.length ? (
+            <div className="album-manager-grid">
+              {addedPhotos.map((asset) => (
+                <article className="album-manager-item selected" key={asset.id}>
+                  <div className="album-manager-image">
+                    {previewUrls[asset.id] ? (
+                      <img
+                        src={previewUrls[asset.id]}
+                        alt={`${order.pet_name}の追加した思い出`}
+                      />
+                    ) : (
+                      <span>PHOTO</span>
+                    )}
+                  </div>
+                  <input
+                    aria-label="追加した写真の説明"
+                    maxLength={120}
+                    defaultValue={asset.album_caption ?? ""}
+                    placeholder="写真のひとこと（任意）"
+                    onBlur={(event) => {
+                      const caption = event.currentTarget.value.trim() || null;
+                      if (caption !== asset.album_caption)
+                        void updatePhoto(asset, { album_caption: caption });
+                    }}
+                  />
+                  <div className="album-manager-actions added-photo-actions">
+                    <button
+                      className="danger"
+                      type="button"
+                      disabled={working}
+                      onClick={() => void deleteAddedPhoto(asset)}
+                    >
+                      写真を削除
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="album-manager-empty">
+              まだ完成後の写真はありません。最初の一枚をここから追加できます。
+            </p>
+          )}
+        </div>
+      )}
+      <div className="card-head">
+        <div>
+          <p className="eyebrow">STORY SOURCE PHOTOS</p>
+          <h2>制作に使用した写真</h2>
+        </div>
+        <span>制作時の写真 {visiblePhotos.length}枚を表示</span>
+      </div>
+      <p className="memory-manager-lead">
+        制作に使った写真の掲載順と短い説明を整えられます。完成後の新しい写真も、この制作室からいつでも追加できます。
+      </p>
 
       {photos.length ? (
         <div className="album-manager-grid">

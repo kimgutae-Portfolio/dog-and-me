@@ -97,6 +97,9 @@ export function StudioClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [deliveredTab, setDeliveredTab] = useState<
+    "delivery" | "stills" | "materials"
+  >("delivery");
   const [pendingConceptSlot, setPendingConceptSlot] = useState<
     "A" | "B" | null
   >(null);
@@ -258,6 +261,10 @@ export function StudioClient() {
     () => orders.find((item) => item.id === selectedOrderId) ?? null,
     [orders, selectedOrderId],
   );
+
+  useEffect(() => {
+    setDeliveredTab("delivery");
+  }, [selectedOrderId]);
 
   useEffect(() => {
     if (paymentResult !== "success" || !user) return;
@@ -1261,7 +1268,41 @@ export function StudioClient() {
               </div>
             </div>
 
-            {canOperateOrder && order.status === "delivered" && (
+            {order.status === "delivered" && (
+              <nav className="delivered-studio-tabs" role="tablist" aria-label="完成後の制作室">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={deliveredTab === "delivery"}
+                  onClick={() => setDeliveredTab("delivery")}
+                >
+                  <small>DELIVERY &amp; WEBSITE</small>
+                  <strong>お届け・ホームページ</strong>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={deliveredTab === "stills"}
+                  onClick={() => setDeliveredTab("stills")}
+                >
+                  <small>STORYBOOK PAGES</small>
+                  <strong>絵本ページ</strong>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={deliveredTab === "materials"}
+                  onClick={() => setDeliveredTab("materials")}
+                >
+                  <small>PRODUCTION RECORD</small>
+                  <strong>物語案・制作素材</strong>
+                </button>
+              </nav>
+            )}
+
+            {canOperateOrder &&
+              order.status === "delivered" &&
+              deliveredTab === "delivery" && (
               <MemoryShareManager
                 key={order.id}
                 order={order}
@@ -1469,6 +1510,7 @@ export function StudioClient() {
               </aside>
             )}
 
+            {(order.status !== "delivered" || deliveredTab === "materials") && (
             <section className="studio-status">
               <div className="status-copy">
                 <span className="status-badge">
@@ -1497,7 +1539,10 @@ export function StudioClient() {
                 <i />
               </div>
             </section>
+            )}
 
+            {(order.status !== "delivered" || deliveredTab === "materials") && (
+            <>
             <section className="timeline-card desktop-studio-timeline">
               <div className="card-head">
                 <div>
@@ -1552,8 +1597,12 @@ export function StudioClient() {
                 ))}
               </ol>
             </details>
+            </>
+            )}
 
-            {concepts.length > 0 && currentStep >= 2 && (
+            {concepts.length > 0 &&
+              currentStep >= 2 &&
+              (order.status !== "delivered" || deliveredTab === "materials") && (
               <section className="concept-section studio-card" id="concepts">
                 <div className="card-head">
                   <div>
@@ -1660,7 +1709,8 @@ export function StudioClient() {
 
             {sceneStills.length > 0 &&
               (order.status === "stills_review" ||
-                order.stills_approved_at) && (
+                order.stills_approved_at) &&
+              (order.status !== "delivered" || deliveredTab === "stills") && (
                 <section className="studio-card stills-review-card" id="stills">
                   <div className="card-head">
                     <div>
@@ -1974,7 +2024,8 @@ export function StudioClient() {
               </section>
             )}
 
-            {(order.status === "customer_review" ||
+            {(order.status !== "delivered" || deliveredTab === "materials") &&
+              (order.status === "customer_review" ||
               order.status === "revision_requested" ||
               revisions.length > 0) && (
               <section className="studio-card revision-card" id="revision">
@@ -2126,7 +2177,8 @@ export function StudioClient() {
               </section>
             )}
 
-            {delivery && (
+            {delivery &&
+              (order.status !== "delivered" || deliveredTab === "delivery") && (
               <section className="delivery-card" id="delivery">
                 <div>
                   <p className="eyebrow light">
@@ -2137,12 +2189,9 @@ export function StudioClient() {
                     {delivery.customer_message ||
                       `${order.pet_name}ちゃんとの時間を、一冊のような動く物語に仕上げました。`}
                   </p>
-                  <Link
-                    className="button button-cream"
-                    href={`/film/${order.id}`}
-                  >
-                    納品内容を確認する →
-                  </Link>
+                  <a className="button button-cream" href="#personal-homepage">
+                    専用ホームページと写真管理へ ↑
+                  </a>
                 </div>
                 <div className="delivery-player">
                   {videoUrl ? (
@@ -2162,6 +2211,7 @@ export function StudioClient() {
               </section>
             )}
 
+            {(order.status !== "delivered" || deliveredTab === "materials") && (
             <div className="studio-grid">
               <section className="studio-card" id="materials">
                 <div className="card-head">
@@ -2356,7 +2406,9 @@ export function StudioClient() {
                 )}
               </section>
             </div>
+            )}
 
+            {(order.status !== "delivered" || deliveredTab === "delivery") && (
             <ChatWidget
               order={order}
               currentUserId={user.id}
@@ -2382,6 +2434,7 @@ export function StudioClient() {
               }
               onRefreshMessages={() => void loadDetails(order.id)}
             />
+            )}
 
             {canOperateOrder && order.status !== "delivered" ? (
               <MemoryShareManager
@@ -2391,7 +2444,8 @@ export function StudioClient() {
                 assets={assets}
                 onChanged={() => loadDetails(order.id)}
               />
-            ) : !canOperateOrder ? (
+            ) : !canOperateOrder &&
+              (order.status !== "delivered" || deliveredTab === "delivery") ? (
               delivery && (
                 <aside className="studio-card readonly-preview-note">
                   <strong>専用ものがたりサイト</strong>

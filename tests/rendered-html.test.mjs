@@ -366,9 +366,19 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(manager, /このURLが、その子だけのホームページです/);
   assert.match(manager, /LINEなどで共有/);
   assert.match(manager, /\$\{order\.pet_name\}との思い出｜WAN MEMORY/);
-  assert.match(manager, /専用ホームページからいつでも追加できます/);
-  assert.match(manager, /写真を追加・アルバムを管理/);
-  assert.match(manager, /\/film\/\$\{order\.id\}#photo-album/);
+  assert.match(manager, /この制作室からいつでも追加できます/);
+  assert.match(manager, /新しい写真を追加/);
+  assert.match(manager, /uploadLifetimeAlbumImages/);
+  assert.match(manager, /delete_lifetime_album_photo/);
+  assert.doesNotMatch(manager, /\/film\/\$\{order\.id\}/);
+  assert.match(
+    await readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    /お届け・ホームページ/,
+  );
+  assert.match(
+    await readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    /物語案・制作素材/,
+  );
   assert.match(sharedPage, /get_shared_memory/);
   assert.match(sharedPage, /getPublicMemoryClient/);
   assert.doesNotMatch(sharedPage, /getSupabaseBrowserClient/);
@@ -454,9 +464,9 @@ test("adds the animated character to the share-code website", async () => {
   assert.match(payload, /character:/);
 });
 
-test("keeps delivered albums growing with storybook pages first", async () => {
+test("keeps delivered albums growing from Studio with storybook pages first", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, customerSite, personalSite, uploads, demo] =
+  const [migration, studioMigration, manager, filmPage, personalSite, uploads, demo] =
     await Promise.all([
       readFile(
         new URL(
@@ -466,9 +476,14 @@ test("keeps delivered albums growing with storybook pages first", async () => {
         "utf8",
       ),
       readFile(
-        new URL("app/film/[orderId]/CustomerFilmSite.tsx", root),
+        new URL("supabase/migrations/202608180005_manage_lifetime_album_in_studio.sql", root),
         "utf8",
       ),
+      readFile(
+        new URL("app/studio/MemoryShareManager.tsx", root),
+        "utf8",
+      ),
+      readFile(new URL("app/film/[orderId]/page.tsx", root), "utf8"),
       readFile(
         new URL("app/components/PersonalStorybookSite.tsx", root),
         "utf8",
@@ -484,8 +499,11 @@ test("keeps delivered albums growing with storybook pages first", async () => {
   assert.match(migration, /5368709120/);
   assert.match(migration, /album_page_for_order/);
   assert.match(migration, /when 'scene_still' then 0 when 'source_image' then 1 else 2/);
-  assert.match(customerSite, /\[\.\.\.sceneStills, \.\.\.sourceImages, \.\.\.loadedAlbumAssets\]/);
-  assert.match(customerSite, /uploadLifetimeAlbumImages/);
+  assert.match(manager, /uploadLifetimeAlbumImages/);
+  assert.match(manager, /delete_lifetime_album_photo/);
+  assert.match(manager, /完成後の写真を、この制作室で管理/);
+  assert.match(studioMigration, /category in \('source_image', 'album_photo'\)/);
+  assert.match(filmPage, /redirect\(`\/studio\?order=/);
   assert.match(personalSite, /新しい思い出を追加/);
   assert.match(personalSite, /続きの写真を見る/);
   assert.match(uploads, /LIFETIME_ALBUM_MAX_EDGE = 2400/);
