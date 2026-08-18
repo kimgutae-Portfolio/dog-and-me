@@ -1429,9 +1429,11 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(chat, /\{activeInstance && !open && \([\s\S]*?className="chat-widget-toggle"[\s\S]*?onClick=\{\(\) => setOpen\(true\)\}/);
   assert.doesNotMatch(chat, /onPointerDown=/);
   assert.doesNotMatch(chat, /setOpen\(\(current\) => !current\)/);
-  assert.doesNotMatch(chat, /createPortal|document\.body|mountedChatWidgets/);
+  assert.doesNotMatch(chat, /createPortal|mountedChatWidgets/);
   assert.match(chat, /useLayoutEffect/);
   assert.match(chat, /new MutationObserver\(syncActiveInstance\)/);
+  assert.match(chat, /document\.querySelectorAll\("\.chat-widget"\)/);
+  assert.match(chat, /observer\.observe\(document\.body, \{ childList: true, subtree: true \}\)/);
   assert.match(chat, /instances\.at\(-1\) === element/);
   assert.match(chat, /data-chat-active=\{activeInstance \? "true" : "false"\}/);
   assert.match(chat, /activeInstance && !open/);

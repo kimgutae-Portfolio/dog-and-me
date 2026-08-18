@@ -66,17 +66,14 @@ export function ChatWidget({
 
   useLayoutEffect(() => {
     const element = widgetRef.current;
-    const parent = element?.parentElement;
-    if (!element || !parent) return;
+    if (!element) return;
 
     const syncActiveInstance = () => {
-      const instances = Array.from(parent.children).filter((child) =>
-        child.classList.contains("chat-widget"),
-      );
+      const instances = Array.from(document.querySelectorAll(".chat-widget"));
       setActiveInstance(instances.at(-1) === element);
     };
     const observer = new MutationObserver(syncActiveInstance);
-    observer.observe(parent, { childList: true });
+    observer.observe(document.body, { childList: true, subtree: true });
     syncActiveInstance();
     return () => observer.disconnect();
   }, []);
