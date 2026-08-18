@@ -1425,14 +1425,10 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(chat, /<textarea[\s\S]*?ref=\{textareaRef\}[\s\S]*?required/);
   assert.match(chat, /disabled=\{sending\}/);
   assert.doesNotMatch(chat, /checked=\{open\}/);
-  assert.match(chat, /onClick=\{\(\) => setOpen\(false\)\}/);
-  assert.match(chat, /onClick=\{\(\) => setOpen\(\(current\) => !current\)\}/);
-  assert.equal(
-    (chat.match(/onPointerDown=/g) ?? []).length,
-    2,
-    "both visible chat close controls must close on pointer-down",
-  );
-  assert.match(chat, /event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);[\s\S]*?setOpen\(false\);/);
+  assert.match(chat, /className="chat-widget-close"[\s\S]*?onClick=\{\(event\) => \{[\s\S]*?event\.stopPropagation\(\);[\s\S]*?setOpen\(false\);/);
+  assert.match(chat, /\{!open && \([\s\S]*?className="chat-widget-toggle"[\s\S]*?onClick=\{\(\) => setOpen\(true\)\}/);
+  assert.doesNotMatch(chat, /onPointerDown=/);
+  assert.doesNotMatch(chat, /setOpen\(\(current\) => !current\)/);
   assert.doesNotMatch(chat, /composeRequest/);
   assert.doesNotMatch(studio, /photoChangeComposeRequest|photoProductionStarted/);
   assert.match(studio, /STORY SOURCE REVIEWの承認前まで写真を変更できます/);

@@ -172,12 +172,10 @@ export function ChatWidget({
               type="button"
               className="chat-widget-close"
               aria-label="閉じる"
-              onPointerDown={(event) => {
-                event.preventDefault();
+              onClick={(event) => {
                 event.stopPropagation();
                 setOpen(false);
               }}
-              onClick={() => setOpen(false)}
             >
               ×
             </button>
@@ -250,43 +248,31 @@ export function ChatWidget({
           )}
         </section>
       )}
-      <button
-        type="button"
-        className={`chat-widget-toggle${open ? " is-open" : ""}`}
-        aria-expanded={open}
-        aria-controls={panelId}
-        aria-label={
-          unreadCount > 0
-            ? "担当者とのメッセージ（未読あり）"
-            : "担当者とのメッセージ"
-        }
-        onPointerDown={(event) => {
-          if (!open) return;
-          event.preventDefault();
-          event.stopPropagation();
-          setOpen(false);
-        }}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <span className="chat-widget-toggle-icon" aria-hidden="true">
-          {open ? (
-            <svg viewBox="0 0 24 24">
-              <path d="m7 7 10 10M17 7 7 17" />
-            </svg>
-          ) : (
+      {!open && (
+        <button
+          type="button"
+          className="chat-widget-toggle"
+          aria-expanded="false"
+          aria-controls={panelId}
+          aria-label={
+            unreadCount > 0
+              ? "担当者とのメッセージ（未読あり）"
+              : "担当者とのメッセージ"
+          }
+          onClick={() => setOpen(true)}
+        >
+          <span className="chat-widget-toggle-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <path d="M20 11.5a7.2 7.2 0 0 1-7.5 7.2 8 8 0 0 1-3.3-.7L4 19l1.5-4.6A7.1 7.1 0 0 1 5 11.5 7.2 7.2 0 0 1 12.5 4 7.2 7.2 0 0 1 20 11.5Z" />
               <path d="M9 11.5h.01M12.5 11.5h.01M16 11.5h.01" />
             </svg>
-          )}
-          {!open && unreadCount > 0 && (
+            {unreadCount > 0 && (
             <span className="chat-widget-badge">!</span>
-          )}
-        </span>
-        {!open && (
+            )}
+          </span>
           <span className="chat-widget-toggle-label">担当者へメッセージ</span>
-        )}
-      </button>
+        </button>
+      )}
     </div>
   );
 
