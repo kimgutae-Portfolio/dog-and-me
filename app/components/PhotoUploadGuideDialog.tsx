@@ -63,31 +63,28 @@ export function PhotoUploadGuideDialog({
         <div className="photo-guide-content">
           <p className="eyebrow">FIRST PHOTO GUIDE</p>
           <h2 id="photo-upload-guide-title">
-            愛犬がはっきり見える写真を
-            <br />1枚以上入れてください。
+            愛犬がよく見える写真を
+            <br />1枚入れてください。
           </h2>
           <p>
-            お送りいただいた候補から、担当者が物語の制作に使う1枚を選びます。
-            次回から、この案内は表示されません。
+            担当者が候補から制作に使う1枚を選びます。この案内は初回だけ表示されます。
           </p>
           <ul className="photo-upload-guide-list">
             <li>
-              <strong>おすすめ</strong>
-              <span>愛犬の顔・体・毛色が明るく、ピントが合っている写真</span>
+              <strong>◎ おすすめ</strong>
+              <span>顔・体・毛色が明るく、ピントが合っている</span>
             </li>
             <li>
-              <strong>家族写真</strong>
-              <span>
-                一緒に写った写真も送れますが、制作候補には愛犬だけがよく見える写真も1枚入れてください
-              </span>
+              <strong>○ 家族写真</strong>
+              <span>送れますが、愛犬だけが見える写真も1枚追加</span>
             </li>
             <li>
-              <strong>避けたい写真</strong>
-              <span>強いぼけ、暗すぎる写真、顔や体が大きく隠れた写真、強い加工や文字入り画像</span>
+              <strong>△ 避ける</strong>
+              <span>暗い・ぼけている・顔や体が隠れている写真</span>
             </li>
           </ul>
           <aside>
-            人物のお顔はAIイラストに使用・生成しません。正面の家族写真だけでは、自然な場面を制作できない場合があります。
+            人物のお顔はAIイラストに使用・生成しません。
           </aside>
         </div>
         <footer>
@@ -95,7 +92,7 @@ export function PhotoUploadGuideDialog({
             あとで選ぶ
           </button>
           <button className="button button-primary" type="button" onClick={onContinue} autoFocus>
-            確認して写真を選ぶ
+            写真を選ぶ
           </button>
         </footer>
       </section>

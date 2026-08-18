@@ -802,9 +802,11 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(story, /hasSeenPhotoUploadGuide/);
   assert.match(studio, /hasSeenPhotoUploadGuide/);
   assert.match(photoUploadGuide, /photo-upload-guide-seen:v1/);
-  assert.match(photoUploadGuide, /愛犬がはっきり見える写真を/);
-  assert.match(photoUploadGuide, /次回から、この案内は表示されません/);
+  assert.match(photoUploadGuide, /愛犬がよく見える写真を/);
+  assert.match(photoUploadGuide, /この案内は初回だけ表示されます/);
   assert.match(photoUploadGuide, /rememberPhotoUploadGuide/);
+  assert.match(css, /\.photo-guide-backdrop \{[^}]*z-index: 1200;/);
+  assert.match(css, /\.photo-guide-backdrop \{[^}]*place-items: center;/);
   assert.match(studio, /NEXT ACTION · 今やること/);
   assert.match(studio, /hasPendingConceptChange/);
   assert.match(studio, /id="materials"/);
