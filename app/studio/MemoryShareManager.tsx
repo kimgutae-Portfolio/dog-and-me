@@ -64,7 +64,6 @@ export function MemoryShareManager({
         ),
     [assets],
   );
-  const visiblePhotos = photos.filter((asset) => asset.album_visible);
   const addedPhotos = useMemo(
     () =>
       assets
@@ -76,7 +75,7 @@ export function MemoryShareManager({
         ),
     [assets],
   );
-  const previewPhotos = useMemo(
+  const managedPhotos = useMemo(
     () => [...photos, ...addedPhotos],
     [addedPhotos, photos],
   );
@@ -93,23 +92,23 @@ export function MemoryShareManager({
   }, [copyPopup]);
 
   useEffect(() => {
-    if (!previewPhotos.length) return;
+    if (!managedPhotos.length) return;
     const supabase = getSupabaseBrowserClient();
     supabase.storage
       .from("order-assets")
       .createSignedUrls(
-        previewPhotos.map((asset) => asset.storage_path),
+        managedPhotos.map((asset) => asset.storage_path),
         3600,
       )
       .then(({ data }) => {
         const next: Record<string, string> = {};
         data?.forEach((result, index) => {
           if (result.signedUrl)
-            next[previewPhotos[index].id] = result.signedUrl;
+            next[managedPhotos[index].id] = result.signedUrl;
         });
         setPreviewUrls(next);
       });
-  }, [previewPhotos]);
+  }, [managedPhotos]);
 
   const manageShare = useCallback(
     async (action: "get" | "enable" | "disable" | "rotate") => {
@@ -163,8 +162,9 @@ export function MemoryShareManager({
   };
 
   const movePhoto = async (asset: OrderAsset, direction: -1 | 1) => {
-    const index = photos.findIndex((item) => item.id === asset.id);
-    const target = photos[index + direction];
+    const siblings = asset.category === "album_photo" ? addedPhotos : photos;
+    const index = siblings.findIndex((item) => item.id === asset.id);
+    const target = siblings[index + direction];
     if (!target) return;
     setWorking(true);
     setError("");
@@ -316,24 +316,6 @@ export function MemoryShareManager({
               <code>{shareUrl || "専用URLを準備しています…"}</code>
             </div>
             <div>
-              <label className="button album-manage-button">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                  multiple
-                  disabled={working}
-                  onChange={(event) => {
-                    const files = Array.from(event.currentTarget.files ?? []);
-                    event.currentTarget.value = "";
-                    void uploadAlbumPhotos(files);
-                  }}
-                />
-                <span>
-                  {working && uploadProgress > 0
-                    ? `写真を追加中 ${uploadProgress}%`
-                    : "新しい写真を追加"}
-                </span>
-              </label>
               <button
                 className="button button-primary"
                 type="button"
@@ -362,7 +344,7 @@ export function MemoryShareManager({
               )}
             </div>
             <small>
-              写真の追加はログイン中のご本人だけが行えます。公開期限や月額料金なく、このURLをそのまま使い続けられます。
+              写真の追加は下の写真アルバムから行えます。公開期限や月額料金なく、このURLをそのまま使い続けられます。
             </small>
           </div>
         )}
@@ -380,146 +362,129 @@ export function MemoryShareManager({
           {error}
         </p>
       )}
-      {siteReady && (
-        <div className="studio-lifetime-album" id="studio-album-manager">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">GROWING PHOTO ALBUM</p>
-              <h2>完成後の写真を、この制作室で管理</h2>
-            </div>
-            <span>追加した写真 {addedPhotos.length}枚</span>
-          </div>
-          <p className="memory-manager-lead">
-            上の「新しい写真を追加」から、その後の日々も残せます。追加した写真は専用ホームページの写真帖へ自動で反映されます。
-          </p>
-          {addedPhotos.length ? (
-            <div className="album-manager-grid">
-              {addedPhotos.map((asset) => (
-                <article className="album-manager-item selected" key={asset.id}>
-                  <div className="album-manager-image">
-                    {previewUrls[asset.id] ? (
-                      <img
-                        src={previewUrls[asset.id]}
-                        alt={`${order.pet_name}の追加した思い出`}
-                      />
-                    ) : (
-                      <span>PHOTO</span>
-                    )}
-                  </div>
-                  <input
-                    aria-label="追加した写真の説明"
-                    maxLength={120}
-                    defaultValue={asset.album_caption ?? ""}
-                    placeholder="写真のひとこと（任意）"
-                    onBlur={(event) => {
-                      const caption = event.currentTarget.value.trim() || null;
-                      if (caption !== asset.album_caption)
-                        void updatePhoto(asset, { album_caption: caption });
-                    }}
-                  />
-                  <div className="album-manager-actions added-photo-actions">
-                    <button
-                      className="danger"
-                      type="button"
-                      disabled={working}
-                      onClick={() => void deleteAddedPhoto(asset)}
-                    >
-                      写真を削除
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="album-manager-empty">
-              まだ完成後の写真はありません。最初の一枚をここから追加できます。
-            </p>
-          )}
-        </div>
-      )}
+      <div className="studio-lifetime-album" id="studio-album-manager">
       <div className="card-head">
         <div>
-          <p className="eyebrow">STORY SOURCE PHOTOS</p>
-          <h2>制作に使用した写真</h2>
+          <p className="eyebrow">PHOTO ALBUM</p>
+          <h2>写真アルバムと家族共有</h2>
         </div>
-        <span>制作時の写真 {visiblePhotos.length}枚を表示</span>
+        <span>写真 {managedPhotos.length}枚を管理</span>
       </div>
-      <p className="memory-manager-lead">
-        制作に使った写真の掲載順と短い説明を整えられます。完成後の新しい写真も、この制作室からいつでも追加できます。
-      </p>
+      <div className="studio-album-intro-row">
+        <p className="memory-manager-lead">
+          制作に使った写真も、完成後に追加した写真もここでまとめて管理します。変更内容は専用ホームページの写真帖へ反映されます。
+        </p>
+        {siteReady && (
+          <label className="button studio-album-upload-button">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              multiple
+              disabled={working}
+              onChange={(event) => {
+                const files = Array.from(event.currentTarget.files ?? []);
+                event.currentTarget.value = "";
+                void uploadAlbumPhotos(files);
+              }}
+            />
+            <span>
+              {working && uploadProgress > 0
+                ? `写真を追加中 ${uploadProgress}%`
+                : "新しい写真を追加"}
+            </span>
+            <small>1枚20MBまで · 一度に50枚まで</small>
+          </label>
+        )}
+      </div>
 
-      {photos.length ? (
+      {managedPhotos.length ? (
         <div className="album-manager-grid">
-          {photos.map((asset, index) => (
-            <article
-              className={
-                asset.album_visible
-                  ? "album-manager-item selected"
-                  : "album-manager-item"
-              }
-              key={asset.id}
-            >
-              <div className="album-manager-image">
-                {previewUrls[asset.id] ? (
-                  <img
-                    src={previewUrls[asset.id]}
-                    alt={`${order.pet_name}のアルバム候補`}
-                  />
-                ) : (
-                  <span>PHOTO</span>
-                )}
-                <button
-                  type="button"
-                  disabled={working}
-                  onClick={() => togglePhoto(asset)}
-                >
-                  {asset.album_visible ? "掲載中" : "掲載する"}
-                </button>
-              </div>
-              <input
-                aria-label="写真の説明"
-                maxLength={120}
-                defaultValue={asset.album_caption ?? ""}
-                placeholder="写真のひとこと（任意）"
-                onBlur={(event) => {
-                  const caption = event.currentTarget.value.trim() || null;
-                  if (caption !== asset.album_caption)
-                    updatePhoto(asset, { album_caption: caption });
-                }}
-              />
-              <div className="album-manager-actions">
-                <button
-                  type="button"
-                  disabled={working || index === 0}
-                  onClick={() => movePhoto(asset, -1)}
-                >
-                  ← 前へ
-                </button>
-                <button
-                  type="button"
-                  disabled={working || index === photos.length - 1}
-                  onClick={() => movePhoto(asset, 1)}
-                >
-                  次へ →
-                </button>
-                <button
-                  className="danger"
-                  type="button"
-                  disabled={working}
-                  onClick={() => deletePhoto(asset)}
-                >
-                  削除
-                </button>
-              </div>
-            </article>
-          ))}
+          {managedPhotos.map((asset) => {
+            const siblings =
+              asset.category === "album_photo" ? addedPhotos : photos;
+            const index = siblings.findIndex((item) => item.id === asset.id);
+            return (
+              <article
+                className={
+                  asset.album_visible
+                    ? "album-manager-item selected"
+                    : "album-manager-item"
+                }
+                key={asset.id}
+              >
+                <div className="album-manager-image">
+                  {previewUrls[asset.id] ? (
+                    <img
+                      src={previewUrls[asset.id]}
+                      alt={`${order.pet_name}のアルバム候補`}
+                    />
+                  ) : (
+                    <span>PHOTO</span>
+                  )}
+                  <span className="album-manager-kind">
+                    {asset.category === "album_photo"
+                      ? "追加した写真"
+                      : "制作時の写真"}
+                  </span>
+                  {asset.category === "source_image" && (
+                    <button
+                      type="button"
+                      disabled={working}
+                      onClick={() => togglePhoto(asset)}
+                    >
+                      {asset.album_visible ? "掲載中" : "掲載する"}
+                    </button>
+                  )}
+                </div>
+                <input
+                  aria-label="写真の説明"
+                  maxLength={120}
+                  defaultValue={asset.album_caption ?? ""}
+                  placeholder="写真のひとこと（任意）"
+                  onBlur={(event) => {
+                    const caption = event.currentTarget.value.trim() || null;
+                    if (caption !== asset.album_caption)
+                      updatePhoto(asset, { album_caption: caption });
+                  }}
+                />
+                <div className="album-manager-actions">
+                  <button
+                    type="button"
+                    disabled={working || index === 0}
+                    onClick={() => movePhoto(asset, -1)}
+                  >
+                    ← 前へ
+                  </button>
+                  <button
+                    type="button"
+                    disabled={working || index === siblings.length - 1}
+                    onClick={() => movePhoto(asset, 1)}
+                  >
+                    次へ →
+                  </button>
+                  <button
+                    className="danger"
+                    type="button"
+                    disabled={working}
+                    onClick={() =>
+                      asset.category === "album_photo"
+                        ? void deleteAddedPhoto(asset)
+                        : void deletePhoto(asset)
+                    }
+                  >
+                    写真を削除
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <p className="album-manager-empty">
           写真を追加すると、ここでアルバムを編集できます。
         </p>
       )}
-
+      </div>
     </section>
   );
 }

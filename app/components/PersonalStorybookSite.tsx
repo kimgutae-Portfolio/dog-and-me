@@ -54,7 +54,12 @@ export function PersonalStorybookSite({
   backHref = "/",
   backLabel = "WAN MEMORYへ戻る ↗",
 }: Props) {
-  const heroImage = images[0]?.url;
+  const storybookPages = images.filter(
+    (image) => image.kind === "scene_still",
+  );
+  const albumImages = images.filter((image) => image.kind !== "scene_still");
+  const heroImage = storybookPages[0]?.url ?? albumImages[0]?.url;
+  const photoAlbumTotal = Math.max(0, albumTotal - storybookPages.length);
   const hasMoreImages = images.length < albumTotal;
   const chooseAlbumPhotos = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
@@ -93,11 +98,43 @@ export function PersonalStorybookSite({
         </div>
       </section>
 
+      {storybookPages.length > 0 && (
+        <section className="moka-scenes moka-storybook-pages" id="storybook-pages">
+          <div className="moka-shell">
+            <div className="moka-heading">
+              <div>
+                <p>01 / STORYBOOK PAGES</p>
+                <h2>思い出から生まれた、<br />五つの絵本ページ。</h2>
+              </div>
+              <span>映像になる前の、一場面ずつをご覧いただけます。</span>
+            </div>
+            <ol className="moka-scene-grid">
+              {storybookPages.map((image, index) => (
+                <li key={image.id}>
+                  <img
+                    className="moka-storybook-page-image"
+                    src={image.url}
+                    alt={`${petName}の絵本ページ ${index + 1}`}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    draggable={false}
+                    onContextMenu={(event) => event.preventDefault()}
+                  />
+                  <div>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <h3>{image.caption || `${petName}の物語`}</h3>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )}
+
       <section className="moka-complete-film" id="complete-film">
         <div className="moka-shell">
           <div className="moka-heading">
             <div>
-              <p>01 / COMPLETE FILM</p>
+              <p>02 / COMPLETE FILM</p>
               <h2>大切な時間を、<br />一冊の映像に。</h2>
             </div>
             <span>画面を大きくしてお楽しみください。</span>
@@ -122,19 +159,19 @@ export function PersonalStorybookSite({
         </div>
       </section>
 
-      {(images.length > 0 || canManageAlbum) && (
+      {(albumImages.length > 0 || canManageAlbum) && (
         <section className="moka-album" id="photo-album">
           <div className="moka-shell">
             <div className="moka-heading">
               <div>
-                <p>02 / {petName.toUpperCase()}&apos;S PHOTO ALBUM</p>
+                <p>03 / {petName.toUpperCase()}&apos;S PHOTO ALBUM</p>
                 <h2>{petName}の時間を、<br />一つの写真帖に。</h2>
               </div>
-              <span>{albumTotal}枚の思い出</span>
+              <span>{photoAlbumTotal}枚の思い出</span>
             </div>
             <div className="lifetime-album-head">
               <p className="moka-album-intro">
-                物語のために描いた場面から始まり、制作に使った写真、完成後の日々の写真へ。これからも育っていく、その子だけのアルバムです。
+                制作に使った写真から、完成後の新しい日々まで。これからも育っていく、その子だけのアルバムです。
               </p>
               {canManageAlbum && (
                 <label className={albumBusy ? "lifetime-album-upload busy" : "lifetime-album-upload"}>
@@ -156,7 +193,7 @@ export function PersonalStorybookSite({
               </p>
             )}
             <ol className="moka-album-grid" aria-label={`${petName}の写真アルバム。スマートフォンでは左右にスワイプできます。`}>
-              {images.map((image, index) => (
+              {albumImages.map((image, index) => (
                 <li key={image.id}>
                   <figure>
                     <img
@@ -170,9 +207,7 @@ export function PersonalStorybookSite({
                       <span>{String(index + 1).padStart(2, "0")}</span>
                       <span className="album-photo-copy">
                         <em>
-                          {image.kind === "scene_still"
-                            ? "STORYBOOK PAGE"
-                            : image.kind === "album_photo"
+                          {image.kind === "album_photo"
                               ? "NEW MEMORY"
                               : "MEMORY PHOTO"}
                         </em>
@@ -208,7 +243,7 @@ export function PersonalStorybookSite({
       )}
 
       <section className="moka-letter">
-        <p>03 / A LETTER FOR {petName.toUpperCase()}</p>
+        <p>04 / A LETTER FOR {petName.toUpperCase()}</p>
         <blockquote>{message}</blockquote>
         <span>FROM YOUR FAMILY</span>
       </section>

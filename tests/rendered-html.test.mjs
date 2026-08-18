@@ -54,7 +54,7 @@ test("server-renders the Japanese landing page", async () => {
       .availability,
     "https://schema.org/InStock",
   );
-  assert.equal(structuredData.at(-1).mainEntity.length, 12);
+  assert.equal(structuredData.at(-1).mainEntity.length, 13);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.match(html, /物語をつくる/);
   assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
@@ -371,7 +371,7 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(manager, /このURLが、その子だけのホームページです/);
   assert.match(manager, /LINEなどで共有/);
   assert.match(manager, /\$\{order\.pet_name\}との思い出｜WAN MEMORY/);
-  assert.match(manager, /この制作室からいつでも追加できます/);
+  assert.match(manager, /制作に使った写真も、完成後に追加した写真もここでまとめて管理します/);
   assert.match(manager, /新しい写真を追加/);
   assert.match(manager, /uploadLifetimeAlbumImages/);
   assert.match(manager, /delete_lifetime_album_photo/);
@@ -401,10 +401,12 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
   assert.match(sharedPage, /PersonalStorybookSite/);
   assert.match(personalSite, /PERSONAL STORYBOOK SITE/);
-  assert.match(personalSite, /01 \/ COMPLETE FILM/);
-  assert.match(personalSite, /02 \/.*PHOTO ALBUM/);
+  assert.match(personalSite, /01 \/ STORYBOOK PAGES/);
+  assert.match(personalSite, /02 \/ COMPLETE FILM/);
+  assert.match(personalSite, /03 \/.*PHOTO ALBUM/);
   assert.match(personalSite, /id="photo-album"/);
-  assert.match(personalSite, /03 \/ A LETTER FOR/);
+  assert.match(personalSite, /04 \/ A LETTER FOR/);
+  assert.match(personalSite, /image\.kind !== "scene_still"/);
   assert.doesNotMatch(personalSite, /THE STORY/);
   assert.doesNotMatch(sharedPage, /家族共有ページ|FAMILY MEMORY SITE/);
   assert.match(metadataPage, /generateMetadata/);
@@ -473,9 +475,18 @@ test("adds the animated character to the share-code website", async () => {
   assert.match(payload, /character:/);
 });
 
-test("keeps delivered albums growing from Studio with storybook pages first", async () => {
+test("keeps delivered albums growing from one Studio photo manager", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, studioMigration, manager, filmPage, personalSite, uploads, demo] =
+  const [
+    migration,
+    studioMigration,
+    captionMigration,
+    manager,
+    filmPage,
+    personalSite,
+    uploads,
+    demo,
+  ] =
     await Promise.all([
       readFile(
         new URL(
@@ -486,6 +497,10 @@ test("keeps delivered albums growing from Studio with storybook pages first", as
       ),
       readFile(
         new URL("supabase/migrations/202608180005_manage_lifetime_album_in_studio.sql", root),
+        "utf8",
+      ),
+      readFile(
+        new URL("supabase/migrations/202608180007_source_photo_memory_captions.sql", root),
         "utf8",
       ),
       readFile(
@@ -510,14 +525,18 @@ test("keeps delivered albums growing from Studio with storybook pages first", as
   assert.match(migration, /when 'scene_still' then 0 when 'source_image' then 1 else 2/);
   assert.match(manager, /uploadLifetimeAlbumImages/);
   assert.match(manager, /delete_lifetime_album_photo/);
-  assert.match(manager, /完成後の写真を、この制作室で管理/);
+  assert.match(manager, /写真アルバムと家族共有/);
+  assert.doesNotMatch(manager, /GROWING PHOTO ALBUM|STORY SOURCE PHOTOS/);
   assert.match(studioMigration, /category in \('source_image', 'album_photo'\)/);
+  assert.match(captionMigration, /set album_caption = left\(memory\.description, 120\)/);
   assert.match(filmPage, /redirect\(`\/studio\?order=/);
   assert.match(personalSite, /新しい思い出を追加/);
   assert.match(personalSite, /続きの写真を見る/);
   assert.match(uploads, /LIFETIME_ALBUM_MAX_EDGE = 2400/);
   assert.match(uploads, /canvas\.toBlob\(resolve, "image\/jpeg", 0\.84\)/);
-  assert.match(demo, /STORYBOOK PAGE/);
+  assert.match(demo, /01 \/ STORYBOOK PAGES/);
+  assert.match(demo, /02 \/ COMPLETE FILM/);
+  assert.match(demo, /03 \/ MOKA.*PHOTO ALBUM/);
   assert.match(demo, /完成後も写真を追加できます/);
 });
 
@@ -585,7 +604,8 @@ test("renders the moving storybook demo", async () => {
   assert.doesNotMatch(html, /FIVE MOVING PAGES|一場面ずつ、そっと動きはじめる/);
   assert.match(html, /雨音を待つ玄関/);
   assert.match(html, /MOKA'S PHOTO ALBUM/);
-  assert.match(html, /五つの思い出から生まれた10枚/);
+  assert.match(html, /01 \/ STORYBOOK PAGES/);
+  assert.match(html, /制作に使った5枚の思い出/);
   assert.doesNotMatch(html, /FROM PHOTO TO STORYBOOK|before-after|比較位置/);
 });
 

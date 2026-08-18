@@ -25,17 +25,20 @@ export const metadata: Metadata = {
   },
 };
 
+const storybookPages = [
+  { src: "/film/moka/01-storybook-rain.webp", title: "雨音を待つ玄関", width: 1672, height: 941 },
+  { src: "/film/moka/02-storybook-train.webp", title: "はじめての電車旅", width: 1672, height: 941 },
+  { src: "/film/moka/03-storybook-bread.webp", title: "パンの香る朝", width: 1672, height: 941 },
+  { src: "/film/moka/04-storybook-autumn.webp", title: "秋色の散歩", width: 1672, height: 941 },
+  { src: "/film/moka/05-storybook-lantern.webp", title: "夕暮れの窓辺", width: 1672, height: 941 },
+] as const;
+
 const album = [
-  { src: "/film/moka/01-storybook-rain.webp", title: "雨音を待つ玄関", width: 1672, height: 941, kind: "STORYBOOK PAGE" },
-  { src: "/film/moka/02-storybook-train.webp", title: "はじめての電車旅", width: 1672, height: 941, kind: "STORYBOOK PAGE" },
-  { src: "/film/moka/03-storybook-bread.webp", title: "パンの香る朝", width: 1672, height: 941, kind: "STORYBOOK PAGE" },
-  { src: "/film/moka/04-storybook-autumn.webp", title: "秋色の散歩", width: 1672, height: 941, kind: "STORYBOOK PAGE" },
-  { src: "/film/moka/05-storybook-lantern.webp", title: "夕暮れの窓辺", width: 1672, height: 941, kind: "STORYBOOK PAGE" },
-  { src: "/film/moka/06-rainy-entryway.webp", title: "雨の日の記憶", width: 1448, height: 1086, kind: "MEMORY PHOTO" },
-  { src: "/film/moka/07-first-train-trip.webp", title: "小さな駅にて", width: 1448, height: 1086, kind: "MEMORY PHOTO" },
-  { src: "/film/moka/08-bread-morning.webp", title: "朝のいい匂い", width: 1448, height: 1086, kind: "MEMORY PHOTO" },
-  { src: "/film/moka/09-autumn-ginkgo.webp", title: "銀杏色の散歩道", width: 1447, height: 1087, kind: "MEMORY PHOTO" },
-  { src: "/film/moka/10-lantern-evening.webp", title: "灯りを眺める夕べ", width: 1448, height: 1086, kind: "MEMORY PHOTO" },
+  { src: "/film/moka/06-rainy-entryway.webp", title: "雨の日の記憶", width: 1448, height: 1086 },
+  { src: "/film/moka/07-first-train-trip.webp", title: "小さな駅にて", width: 1448, height: 1086 },
+  { src: "/film/moka/08-bread-morning.webp", title: "朝のいい匂い", width: 1448, height: 1086 },
+  { src: "/film/moka/09-autumn-ginkgo.webp", title: "銀杏色の散歩道", width: 1447, height: 1087 },
+  { src: "/film/moka/10-lantern-evening.webp", title: "灯りを眺める夕べ", width: 1448, height: 1086 },
 ] as const;
 
 export default function MokaDemoPage() {
@@ -66,11 +69,41 @@ export default function MokaDemoPage() {
         </div>
       </section>
 
+      <section className="moka-scenes moka-storybook-pages" id="storybook-pages">
+        <div className="moka-shell">
+          <div className="moka-heading">
+            <div>
+              <p>01 / STORYBOOK PAGES</p>
+              <h2>思い出から生まれた、<br />五つの絵本ページ。</h2>
+            </div>
+            <span>映像になる前の、一場面ずつをご覧いただけます。</span>
+          </div>
+          <ol className="moka-scene-grid">
+            {storybookPages.map((page, index) => (
+              <li key={page.src}>
+                <img
+                  className="moka-storybook-page-image"
+                  src={page.src}
+                  alt={`${page.title}の絵本ページ`}
+                  width={page.width}
+                  height={page.height}
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+                <div>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <h3>{page.title}</h3>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       <section className="moka-complete-film" id="complete-film">
         <div className="moka-shell">
           <div className="moka-heading">
             <div>
-              <p>01 / COMPLETE FILM</p>
+              <p>02 / COMPLETE FILM</p>
               <h2>五つの記憶を、<br />一冊の映像に。</h2>
             </div>
             <span>約39秒 · 画面を大きくしてお楽しみください</span>
@@ -94,14 +127,14 @@ export default function MokaDemoPage() {
         <div className="moka-shell">
           <div className="moka-heading">
             <div>
-              <p>02 / MOKA&apos;S PHOTO ALBUM</p>
+              <p>03 / MOKA&apos;S PHOTO ALBUM</p>
               <h2>モカの時間を、<br />一つの写真帖に。</h2>
             </div>
-            <span>五つの思い出から生まれた10枚</span>
+            <span>制作に使った5枚の思い出</span>
           </div>
           <div className="lifetime-album-head">
             <p className="moka-album-intro">
-              物語のために描いた5つの場面から始まり、制作に使った写真へ。完成後も新しい日々を追加しながら育てていけるアルバムです。
+              制作に使った写真から、完成後の新しい日々まで。これからも育っていく、モカだけのアルバムです。
             </p>
             <div className="demo-lifetime-album-note">
               <strong>完成後も写真を追加できます</strong>
@@ -121,7 +154,7 @@ export default function MokaDemoPage() {
                   />
                   <figcaption>
                     <span>{String(index + 1).padStart(2, "0")}</span>
-                    <span className="album-photo-copy"><em>{photo.kind}</em>{photo.title}</span>
+                    <span className="album-photo-copy"><em>MEMORY PHOTO</em>{photo.title}</span>
                   </figcaption>
                 </figure>
               </li>
@@ -131,7 +164,7 @@ export default function MokaDemoPage() {
       </section>
 
       <section className="moka-letter" id="moka-letter">
-        <p>03 / A LETTER FOR MOKA</p>
+        <p>04 / A LETTER FOR MOKA</p>
         <blockquote>
           モカへ。<br />雨の日も、遠くへ出かけた日も、<br />何気ない朝も、ぜんぶ大切な物語だよ。
         </blockquote>
