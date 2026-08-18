@@ -2373,9 +2373,9 @@ export function StudioClient() {
             ) : (
               delivery && (
                 <aside className="studio-card readonly-preview-note">
-                  <strong>専用ものがたりサイト設定</strong>
+                  <strong>専用ものがたりサイト</strong>
                   <span>
-                    顧客画面では、納品後に写真アルバムと共有設定を変更できます。運営プレビューは閲覧専用です。
+                    納品後は専用ホームページが自動で公開されます。運営プレビューは閲覧専用です。
                   </span>
                 </aside>
               )

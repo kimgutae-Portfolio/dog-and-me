@@ -318,7 +318,7 @@ test("server-renders the connected MVP routes", async () => {
   }
 });
 
-test("memory sharing keeps family links private and album access scoped", async () => {
+test("delivered personal sites stay public and album access stays scoped", async () => {
   const { readFile } = await import("node:fs/promises");
   const [
     manager,
@@ -329,6 +329,7 @@ test("memory sharing keeps family links private and album access scoped", async 
     migration,
     personalSite,
     slugMigration,
+    publicSiteMigration,
   ] = await Promise.all([
     readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
     readFile(
@@ -345,6 +346,10 @@ test("memory sharing keeps family links private and album access scoped", async 
     readFile(new URL("app/components/PersonalStorybookSite.tsx", root), "utf8"),
     readFile(
       new URL("supabase/migrations/202608130001_personal_site_slugs.sql", root),
+      "utf8",
+    ),
+    readFile(
+      new URL("supabase/migrations/202608180002_always_public_personal_sites.sql", root),
       "utf8",
     ),
   ]);
@@ -378,8 +383,14 @@ test("memory sharing keeps family links private and album access scoped", async 
   assert.match(manager, /share-copy-popup/);
   assert.match(manager, /URLをコピーしました/);
   assert.match(manager, /customer_slug/);
+  assert.match(manager, /完成すると、専用ホームページが自動で公開されます/);
+  assert.match(manager, /公開期限や月額料金なく/);
+  assert.doesNotMatch(manager, /共有を停止する|家族共有を始める|共有URLを新しく発行する/);
   assert.match(slugMigration, /get_shared_memory_by_slug/);
   assert.match(slugMigration, /split_part\(profile\.email, '@', 1\)/);
+  assert.match(publicSiteMigration, /alter column active set default true/);
+  assert.match(publicSiteMigration, /set active = true/);
+  assert.doesNotMatch(publicSiteMigration, /set active = false|set token =/);
 });
 
 test("adds the animated character to the share-code website", async () => {

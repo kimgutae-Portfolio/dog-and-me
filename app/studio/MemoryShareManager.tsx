@@ -190,32 +190,6 @@ export function MemoryShareManager({
     setWorking(false);
   };
 
-  const changeShare = async (action: "enable" | "disable" | "rotate") => {
-    if (
-      action === "rotate" &&
-      !window.confirm("現在の共有URLを無効にして、新しいURLを発行しますか？")
-    )
-      return;
-    setWorking(true);
-    setError("");
-    try {
-      const next = await manageShare(action);
-      setNotice(
-        action === "disable"
-          ? "家族共有を停止しました。"
-          : action === "rotate"
-            ? "新しい共有URLを発行しました。"
-            : "家族共有を開始しました。",
-      );
-      return next;
-    } catch {
-      setError("共有設定を変更できませんでした。");
-      return null;
-    } finally {
-      setWorking(false);
-    }
-  };
-
   const copyShareUrl = async () => {
     if (!shareUrl) return;
     try {
@@ -357,31 +331,19 @@ export function MemoryShareManager({
         {!delivery ? (
           <div className="family-share-waiting">
             <strong>完成映像の納品後に利用できます</strong>
-            <small>完成映像が届くと共有URLを発行できます。</small>
+            <small>完成すると、専用ホームページが自動で公開されます。</small>
           </div>
         ) : (
           <div className="family-share-controls">
             <div className="share-status">
-              <span className={share?.active ? "active" : ""}>
-                {share?.active ? "共有中" : "停止中"}
-              </span>
-              <code>{shareUrl || "共有URLを準備しています…"}</code>
+              <span className="active">公開中</span>
+              <code>{shareUrl || "専用URLを準備しています…"}</code>
             </div>
             <div>
               <button
                 className="button button-primary"
                 type="button"
-                disabled={working || !share}
-                onClick={() =>
-                  changeShare(share?.active ? "disable" : "enable")
-                }
-              >
-                {share?.active ? "共有を停止する" : "家族共有を始める"}
-              </button>
-              <button
-                className="button button-outline"
-                type="button"
-                disabled={working || !share?.active}
+                disabled={working || !shareUrl}
                 onClick={copyShareUrl}
               >
                 URLをコピー
@@ -389,12 +351,12 @@ export function MemoryShareManager({
               <button
                 className="button button-outline"
                 type="button"
-                disabled={working || !share?.active}
+                disabled={working || !shareUrl}
                 onClick={openShareSheet}
               >
                 LINEなどで共有
               </button>
-              {share?.active && shareUrl && (
+              {shareUrl && (
                 <a
                   className="button button-cream"
                   href={shareUrl}
@@ -405,16 +367,8 @@ export function MemoryShareManager({
                 </a>
               )}
             </div>
-            <button
-              className="share-rotate"
-              type="button"
-              disabled={working || !share}
-              onClick={() => changeShare("rotate")}
-            >
-              共有URLを新しく発行する
-            </button>
             <small>
-              共有停止後も、すでに開かれている映像は最大15分ほど表示される場合があります。
+              完成後は公開期限や月額料金なく、このURLをそのまま使い続けられます。
             </small>
           </div>
         )}
