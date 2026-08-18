@@ -987,6 +987,11 @@ test("sends customers directly to the current consent record", async () => {
   assert.match(studio, /if \(\s*!consentCurrent[\s\S]*?href: "#consent-renewal"/);
   assert.match(studio, /title: "現在の同意内容を確認"/);
   assert.match(studio, /3項目の同意を注文に記録する/);
+  assert.match(
+    studio,
+    /const activeOrder = loadedOrders\.find\([\s\S]*?!\["delivered", "cancelled"\]\.includes\(item\.status\)/,
+  );
+  assert.match(studio, /activeOrder\?\.id \?\? loadedOrders\[0\]\?\.id/);
   assert.match(admin, /お客様が制作室へログインし、画面上部の「現在の同意内容を確認する」/);
 });
 
