@@ -421,6 +421,17 @@ export function StudioClient() {
   );
   const nextAction = useMemo(() => {
     if (!order) return null;
+    if (
+      !consentCurrent &&
+      !["delivered", "cancelled"].includes(order.status)
+    ) {
+      return {
+        title: "現在の同意内容を確認",
+        copy: "制作を続けるため、3つの確認項目にチェックして注文へ記録してください。",
+        href: "#consent-renewal",
+        label: "同意内容を確認する",
+      };
+    }
     if (order.payment_status === "invoice_sent") {
       return {
         title: "制作料金のお支払い",
@@ -517,7 +528,7 @@ export function StudioClient() {
           label: "担当者へ連絡する",
         };
     }
-  }, [order, reviewAsset]);
+  }, [consentCurrent, order, reviewAsset]);
 
   useEffect(() => {
     if (!conceptReceipt) return;
@@ -1255,9 +1266,9 @@ export function StudioClient() {
                 <aside className="studio-consent-renewal" id="consent-renewal">
                   <div>
                     <p className="eyebrow">CONSENT RECORD</p>
-                    <h2>制作を続けるため、現在の内容をご確認ください。</h2>
+                    <h2>現在の同意内容を確認する</h2>
                     <p>
-                      人物の写り込みと写真の利用条件を確認し、外部制作サービスで処理する前に、選択内容・同意日時・確認文のバージョンを注文へ記録します。
+                      制作を続けるため、下の3項目をご確認ください。すべてにチェックして、最後のボタンを押すと注文へ記録されます。
                     </p>
                   </div>
                   {canOperateOrder ? (
@@ -1327,7 +1338,7 @@ export function StudioClient() {
                       >
                         {acceptingConsent
                           ? "記録中…"
-                          : "同意内容を注文に記録する →"}
+                          : "3項目の同意を注文に記録する →"}
                       </button>
                     </>
                   ) : (

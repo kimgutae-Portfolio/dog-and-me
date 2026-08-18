@@ -4514,7 +4514,7 @@ export function AdminStudio() {
                               : order.payment_status !== "paid"
                                 ? "先に入金確認を保存してください。"
                                 : !consentCurrent
-                                  ? "お客様による現在版の同意記録が必要です。"
+                                  ? "お客様が制作室へログインし、画面上部の「現在の同意内容を確認する」から3項目を記録する必要があります。"
                                   : "物語案の選択後に管理できます。"}
                           </span>
                         </aside>
@@ -4764,7 +4764,7 @@ export function AdminStudio() {
                             : order.payment_status !== "paid"
                               ? "先に入金確認を保存してください。"
                               : !consentCurrent
-                                ? "お客様による現在版の同意記録が必要です。"
+                                ? "お客様が制作室へログインし、画面上部の「現在の同意内容を確認する」から3項目を記録する必要があります。"
                                 : !order.stills_approved_at
                                   ? "お客様が絵本ページと文章を承認するまで編集できません。"
                                   : "進行状況を「約40秒の映像を制作しています」へ進めてください。"}
@@ -5236,7 +5236,7 @@ export function AdminStudio() {
                               {order.payment_status !== "paid"
                                 ? "先に入金確認を保存してください。"
                                 : !consentCurrent
-                                  ? "お客様による現在版の同意記録が必要です。"
+                                  ? "お客様が制作室へログインし、画面上部の「現在の同意内容を確認する」から3項目を記録する必要があります。"
                                   : "物語案の選択後、進行状況を「動く絵本を制作しています」へ進めてください。"}
                             </span>
                           </aside>
@@ -5272,7 +5272,7 @@ export function AdminStudio() {
                               {order.payment_status !== "paid"
                                 ? "入金確認が必要です。"
                                 : !consentCurrent
-                                  ? "現在版の同意記録が必要です。"
+                                  ? "お客様が制作室へログインし、画面上部の「現在の同意内容を確認する」から3項目を記録する必要があります。"
                                   : openRevisions.length
                                     ? "未対応の修正依頼をすべて解決してください。"
                                     : !order.customer_approved_at

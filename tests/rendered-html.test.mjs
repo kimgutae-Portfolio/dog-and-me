@@ -978,6 +978,18 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
   assert.match(fiveSecondMigration, /drop function if exists public\.admin_set_expanded_story_slots/);
 });
 
+test("sends customers directly to the current consent record", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [studio, admin] = await Promise.all([
+    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+  ]);
+  assert.match(studio, /if \(\s*!consentCurrent[\s\S]*?href: "#consent-renewal"/);
+  assert.match(studio, /title: "現在の同意内容を確認"/);
+  assert.match(studio, /3項目の同意を注文に記録する/);
+  assert.match(admin, /お客様が制作室へログインし、画面上部の「現在の同意内容を確認する」/);
+});
+
 test("counts storybook and video revisions as separate three-scene allowances", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, studio, admin, types, pricing, terms, legal, css] =
