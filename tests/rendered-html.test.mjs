@@ -332,6 +332,7 @@ test("delivered personal sites stay public and album access stays scoped", async
     publicSiteMigration,
     autoPublishMigration,
     deliveredSiteMigration,
+    sequentialSlugMigration,
   ] = await Promise.all([
     readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
     readFile(
@@ -360,6 +361,10 @@ test("delivered personal sites stay public and album access stays scoped", async
     ),
     readFile(
       new URL("supabase/migrations/202608180004_delivered_sites_are_public.sql", root),
+      "utf8",
+    ),
+    readFile(
+      new URL("supabase/migrations/202608180006_sequential_personal_site_slugs.sql", root),
       "utf8",
     ),
   ]);
@@ -436,6 +441,10 @@ test("delivered personal sites stay public and album access stays scoped", async
   assert.match(deliveredSiteMigration, /delivered_memory_for_order/);
   assert.match(deliveredSiteMigration, /orders\.status = 'delivered'/);
   assert.doesNotMatch(deliveredSiteMigration, /link\.active|share_links\.active/);
+  assert.match(sequentialSlugMigration, /next_personal_pet_slug/);
+  assert.match(sequentialSlugMigration, /v_number := v_number \+ 1/);
+  assert.match(sequentialSlugMigration, /\|\| '-' \|\| v_number::text/);
+  assert.doesNotMatch(sequentialSlugMigration, /replace\(.*id::text/);
 });
 
 test("adds the animated character to the share-code website", async () => {
