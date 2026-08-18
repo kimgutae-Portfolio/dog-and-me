@@ -7,8 +7,18 @@ type PageProps = {
   params: Promise<{ customerSlug: string; petSlug: string }>;
 };
 
+function decodeRouteSegment(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { customerSlug, petSlug } = await params;
+  const routeParams = await params;
+  const customerSlug = decodeRouteSegment(routeParams.customerSlug);
+  const petSlug = decodeRouteSegment(routeParams.petSlug);
   const [origin, memory] = await Promise.all([
     getRequestOrigin(),
     getPublicSharedMemoryBySlug(customerSlug, petSlug).catch(() => null),
@@ -32,7 +42,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function PersonalMemoryPage({ params }: PageProps) {
-  const { customerSlug, petSlug } = await params;
+  const routeParams = await params;
+  const customerSlug = decodeRouteSegment(routeParams.customerSlug);
+  const petSlug = decodeRouteSegment(routeParams.petSlug);
   const initialMemory = await getPublicSharedMemoryBySlug(
     customerSlug,
     petSlug,

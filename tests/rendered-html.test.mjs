@@ -377,6 +377,10 @@ test("delivered personal sites stay public and album access stays scoped", async
     await readFile(new URL("app/[customerSlug]/[petSlug]/page.tsx", root), "utf8"),
     /initialMemory=\{initialMemory\}/,
   );
+  assert.match(
+    await readFile(new URL("app/[customerSlug]/[petSlug]/page.tsx", root), "utf8"),
+    /decodeURIComponent\(value\)/,
+  );
   assert.match(sharedPage, /createSignedUrls\(paths, 900\)/);
   assert.match(sharedPage, /PersonalStorybookSite/);
   assert.match(personalSite, /PERSONAL STORYBOOK SITE/);
