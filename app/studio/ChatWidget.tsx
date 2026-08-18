@@ -5,7 +5,6 @@ import {
   KeyboardEvent,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -50,9 +49,7 @@ export function ChatWidget({
   onRefreshMessages: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [activeInstance, setActiveInstance] = useState(false);
   const panelId = useId();
-  const widgetRef = useRef<HTMLDivElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const markedThroughRef = useRef<string | null>(null);
@@ -63,20 +60,6 @@ export function ChatWidget({
   // controls may be read-only (for example while an admin previews the page),
   // but that must not hide the customer's conversation composer.
   const canCompose = canOperate || currentUserId === order.user_id;
-
-  useLayoutEffect(() => {
-    const element = widgetRef.current;
-    if (!element) return;
-
-    const syncActiveInstance = () => {
-      const instances = Array.from(document.querySelectorAll(".chat-widget"));
-      setActiveInstance(instances.at(-1) === element);
-    };
-    const observer = new MutationObserver(syncActiveInstance);
-    observer.observe(document.body, { childList: true, subtree: true });
-    syncActiveInstance();
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -104,7 +87,6 @@ export function ChatWidget({
   );
 
   useEffect(() => {
-    if (!activeInstance) return;
     const supabase = getSupabaseBrowserClient();
     // The topic includes a random suffix so this always gets a brand-new
     // channel object. supabase-js reuses an existing channel by exact topic
@@ -131,7 +113,7 @@ export function ChatWidget({
       supabase.removeChannel(channel);
     };
     // The callback refs above keep this channel stable while the parent rerenders.
-  }, [activeInstance, order.id]);
+  }, [order.id]);
 
   useEffect(() => {
     if (!open || unreadCount === 0) return;
@@ -166,12 +148,8 @@ export function ChatWidget({
   };
 
   const widget = (
-    <div
-      className="chat-widget"
-      data-chat-active={activeInstance ? "true" : "false"}
-      ref={widgetRef}
-    >
-      {activeInstance && open && (
+    <div className="chat-widget">
+      {open && (
         <section
           className="chat-widget-panel"
           id={panelId}
@@ -263,7 +241,7 @@ export function ChatWidget({
           )}
         </section>
       )}
-      {activeInstance && !open && (
+      {!open && (
         <button
           type="button"
           className="chat-widget-toggle"

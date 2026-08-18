@@ -2337,7 +2337,6 @@ export function StudioClient() {
             </div>
 
             <ChatWidget
-              key={order.id}
               order={order}
               currentUserId={user.id}
               canOperate={canOperateOrder}
