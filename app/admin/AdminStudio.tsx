@@ -630,7 +630,7 @@ function peopleHandlingLabel(value: MemoryOrder["people_handling"]) {
   > = {
     not_applicable: "該当なし",
     dog_only_crop: "愛犬だけを切り抜いて使用",
-    anonymous_person: "顔が分からない後ろ姿・手元・足元・シルエットで表現",
+    anonymous_person: "旧方針：顔が分からない後ろ姿・手元・足元・シルエットで表現",
     original_still: "元の家族写真をAIで動かさず使用",
     consult: "担当者へ相談",
   };

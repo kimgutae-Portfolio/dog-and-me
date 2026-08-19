@@ -1158,7 +1158,7 @@ test("records first-ten production metrics through an admin-only RPC", async () 
 
 test("records and enforces consolidated photo-rights and external-service consent", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [peopleConsent, story, studio, admin, privacy] = await Promise.all([
+  const [peopleConsent, story, studio, admin, privacy, terms] = await Promise.all([
     readFile(
       new URL(
         "supabase/migrations/202607210004_people_photo_consent.sql",
@@ -1170,6 +1170,7 @@ test("records and enforces consolidated photo-rights and external-service consen
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
     readFile(new URL("app/privacy/page.tsx", root), "utf8"),
+    readFile(new URL("app/terms/page.tsx", root), "utf8"),
   ]);
   assert.match(peopleConsent, /contains_people boolean/);
   assert.match(peopleConsent, /photo_rights_consented_at/);
@@ -1180,7 +1181,7 @@ test("records and enforces consolidated photo-rights and external-service consen
     peopleConsent,
     /current photo, people, minor and external service consent records are required before video processing/,
   );
-  assert.match(story, /人物のお顔は映像に使用・生成せず/);
+  assert.match(story, /完成作品から人物をすべて除いて愛犬だけの場面/);
   assert.match(story, /外部AIサービス/);
   assert.doesNotMatch(story, /Runway|ChatGPT|OpenAI|GPT/);
   assert.match(story, /photo_rights_consent_accepted/);
@@ -1189,6 +1190,10 @@ test("records and enforces consolidated photo-rights and external-service consen
   assert.match(admin, /people_fully_removed_no_human_rendering/);
   assert.match(admin, /사람이 있던 자리를 다른 물건으로 채우지 않는다/);
   assert.match(privacy, /人物が写っている写真の取り扱い/);
+  assert.match(privacy, /人物の顔・身体・手足・衣服・シルエット・影を完成作品に描画または生成しません/);
+  assert.match(studio, /完成作品から人物をすべて除き/);
+  assert.match(terms, /完成作品から人物をすべて除き/);
+  assert.doesNotMatch(`${story}\n${studio}\n${privacy}\n${terms}`, /後ろ姿などお顔が分からない形/);
   assert.match(privacy, /外部サービスでのデータの取り扱い/);
   assert.doesNotMatch(story, /広告利用や当社のAI学習には使用しません/);
 });
