@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const PHOTO_UPLOAD_GUIDE_STORAGE_KEY =
   "wan-memory:photo-upload-guide-seen:v1";
@@ -30,12 +30,28 @@ export function PhotoUploadGuideDialog({
   onClose: () => void;
   onContinue: () => void;
 }) {
+  const [page, setPage] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+
+  const closeDialog = () => {
+    setPage(0);
+    onClose();
+  };
+
+  const continueToPhotos = () => {
+    setPage(0);
+    onContinue();
+  };
+
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        setPage(0);
+        onClose();
+      }
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => {
@@ -55,47 +71,113 @@ export function PhotoUploadGuideDialog({
         role="dialog"
       >
         <header>
-          <span>写真を選ぶ前に</span>
-          <button type="button" aria-label="閉じる" onClick={onClose}>
+          <span id="photo-upload-guide-title">写真を選ぶ前に</span>
+          <button type="button" aria-label="閉じる" onClick={closeDialog}>
             ×
           </button>
         </header>
-        <div className="photo-guide-content">
-          <p className="eyebrow">FIRST PHOTO GUIDE</p>
-          <h2 id="photo-upload-guide-title">
-            愛犬だけが写った写真が、
-            <br />いちばんきれいに仕上がります。
-          </h2>
-          <p>
-            顔・体・毛色がよく見える写真ほど、その子らしさを活かして描けます。
-          </p>
-          <ul className="photo-upload-guide-list">
-            <li>
-              <strong>◎ いちばんおすすめ</strong>
-              <span>愛犬だけが明るく、はっきり写っている写真</span>
-            </li>
-            <li>
-              <strong>○ 人物と一緒</strong>
-              <span>人物を除き、愛犬だけの場面として制作します</span>
-            </li>
-            <li>
-              <strong>△ ご注意</strong>
-              <span>
-                人物と一緒の写真は、背景が不自然になることがあります。また、愛犬が大きく隠れている場合は、その子らしさを十分に再現できないことがあります。ご了承ください。
-              </span>
-            </li>
-          </ul>
-          <aside>
-            迷ったら、愛犬だけが写った写真を1枚入れてください。
-          </aside>
+        <div
+          className="photo-guide-content photo-upload-guide-viewport"
+          onTouchStart={(event) => {
+            touchStartX.current = event.touches[0]?.clientX ?? null;
+          }}
+          onTouchEnd={(event) => {
+            const startX = touchStartX.current;
+            const endX = event.changedTouches[0]?.clientX;
+            touchStartX.current = null;
+            if (startX === null || endX === undefined) return;
+            const distance = endX - startX;
+            if (distance < -45) setPage(1);
+            if (distance > 45) setPage(0);
+          }}
+        >
+          <div
+            className="photo-upload-guide-track"
+            style={{ transform: `translateX(-${page * 100}%)` }}
+          >
+            <section
+              aria-hidden={page !== 0}
+              className="photo-upload-guide-slide"
+            >
+              <p className="eyebrow">FIRST PHOTO GUIDE · 1 / 2</p>
+              <h2>
+                愛犬だけが写った写真が、
+                <br />いちばんきれいに仕上がります。
+              </h2>
+              <p>
+                顔・体・毛色がよく見えるほど、その子らしさを活かして描けます。
+              </p>
+              <ul className="photo-upload-guide-list">
+                <li>
+                  <strong>◎ 明るさ</strong>
+                  <span>明るく、ピントが合っている</span>
+                </li>
+                <li>
+                  <strong>◎ 見え方</strong>
+                  <span>顔と体が隠れず、全体がよく見える</span>
+                </li>
+              </ul>
+              <aside>
+                迷ったら、愛犬だけが写った写真を1枚入れてください。
+              </aside>
+            </section>
+            <section
+              aria-hidden={page !== 1}
+              className="photo-upload-guide-slide"
+            >
+              <p className="eyebrow">FIRST PHOTO GUIDE · 2 / 2</p>
+              <h2>人物と一緒の写真も、<br />お送りいただけます。</h2>
+              <p>
+                完成作品では人物を除き、愛犬だけの場面として背景を整えます。
+              </p>
+              <ul className="photo-upload-guide-list">
+                <li>
+                  <strong>○ 人物</strong>
+                  <span>顔・体・服・影まで完成作品には描きません</span>
+                </li>
+                <li>
+                  <strong>△ ご注意</strong>
+                  <span>
+                    背景が不自然になったり、愛犬が大きく隠れている場合は、その子らしさを十分に再現できないことがあります
+                  </span>
+                </li>
+              </ul>
+              <aside>あらかじめご了承ください。</aside>
+            </section>
+          </div>
+        </div>
+        <div className="photo-upload-guide-pagination" aria-label="案内 2ページ">
+          {[0, 1].map((index) => (
+            <button
+              aria-label={`${index + 1}ページ目を表示`}
+              aria-pressed={page === index}
+              className={page === index ? "active" : ""}
+              key={index}
+              onClick={() => setPage(index)}
+              type="button"
+            />
+          ))}
         </div>
         <footer>
-          <button className="button button-outline" type="button" onClick={onClose}>
-            あとで選ぶ
-          </button>
-          <button className="button button-primary" type="button" onClick={onContinue} autoFocus>
-            写真を選ぶ
-          </button>
+          {page === 0 ? (
+            <>
+              <button className="button button-outline" type="button" onClick={closeDialog}>
+                あとで選ぶ
+              </button>
+              <button className="button button-primary" type="button" onClick={() => setPage(1)} autoFocus>
+                次へ
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="button button-outline" type="button" onClick={() => setPage(0)}>
+                ← 戻る
+              </button>
+              <button className="button button-primary" type="button" onClick={continueToPhotos}>
+                写真を選ぶ
+              </button>
+            </>
+          )}
         </footer>
       </section>
     </div>
