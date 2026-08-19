@@ -80,7 +80,9 @@ export function PhotoUploadGuideDialog({
             </li>
             <li>
               <strong>△ ご注意</strong>
-              <span>人物で隠れた部分や背景の再構成が不自然になる場合があります</span>
+              <span>
+                人物と一緒の写真は、背景が不自然になることがあります。また、愛犬が大きく隠れている場合は、その子らしさを十分に再現できないことがあります。ご了承ください。
+              </span>
             </li>
           </ul>
           <aside>

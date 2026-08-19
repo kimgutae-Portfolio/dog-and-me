@@ -803,7 +803,8 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(studio, /hasSeenPhotoUploadGuide/);
   assert.match(photoUploadGuide, /photo-upload-guide-seen:v1/);
   assert.match(photoUploadGuide, /愛犬だけが写った写真が/);
-  assert.match(photoUploadGuide, /背景の再構成が不自然になる場合があります/);
+  assert.match(photoUploadGuide, /愛犬が大きく隠れている場合/);
+  assert.match(photoUploadGuide, /ご了承ください/);
   assert.match(photoUploadGuide, /rememberPhotoUploadGuide/);
   assert.match(css, /\.photo-guide-backdrop \{[^}]*z-index: 1200;/);
   assert.match(css, /\.photo-guide-backdrop \{[^}]*place-items: center;/);
