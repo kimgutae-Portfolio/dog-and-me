@@ -68,6 +68,26 @@ function normalizedText(value: string) {
   return value.toLocaleLowerCase().replace(/[\s「」『』。、・:：!?！？]/g, "");
 }
 
+function readImageDimensions(file: File) {
+  return new Promise<{ width: number; height: number }>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      const dimensions = {
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+      };
+      URL.revokeObjectURL(objectUrl);
+      resolve(dimensions);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("image_dimensions_unavailable"));
+    };
+    image.src = objectUrl;
+  });
+}
+
 function sceneCandidates(value: ConceptJsonRecord) {
   const candidates = [value.story_scenes, value.storyScenes, value.scenes, value.stories];
   return candidates.find((item) => Array.isArray(item)) as unknown[] | undefined;
@@ -2562,6 +2582,19 @@ export function AdminStudio() {
     const caption = (stillCaptions[memory.id] ?? "").trim();
     if (!caption) {
       setError("この場面に表示する物語の文章を入力してください。");
+      return;
+    }
+    try {
+      const { width, height } = await readImageDimensions(stillFile);
+      const ratio = width / height;
+      if (Math.abs(ratio - 16 / 9) > 0.025) {
+        setError(
+          `絵本ページは16:9の画像を選んでください。選択中の画像は${width}×${height}pxです。`,
+        );
+        return;
+      }
+    } catch {
+      setError("画像サイズを確認できませんでした。JPG・PNG・WebPを選び直してください。");
       return;
     }
     setSaving(true);

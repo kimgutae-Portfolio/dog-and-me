@@ -809,7 +809,8 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(css, /\.album-manager-actions button \{ min-height: 44px;/);
   assert.match(css, /\.stills-grid \{ grid-template-columns: minmax\(0, 1fr\); \}/);
   assert.match(css, /\.stills-grid figure \{ min-width: 0; max-width: 100%;/);
-  assert.match(css, /\.stills-grid img \{ width: 100%; max-width: 100%; min-width: 0; display: block;/);
+  assert.match(css, /\.stills-image-frame \{[^}]*aspect-ratio: 16 \/ 9;[^}]*overflow: hidden;/);
+  assert.match(css, /\.stills-grid img \{ width: 100%; height: 100%; max-width: 100%; min-width: 0; display: block; object-fit: contain;/);
   assert.match(css, /#admin-stills \.admin-photo-grid \{ grid-template-columns: repeat\(auto-fill, minmax\(180px, 240px\)\);/);
   assert.match(css, /#admin-stills \.admin-photo-grid a > \.admin-photo-thumb \{[^}]*aspect-ratio: 16 \/ 9;/);
   assert.match(css, /#admin-stills \.admin-photo-grid \{ grid-template-columns: minmax\(0, 1fr\); \}/);
@@ -817,6 +818,9 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(css, /\.photo-upload-guide-list/);
   assert.match(story, /hasSeenPhotoUploadGuide/);
   assert.match(studio, /hasSeenPhotoUploadGuide/);
+  assert.match(studio, /className="stills-image-frame"/);
+  assert.match(admin, /Math\.abs\(ratio - 16 \/ 9\) > 0\.025/);
+  assert.match(admin, /絵本ページは16:9の画像を選んでください/);
   assert.match(photoUploadGuide, /photo-upload-guide-seen:v1/);
   assert.match(photoUploadGuide, /愛犬だけが写った写真が/);
   assert.match(photoUploadGuide, /愛犬が大きく隠れている場合/);

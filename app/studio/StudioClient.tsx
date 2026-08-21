@@ -1843,15 +1843,17 @@ export function StudioClient() {
                   <div className="stills-grid">
                     {sceneStills.map((asset, index) => (
                       <figure key={asset.id}>
-                        {sceneStillUrls[asset.id] ? (
-                          <img
-                            src={sceneStillUrls[asset.id]}
-                            alt={asset.scene_title ?? `絵本ページ${index + 1}`}
-                            loading="lazy"
-                          />
-                        ) : (
-                          <span className="stills-loading">読み込み中…</span>
-                        )}
+                        <div className="stills-image-frame">
+                          {sceneStillUrls[asset.id] ? (
+                            <img
+                              src={sceneStillUrls[asset.id]}
+                              alt={asset.scene_title ?? `絵本ページ${index + 1}`}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <span className="stills-loading">読み込み中…</span>
+                          )}
+                        </div>
                         <figcaption>
                           <span>{String(index + 1).padStart(2, "0")}</span>
                           <strong>{asset.scene_title ?? "絵本ページ"}</strong>
