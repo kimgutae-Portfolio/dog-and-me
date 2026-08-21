@@ -113,6 +113,7 @@ export function StudioClient() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [pendingPhotoInputId, setPendingPhotoInputId] = useState("");
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [savingMemoryId, setSavingMemoryId] = useState<string | null>(null);
   const [sourcePhotoUrls, setSourcePhotoUrls] = useState<
     Record<string, string>
   >({});
@@ -697,6 +698,46 @@ export function StudioClient() {
       setError("写真を削除できませんでした。もう一度お試しください。");
     } finally {
       setDeletingPhotoId(null);
+    }
+  };
+
+  const saveMemoryCopy = async (
+    event: FormEvent<HTMLFormElement>,
+    memory: OrderMemory,
+  ) => {
+    event.preventDefault();
+    if (!order || !canManageSourcePhotos || savingMemoryId) return;
+    const form = new FormData(event.currentTarget);
+    const title = String(form.get("title") ?? "").trim();
+    const whenText = String(form.get("when_text") ?? "").trim();
+    const location = String(form.get("location") ?? "").trim();
+    const description = String(form.get("description") ?? "").trim();
+    if (!title || !description) {
+      setError("思い出のタイトルと内容を入力してください。");
+      return;
+    }
+    setSavingMemoryId(memory.id);
+    setError("");
+    try {
+      const { error: saveError } = await getSupabaseBrowserClient().rpc(
+        "update_order_memory_entry",
+        {
+          p_order_id: order.id,
+          p_memory_id: memory.id,
+          p_title: title,
+          p_when_text: whenText,
+          p_location: location,
+          p_description: description,
+        },
+      );
+      if (saveError) throw saveError;
+      setNotice(`「${title}」の文章を保存しました。担当者が変更内容を確認します。`);
+      await Promise.all([loadDetails(order.id), loadOrders()]);
+    } catch (caught) {
+      console.error(caught);
+      setError("物語の文章を保存できませんでした。もう一度お試しください。");
+    } finally {
+      setSavingMemoryId(null);
     }
   };
 
@@ -2265,13 +2306,67 @@ export function StudioClient() {
                           {String(memory.sort_order).padStart(2, "0")}
                         </span>
                         <div>
-                          <strong>{memory.title}</strong>
-                          <p>{memory.description}</p>
-                          <small>
-                            {memory.when_text || "時期指定なし"} ·{" "}
-                            {memory.location || "場所指定なし"} · 写真
-                            {memoryPhotos.length}枚
-                          </small>
+                          {canManageSourcePhotos ? (
+                            <form
+                              className="studio-memory-copy-editor"
+                              onSubmit={(event) => void saveMemoryCopy(event, memory)}
+                            >
+                              <label className="wide">
+                                <span>思い出のタイトル</span>
+                                <input
+                                  name="title"
+                                  required
+                                  maxLength={80}
+                                  defaultValue={memory.title}
+                                />
+                              </label>
+                              <label>
+                                <span>いつ頃（任意）</span>
+                                <input
+                                  name="when_text"
+                                  maxLength={120}
+                                  defaultValue={memory.when_text ?? ""}
+                                />
+                              </label>
+                              <label>
+                                <span>場所（任意）</span>
+                                <input
+                                  name="location"
+                                  maxLength={120}
+                                  defaultValue={memory.location ?? ""}
+                                />
+                              </label>
+                              <label className="wide">
+                                <span>そのときのこと</span>
+                                <textarea
+                                  name="description"
+                                  required
+                                  rows={4}
+                                  maxLength={2000}
+                                  defaultValue={memory.description}
+                                />
+                              </label>
+                              <button
+                                className="button button-outline wide"
+                                type="submit"
+                                disabled={Boolean(savingMemoryId)}
+                              >
+                                {savingMemoryId === memory.id
+                                  ? "文章を保存中…"
+                                  : "文章の変更を保存"}
+                              </button>
+                            </form>
+                          ) : (
+                            <>
+                              <strong>{memory.title}</strong>
+                              <p>{memory.description}</p>
+                              <small>
+                                {memory.when_text || "時期指定なし"} ·{" "}
+                                {memory.location || "場所指定なし"} · 写真
+                                {memoryPhotos.length}枚
+                              </small>
+                            </>
+                          )}
                           <div className="studio-story-photo-grid">
                             {memoryPhotos.map((asset) => (
                               <article key={asset.id}>
@@ -2385,16 +2480,16 @@ export function StudioClient() {
                       </span>
                       <strong>
                         {order.source_photo_change_open
-                          ? "現在の決済・制作状況にかかわらず写真を変更できます"
+                          ? "現在の決済・制作状況にかかわらず写真と文章を変更できます"
                           : canManageSourcePhotos
-                          ? "STORY SOURCE REVIEWの承認前まで写真を変更できます"
+                          ? "STORY SOURCE REVIEWの承認前まで写真と文章を変更できます"
                           : "STORY SOURCE REVIEWで承認された写真です"}
                       </strong>
                       <p>
                         {order.source_photo_change_open
-                          ? "変更後は担当者が写真を再確認します。必要な写真を追加・削除してください。"
+                          ? "変更後は担当者が内容を再確認します。写真の追加・削除と、物語の文章修正ができます。"
                           : canManageSourcePhotos
-                          ? "承認されるまでは、この画面から写真を追加・削除できます。"
+                          ? "承認されるまでは、この画面から写真の追加・削除と文章の修正ができます。"
                           : "承認後に変更が必要な場合は、担当者が変更権限を開くと再び編集できます。"}
                       </p>
                     </div>

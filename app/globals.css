@@ -1475,6 +1475,13 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .studio-memory-list strong { font-family: var(--font-serif); font-size: 13px; font-weight: 400; }
 .studio-memory-list p { margin: 6px 0; color: var(--muted); font-size: 9px; line-height: 1.7; }
 .studio-memory-list small { color: #8f897e; font-size: 8px; }
+.studio-memory-copy-editor { margin-bottom: 12px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.studio-memory-copy-editor label { display: grid; gap: 5px; }
+.studio-memory-copy-editor label > span { color: #756f66; font-size: 8px; }
+.studio-memory-copy-editor .wide { grid-column: 1 / -1; }
+.studio-memory-copy-editor input, .studio-memory-copy-editor textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--line); color: var(--ink); background: rgba(255,255,255,.82); font: inherit; font-size: 10px; line-height: 1.65; }
+.studio-memory-copy-editor textarea { resize: vertical; }
+.studio-memory-copy-editor .button { min-height: 40px; }
 .studio-story-photo-add { margin-top: 10px; padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px dashed #aaa69c; color: var(--rust); background: rgba(255,255,255,.55); cursor: pointer; }
 .studio-story-photo-add input { position: absolute; opacity: 0; pointer-events: none; }
 .studio-story-photo-add span { font-size: 9px; font-weight: 700; }
@@ -1504,6 +1511,9 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .photo-change-status.production-started .photo-change-status-badge { color: #7b3f31; background: #ecd4c9; }
 
 @media (max-width: 640px) {
+  .studio-memory-copy-editor { grid-template-columns: 1fr; }
+  .studio-memory-copy-editor label, .studio-memory-copy-editor .wide { grid-column: 1; }
+  .studio-memory-copy-editor input, .studio-memory-copy-editor textarea { min-height: 48px; font-size: 16px; }
   .photo-change-status { align-items: stretch; flex-direction: column; }
   .photo-change-status .button { width: 100%; }
 }

@@ -2302,7 +2302,7 @@ export function AdminStudio() {
     if (
       open &&
       !window.confirm(
-        "このお客様の写真変更を許可しますか？ 決済・制作状況にかかわらず写真を追加・削除でき、変更後はSTORY SOURCE REVIEWの再承認が必要になります。",
+        "このお客様の写真・文章変更を許可しますか？ 決済・制作状況にかかわらず写真の追加・削除と物語文の修正ができ、変更後はSTORY SOURCE REVIEWの再承認が必要になります。",
       )
     )
       return;
@@ -2321,7 +2321,7 @@ export function AdminStudio() {
       const notification = open
         ? await notifyCustomerByMessage(
             order.id,
-            "写真変更を受け付けられる状態にしました。現在の決済・制作状況にかかわらず、制作室から写真を追加・削除できます。変更後は担当者が内容を再確認します。",
+            "写真と物語文の変更を受け付けられる状態にしました。現在の決済・制作状況にかかわらず、制作室から写真の追加・削除と文章の修正ができます。変更後は担当者が内容を再確認します。",
           )
         : null;
       setNotice(
@@ -3635,14 +3635,14 @@ export function AdminStudio() {
                         }
                       >
                         {order.source_photo_change_open
-                          ? "写真変更の許可を終了する"
-                          : "このお客様の写真変更を許可する"}
+                          ? "写真・文章変更の許可を終了する"
+                          : "このお客様の写真・文章変更を許可する"}
                       </button>
                       {order.source_photo_change_open && (
                         <aside className="admin-operation-note warning">
-                          <strong>写真変更を許可中です。</strong>
+                          <strong>写真・文章変更を許可中です。</strong>
                           <span>
-                            お客様は決済・制作状況にかかわらず写真を変更できます。変更後は再承認するまで次の制作工程が停止します。
+                            お客様は決済・制作状況にかかわらず写真と物語文を変更できます。変更後は再承認するまで次の制作工程が停止します。
                           </span>
                         </aside>
                       )}
