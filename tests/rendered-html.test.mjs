@@ -807,6 +807,12 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
     /\.form-grid input, \.form-grid select, \.stacked-fields textarea \{ font-size: 16px; \}/,
   );
   assert.match(css, /\.album-manager-actions button \{ min-height: 44px;/);
+  assert.match(css, /\.stills-grid \{ grid-template-columns: minmax\(0, 1fr\); \}/);
+  assert.match(css, /\.stills-grid figure \{ min-width: 0; max-width: 100%;/);
+  assert.match(css, /\.stills-grid img \{ width: 100%; max-width: 100%; min-width: 0; display: block;/);
+  assert.match(css, /#admin-stills \.admin-photo-grid \{ grid-template-columns: repeat\(auto-fill, minmax\(180px, 240px\)\);/);
+  assert.match(css, /#admin-stills \.admin-photo-grid a > \.admin-photo-thumb \{[^}]*aspect-ratio: 16 \/ 9;/);
+  assert.match(css, /#admin-stills \.admin-photo-grid \{ grid-template-columns: minmax\(0, 1fr\); \}/);
   assert.match(css, /\.admin-mobile-sections/);
   assert.match(css, /\.photo-upload-guide-list/);
   assert.match(story, /hasSeenPhotoUploadGuide/);
