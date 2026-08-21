@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
+import { uploadMessageAttachment } from "../lib/supabase/uploads";
 import { hasCurrentConsent } from "../lib/consent";
 import { APPLICATIONS_OPEN } from "../lib/site";
 import { AdminPushCenter } from "./AdminPushCenter";
@@ -730,12 +731,20 @@ export function AdminStudio() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [messageDraft, setMessageDraft] = useState("");
+  const [messageAttachmentFile, setMessageAttachmentFile] = useState<File | null>(null);
+  const [messageAttachmentPreviewUrl, setMessageAttachmentPreviewUrl] = useState<string | null>(null);
+  const [messageAttachmentError, setMessageAttachmentError] = useState("");
   const [filter, setFilter] = useState("all");
   const [attentionByOrder, setAttentionByOrder] = useState<
     Record<string, AttentionCount>
   >({});
   const messageComposerRef = useRef<HTMLTextAreaElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
+  const messageFileInputRef = useRef<HTMLInputElement>(null);
+  const [messageAttachmentUrls, setMessageAttachmentUrls] = useState<
+    Record<string, string>
+  >({});
+  const knownMessageAttachmentPathsRef = useRef(new Set<string>());
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?next=/admin");
@@ -1313,6 +1322,29 @@ export function AdminStudio() {
     return () => window.cancelAnimationFrame(frame);
   }, [messages, selectedOrderId]);
 
+  useEffect(() => {
+    const newPaths = messages
+      .map((message) => message.attachment_path)
+      .filter(
+        (path): path is string =>
+          !!path && !knownMessageAttachmentPathsRef.current.has(path),
+      );
+    if (!newPaths.length) return;
+    newPaths.forEach((path) => knownMessageAttachmentPathsRef.current.add(path));
+    getSupabaseBrowserClient()
+      .storage.from("order-assets")
+      .createSignedUrls(newPaths, 3600)
+      .then(({ data }) => {
+        if (!data) return;
+        setMessageAttachmentUrls((current) => {
+          const next = { ...current };
+          for (const item of data)
+            if (item.signedUrl && item.path) next[item.path] = item.signedUrl;
+          return next;
+        });
+      });
+  }, [messages]);
+
   const hasAttention = (orderId: string) => {
     const count = attentionByOrder[orderId];
     return Boolean(count && count.messages + count.revisions > 0);
@@ -1331,6 +1363,7 @@ export function AdminStudio() {
   const selectOrder = (orderId: string) => {
     if (orderId !== selectedOrderId) {
       setMessageDraft("");
+      clearMessageAttachment();
       setConceptJsonDraft("");
       setConceptJsonStatus("");
       setCancelReason("");
@@ -3123,14 +3156,58 @@ export function AdminStudio() {
     setSaving(false);
   };
 
+  const clearMessageAttachment = () => {
+    if (messageAttachmentPreviewUrl) URL.revokeObjectURL(messageAttachmentPreviewUrl);
+    setMessageAttachmentFile(null);
+    setMessageAttachmentPreviewUrl(null);
+    setMessageAttachmentError("");
+  };
+
+  const pickMessageAttachment = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setMessageAttachmentError("");
+    if (!file.type.startsWith("image/")) {
+      setMessageAttachmentError("写真（JPEG・PNG・WebP・HEIC）を選んでください。");
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      setMessageAttachmentError("写真1枚の上限は20MBです。");
+      return;
+    }
+    if (messageAttachmentPreviewUrl) URL.revokeObjectURL(messageAttachmentPreviewUrl);
+    setMessageAttachmentFile(file);
+    setMessageAttachmentPreviewUrl(URL.createObjectURL(file));
+  };
+
   const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!order) return;
     const body = messageDraft.trim();
-    if (!body) return;
+    if (!body && !messageAttachmentFile) return;
     setSaving(true);
     setError("");
     const supabase = getSupabaseBrowserClient();
+    let attachment: { path: string; mimeType: string; size: number } | null = null;
+    if (messageAttachmentFile) {
+      try {
+        attachment = await uploadMessageAttachment(
+          supabase,
+          order.user_id,
+          order.id,
+          messageAttachmentFile,
+        );
+      } catch (uploadFailure) {
+        setError(
+          uploadFailure instanceof Error
+            ? uploadFailure.message
+            : "写真を送信できませんでした。",
+        );
+        setSaving(false);
+        return;
+      }
+    }
     const { data: sessionData } = await supabase.auth.getSession();
     const response = await fetch("/api/admin/messages", {
       method: "POST",
@@ -3138,7 +3215,13 @@ export function AdminStudio() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${sessionData.session?.access_token ?? ""}`,
       },
-      body: JSON.stringify({ orderId: order.id, body }),
+      body: JSON.stringify({
+        orderId: order.id,
+        body,
+        attachmentPath: attachment?.path,
+        attachmentMimeType: attachment?.mimeType,
+        attachmentSize: attachment?.size,
+      }),
     });
     const result = (await response.json().catch(() => null)) as {
       saved?: boolean;
@@ -3154,6 +3237,7 @@ export function AdminStudio() {
       );
     } else {
       setMessageDraft("");
+      clearMessageAttachment();
       const notifyNote = result.notificationSent
         ? "お客様へメッセージを送り、メールでお知らせしました。"
         : "メッセージは保存しましたが、メール通知を送れませんでした。Resendの設定・送信履歴をご確認ください。";
@@ -5644,7 +5728,21 @@ export function AdminStudio() {
                                 {formatDateTime(message.created_at)}
                               </small>
                             </div>
-                            <p>{message.body}</p>
+                            {message.body && <p>{message.body}</p>}
+                            {message.attachment_path &&
+                              messageAttachmentUrls[message.attachment_path] && (
+                                <a
+                                  className="admin-message-attachment"
+                                  href={messageAttachmentUrls[message.attachment_path]}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <img
+                                    src={messageAttachmentUrls[message.attachment_path]}
+                                    alt="添付写真"
+                                  />
+                                </a>
+                              )}
                             {fromCustomer && message.status === "open" && (
                               <button
                                 className="button button-outline"
@@ -5665,6 +5763,26 @@ export function AdminStudio() {
                     )}
                   </div>
                   <form className="admin-message-form" onSubmit={sendMessage}>
+                    {messageAttachmentPreviewUrl && (
+                      <div className="admin-message-pending-attachment">
+                        <img
+                          src={messageAttachmentPreviewUrl}
+                          alt="送信する写真のプレビュー"
+                        />
+                        <button
+                          type="button"
+                          aria-label="写真を取り消す"
+                          onClick={clearMessageAttachment}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {messageAttachmentError && (
+                      <p className="admin-message-attachment-error">
+                        {messageAttachmentError}
+                      </p>
+                    )}
                     <label>
                       <span>お客様へのメッセージ</span>
                       <textarea
@@ -5682,17 +5800,38 @@ export function AdminStudio() {
                         メール本文には内容を載せず、制作室に新着があることだけをお知らせします。
                       </small>
                     </label>
-                    <button
-                      className="button button-primary"
-                      type="submit"
-                      disabled={saving || !messageDraft.trim()}
-                    >
-                      {saving
-                        ? "送信中…"
-                        : customerInputPending
-                          ? "送信して追加確認へ変更する →"
-                          : "メッセージを送る"}
-                    </button>
+                    <input
+                      ref={messageFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      className="admin-message-file-input"
+                      onChange={pickMessageAttachment}
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    />
+                    <div className="admin-message-form-actions">
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        disabled={saving}
+                        onClick={() => messageFileInputRef.current?.click()}
+                      >
+                        写真を添付
+                      </button>
+                      <button
+                        className="button button-primary"
+                        type="submit"
+                        disabled={
+                          saving || (!messageDraft.trim() && !messageAttachmentFile)
+                        }
+                      >
+                        {saving
+                          ? "送信中…"
+                          : customerInputPending
+                            ? "送信して追加確認へ変更する →"
+                            : "メッセージを送る"}
+                      </button>
+                    </div>
                   </form>
                 </aside>
               </div>

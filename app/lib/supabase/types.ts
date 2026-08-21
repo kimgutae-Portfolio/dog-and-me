@@ -347,6 +347,9 @@ export type OrderMessage = {
   resolved_at: string | null;
   resolved_by: string | null;
   read_at: string | null;
+  attachment_path: string | null;
+  attachment_mime_type: string | null;
+  attachment_size: number | null;
   created_at: string;
 };
 

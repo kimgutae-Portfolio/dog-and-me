@@ -716,7 +716,20 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .chat-widget-thread { flex: 1; min-height: 0; max-height: 330px; margin: 14px 0; }
 .chat-widget-header, .chat-widget-panel > .message-form, .chat-widget-panel > .readonly-preview-note { flex: 0 0 auto; }
 .chat-widget-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.chat-widget-composer-footer small { color: var(--muted); font-size: 8px; }
+.chat-widget-composer-footer-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.chat-widget-composer-footer small { color: var(--muted); font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-widget-file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.chat-widget-attach-button { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; color: var(--forest); background: rgba(48,58,49,.05); cursor: pointer; transition: background .15s ease; }
+.chat-widget-attach-button:hover:not(:disabled) { background: rgba(48,58,49,.1); }
+.chat-widget-attach-button:disabled { opacity: .45; cursor: not-allowed; }
+.chat-widget-attach-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.chat-widget-pending-attachment { position: relative; width: 84px; }
+.chat-widget-pending-attachment img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); display: block; }
+.chat-widget-pending-attachment button { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid rgba(48,58,49,.15); border-radius: 50%; color: var(--muted); background: #fbfaf5; font-size: 13px; line-height: 1; cursor: pointer; box-shadow: 0 4px 10px rgba(20,24,20,.15); }
+.chat-widget-pending-attachment button:hover { color: var(--rust); }
+.chat-widget-attachment-error { margin: 0; color: var(--rust); font-size: 9px; }
+.chat-widget-attachment { display: block; margin-top: 8px; }
+.chat-widget-attachment img { max-width: 100%; width: 160px; border-radius: 10px; display: block; }
 .message-send-button { min-width: 76px; min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 10px; color: #fff; background: var(--forest); font-size: 10px; font-weight: 700; cursor: pointer; transition: transform .15s ease, background .15s ease, opacity .15s ease; }
 .message-send-button:hover:not(:disabled) { background: #26372a; transform: translateY(-1px); }
 .message-send-button:disabled { opacity: .45; cursor: not-allowed; }
@@ -1008,6 +1021,16 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .admin-message-form label > span { font-size: 9px; font-weight: 700; }
 .admin-message-form label > small { color: var(--muted); font-size: 8px; line-height: 1.7; }
 .admin-message-form button { width: 100%; justify-self: stretch; }
+.admin-message-file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.admin-message-form-actions { display: flex; gap: 10px; }
+.admin-message-form-actions button { width: auto; flex: 1; }
+.admin-message-pending-attachment { position: relative; width: 84px; }
+.admin-message-pending-attachment img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); display: block; }
+.admin-message-pending-attachment button { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); background: white; font-size: 13px; line-height: 1; cursor: pointer; box-shadow: 0 4px 10px rgba(20,24,20,.15); }
+.admin-message-pending-attachment button:hover { color: var(--rust); }
+.admin-message-attachment-error { margin: 0; color: var(--rust); font-size: 9px; }
+.admin-message-attachment { display: block; margin-top: 8px; }
+.admin-message-attachment img { max-width: 100%; width: 160px; border-radius: 10px; display: block; }
 .admin-work-list { display: grid; gap: 10px; }
 .admin-work-list article { padding: 17px; display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: 12px; border: 1px solid var(--line); background: white; }
 .admin-work-list article > div { display: grid; gap: 6px; }

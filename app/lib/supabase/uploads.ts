@@ -189,6 +189,43 @@ function safeExtension(file: File) {
   return candidate || (file.type === "image/jpeg" ? "jpg" : "bin");
 }
 
+export type MessageAttachment = {
+  path: string;
+  mimeType: string;
+  size: number;
+};
+
+// ownerUserId must be the order's owner (order.user_id), not the uploader's own
+// id — this matches the path convention every other customer-visible upload
+// uses (final_video, scene_still), which is what lets both the customer and
+// the admin read the file back regardless of which of them sent it.
+export async function uploadMessageAttachment(
+  supabase: SupabaseClient,
+  ownerUserId: string,
+  orderId: string,
+  originalFile: File,
+): Promise<MessageAttachment> {
+  if (
+    (!ALBUM_IMAGE_TYPES.has(originalFile.type) &&
+      !ALBUM_IMAGE_EXTENSIONS.test(originalFile.name)) ||
+    originalFile.size <= 0
+  ) {
+    throw new Error("JPEG、PNG、WebP、HEICの写真を選んでください。");
+  }
+  if (originalFile.size > MAX_LIFETIME_ALBUM_FILE_BYTES) {
+    throw new Error("写真1枚の上限は20MBです。");
+  }
+
+  const file = await normalizeImage(originalFile);
+  const path = `${ownerUserId}/${orderId}/messages/${crypto.randomUUID()}.${safeExtension(file)}`;
+  const { error: uploadError } = await supabase.storage
+    .from("order-assets")
+    .upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
+  if (uploadError) throw uploadError;
+
+  return { path, mimeType: file.type, size: file.size };
+}
+
 export class OrderImageUploadError extends Error {
   fileName: string;
 

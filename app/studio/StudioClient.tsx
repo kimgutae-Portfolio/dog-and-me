@@ -28,7 +28,7 @@ import type {
   RevisionRequest,
 } from "../lib/supabase/types";
 import { ORDER_STATUS_LABELS } from "../lib/supabase/types";
-import { uploadOrderImages } from "../lib/supabase/uploads";
+import { uploadMessageAttachment, uploadOrderImages } from "../lib/supabase/uploads";
 import { ChatWidget } from "./ChatWidget";
 import { MemoryShareManager } from "./MemoryShareManager";
 import {
@@ -770,17 +770,23 @@ export function StudioClient() {
     }
   };
 
-  const sendMessage = async (body: string): Promise<boolean> => {
+  const sendMessage = async (
+    body: string,
+    attachmentFile?: File,
+  ): Promise<boolean> => {
     if (
       !user ||
       !order ||
       order.user_id !== user.id ||
-      !body.trim() ||
+      (!body.trim() && !attachmentFile) ||
       sendingMessage
     )
       return false;
     const trimmedBody = body.trim();
     const optimisticId = `pending-${crypto.randomUUID()}`;
+    const optimisticAttachmentUrl = attachmentFile
+      ? URL.createObjectURL(attachmentFile)
+      : null;
     const optimisticMessage: OrderMessage = {
       id: optimisticId,
       order_id: order.id,
@@ -790,18 +796,49 @@ export function StudioClient() {
       resolved_at: null,
       resolved_by: null,
       read_at: null,
+      // The real path lives in Storage and needs a signed URL; the optimistic
+      // row shows the local blob URL instead so the preview appears instantly.
+      attachment_path: optimisticAttachmentUrl,
+      attachment_mime_type: attachmentFile?.type ?? null,
+      attachment_size: attachmentFile?.size ?? null,
       created_at: new Date().toISOString(),
     };
     setMessages((current) => [...current, optimisticMessage]);
     setSendingMessage(true);
     setError("");
     try {
-      const { data: insertedMessage, error: messageError } = await getSupabaseBrowserClient()
+      const supabase = getSupabaseBrowserClient();
+      let attachment: { path: string; mimeType: string; size: number } | null = null;
+      if (attachmentFile) {
+        try {
+          attachment = await uploadMessageAttachment(
+            supabase,
+            user.id,
+            order.id,
+            attachmentFile,
+          );
+        } catch (uploadFailure) {
+          console.error(uploadFailure);
+          setMessages((current) =>
+            current.filter((message) => message.id !== optimisticId),
+          );
+          setError(
+            uploadFailure instanceof Error
+              ? uploadFailure.message
+              : "写真を送信できませんでした。",
+          );
+          return false;
+        }
+      }
+      const { data: insertedMessage, error: messageError } = await supabase
         .from("messages")
         .insert({
           order_id: order.id,
           sender_id: user.id,
           body: trimmedBody,
+          attachment_path: attachment?.path ?? null,
+          attachment_mime_type: attachment?.mimeType ?? null,
+          attachment_size: attachment?.size ?? null,
         })
         .select("*")
         .single();
@@ -840,6 +877,7 @@ export function StudioClient() {
       setError("メッセージを送信できませんでした。通信状態をご確認ください。");
       return false;
     } finally {
+      if (optimisticAttachmentUrl) URL.revokeObjectURL(optimisticAttachmentUrl);
       setSendingMessage(false);
     }
   };

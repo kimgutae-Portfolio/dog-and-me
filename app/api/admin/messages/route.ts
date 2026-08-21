@@ -8,6 +8,9 @@ export const runtime = "nodejs";
 type MessageRequest = {
   orderId?: unknown;
   body?: unknown;
+  attachmentPath?: unknown;
+  attachmentMimeType?: unknown;
+  attachmentSize?: unknown;
 };
 
 export async function POST(request: NextRequest) {
@@ -31,11 +34,26 @@ export async function POST(request: NextRequest) {
 
   const orderId = typeof payload.orderId === "string" ? payload.orderId.trim() : "";
   const body = typeof payload.body === "string" ? payload.body.trim() : "";
+  const attachmentPath =
+    typeof payload.attachmentPath === "string" && payload.attachmentPath.trim()
+      ? payload.attachmentPath.trim()
+      : null;
+  const attachmentMimeType =
+    typeof payload.attachmentMimeType === "string" && payload.attachmentMimeType.trim()
+      ? payload.attachmentMimeType.trim()
+      : null;
+  const attachmentSize =
+    typeof payload.attachmentSize === "number" && Number.isFinite(payload.attachmentSize)
+      ? payload.attachmentSize
+      : null;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId)) {
     return NextResponse.json({ error: "invalid_order" }, { status: 400 });
   }
-  if (!body || body.length > 3000) {
+  if ((!body && !attachmentPath) || body.length > 3000) {
     return NextResponse.json({ error: "invalid_message" }, { status: 400 });
+  }
+  if (attachmentPath && !attachmentMimeType) {
+    return NextResponse.json({ error: "invalid_attachment" }, { status: 400 });
   }
 
   const userClient = createClient(supabaseUrl, publishableKey, {
@@ -50,6 +68,9 @@ export async function POST(request: NextRequest) {
   const { error: messageError } = await userClient.rpc("admin_send_message", {
     p_order_id: orderId,
     p_body: body,
+    p_attachment_path: attachmentPath,
+    p_attachment_mime_type: attachmentMimeType,
+    p_attachment_size: attachmentSize,
   });
   if (messageError) {
     const forbidden = messageError.message.includes("admin required");
