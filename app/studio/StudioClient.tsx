@@ -448,6 +448,17 @@ export function StudioClient() {
         label: "お支払い内容を確認する",
       };
     }
+    if (
+      ["materials_submitted", "reviewing_materials"].includes(order.status) &&
+      order.photo_analysis_status === "approved"
+    ) {
+      return {
+        title: "物語案を準備しています",
+        copy: "写真とお預かり内容の確認は完了しました。次に、2つの物語案を担当者が準備します。",
+        href: "#messages",
+        label: "担当者へ連絡する",
+      };
+    }
     switch (order.status) {
       case "awaiting_materials":
       case "materials_submitted":
@@ -731,8 +742,26 @@ export function StudioClient() {
         },
       );
       if (saveError) throw saveError;
+      const updatedMemory: OrderMemory = {
+        ...memory,
+        title,
+        when_text: whenText || null,
+        location: location || null,
+        description,
+        updated_at: new Date().toISOString(),
+      };
+      const applySavedMemory = () =>
+        setMemories((current) =>
+          current.map((item) =>
+            item.id === memory.id ? updatedMemory : item,
+          ),
+        );
+      applySavedMemory();
       setNotice(`「${title}」の文章を保存しました。担当者が変更内容を確認します。`);
       await Promise.all([loadDetails(order.id), loadOrders()]);
+      // Keep the confirmed values visible even if a just-started detail fetch
+      // briefly returns its pre-update snapshot.
+      applySavedMemory();
     } catch (caught) {
       console.error(caught);
       setError("物語の文章を保存できませんでした。もう一度お試しください。");
@@ -2308,6 +2337,7 @@ export function StudioClient() {
                         <div>
                           {canManageSourcePhotos ? (
                             <form
+                              key={`${memory.id}-${memory.updated_at}`}
                               className="studio-memory-copy-editor"
                               onSubmit={(event) => void saveMemoryCopy(event, memory)}
                             >
@@ -2531,15 +2561,7 @@ export function StudioClient() {
             />
             )}
 
-            {canOperateOrder && order.status !== "delivered" ? (
-              <MemoryShareManager
-                key={order.id}
-                order={order}
-                delivery={delivery}
-                assets={assets}
-                onChanged={() => loadDetails(order.id)}
-              />
-            ) : !canOperateOrder &&
+            {!canOperateOrder &&
               (order.status !== "delivered" || deliveredTab === "delivery") ? (
               delivery && (
                 <aside className="studio-card readonly-preview-note">

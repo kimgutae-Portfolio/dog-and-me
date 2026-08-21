@@ -486,6 +486,7 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
     personalSite,
     uploads,
     demo,
+    studio,
   ] =
     await Promise.all([
       readFile(
@@ -514,6 +515,7 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
       ),
       readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
       readFile(new URL("app/film/moka-demo/page.tsx", root), "utf8"),
+      readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     ]);
 
   assert.match(migration, /'album_photo'/);
@@ -527,6 +529,14 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
   assert.match(manager, /delete_lifetime_album_photo/);
   assert.match(manager, /写真アルバムと家族共有/);
   assert.doesNotMatch(manager, /GROWING PHOTO ALBUM|STORY SOURCE PHOTOS/);
+  assert.match(
+    studio,
+    /order\.status === "delivered" &&[\s\S]*deliveredTab === "delivery" && \([\s\S]*<MemoryShareManager/,
+  );
+  assert.doesNotMatch(
+    studio,
+    /order\.status !== "delivered" \? \([\s\S]{0,300}<MemoryShareManager/,
+  );
   assert.match(studioMigration, /category in \('source_image', 'album_photo'\)/);
   assert.match(captionMigration, /set album_caption = left\(memory\.description, 120\)/);
   assert.match(filmPage, /redirect\(`\/studio\?order=/);
@@ -1390,11 +1400,17 @@ test("uses story-specific photo sources and lets admins reopen approved photos",
   assert.match(admin, /登録写真\{storyPhotos\.length\}枚/);
   assert.match(admin, /基準写真に選ぶ/);
   assert.match(admin, /makeAdminStoryPhotoPrimary/);
-  assert.match(admin, /このお客様の写真変更を許可する/);
+  assert.match(admin, /このお客様の写真・文章変更を許可する/);
   assert.match(admin, /admin_set_source_photo_change_open/);
   assert.doesNotMatch(admin, /承認を取り消し、追加確認を連絡する/);
   assert.match(studio, /STORY SOURCE REVIEWで承認された写真です/);
-  assert.match(studio, /現在の決済・制作状況にかかわらず写真を変更できます/);
+  assert.match(studio, /現在の決済・制作状況にかかわらず写真と文章を変更できます/);
+  assert.match(
+    studio,
+    /photo_analysis_status === "approved"[\s\S]*title: "物語案を準備しています"/,
+  );
+  assert.match(studio, /写真とお預かり内容の確認は完了しました/);
+  assert.match(studio, /applySavedMemory\(\);[\s\S]*loadDetails\(order\.id\)[\s\S]*applySavedMemory\(\);/);
   assert.match(studio, /order\.source_photo_change_open/);
   assert.doesNotMatch(studio, /写真の変更を相談する/);
   assert.match(css, /\.memory-photo-role/);
@@ -1564,7 +1580,7 @@ test("emails customers only when an administrator sends a studio message", async
   assert.match(studio, /setMessages\(\(current\) => \[\.\.\.current, optimisticMessage\]\)/);
   assert.match(studio, /current[\s\S]*?filter\(\(message\) => message\.order_id === orderId\)[\s\S]*?fetchedMessages\.forEach/);
   assert.match(studio, /message\.id !== optimisticId/);
-  assert.match(studio, /STORY SOURCE REVIEWの承認前まで写真を変更できます/);
+  assert.match(studio, /STORY SOURCE REVIEWの承認前まで写真と文章を変更できます/);
   assert.match(studio, /担当者が写真変更を許可しました/);
   assert.doesNotMatch(studio, /写真の変更を相談する/);
   assert.doesNotMatch(chat, /disabled=\{!messageBody\.trim\(\)\}/);
