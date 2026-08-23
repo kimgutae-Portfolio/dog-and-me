@@ -22,6 +22,8 @@
 - `SUPABASE_SERVICE_ROLE_KEY` — 서버 전용, `NEXT_PUBLIC_` 금지
 - `STRIPE_SECRET_KEY` — Stripe 서버 전용 비밀 키, `NEXT_PUBLIC_` 금지
 - `STRIPE_WEBHOOK_SECRET` — 운영 Webhook 엔드포인트의 서명 비밀
+- `STRIPE_MODE=live` — Production에서는 반드시 `live`; Preview·로컬은 테스트 키와 함께 `test`
+- Production에는 `sk_live_`로 시작하는 키와 라이브 Webhook의 서명 비밀만 등록하고, 테스트 키·테스트 Webhook 비밀을 섞지 않는다.
 - `CRON_SECRET` — 충분히 긴 무작위 문자열
 - Google Search Console은 Cloudflare DNS의 TXT 레코드로 도메인 소유권을 인증한다. HTML 메타 태그용 환경변수는 사용하지 않는다.
 

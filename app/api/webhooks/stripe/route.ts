@@ -2,35 +2,28 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { notifyAdmins } from "../../../lib/adminPush";
+import { getStripeMode, isStripeLiveMode } from "../../../lib/stripe-mode";
 import { getStripeServerClient } from "../../../lib/stripe-server";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
-  const webhookSecrets = [
-    process.env.STRIPE_WEBHOOK_SECRET,
-    process.env.STRIPE_TEST_WEBHOOK_SECRET,
-  ].map((value) => value?.trim()).filter((value): value is string => Boolean(value));
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!signature || webhookSecrets.length === 0 || !supabaseUrl || !serviceRoleKey || !process.env.STRIPE_SECRET_KEY) {
+  if (!signature || !webhookSecret || !supabaseUrl || !serviceRoleKey || !process.env.STRIPE_SECRET_KEY) {
     return NextResponse.json({ error: "server_not_configured" }, { status: 500 });
   }
 
   let event: Stripe.Event;
   try {
     const rawBody = await request.text();
-    const verifiedEvent = webhookSecrets.reduce<Stripe.Event | null>((result, webhookSecret) => {
-      if (result) return result;
-      try {
-        return getStripeServerClient().webhooks.constructEvent(rawBody, signature, webhookSecret);
-      } catch {
-        return null;
-      }
-    }, null);
-    if (!verifiedEvent) throw new Error("invalid_signature");
-    event = verifiedEvent;
+    const expectedLivemode = isStripeLiveMode(getStripeMode());
+    event = getStripeServerClient().webhooks.constructEvent(rawBody, signature, webhookSecret);
+    if (event.livemode !== expectedLivemode) {
+      return NextResponse.json({ error: "stripe_mode_mismatch" }, { status: 400 });
+    }
   } catch {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }

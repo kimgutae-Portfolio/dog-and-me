@@ -1645,9 +1645,11 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
   assert.match(checkout, /order\.payment_status !== "invoice_sent"/);
   assert.match(checkout, /existing\.status === "complete"/);
   assert.match(checkout, /processing: true/);
+  assert.match(checkout, /session\.livemode !== expectedLivemode/);
   assert.doesNotMatch(checkout, /payload\.(amount|price)/);
   assert.match(webhook, /constructEvent\(rawBody, signature, webhookSecret\)/);
-  assert.match(webhook, /STRIPE_TEST_WEBHOOK_SECRET/);
+  assert.match(webhook, /event\.livemode !== expectedLivemode/);
+  assert.doesNotMatch(webhook, /STRIPE_TEST_WEBHOOK_SECRET/);
   assert.match(webhook, /process_stripe_checkout_completed/);
   assert.match(webhook, /charge\.refunded/);
   assert.match(
@@ -1676,5 +1678,6 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
   assert.match(admin, /\/api\/admin\/payment-request/);
   assert.match(envExample, /STRIPE_SECRET_KEY=/);
   assert.match(envExample, /STRIPE_WEBHOOK_SECRET=/);
+  assert.match(envExample, /STRIPE_MODE=test/);
   assert.ok(JSON.parse(packageSource).dependencies.stripe);
 });

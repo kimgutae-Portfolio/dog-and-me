@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { hasCurrentConsent } from "../../../lib/consent";
 import { sendPaymentRequestNotification } from "../../../lib/email/messageNotification";
 import { APPLICATIONS_OPEN, DEFAULT_SITE_ORIGIN } from "../../../lib/site";
+import { getStripeMode, isStripeLiveMode } from "../../../lib/stripe-mode";
 import { getStripeServerClient } from "../../../lib/stripe-server";
 import type { MemoryOrder } from "../../../lib/supabase/types";
 
@@ -34,6 +35,18 @@ export async function POST(request: NextRequest) {
   ) {
     return NextResponse.json(
       { error: "server_not_configured" },
+      { status: 500 },
+    );
+  }
+
+  let expectedLivemode: boolean;
+  try {
+    expectedLivemode = isStripeLiveMode(getStripeMode());
+    getStripeServerClient();
+  } catch (error) {
+    console.error("Stripe mode configuration is invalid", error);
+    return NextResponse.json(
+      { error: "stripe_mode_not_configured" },
       { status: 500 },
     );
   }
@@ -165,7 +178,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data: activeSession, error: activeSessionError } = await admin
+  const { data: activeSessionData, error: activeSessionError } = await admin
     .from("stripe_checkout_sessions")
     .select("*")
     .eq("order_id", order.id)
@@ -184,6 +197,27 @@ export async function POST(request: NextRequest) {
       { error: "checkout_storage_unavailable" },
       { status: 500 },
     );
+  }
+
+
+  let activeSession = activeSessionData;
+  if (
+    activeSession &&
+    activeSession.livemode !== null &&
+    activeSession.livemode !== expectedLivemode
+  ) {
+    const { error: retireError } = await admin
+      .from("stripe_checkout_sessions")
+      .update({ status: "expired", updated_at: new Date().toISOString() })
+      .eq("id", activeSession.id);
+    if (retireError) {
+      console.error("Opposite-mode checkout retirement failed", retireError);
+      return NextResponse.json(
+        { error: "checkout_storage_unavailable" },
+        { status: 500 },
+      );
+    }
+    activeSession = null;
   }
 
   const stripe = getStripeServerClient();
@@ -223,6 +257,7 @@ export async function POST(request: NextRequest) {
       amount: order.quoted_price,
       currency: order.currency.toLowerCase(),
       status: "creating",
+      livemode: expectedLivemode,
     })
     .select("*")
     .single();
@@ -321,6 +356,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (!session.url) throw new Error("checkout_url_missing");
+    if (session.livemode !== expectedLivemode) {
+      throw new Error("stripe_session_mode_mismatch");
+    }
     const { error: saveError } = await admin
       .from("stripe_checkout_sessions")
       .update({
