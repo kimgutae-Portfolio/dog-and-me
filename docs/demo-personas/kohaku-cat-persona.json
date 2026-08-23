@@ -1,0 +1,217 @@
+{
+  "schema_version": "wan-memory-demo-persona-1.0",
+  "persona_id": "cat-kohaku-01",
+  "persona_purpose": "A fictional cat customer persona for testing the full WAN MEMORY storybook, film, personal website, album, and animated character workflow.",
+  "customer": {
+    "display_name": "さき",
+    "age_range": "30代",
+    "household": "ひとり暮らし",
+    "location": "東京都内の静かな住宅街",
+    "relationship_to_pet": "保護猫だったこはくと暮らして6年目",
+    "service_need": "大きな記念日ではなく、毎日の小さな癖や待っていてくれる時間を一つの作品に残したい",
+    "mobile_usage": "スマートフォン中心",
+    "decision_trigger": "完成後も写真を追加でき、こはくだけのホームページとして残せること",
+    "concerns": [
+      "AIで別の猫のような顔にならないか",
+      "縞模様や白い部分が毎場面で変わらないか",
+      "動画修正で追加費用が大きくならないか"
+    ]
+  },
+  "order_input": {
+    "pet_name": "こはく",
+    "name_kana": "コハク",
+    "species": "cat",
+    "breed": "茶トラの日本猫（短毛）",
+    "age_text": "6歳",
+    "sex": "男の子",
+    "purpose": "何気ない毎日を、これからも見返せる物語として残したい",
+    "personality": [
+      "好奇心旺盛",
+      "少し慎重",
+      "甘えん坊",
+      "日なたが好き"
+    ],
+    "first_meeting": "保護猫の譲渡会で、小さな段ボール箱の奥からこちらをじっと見ていたのが最初の出会いでした。",
+    "favorite_memory": "朝の窓辺、紙袋遊び、帰宅を待つ時間など、家の中で繰り返してきた小さな習慣です。",
+    "message_to_pet": "こはくへ。特別なことがない日も、あなたがいるだけで家の中には小さな物語が増えていきました。これからも、好きな場所で安心して眠っていてね。",
+    "avoid_notes": "目を大きくしすぎない。子猫のように頭身を縮めない。縞模様と白い胸元を省略しない。犬のような表情・口元・座り方にしない。",
+    "style": "明るく澄んだ日本の絵本風水彩。室内の自然光と猫の柔らかな短毛を繊細に描く。",
+    "aspect_ratio": "16:9",
+    "narration": "なし",
+    "bgm": "静かなピアノと小さな木琴。猫の落ち着いた時間を邪魔しないテンポ。"
+  },
+  "character_identity": {
+    "species": "cat",
+    "identity_summary": "Natural-proportioned adult orange tabby Japanese cat with amber eyes, short fur, a white chin and chest bib, and white front paw tips.",
+    "face": {
+      "head_shape": "丸すぎない自然な成猫の顔。頬はややふっくらしているが子猫化しない",
+      "eyes": "落ち着いた琥珀色。自然なアーモンド形で、左右の間隔と大きさを誇張しない",
+      "nose": "小さなピンクブラウンの鼻",
+      "muzzle": "白い口元と短いひげ袋。犬のように前へ突き出さない",
+      "ears": "中くらいの立ち耳。先端はわずかに丸く、左右とも前向き"
+    },
+    "body": {
+      "proportions": "細すぎず太りすぎない6歳の成猫。胴はしなやかで脚は自然な長さ",
+      "coat": "短毛の明るい茶トラ。額にM字、頬と脚に細い縞",
+      "white_markings": "あご、胸元、前足のつま先に白",
+      "tail": "長く、先端に向かって濃くなる輪状の縞。軽く上向きに曲がる"
+    },
+    "accessories": {
+      "preserve": "細い深緑色の首輪と、小さな真鍮色の丸い迷子札",
+      "exclude": "ハーネス、リード、服、ブランド文字"
+    },
+    "owner_locked_traits": [
+      "琥珀色の自然なアーモンド形の目",
+      "白いあごから胸元へ続く模様",
+      "長いしっぽの輪状の縞"
+    ],
+    "negative_identity_rules": [
+      "no oversized animation eyes",
+      "no kitten proportions",
+      "no shortened legs",
+      "no fluffy long-haired coat",
+      "no missing tabby stripes",
+      "no dog-like muzzle, panting, sitting posture, or paw shape"
+    ]
+  },
+  "photo_policy": {
+    "recommended": "各物語につき、こはくが大きく写り、顔・体・しっぽ・その場の行動が読み取れる猫だけの写真を1枚選ぶ",
+    "people_policy": "people_fully_removed_no_human_rendering",
+    "contains_people": false,
+    "primary_photo_only": true,
+    "photo_placeholders": [
+      "stories/01-cardboard-home/original/story_01_primary.jpg",
+      "stories/02-rainy-window/original/story_02_primary.jpg",
+      "stories/03-morning-sunbeam/original/story_03_primary.jpg",
+      "stories/04-paper-bag-adventure/original/story_04_primary.jpg",
+      "stories/05-waiting-by-the-door/original/story_05_primary.jpg"
+    ]
+  },
+  "stories": [
+    {
+      "number": 1,
+      "title": "箱の奥で出会った日",
+      "when": "6年前の春",
+      "location": "保護猫の譲渡会",
+      "description": "小さな段ボール箱の奥で、こはくは鳴かずにこちらをじっと見ていました。差し出した指の匂いを一度だけ確かめ、ゆっくり前へ出てきました。",
+      "cat_behavior": "箱の奥から慎重に顔を出し、鼻先を近づけて匂いを確かめる",
+      "primary_photo_brief": "段ボール箱の中またはそばにいる、顔と前足がはっきり見えるこはくだけの写真",
+      "story_caption": "箱の奥から伸ばした鼻先が、ふたりの暮らしの始まりでした。"
+    },
+    {
+      "number": 2,
+      "title": "雨粒を追う窓辺",
+      "when": "梅雨の午後",
+      "location": "リビングの窓辺",
+      "description": "雨の日になると、こはくは窓辺に座り、ガラスを流れる雨粒を目で追います。ときどき前足をそっと伸ばして触れようとします。",
+      "cat_behavior": "窓ガラスを流れる雨粒を視線で追い、片方の前足を静かに上げる",
+      "primary_photo_brief": "雨の窓と、横顔・上げた前足・長いしっぽが確認できる写真",
+      "story_caption": "雨粒を追う静かな午後は、こはくだけの小さな遊び時間です。"
+    },
+    {
+      "number": 3,
+      "title": "朝の四角いひなた",
+      "when": "冬の朝",
+      "location": "寝室の床",
+      "description": "冬の朝、窓から入る四角い光の中へ必ず体を収めます。まぶしそうに目を細め、前足を胸の下へしまって眠ります。",
+      "cat_behavior": "四角い日だまりの中で香箱座りになり、目を細めてうとうとする",
+      "primary_photo_brief": "朝日、香箱座り、顔の縞と白い胸元がよく見える写真",
+      "story_caption": "朝の光が床に届くと、そこはいつもこはくの指定席になります。"
+    },
+    {
+      "number": 4,
+      "title": "紙袋の小さな探検",
+      "when": "休日の夕方",
+      "location": "リビング",
+      "description": "買い物から帰ると、空になった紙袋を誰より先に見つけます。中へ潜り、持ち手の間から顔だけを出してこちらの様子をうかがいます。",
+      "cat_behavior": "紙袋の中へ入り、持ち手の間から顔と片方の前足を出す",
+      "primary_photo_brief": "無地の紙袋から顔を出し、耳・目・前足が隠れすぎていない写真",
+      "story_caption": "空っぽの紙袋も、こはくが入れば秘密の探検場所に変わります。"
+    },
+    {
+      "number": 5,
+      "title": "玄関で待つ夜",
+      "when": "いつもの夜",
+      "location": "家の玄関",
+      "description": "帰宅して鍵を開けると、こはくは少し離れた場所に座って待っています。目が合うと、しっぽを立ててゆっくり近づいてきます。",
+      "cat_behavior": "玄関の奥で座って待ち、目が合うと長いしっぽを立てて歩き出す",
+      "primary_photo_brief": "玄関で待つ全身と、立ち上がったしっぽの形が確認できる猫だけの写真",
+      "story_caption": "扉の向こうで待つ琥珀色の目が、今日も帰る場所を教えてくれます。"
+    }
+  ],
+  "concepts": [
+    {
+      "slot": "A",
+      "title": "こはくが集めた、家の光",
+      "tone": "静かで温かく、最後に帰る場所の安心へつながる",
+      "summary": "箱の暗がりから始まり、雨の窓、朝の日なた、紙袋の隙間、夜の玄関へ。こはくが見つけた家の中の小さな光をたどる物語です。",
+      "scenes": [
+        "薄暗い箱の奥から、こはくが慎重に顔を出す",
+        "青い雨明かりの窓辺で、流れる雨粒へ前足を伸ばす",
+        "白い朝日がつくる四角いひなたで、香箱座りのまま眠る",
+        "夕方の柔らかな光の中、紙袋から顔をのぞかせる",
+        "暖かな玄関灯の下、しっぽを立ててゆっくり歩き出す"
+      ],
+      "selected": true
+    },
+    {
+      "slot": "B",
+      "title": "家の中は、毎日が小さな冒険",
+      "tone": "好奇心と猫らしいユーモアを中心にした軽やかな物語",
+      "summary": "箱、雨粒、日なた、紙袋、玄関。人には見慣れた場所が、こはくの視線では毎日違う冒険になることを描きます。",
+      "scenes": [
+        "箱の入口を確かめながら一歩だけ前へ出る",
+        "雨粒の動きに合わせて視線と前足を動かす",
+        "日なたの形に合わせるように体を丸く収める",
+        "紙袋の音に耳を動かし、持ち手から顔を出す",
+        "扉の音を聞き分け、玄関で静かに出迎える"
+      ],
+      "selected": false
+    }
+  ],
+  "selected_concept": {
+    "slot": "A",
+    "title": "こはくが集めた、家の光"
+  },
+  "personal_website": {
+    "hero_title": "こはくと、五つの光",
+    "hero_subtitle": "茶トラ猫 · 家の中の小さな光をめぐる物語",
+    "album_heading": "こはくの時間を、ひとつの写真帖に。",
+    "closing_letter": "こはくへ。箱の奥で出会った日も、窓辺で眠る今日も、あなたが見つけた小さな光をずっと覚えているよ。",
+    "character_voice": {
+      "cover": [
+        "ここは、ぼくのひなたの場所。",
+        "しっぽの先まで、ちゃんと見てね。"
+      ],
+      "film": [
+        "五つの光が、一つの物語になったよ。",
+        "雨粒の場面は、ぼくのお気に入り。"
+      ],
+      "album": [
+        "箱の写真も、忘れずに見てね。",
+        "写真は横にもめくれるよ。"
+      ],
+      "letter": [
+        "今日も同じ窓辺で待ってるよ。",
+        "最後まで見てくれて、ありがとう。"
+      ]
+    },
+    "character_pose_notes": [
+      "歩行は猫らしく背中を水平に保ち、前後の脚を交互に運ぶ",
+      "待機中はしっぽの先だけをゆっくり動かす",
+      "座る姿勢は前足を平行に置き、犬のような横座りにしない",
+      "休む姿勢は香箱座りまたは自然に丸くなる姿勢を使う",
+      "発話時は口を大きく開けず、耳・目・ひげの小さな動きで表現する"
+    ]
+  },
+  "production_policy": {
+    "storybook_revision_allowance_scenes": 2,
+    "review_video_revision_allowance_scenes": 1,
+    "story_count": 5,
+    "video_seconds_per_story": 5,
+    "estimated_complete_film_seconds": 40,
+    "people_rendering": "remove_all_people_and_reconstruct_the_existing_natural_background",
+    "customer_site_duration": "unlimited",
+    "album_photo_limit": "no_fixed_count_limit_with_fair_use_safeguards"
+  }
+}
