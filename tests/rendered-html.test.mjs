@@ -1022,6 +1022,7 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
     storybookMigration,
     revisionMigration,
     fiveSecondMigration,
+    revisionLimitMigration,
   ] =
     await Promise.all([
       readFile(new URL("app/lib/consent.ts", root), "utf8"),
@@ -1055,13 +1056,20 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
         ),
         "utf8",
       ),
+      readFile(
+        new URL(
+          "supabase/migrations/202608230002_revision_limits_2_1.sql",
+          root,
+        ),
+        "utf8",
+      ),
     ]);
-  assert.match(consent, /terms: "2026-08-17-five-second-stories-v1"/);
+  assert.match(consent, /terms: "2026-08-23-revision-2-1-v1"/);
   assert.match(consent, /privacy: "2026-07-27"/);
-  assert.match(consent, /aiNotice: "2026-08-17-five-second-stories-v1"/);
+  assert.match(consent, /aiNotice: "2026-08-23-revision-2-1-v1"/);
   assert.match(
     terms,
-    /全5物語を各5秒で制作する映像仕様・場面ごとの修正枠・決済・キャンセル案内更新：2026年8月17日（同意版\s*2026-08-17-five-second-stories-v1）/,
+    /絵本2場面・確認映像1場面の修正枠、決済・キャンセル案内更新：2026年8月23日（同意版\s*2026-08-23-revision-2-1-v1）/,
   );
   assert.match(
     privacy,
@@ -1078,6 +1086,8 @@ test("keeps displayed policy dates and stored consent versions aligned", async (
   assert.match(revisionMigration, /order_has_current_consents/);
   assert.match(fiveSecondMigration, /2026-08-17-five-second-stories-v1/);
   assert.match(fiveSecondMigration, /drop function if exists public\.admin_set_expanded_story_slots/);
+  assert.match(revisionLimitMigration, /2026-08-23-revision-2-1-v1/);
+  assert.match(revisionLimitMigration, /order_has_current_consents/);
 });
 
 test("sends customers directly to the current consent record", async () => {
@@ -1096,13 +1106,20 @@ test("sends customers directly to the current consent record", async () => {
   );
 });
 
-test("counts storybook and video revisions as separate three-scene allowances", async () => {
+test("limits storybook and video revisions to separate two-and-one scene allowances", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, studio, admin, types, pricing, terms, legal, css] =
+  const [migration, limits, studio, admin, types, pricing, terms, legal, css] =
     await Promise.all([
       readFile(
         new URL(
           "supabase/migrations/202608170002_scene_based_revision_allowances.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(
+        new URL(
+          "supabase/migrations/202608230002_revision_limits_2_1.sql",
           root,
         ),
         "utf8",
@@ -1116,8 +1133,10 @@ test("counts storybook and video revisions as separate three-scene allowances", 
       readFile(new URL("app/globals.css", root), "utf8"),
     ]);
 
-  assert.match(migration, /alter column revision_limit set default 3/);
-  assert.match(migration, /alter column stills_revision_limit set default 3/);
+  assert.match(limits, /alter column revision_limit set default 1/);
+  assert.match(limits, /alter column stills_revision_limit set default 2/);
+  assert.match(limits, /new\.revision_limit := 1/);
+  assert.match(limits, /new\.stills_revision_limit := 2/);
   assert.match(migration, /p_memory_ids uuid\[\]/);
   assert.match(migration, /revision_used \+ v_scene_count/);
   assert.match(migration, /stills_revision_used \+ v_scene_count/);
@@ -1133,10 +1152,12 @@ test("counts storybook and video revisions as separate three-scene allowances", 
   assert.match(admin, /revision\.scene_count \?\? 1/);
   assert.match(types, /memory_ids: string\[\] \| null/);
   assert.match(types, /scene_count: number \| null/);
-  assert.match(pricing, /絵本3場面まで修正/);
-  assert.match(pricing, /完成映像も3場面まで修正/);
-  assert.match(terms, /合計3場面/);
-  assert.match(legal, /絵本ページと物語文の修正3場面/);
+  assert.match(pricing, /絵本2場面まで修正/);
+  assert.match(pricing, /完成映像は1場面まで修正/);
+  assert.match(terms, /絵本ページと物語文について合計2場面/);
+  assert.match(terms, /確認映像については別に合計1場面/);
+  assert.match(legal, /絵本ページと物語文の修正2場面/);
+  assert.match(legal, /確認映像の修正1場面/);
   assert.match(css, /\.revision-scene-picker/);
 });
 
@@ -1478,7 +1499,8 @@ test("stores storybook page sentences and burns them into the final video", asyn
   assert.doesNotMatch(admin, /10秒にする重要な物語/);
   assert.match(studio, /5つの物語を各5秒で制作/);
   assert.match(studio, /完成約40秒/);
-  assert.match(studio, /絵本と映像はそれぞれ3場面まで修正/);
+  assert.match(studio, /order\.stills_revision_limit/);
+  assert.match(studio, /order\.revision_limit/);
   assert.match(css, /\.stills-story-caption/);
 });
 
@@ -1561,6 +1583,9 @@ test("emails customers only when an administrator sends a studio message", async
   ]);
 
   assert.ok(admin.includes('fetch("/api/admin/messages"'));
+  assert.match(admin, /notifyReviewVideoPublished/);
+  assert.match(admin, /確認映像を公開しました。制作室で映像をご確認ください/);
+  assert.match(admin, /const notification = await notifyReviewVideoPublished\(order\.id\)/);
   assert.match(route, /admin_send_message/);
   assert.match(route, /sendCustomerMessageNotification/);
   assert.doesNotMatch(route, /SUPABASE_SERVICE_ROLE_KEY/);

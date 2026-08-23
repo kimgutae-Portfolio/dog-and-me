@@ -1349,7 +1349,9 @@ export function StudioClient() {
                 <h1>{order.pet_name}ちゃんの制作室</h1>
                 <p>写真の追加から完成まで、ひとつずつ進めます。</p>
                 <small className="studio-plan-summary">
-                  5つの物語を各5秒で制作 · 完成約40秒 · 絵本と映像はそれぞれ3場面まで修正
+                  5つの物語を各5秒で制作 · 完成約40秒 · 絵本
+                  {order.stills_revision_limit}場面・映像
+                  {order.revision_limit}場面まで修正
                 </small>
               </div>
               <div className="order-meta">

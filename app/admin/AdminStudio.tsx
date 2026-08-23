@@ -1558,6 +1558,12 @@ export function AdminStudio() {
     };
   };
 
+  const notifyReviewVideoPublished = (orderId: string) =>
+    notifyCustomerByMessage(
+      orderId,
+      "確認映像を公開しました。制作室で映像をご確認ください。修正をご希望の場合は、確認映像の修正依頼から対象の1場面と内容をお知らせください。",
+    );
+
   const saveConcepts = async () => {
     if (!photoAnalysisApproved) {
       setError(
@@ -2533,8 +2539,13 @@ export function AdminStudio() {
       }
       setNotice("完成映像と専用サイトをお客様へ納品しました。");
     } else {
+      const notification = await notifyReviewVideoPublished(order.id);
       setNotice(
-        "完成前の確認映像を公開しました。注文は納品済みになっていません。",
+        notification.saved
+          ? notification.notificationSent
+            ? "完成前の確認映像を公開し、お客様へチャットとメールでお知らせしました。"
+            : "完成前の確認映像を公開し、チャットでお知らせしました。メール通知は送れませんでした。"
+          : "完成前の確認映像を公開しましたが、お客様への通知に失敗しました。チャットから手動でお知らせしてください。",
       );
     }
     clearVideo();
@@ -3149,7 +3160,14 @@ export function AdminStudio() {
       setSaving(false);
       return;
     }
-    setNotice("確認映像としてお客様へ公開しました。");
+    const notification = await notifyReviewVideoPublished(order.id);
+    setNotice(
+      notification.saved
+        ? notification.notificationSent
+          ? "確認映像を公開し、お客様へチャットとメールでお知らせしました。"
+          : "確認映像を公開し、チャットでお知らせしました。メール通知は送れませんでした。"
+        : "確認映像を公開しましたが、お客様への通知に失敗しました。チャットから手動でお知らせしてください。",
+    );
     await Promise.all([loadOrders(), loadDetails(order.id)]);
     setSaving(false);
   };
@@ -5163,7 +5181,7 @@ export function AdminStudio() {
                     )}
 
                     <p className="admin-operation-note">
-                      編集された映像はお客様には表示されません。内容を確認したうえで「確認映像として公開する」を押すと、お客様の制作室に表示され、進行状況が「完成前の映像をご確認ください」へ進みます。
+                      編集された映像はお客様には表示されません。内容を確認したうえで「確認映像として公開する」を押すと、お客様の制作室に表示され、チャットと登録メールでお知らせします。進行状況は「完成前の映像をご確認ください」へ進みます。
                     </p>
                   </section>
 
@@ -5357,7 +5375,7 @@ export function AdminStudio() {
                             このアップロードでは納品済みになりません。
                           </strong>
                           <span>
-                            お客様の制作室に確認映像を表示し、状態を「完成前の映像をご確認ください」へ進めます。
+                            お客様の制作室に確認映像を表示し、チャットと登録メールでお知らせします。状態は「完成前の映像をご確認ください」へ進みます。
                           </span>
                         </aside>
                         {!canUploadReview && (
