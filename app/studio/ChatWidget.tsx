@@ -42,6 +42,8 @@ export function ChatWidget({
   onMessageReceived,
   onMessagesRead,
   onRefreshMessages,
+  open,
+  onOpenChange,
 }: {
   order: MemoryOrder;
   currentUserId: string;
@@ -52,8 +54,12 @@ export function ChatWidget({
   onMessageReceived: (message: OrderMessage) => void;
   onMessagesRead: () => void;
   onRefreshMessages: () => void;
+  // Controlled from the parent so other UI (e.g. the "担当者へ連絡する" next-action
+  // button) can open this panel imperatively — it used to be an in-page #messages
+  // anchor before this became a floating widget with nothing to scroll to.
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
   const panelId = useId();
   const threadRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -79,11 +85,11 @@ export function ChatWidget({
   useEffect(() => {
     if (!open) return;
     const handleEscape = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") onOpenChange(false);
     };
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [open]);
+  }, [open, onOpenChange]);
 
   useEffect(() => {
     messageReceivedRef.current = onMessageReceived;
@@ -246,7 +252,7 @@ export function ChatWidget({
               aria-label="閉じる"
               onClick={(event) => {
                 event.stopPropagation();
-                setOpen(false);
+                onOpenChange(false);
               }}
             >
               ×
@@ -383,7 +389,7 @@ export function ChatWidget({
               ? "担当者とのメッセージ（未読あり）"
               : "担当者とのメッセージ"
           }
-          onClick={() => setOpen(true)}
+          onClick={() => onOpenChange(true)}
         >
           <span className="chat-widget-toggle-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">

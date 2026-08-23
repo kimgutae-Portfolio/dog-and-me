@@ -118,6 +118,7 @@ export function StudioClient() {
     Record<string, string>
   >({});
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [revisionCategory, setRevisionCategory] = useState("絵の動き");
   const [revisionBody, setRevisionBody] = useState("");
   const [revisionMemoryIds, setRevisionMemoryIds] = useState<string[]>([]);
@@ -1614,9 +1615,19 @@ export function StudioClient() {
                   <h2>{nextAction.title}</h2>
                   <span>{nextAction.copy}</span>
                 </div>
-                <a className="button button-primary" href={nextAction.href}>
-                  {nextAction.label} →
-                </a>
+                {nextAction.href === "#messages" ? (
+                  <button
+                    type="button"
+                    className="button button-primary"
+                    onClick={() => setChatOpen(true)}
+                  >
+                    {nextAction.label} →
+                  </button>
+                ) : (
+                  <a className="button button-primary" href={nextAction.href}>
+                    {nextAction.label} →
+                  </a>
+                )}
               </aside>
             )}
 
@@ -2582,6 +2593,8 @@ export function StudioClient() {
               canOperate={canOperateOrder}
               messages={messages}
               sending={sendingMessage}
+              open={chatOpen}
+              onOpenChange={setChatOpen}
               onSend={sendMessage}
               onMessageReceived={(message) =>
                 setMessages((current) =>
