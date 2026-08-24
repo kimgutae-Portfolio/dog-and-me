@@ -29,7 +29,6 @@ type Props = {
   onAlbumUpload?: (files: File[]) => void;
   onAlbumDelete?: (imageId: string) => void;
   onLoadMore?: () => void;
-  albumManageHref?: string;
   characterSpriteUrl?: string;
   backHref?: string;
   backLabel?: string;
@@ -51,7 +50,6 @@ export function PersonalStorybookSite({
   onAlbumUpload,
   onAlbumDelete,
   onLoadMore,
-  albumManageHref,
   characterSpriteUrl = "",
   backHref = "/",
   backLabel = "WAN MEMORYへ戻る ↗",
@@ -187,14 +185,6 @@ export function PersonalStorybookSite({
                   <strong>{albumBusy ? "写真を追加しています…" : "新しい思い出を追加"}</strong>
                   <small>1枚20MBまで · 一度に50枚まで</small>
                 </label>
-              )}
-              {!canManageAlbum && albumManageHref && (
-                <Link
-                  className="button button-outline lifetime-album-manage-link"
-                  href={albumManageHref}
-                >
-                  写真・ホームページを管理する ↗
-                </Link>
               )}
             </div>
             {albumNotice && (

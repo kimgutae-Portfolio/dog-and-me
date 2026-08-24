@@ -3647,14 +3647,26 @@ export function AdminStudio() {
                     {customer?.full_name || customer?.email || order.user_id}
                   </span>
                 </div>
-                <Link
-                  className="button button-outline"
-                  href={`/studio?order=${order.id}&preview=1`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  顧客画面を閲覧
-                </Link>
+                <div className="admin-title-actions">
+                  {order.status === "delivered" && (
+                    <Link
+                      className="button button-primary"
+                      href={`/studio?order=${order.id}&preview=1&manage=website`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      ホームページを管理
+                    </Link>
+                  )}
+                  <Link
+                    className="button button-outline"
+                    href={`/studio?order=${order.id}&preview=1`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    顧客画面を閲覧
+                  </Link>
+                </div>
               </div>
 
               <div className="admin-workspace">

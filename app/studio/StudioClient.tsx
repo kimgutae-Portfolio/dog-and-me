@@ -145,13 +145,8 @@ export function StudioClient() {
   const paymentResult = searchParams.get("payment");
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      const nextPath = requestedOrderId
-        ? `/studio?order=${encodeURIComponent(requestedOrderId)}`
-        : "/studio";
-      router.replace(`/auth?next=${encodeURIComponent(nextPath)}`);
-    }
-  }, [authLoading, requestedOrderId, router, user]);
+    if (!authLoading && !user) router.replace("/auth?next=/studio");
+  }, [authLoading, router, user]);
 
   const loadOrders = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -359,6 +354,12 @@ export function StudioClient() {
       (searchParams.get("preview") === "1" || !isOrderOwner),
   );
   const canOperateOrder = isOrderOwner && !readOnlyPreview;
+  const canManageDeliveredWebsite = Boolean(
+    order &&
+      profile?.role === "admin" &&
+      order.status === "delivered" &&
+      searchParams.get("manage") === "website",
+  );
   const consentCurrent = order ? hasCurrentConsent(order) : false;
   const effectiveConceptSlot =
     pendingConceptSlot ?? order?.selected_concept_slot ?? null;
@@ -1317,11 +1318,20 @@ export function StudioClient() {
           )}
         </div>
 
-        {readOnlyPreview && (
+        {readOnlyPreview && !canManageDeliveredWebsite && (
           <aside className="studio-preview-banner" role="status">
             <strong>運営用・顧客画面プレビュー</strong>
             <span>
               閲覧専用です。物語案の選択、写真追加、メッセージ、修正、承認、共有設定は操作できません。
+            </span>
+            <Link href="/admin">運営管理へ戻る</Link>
+          </aside>
+        )}
+        {canManageDeliveredWebsite && (
+          <aside className="studio-preview-banner studio-website-management-banner" role="status">
+            <strong>運営用・完成ホームページ管理</strong>
+            <span>
+              URL、掲載写真、写真のひとこと、表示順を運営者として更新できます。変更は公開ホームページへ反映されます。
             </span>
             <Link href="/admin">運営管理へ戻る</Link>
           </aside>
@@ -1426,7 +1436,7 @@ export function StudioClient() {
               </nav>
             )}
 
-            {canOperateOrder &&
+            {(canOperateOrder || canManageDeliveredWebsite) &&
               order.status === "delivered" &&
               deliveredTab === "delivery" && (
               <MemoryShareManager
