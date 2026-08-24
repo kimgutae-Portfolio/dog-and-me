@@ -1248,6 +1248,22 @@ test("approves review videos and dispatches admin push from one server route", a
   assert.match(route, /notificationDelivered/);
 });
 
+test("sends a warm personal-site guide after final delivery", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const admin = await readFile(
+    new URL("app/admin/AdminStudio.tsx", root),
+    "utf8",
+  );
+
+  assert.match(admin, /const notifyFinalDelivery = async/);
+  assert.match(admin, /\.from\("share_links"\)/);
+  assert.match(admin, /ちゃんだけの専用ホームページも公開されました/);
+  assert.match(admin, /写真アルバムには、これからも新しい写真を追加できます/);
+  assert.match(admin, /これから先の思い出もたくさん積み重ねていただけたら嬉しいです/);
+  assert.match(admin, /await notifyFinalDelivery\(order\)/);
+  assert.match(admin, /案内メッセージと通知メールを送りました/);
+});
+
 test("records and enforces consolidated photo-rights and external-service consent", async () => {
   const { readFile } = await import("node:fs/promises");
   const [peopleConsent, story, studio, admin, privacy, terms] = await Promise.all([

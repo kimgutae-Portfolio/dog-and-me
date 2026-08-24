@@ -1564,6 +1564,31 @@ export function AdminStudio() {
       "確認映像を公開しました。制作室で映像をご確認ください。修正をご希望の場合は、確認映像の修正依頼から対象の1場面と内容をお知らせください。",
     );
 
+  const notifyFinalDelivery = async (currentOrder: MemoryOrder) => {
+    const { data: personalSite } = await getSupabaseBrowserClient()
+      .from("share_links")
+      .select("customer_slug,pet_slug")
+      .eq("order_id", currentOrder.id)
+      .eq("active", true)
+      .maybeSingle();
+    const personalSiteUrl =
+      personalSite?.customer_slug && personalSite.pet_slug
+        ? `${window.location.origin}/${encodeURIComponent(personalSite.customer_slug)}/${encodeURIComponent(personalSite.pet_slug)}`
+        : null;
+    const body = [
+      `${currentOrder.pet_name}ちゃんの動く絵本が完成しました。`,
+      "制作室から完成映像をご覧いただけます。",
+      "",
+      `あわせて、${currentOrder.pet_name}ちゃんだけの専用ホームページも公開されました。`,
+      personalSiteUrl ?? "制作室の「YOUR DOG'S WEBSITE」からご覧いただけます。",
+      "",
+      "ホームページの写真アルバムには、これからも新しい写真を追加できます。ご家族みなさまで楽しくご利用いただき、これから先の思い出もたくさん積み重ねていただけたら嬉しいです。",
+      "",
+      "このたびは、WAN MEMORYに大切な物語をお任せいただき、本当にありがとうございました。",
+    ].join("\n");
+    return notifyCustomerByMessage(currentOrder.id, body);
+  };
+
   const saveConcepts = async () => {
     if (!photoAnalysisApproved) {
       setError(
@@ -2537,7 +2562,14 @@ export function AdminStudio() {
         setSaving(false);
         return;
       }
-      setNotice("完成映像と専用サイトをお客様へ納品しました。");
+      const notification = await notifyFinalDelivery(order);
+      setNotice(
+        notification.saved
+          ? notification.notificationSent
+            ? "完成映像と専用サイトを納品し、お客様へ案内メッセージと通知メールを送りました。"
+            : "完成映像と専用サイトを納品し、案内メッセージを送りました。通知メールは送れませんでした。"
+          : "完成映像と専用サイトを納品しましたが、案内メッセージを送れませんでした。チャットから手動でお知らせしてください。",
+      );
     } else {
       const notification = await notifyReviewVideoPublished(order.id);
       setNotice(
@@ -2577,7 +2609,14 @@ export function AdminStudio() {
         "登録済み映像での納品を完了できませんでした。入金・顧客承認・未対応修正をご確認ください。",
       );
     else {
-      setNotice("登録済みの完成映像を使って納品を完了しました。");
+      const notification = await notifyFinalDelivery(order);
+      setNotice(
+        notification.saved
+          ? notification.notificationSent
+            ? "登録済みの完成映像で納品し、お客様へ案内メッセージと通知メールを送りました。"
+            : "登録済みの完成映像で納品し、案内メッセージを送りました。通知メールは送れませんでした。"
+          : "登録済みの完成映像で納品しましたが、案内メッセージを送れませんでした。チャットから手動でお知らせしてください。",
+      );
       await Promise.all([loadOrders(), loadDetails(order.id)]);
     }
     setSaving(false);
@@ -5404,7 +5443,7 @@ export function AdminStudio() {
                             />
                           </label>
                           <label className="wide">
-                            <span>お客様へのメッセージ</span>
+                            <span>専用ホームページに表示するメッセージ</span>
                             <textarea
                               rows={3}
                               value={deliveryMessage}
