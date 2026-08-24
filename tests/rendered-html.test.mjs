@@ -597,6 +597,25 @@ test("character speech waits until customers stop scrolling", async () => {
   assert.match(customerGuide, /addEventListener\("scroll", hideWhileReading/);
 });
 
+test("connects every customer character sprite row to live poses", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [guide, styles] = await Promise.all([
+    readFile(
+      new URL("app/film/[orderId]/CustomerCharacterGuide.tsx", root),
+      "utf8",
+    ),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+
+  assert.match(guide, /poseSequence = \["sit", "tilt", "happy", "wave", "rest", "idle"\]/);
+  assert.match(guide, /data-activity=\{activity\}/);
+  assert.match(guide, /is-\$\{activity\}/);
+  assert.match(styles, /\.customer-character-sprite\.is-sit \{ background-position: 33\.333% 50%;/);
+  assert.match(styles, /\.customer-character-sprite\.is-rest \{ background-position: 100% 100%;/);
+  assert.match(styles, /@keyframes customer-character-speak/);
+  assert.match(styles, /@keyframes customer-character-wave/);
+});
+
 test("uses the default social image when a memory URL is unavailable", async () => {
   const response = await render("/api/memory/share-demo/og");
   assert.equal(response.status, 307);
