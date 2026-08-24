@@ -30,6 +30,7 @@ import type {
 import { ORDER_STATUS_LABELS } from "../lib/supabase/types";
 import { uploadMessageAttachment, uploadOrderImages } from "../lib/supabase/uploads";
 import { ChatWidget } from "./ChatWidget";
+import { AccountDeletion } from "./AccountDeletion";
 import { MemoryShareManager } from "./MemoryShareManager";
 import {
   hasSeenPhotoUploadGuide,
@@ -1298,6 +1299,7 @@ export function StudioClient() {
             <small>ACCOUNT</small>
             <strong>{profile?.full_name || user.email}</strong>
           </div>
+          <AccountDeletion />
           {orders.length > 1 && (
             <label>
               <span>制作中の動く絵本</span>

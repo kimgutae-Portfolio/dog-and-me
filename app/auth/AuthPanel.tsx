@@ -421,6 +421,11 @@ export function AuthPanel() {
                 ? "これからログインに使う新しいパスワードを入力してください。"
               : "写真の追加から完成映像のお届けまで、こちらでご確認いただけます。"}
         </p>
+        {searchParams.get("deleted") === "1" && (
+          <p className="form-success" role="status">
+            退会が完了しました。すべての制作データを削除しました。同じメールアドレスで、いつでも新しく会員登録できます。
+          </p>
+        )}
         {!APPLICATIONS_OPEN && mode === "login" && (
           <p className="auth-prefill-note">
             新規会員登録とお申し込みは現在準備中です。すでに制作室をお持ちの方はログインできます。
