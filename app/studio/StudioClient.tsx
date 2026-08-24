@@ -93,12 +93,13 @@ export function StudioClient() {
   const [messages, setMessages] = useState<OrderMessage[]>([]);
   const [revisions, setRevisions] = useState<RevisionRequest[]>([]);
   const [videoUrl, setVideoUrl] = useState("");
+  const [videoDownloadUrl, setVideoDownloadUrl] = useState("");
   const [reviewVideoUrl, setReviewVideoUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [deliveredTab, setDeliveredTab] = useState<
-    "delivery" | "stills" | "materials"
+    "delivery" | "film" | "stills" | "materials"
   >("delivery");
   const [pendingConceptSlot, setPendingConceptSlot] = useState<
     "A" | "B" | null
@@ -241,6 +242,7 @@ export function StudioClient() {
     });
     setRevisions((revisionResult.data ?? []) as RevisionRequest[]);
     setVideoUrl("");
+    setVideoDownloadUrl("");
     setReviewVideoUrl("");
   }, []);
 
@@ -314,11 +316,22 @@ export function StudioClient() {
 
   useEffect(() => {
     if (!finalAsset) return;
-    getSupabaseBrowserClient()
-      .storage.from("order-assets")
-      .createSignedUrl(finalAsset.storage_path, 3600)
-      .then(({ data }) => setVideoUrl(data?.signedUrl ?? ""));
-  }, [finalAsset]);
+    const supabase = getSupabaseBrowserClient();
+    const downloadName = `wan-memory-${order?.order_number ?? "storybook"}.mp4`;
+    Promise.all([
+      supabase.storage
+        .from("order-assets")
+        .createSignedUrl(finalAsset.storage_path, 3600),
+      supabase.storage
+        .from("order-assets")
+        .createSignedUrl(finalAsset.storage_path, 3600, {
+          download: downloadName,
+        }),
+    ]).then(([playback, download]) => {
+      setVideoUrl(playback.data?.signedUrl ?? "");
+      setVideoDownloadUrl(download.data?.signedUrl ?? "");
+    });
+  }, [finalAsset, order?.order_number]);
 
   useEffect(() => {
     if (!reviewAsset) return;
@@ -536,12 +549,7 @@ export function StudioClient() {
               label: "担当者へ連絡する",
             };
       case "delivered":
-        return {
-          title: "完成した動く絵本をお届け",
-          copy: "動く絵本と写真アルバムを、専用サイトでいつでも見返せます。",
-          href: "#delivery",
-          label: "完成映像を見る",
-        };
+        return null;
       case "cancelled":
         return {
           title: "このご相談は停止中です",
@@ -1169,17 +1177,6 @@ export function StudioClient() {
     setSendingStillsChange(false);
   };
 
-  const showDeliveredFilm = () => {
-    setDeliveredTab("delivery");
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        document
-          .getElementById("delivery")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    });
-  };
-
   if (authLoading || loading || !user)
     return <div className="wizard-loading">制作室を準備しています…</div>;
 
@@ -1429,6 +1426,15 @@ export function StudioClient() {
                 <button
                   type="button"
                   role="tab"
+                  aria-selected={deliveredTab === "film"}
+                  onClick={() => setDeliveredTab("film")}
+                >
+                  <small>COMPLETE FILM</small>
+                  <strong>完成映像</strong>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
                   aria-selected={deliveredTab === "stills"}
                   onClick={() => setDeliveredTab("stills")}
                 >
@@ -1656,14 +1662,6 @@ export function StudioClient() {
                     type="button"
                     className="button button-primary"
                     onClick={() => setChatOpen(true)}
-                  >
-                    {nextAction.label} →
-                  </button>
-                ) : order.status === "delivered" ? (
-                  <button
-                    type="button"
-                    className="button button-primary"
-                    onClick={showDeliveredFilm}
                   >
                     {nextAction.label} →
                   </button>
@@ -2345,7 +2343,7 @@ export function StudioClient() {
             )}
 
             {delivery &&
-              (order.status !== "delivered" || deliveredTab === "delivery") && (
+              (order.status !== "delivered" || deliveredTab === "film") && (
               <section className="delivery-card" id="delivery">
                 <div>
                   <p className="eyebrow light">
@@ -2356,24 +2354,33 @@ export function StudioClient() {
                     {delivery.customer_message ||
                       `${order.pet_name}ちゃんとの時間を、一冊のような動く物語に仕上げました。`}
                   </p>
-                  <a className="button button-cream" href="#personal-homepage">
-                    専用ホームページと写真管理へ ↑
-                  </a>
+                  {videoDownloadUrl ? (
+                    <a
+                      className="button button-cream"
+                      href={videoDownloadUrl}
+                      download={`wan-memory-${order.order_number}.mp4`}
+                    >
+                      完成映像をダウンロード ↓
+                    </a>
+                  ) : (
+                    <button className="button button-cream" type="button" disabled>
+                      ダウンロードを準備しています…
+                    </button>
+                  )}
                 </div>
                 <div className="delivery-player">
                   {videoUrl ? (
                     <video
                       src={videoUrl}
                       controls
-                      controlsList="nodownload noplaybackrate"
+                      controlsList="noplaybackrate"
                       disablePictureInPicture
                       playsInline
-                      onContextMenu={(event) => event.preventDefault()}
                     />
                   ) : (
                     <span>映像を準備しています…</span>
                   )}
-                  <small>閲覧専用 · ダウンロードボタンは表示されません</small>
+                  <small>MP4形式の完成映像を保存できます</small>
                 </div>
               </section>
             )}
