@@ -1,4 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { sendAdminReviewApprovedNotification } from "./email/messageNotification";
+import { DEFAULT_SITE_ORIGIN } from "./site";
 import { sendWebPushNotification } from "./webPush";
 
 export type AdminPushEventType =
@@ -88,7 +90,7 @@ export async function notifyAdmins({
     admin.from("orders").select("id,pet_name,order_number").eq("id", orderId).maybeSingle(),
     (() => {
       const targetId = process.env.ADMIN_PUSH_TARGET_USER_ID?.trim();
-      let query = admin.from("profiles").select("id").eq("role", "admin");
+      let query = admin.from("profiles").select("id,email").eq("role", "admin");
       if (targetId) query = query.eq("id", targetId);
       return query;
     })(),
@@ -97,7 +99,7 @@ export async function notifyAdmins({
   if (!profiles?.length) return { notified: 0, notificationIds: [], reason: "no_admin" };
 
   const config = vapidConfig();
-  const origin = (process.env.SITE_ORIGIN || "https://kimi-to-no-eiga.ggutae0.chatgpt.site").replace(/\/+$/, "");
+  const origin = (process.env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN).replace(/\/+$/, "");
   const href = `${origin}/admin?order=${encodeURIComponent(orderId)}`;
   const dedupeKey = `${type}:${orderId}:${eventKey?.trim() || "event"}`;
   const title = copy.title;
@@ -105,13 +107,28 @@ export async function notifyAdmins({
   const notificationIds: string[] = [];
   let notified = 0;
 
-  for (const profile of profiles as Array<{ id: string }>) {
+  for (const profile of profiles as Array<{ id: string; email: string | null }>) {
     const { data: existing } = await admin
       .from("admin_notifications")
       .select("id,push_status")
       .eq("admin_user_id", profile.id)
       .eq("dedupe_key", dedupeKey)
       .maybeSingle();
+
+    if (type === "review_approved" && profile.email) {
+      try {
+        await sendAdminReviewApprovedNotification({
+          to: profile.email,
+          petName: order.pet_name,
+          orderNumber: order.order_number,
+          adminUrl: href,
+          idempotencyKey: `review-approved-${orderId}-${eventKey?.trim() || "event"}-${profile.id}`,
+        });
+      } catch {
+        // Approval is authoritative even when the optional email provider is unavailable.
+      }
+    }
+
     if (existing?.push_status === "sent") {
       notificationIds.push(existing.id);
       continue;
