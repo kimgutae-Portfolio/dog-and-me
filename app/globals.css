@@ -2220,6 +2220,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .moka-album-grid li { margin: 0 0 16px; break-inside: avoid; }
 .moka-album-grid figure { margin: 0; padding: 10px 10px 14px; background: #fffaf2; box-shadow: 0 15px 36px rgba(70,55,45,.09); }
 .moka-album-grid img { width: 100%; height: auto; display: block; }
+.album-photo-open { width: 100%; padding: 0; display: block; overflow: hidden; border: 0; background: #ddd6cb; cursor: zoom-in; }
 .moka-album-grid figcaption { padding: 12px 3px 0; display: flex; align-items: baseline; gap: 11px; color: #59534c; font-family: var(--font-serif); font-size: 14px; }
 .moka-album-grid figcaption span { color: #a16f70; font-family: var(--font-sans); font-size: 7px; letter-spacing: .14em; }
 .lifetime-album-head { margin: -10px 0 44px auto; display: flex; align-items: end; justify-content: space-between; gap: 32px; }
@@ -2251,6 +2252,16 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .personal-storybook-year { color: rgba(255,255,255,.52); font-size: 8px; letter-spacing: .14em; }
 .personal-storybook-site .moka-cover-copy h1 { max-width: 720px; text-wrap: balance; }
 .personal-storybook-site .moka-album-grid img { user-select: none; }
+.album-lightbox { position: fixed; z-index: 1000; inset: 0; padding: max(64px,env(safe-area-inset-top)) 72px max(40px,env(safe-area-inset-bottom)); display: grid; place-items: center; color: white; background: rgba(24,24,22,.94); backdrop-filter: blur(16px); }
+.album-lightbox figure { max-width: min(1100px,calc(100vw - 144px)); max-height: calc(100svh - 104px); margin: 0; display: grid; justify-items: center; gap: 14px; }
+.album-lightbox figure img { max-width: 100%; max-height: calc(100svh - 156px); display: block; object-fit: contain; box-shadow: 0 22px 70px rgba(0,0,0,.34); user-select: none; }
+.album-lightbox figcaption { max-width: min(760px,100%); color: rgba(255,255,255,.82); font-family: var(--font-serif); font-size: 13px; line-height: 1.7; text-align: center; }
+.album-lightbox figcaption span { margin-right: 12px; color: #d9aba5; font-family: var(--font-sans); font-size: 8px; letter-spacing: .14em; }
+.album-lightbox-close, .album-lightbox-arrow { position: absolute; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.3); border-radius: 50%; color: white; background: rgba(255,255,255,.08); cursor: pointer; }
+.album-lightbox-close { width: 46px; height: 46px; right: max(20px,env(safe-area-inset-right)); top: max(20px,env(safe-area-inset-top)); font-size: 25px; font-weight: 200; }
+.album-lightbox-arrow { width: 52px; height: 52px; top: 50%; font-size: 34px; transform: translateY(-50%); }
+.album-lightbox-arrow.previous { left: 18px; }
+.album-lightbox-arrow.next { right: 18px; }
 .moka-guide-layer { position: fixed; z-index: 90; inset: auto 0 12px; height: 210px; overflow: hidden; pointer-events: none; }
 .moka-guide { width: 174px; height: 174px; position: absolute; left: 0; bottom: 0; will-change: transform; pointer-events: auto; }
 .moka-guide-character { width: 174px; height: 174px; padding: 0; position: relative; display: block; overflow: hidden; border: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 10px 9px rgba(43,35,29,.2)); }
@@ -2443,7 +2454,17 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .moka-album-grid::-webkit-scrollbar { display: none; }
   .moka-album-grid li { width: calc(100vw - 56px); min-width: calc(100vw - 56px); margin: 0; scroll-snap-align: start; scroll-snap-stop: always; }
   .moka-album-grid figure { height: 100%; display: flex; flex-direction: column; }
+  .moka-album-grid .album-photo-open { aspect-ratio: 3/4; }
+  .moka-album-grid .album-photo-open img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
   .moka-album-grid figcaption { margin-top: auto; }
+  .album-lightbox { padding: max(58px,env(safe-area-inset-top)) 12px max(24px,env(safe-area-inset-bottom)); }
+  .album-lightbox figure { max-width: 100%; max-height: calc(100svh - 82px); gap: 12px; }
+  .album-lightbox figure img { max-width: 100%; max-height: calc(100svh - 132px); }
+  .album-lightbox figcaption { padding: 0 38px; font-size: 12px; }
+  .album-lightbox-close { width: 44px; height: 44px; right: 12px; top: max(10px,env(safe-area-inset-top)); }
+  .album-lightbox-arrow { width: 44px; height: 44px; top: auto; bottom: max(18px,env(safe-area-inset-bottom)); z-index: 2; background: rgba(35,35,33,.72); }
+  .album-lightbox-arrow.previous { left: 12px; }
+  .album-lightbox-arrow.next { right: 12px; }
   .moka-letter { min-height: 460px; padding: 70px 24px; }
   .moka-footer { padding: 28px 18px; align-items: stretch; flex-direction: column; gap: 24px; }
   .personal-storybook-year { align-self: center; }

@@ -3,7 +3,13 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import { ChangeEvent } from "react";
+import {
+  ChangeEvent,
+  TouchEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { CustomerCharacterGuide } from "../film/[orderId]/CustomerCharacterGuide";
 
 export type AlbumImage = {
@@ -58,6 +64,8 @@ export function PersonalStorybookSite({
     (image) => image.kind === "scene_still",
   );
   const albumImages = images.filter((image) => image.kind !== "scene_still");
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const swipeStartX = useRef<number | null>(null);
   const heroImage = storybookPages[0]?.url ?? albumImages[0]?.url;
   const photoAlbumTotal = Math.max(0, albumTotal - storybookPages.length);
   const hasMoreImages = images.length < albumTotal;
@@ -66,6 +74,49 @@ export function PersonalStorybookSite({
     event.target.value = "";
     if (files.length) onAlbumUpload?.(files);
   };
+  const lightboxImage =
+    lightboxIndex === null ? null : albumImages[lightboxIndex] ?? null;
+  const moveLightbox = (direction: -1 | 1) => {
+    if (albumImages.length < 2) return;
+    setLightboxIndex((current) =>
+      current === null
+        ? 0
+        : (current + direction + albumImages.length) % albumImages.length,
+    );
+  };
+  const startLightboxSwipe = (event: TouchEvent<HTMLDivElement>) => {
+    swipeStartX.current = event.touches[0]?.clientX ?? null;
+  };
+  const finishLightboxSwipe = (event: TouchEvent<HTMLDivElement>) => {
+    const startX = swipeStartX.current;
+    swipeStartX.current = null;
+    if (startX === null) return;
+    const distance = event.changedTouches[0]?.clientX - startX;
+    if (Math.abs(distance) < 48) return;
+    moveLightbox(distance < 0 ? 1 : -1);
+  };
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLightboxIndex(null);
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        const direction = event.key === "ArrowLeft" ? -1 : 1;
+        setLightboxIndex((current) =>
+          current === null || albumImages.length < 2
+            ? current
+            : (current + direction + albumImages.length) % albumImages.length,
+        );
+      }
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [albumImages.length, lightboxIndex]);
 
   return (
     <main className="moka-demo personal-storybook-site">
@@ -196,13 +247,20 @@ export function PersonalStorybookSite({
               {albumImages.map((image, index) => (
                 <li key={image.id}>
                   <figure>
-                    <img
-                      src={image.url}
-                      alt={`${petName}の思い出写真 ${index + 1}`}
-                      loading="lazy"
-                      draggable={false}
-                      onContextMenu={(event) => event.preventDefault()}
-                    />
+                    <button
+                      className="album-photo-open"
+                      type="button"
+                      onClick={() => setLightboxIndex(index)}
+                      aria-label={`${petName}の思い出写真 ${index + 1}を大きく見る`}
+                    >
+                      <img
+                        src={image.url}
+                        alt={`${petName}の思い出写真 ${index + 1}`}
+                        loading="lazy"
+                        draggable={false}
+                        onContextMenu={(event) => event.preventDefault()}
+                      />
+                    </button>
                     <figcaption>
                       <span>{String(index + 1).padStart(2, "0")}</span>
                       <span className="album-photo-copy">
@@ -263,6 +321,67 @@ export function PersonalStorybookSite({
           spriteUrl={characterSpriteUrl}
           petName={petName}
         />
+      )}
+
+      {lightboxImage && lightboxIndex !== null && (
+        <div
+          className="album-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${petName}の写真を拡大表示`}
+          onClick={() => setLightboxIndex(null)}
+          onTouchStart={startLightboxSwipe}
+          onTouchEnd={finishLightboxSwipe}
+        >
+          <button
+            className="album-lightbox-close"
+            type="button"
+            onClick={() => setLightboxIndex(null)}
+            aria-label="写真を閉じる"
+          >
+            ×
+          </button>
+          {albumImages.length > 1 && (
+            <button
+              className="album-lightbox-arrow previous"
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                moveLightbox(-1);
+              }}
+              aria-label="前の写真を見る"
+            >
+              ‹
+            </button>
+          )}
+          <figure onClick={(event) => event.stopPropagation()}>
+            <img
+              src={lightboxImage.url}
+              alt={`${petName}の思い出写真 ${lightboxIndex + 1}`}
+              draggable={false}
+              onContextMenu={(event) => event.preventDefault()}
+            />
+            <figcaption>
+              <span>
+                {String(lightboxIndex + 1).padStart(2, "0")} / {String(albumImages.length).padStart(2, "0")}
+              </span>
+              {lightboxImage.caption || `${petName}との思い出`}
+            </figcaption>
+          </figure>
+          {albumImages.length > 1 && (
+            <button
+              className="album-lightbox-arrow next"
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                moveLightbox(1);
+              }}
+              aria-label="次の写真を見る"
+            >
+              ›
+            </button>
+          )}
+        </div>
       )}
     </main>
   );
