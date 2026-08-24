@@ -161,7 +161,10 @@ export function SharedMemorySite({
       albumTotal={memory.album_total}
       albumBusy={loadingMore}
       onLoadMore={loadedImageCount < memory.album_total ? loadMoreImages : undefined}
+      albumManageHref={`/studio?order=${encodeURIComponent(memory.order.id)}`}
       characterSpriteUrl={characterSpriteUrl}
+      backHref={`/studio?order=${encodeURIComponent(memory.order.id)}`}
+      backLabel="ホームページを管理する ↗"
     />
   );
 }

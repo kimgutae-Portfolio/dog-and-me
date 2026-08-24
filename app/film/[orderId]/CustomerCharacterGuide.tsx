@@ -40,7 +40,6 @@ export function CustomerCharacterGuide({ spriteUrl, petName }: { spriteUrl: stri
     if (!guide) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       guide.style.transform = "translate3d(18px,0,0)";
-      setActivity("idle");
       return;
     }
     let x = Math.min(window.innerWidth * .68, window.innerWidth - 190);

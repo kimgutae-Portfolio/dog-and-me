@@ -145,8 +145,13 @@ export function StudioClient() {
   const paymentResult = searchParams.get("payment");
 
   useEffect(() => {
-    if (!authLoading && !user) router.replace("/auth?next=/studio");
-  }, [authLoading, router, user]);
+    if (!authLoading && !user) {
+      const nextPath = requestedOrderId
+        ? `/studio?order=${encodeURIComponent(requestedOrderId)}`
+        : "/studio";
+      router.replace(`/auth?next=${encodeURIComponent(nextPath)}`);
+    }
+  }, [authLoading, requestedOrderId, router, user]);
 
   const loadOrders = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -263,10 +268,6 @@ export function StudioClient() {
     () => orders.find((item) => item.id === selectedOrderId) ?? null,
     [orders, selectedOrderId],
   );
-
-  useEffect(() => {
-    setDeliveredTab("delivery");
-  }, [selectedOrderId]);
 
   useEffect(() => {
     if (paymentResult !== "success" || !user) return;
@@ -1295,6 +1296,7 @@ export function StudioClient() {
                 value={selectedOrderId}
                 onChange={(event) => {
                   setSelectedOrderId(event.target.value);
+                  setDeliveredTab("delivery");
                   setPendingConceptSlot(null);
                   setConceptReceipt(null);
                   setApprovalChecked(false);
