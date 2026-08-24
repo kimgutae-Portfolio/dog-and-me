@@ -1169,6 +1169,17 @@ export function StudioClient() {
     setSendingStillsChange(false);
   };
 
+  const showDeliveredFilm = () => {
+    setDeliveredTab("delivery");
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document
+          .getElementById("delivery")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  };
+
   if (authLoading || loading || !user)
     return <div className="wizard-loading">制作室を準備しています…</div>;
 
@@ -1645,6 +1656,14 @@ export function StudioClient() {
                     type="button"
                     className="button button-primary"
                     onClick={() => setChatOpen(true)}
+                  >
+                    {nextAction.label} →
+                  </button>
+                ) : order.status === "delivered" ? (
+                  <button
+                    type="button"
+                    className="button button-primary"
+                    onClick={showDeliveredFilm}
                   >
                     {nextAction.label} →
                   </button>
