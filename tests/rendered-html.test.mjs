@@ -846,13 +846,20 @@ test("keeps customer and admin work practical and safe on mobile", async () => {
   assert.match(admin, /id="admin-photos"/);
   assert.match(admin, /構成案作成データをダウンロード/);
   assert.match(admin, /絵本画像制作データをダウンロード/);
+  assert.match(admin, /工程別のAI制作データ/);
+  assert.match(admin, /動画制作へ進む/);
+  assert.match(admin, /動画生成AI用プロンプト5本/);
+  assert.doesNotMatch(
+    admin,
+    /工程別のCodex制作データ|Runway制作へ進む|Codex에서 받은 구성안|STORY · Gen-4|Gen-4 · 5秒/,
+  );
   assert.match(admin, /storage\s*\.from\("order-assets"\)\s*\.download/);
   assert.match(admin, /import\("fflate"\)/);
   assert.match(admin, /photo-manifest\.json/);
   assert.doesNotMatch(admin, /createLandscape16x9/);
   assert.doesNotMatch(admin, /runway_16x9/);
   assert.doesNotMatch(admin, /runway_16x9_archive_path/);
-  assert.match(admin, /requested_gpt_output/);
+  assert.match(admin, /requested_ai_output/);
   assert.match(admin, /source_photos/);
   assert.match(admin, /wan-memory-storybook-production-export-4\.1/);
   assert.match(
@@ -1199,7 +1206,7 @@ test("records first-ten production metrics through an admin-only RPC", async () 
   assert.match(migration, /production metrics must be nonnegative/);
   assert.match(migration, /production_metrics_saved/);
   assert.match(admin, /FIRST 10 METRICS/);
-  assert.match(admin, /Runway使用クレジット/);
+  assert.match(admin, /動画制作ツール使用クレジット/);
   assert.match(admin, /rpc\(\s*"admin_save_production_metrics"/);
   assert.match(types, /runway_credits_used: number/);
 });
@@ -1303,7 +1310,7 @@ test("stores exactly five stories with required scene photos", async () => {
   assert.match(story, /prune_order_memories/);
   assert.match(story, /save_order_production_fields/);
   assert.match(uploads, /const fileKey = `\$\{file\.name\}:\$\{file\.size\}`/);
-  assert.match(admin, /Runway制作データをダウンロード/);
+  assert.match(admin, /動画制作データをダウンロード/);
   assert.match(admin, /primary_scene_source/);
   assert.match(studio, /studio-memory-list/);
   assert.match(studio, /studio-story-photo-add/);

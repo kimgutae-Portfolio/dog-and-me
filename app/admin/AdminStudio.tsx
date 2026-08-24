@@ -179,12 +179,12 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
   version: "3.1",
   prompt_filename: "MEMORY_STORYBOOK_PRODUCTION_v3_1.txt",
   source_photo_policy:
-    "Use only the one administrator-selected primary customer photo for each story as its identity-locked reference in the original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories; never add unselected photos, pad, blur, crop, or send the raw photo directly to Runway.",
+    "Use only the one administrator-selected primary customer photo for each story as its identity-locked reference in the original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories; never add unselected photos, pad, blur, crop, or send the raw photo directly to the video generation tool.",
   page_image_policy:
     "Keep the dog as faithful as possible to the primary reference while recomposing the scene into a new 16:9 watercolor-and-gouache storybook page. Remove every person completely and reconstruct the vacated area as a simple, natural continuation of the existing environment without adding replacement objects.",
   story_pages: {
     count: 5,
-    model: "gen4",
+    model: "video_generation_ai",
     duration_seconds: 5,
     duration_rule:
       "Every story is produced as one continuous 5-second clip. No story selection or extended clip is used.",
@@ -197,7 +197,7 @@ const CONCEPT_PROPOSAL_PROMPT = `WAN MEMORY STORY CONCEPT PROPOSAL v1.0
 첨부한 order.json과 stories/01~05에 각각 한 장씩 들어 있는 관리자가 선택한 메인 사진만 읽고 고객에게 제시할 구성안 A와 B를 작성해줘.
 
 규칙
-- 아직 그림, 이미지 생성 프롬프트, Runway 프롬프트를 만들지 않는다.
+- 아직 그림, 이미지 생성 프롬프트, 영상 생성 프롬프트를 만들지 않는다.
 - 고객이 제공한 5개 이야기를 모두 포함한다.
 - 각 이야기의 메인 사진 1장만 참고하고, 미선택 사진이나 다른 이야기의 사진을 보조 자료로 추론하지 않는다.
 - 고객이 제공하지 않은 사람, 장소, 사건, 감정을 사실처럼 추가하지 않는다.
@@ -232,7 +232,7 @@ style_reference.png에 등장하는 강아지, 체형, 포즈, 목줄, 벚꽃, �
 - style_reference.png는 색감, 수채 표현, 선묘, 종이 질감, 배경 묘사 방식에만 사용한다.
 - 각 이야기마다 원본 사진을 직접 변형한 이미지가 아닌 새로운 16:9 그림책 페이지 이미지 1장을 제작한다.
 - 원본 사진의 종횡비는 그대로 읽고, 크롭·패딩·블러 확장 없이 새로운 16:9 장면으로 재구성한다.
-- 이번 단계에서는 Runway, Gen-4 또는 영상 생성 프롬프트를 작성하지 않는다.
+- 이번 단계에서는 영상 생성 프롬프트를 작성하지 않는다.
 
 입력 이미지 역할
 - Image 1: primary reference
@@ -397,11 +397,11 @@ story_caption 규칙
   "embedded_text_check": "passed"
 }`;
 
-const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v4.0
+const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.1
 
 첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
 
-이야기 1~5를 각각 하나의 5초 Gen-4 프롬프트로 작성한다. 총 5개의 이미지 투 비디오 프롬프트를 Runway가 명확하게 이해하도록 영어로 작성한다. 메인 에피소드나 중요 이야기를 별도로 고르지 않으며, 모든 이야기는 동일한 5초 규격이다.
+이야기 1~5를 각각 하나의 5초 영상 생성 프롬프트로 작성한다. 총 5개의 이미지 투 비디오 프롬프트를 범용 영상 생성 AI가 명확하게 이해하도록 영어로 작성한다. 메인 에피소드나 중요 이야기를 별도로 고르지 않으며, 모든 이야기는 동일한 5초 규격이다.
 
 한 이야기를 여러 take로 분리하지 않는다. 연결 배경 이미지와 연결 영상은 만들지 않는다. 각 5초 영상 안에서 하나의 작고 분명한 행동이 시작되어 자연스럽게 안정되는 흐름으로 설계한다.
 
@@ -460,7 +460,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v4.0
 - 이미지 전체가 미끄러지는 평면 이동으로 강아지 동작을 대신하는 연출
 
 전체 5개 프롬프트 검수
-- gen4_story_prompts 배열이 정확히 5개이고 이야기 1~5가 각각 한 번씩 포함되는가?
+- video_story_prompts 배열이 정확히 5개이고 이야기 1~5가 각각 한 번씩 포함되는가?
 - 모든 이야기의 duration_seconds가 5인가?
 - 하나의 이야기가 여러 take로 나뉘지 않았는가?
 - 각 이야기에서 하나의 primary action이 5초 안에 자연스럽게 시작되고 안정되는가?
@@ -472,7 +472,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v4.0
 
 반환 형식
 {
-  "gen4_story_prompts": [
+  "video_story_prompts": [
     {
       "story_number": 1,
       "title": "",
@@ -492,7 +492,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY RUNWAY MOTION PROMPT PRODUCTION v4.0
   ]
 }
 
-gen4_story_prompts 배열은 정확히 5개이며 모든 이야기는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
+video_story_prompts 배열은 정확히 5개이며 모든 이야기는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
 
 const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.2
 
@@ -1494,7 +1494,7 @@ export function AdminStudio() {
       setError("制作メモを保存できませんでした。入力内容をご確認ください。");
     else {
       setNotice(
-        "制作時間・Runway使用量を記録しました。初期10組の原価検証に利用できます。",
+        "制作時間・動画制作ツール使用量を記録しました。初期10組の原価検証に利用できます。",
       );
       await loadOrders();
     }
@@ -1774,12 +1774,12 @@ export function AdminStudio() {
         main_motif: null,
         main_motif_instruction:
           "Derive one visual motif from this story without adding customer facts.",
-        runway_clip_count: 1,
+        video_clip_count: 1,
         output: {
           page_image_filename: `${storyId}.png`,
-          runway_clip_filenames: [`${storyId}.mp4`],
-          runway_model: "gen4",
-          runway_duration_seconds: 5,
+          video_clip_filenames: [`${storyId}.mp4`],
+          video_generation_model: "video_generation_ai",
+          video_duration_seconds: 5,
         },
       };
     });
@@ -1815,8 +1815,8 @@ export function AdminStudio() {
       transitions,
       output_plan: {
         story_count: stories.length,
-        runway_clip_count: stories.length,
-        story_model: "gen4",
+        video_clip_count: stories.length,
+        story_model: "video_generation_ai",
         story_duration_seconds: 5,
         total_story_video_seconds: stories.length * 5,
         story_duration_policy:
@@ -1896,14 +1896,14 @@ export function AdminStudio() {
       additional_customer_requests: messages
         .filter((message) => message.sender_id === order.user_id)
         .map((message) => message.body),
-      requested_gpt_output: {
+      requested_ai_output: {
         current_stage:
           "Read job, style, production_protocol, and stories first. Use only the one administrator-selected primary photo supplied for each story, lock the dog's identity to that original-aspect-ratio photo, and create five new 16:9 storybook page images. Do not seek or infer supporting photos. Do not create bridge backgrounds or transition videos; the editor turns directly from one approved story page to the next.",
         required_sections: [
           "memory_storybook_production_checklist",
           "story_source_checklist",
           "story_page_image_plan",
-          "gen4_scene_prompts",
+          "video_scene_prompts",
           "missing_information_only_if_blocking",
           "people_photo_assessment",
         ],
@@ -2002,18 +2002,18 @@ export function AdminStudio() {
               "STEP 1 · A/B物語案を作るデータです。",
               "1. order.jsonとstoriesフォルダを確認します。",
               "2. 各storyフォルダには、管理者が選んだ基準写真が1枚だけ入っています。未選択写真は構成案に使用しません。",
-              "3. このZIPと02_PROMPT_CONCEPT_PROPOSAL.txtをCodexへ添付します。",
+              "3. このZIPと02_PROMPT_CONCEPT_PROPOSAL.txtをAIへ添付します。",
               "4. 返されたA/B案のタイトル・トーン・概要・5場面を管理画面へ入力します。",
-              "5. この段階では画像やRunwayプロンプトを作りません。",
+              "5. この段階では画像や動画生成プロンプトを作りません。",
             ].join("\n")
           : [
               "STEP 2 · 顧客確認用の絵本ページを作るデータです。",
               "1. order.jsonのselected_conceptを確認します。",
               "2. 各storyフォルダには、管理者が選んだ基準写真が1枚だけ入っています。未選択写真は制作に使用しません。",
-              "3. Codexへorder.json、style_reference.png（画風基準画像・別途用意）、対象のstoryフォルダを添付し、01から05まで順番に制作します。",
+              "3. AIへorder.json、style_reference.png（画風基準画像・別途用意）、対象のstoryフォルダを添付し、01から05まで順番に制作します。",
               "4. 02_PROMPT_STORYBOOK_IMAGES.txtをそのまま依頼文として使います。",
               "5. 完成した5枚を管理画面へアップロードし、顧客確認へ公開します。",
-              "6. この段階ではRunwayプロンプトを作りません。",
+              "6. この段階では動画生成プロンプトを作りません。",
             ].join("\n");
       const orderJson =
         stage === "concept"
@@ -2151,7 +2151,7 @@ export function AdminStudio() {
       const files: Record<string, Uint8Array> = {
         [`${root}/01_START_HERE.txt`]: strToU8([
           "OPTIONAL · いつでも作れるホームページキャラクターです。",
-          "1. order.jsonとreference-photosをCodexへ添付します。",
+          "1. order.jsonとreference-photosをAIへ添付します。",
           "2. 02_PROMPT_WEBSITE_CHARACTER.txtをそのまま依頼文として使います。",
           "3. 返された4×3の透明PNGスプライトを管理画面へ登録します。",
           "4. 顧客確認には出さず、専用ホームページへ自動で反映されます。",
@@ -2251,9 +2251,9 @@ export function AdminStudio() {
         import("fflate"),
         Promise.resolve(getSupabaseBrowserClient()),
       ]);
-      const root = `${safeArchiveSegment(order.order_number)}-03-runway-prompts`;
+      const root = `${safeArchiveSegment(order.order_number)}-03-video-prompts`;
       const runwayData = {
-        schema_version: "wan-memory-runway-prompt-input-4.0",
+        schema_version: "wan-memory-video-prompt-input-4.1",
         exported_at: new Date().toISOString(),
         job: exportData.productionData.job,
         style: exportData.productionData.style,
@@ -2264,8 +2264,8 @@ export function AdminStudio() {
         transitions: exportData.productionData.transitions,
         output_plan: {
           story_count: 5,
-          runway_clip_count: 5,
-          story_model: "gen4",
+          video_clip_count: 5,
+          story_model: "video_generation_ai",
           story_duration_seconds: 5,
           total_story_video_seconds: 25,
           story_duration_policy:
@@ -2280,16 +2280,16 @@ export function AdminStudio() {
       const files: Record<string, Uint8Array> = {
         [`${root}/01_START_HERE.txt`]: strToU8(
           [
-            "STEP 3 · 顧客承認後のRunway制作データです。",
-            "1. order.jsonとapproved-pagesの5枚をCodexへ添付します。",
-            "2. 02_PROMPT_RUNWAY.txtをそのまま依頼文として使います。",
-            "3. CodexがStory用Runwayプロンプトを合計5本作ります。5物語すべて各5秒です。メインエピソードの選択、接続背景、接続映像はありません。",
+            "STEP 3 · 顧客承認後の動画制作データです。",
+            "1. order.jsonとapproved-pagesの5枚をAIへ添付します。",
+            "2. 02_PROMPT_VIDEO.txtをそのまま依頼文として使います。",
+            "3. AIがStory用の動画生成プロンプトを合計5本作ります。5物語すべて各5秒です。メインエピソードの選択、接続背景、接続映像はありません。",
             "4. 各物語を複数takeに分けず、1本の5秒動画の中で一つの行動が自然に始まり、落ち着くように設計します。",
-            "5. Story 5本をGen-4で、すべて5秒で制作します。",
+            "5. 動画生成AIでStory 5本を、すべて5秒で制作します。",
             "6. 完成した5本を管理画面の各物語1本スロットへ登録します。物語間のページめくりは自動編集されます。",
           ].join("\n"),
         ),
-        [`${root}/02_PROMPT_RUNWAY.txt`]: strToU8(RUNWAY_PROMPT_REQUEST),
+        [`${root}/02_PROMPT_VIDEO.txt`]: strToU8(RUNWAY_PROMPT_REQUEST),
         [`${root}/order.json`]: strToU8(
           JSON.stringify(runwayData, null, 2),
         ),
@@ -2310,7 +2310,7 @@ export function AdminStudio() {
       }
       setExportProgress("ZIPファイルを作成しています…");
       await saveOperatorZip(files, `${root}.zip`);
-      setNotice("顧客承認済み画像・Runway依頼文・制作JSONをまとめました。");
+      setNotice("顧客承認済み画像・動画生成AI用の依頼文・制作JSONをまとめました。");
     } catch (bundleError) {
       console.error(bundleError);
       setError("承認画像の取得を完了できませんでした。もう一度お試しください。");
@@ -4091,7 +4091,7 @@ export function AdminStudio() {
                     <div className="card-head">
                       <div>
                         <p className="eyebrow">PRODUCTION DOWNLOADS</p>
-                        <h3>工程別のCodex制作データ</h3>
+                        <h3>工程別のAI制作データ</h3>
                       </div>
                     </div>
                     <p className="admin-export-intro">
@@ -4127,16 +4127,16 @@ export function AdminStudio() {
                         {!illustrationExportReady && <em>案選択・決済完了後に有効</em>}
                       </article>
                       <article className={runwayExportReady ? "ready" : "locked"}>
-                        <header><span>STEP 3</span><strong>Runway制作へ進む</strong></header>
+                        <header><span>STEP 3</span><strong>動画制作へ進む</strong></header>
                         <p>5枚の絵本ページを顧客が承認した後に使用します。</p>
-                        <small>内容：承認画像5枚、各5秒のGen-4用プロンプト5本</small>
+                        <small>内容：承認画像5枚、各5秒の動画生成AI用プロンプト5本</small>
                         <button
                           className="button button-primary"
                           type="button"
                           disabled={saving || exportingBundle || !runwayExportReady}
                           onClick={() => void downloadRunwayBundle()}
                         >
-                          {exportingBundle && runwayExportReady ? "準備中…" : "③ Runway制作データをダウンロード"}
+                          {exportingBundle && runwayExportReady ? "準備中…" : "③ 動画制作データをダウンロード"}
                         </button>
                         {!runwayExportReady && (
                           <em>
@@ -4472,7 +4472,7 @@ export function AdminStudio() {
                     <div className="admin-concept-json-import">
                       <div className="admin-concept-json-import-head">
                         <div>
-                          <strong>Codex에서 받은 구성안 JSON 불러오기</strong>
+                          <strong>AI에서 받은 구성안 JSON 불러오기</strong>
                           <small>
                             JSON을 붙여넣거나 파일을 선택하면 A·B안의 제목·톤·개요·5개 장면이 아래 폼에 자동으로 연결됩니다.
                           </small>
@@ -4924,7 +4924,7 @@ export function AdminStudio() {
                     {renderAvailable && sceneStills.length > 0 && (
                       <>
                         <p className="admin-render-section-label">
-                          STORY · Gen-4（全5本 · 各5秒）
+                          STORY · 動画生成AI（全5本 · 各5秒）
                         </p>
                         <div className="admin-render-clips">
                           {sceneStills.map((still) => {
@@ -4967,7 +4967,7 @@ export function AdminStudio() {
                                         className={clip ? "ready" : ""}
                                       >
                                         <span>
-                                          Gen-4 · 5秒で完結
+                                          動画生成AI · 5秒で完結
                                         </span>
                                         {clip ? (
                                           <>
@@ -5264,7 +5264,7 @@ export function AdminStudio() {
                       <span>運営者のみ</span>
                     </div>
                     <p className="admin-operation-note">
-                      最初の10組は、実制作にかかった時間とRunway使用量を残します。次の料金・制作枠を判断するための内部メモで、お客様には表示されません。
+                      最初の10組は、実制作にかかった時間と動画制作ツール使用量を残します。次の料金・制作枠を判断するための内部メモで、お客様には表示されません。
                     </p>
                     <div className="admin-form-grid">
                       <label>
@@ -5279,7 +5279,7 @@ export function AdminStudio() {
                         />
                       </label>
                       <label>
-                        <span>Runway使用クレジット</span>
+                        <span>動画制作ツール使用クレジット</span>
                         <input
                           type="number"
                           min="0"
