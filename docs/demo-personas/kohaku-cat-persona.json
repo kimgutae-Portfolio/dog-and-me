@@ -79,6 +79,13 @@
     "people_policy": "people_fully_removed_no_human_rendering",
     "contains_people": false,
     "primary_photo_only": true,
+    "generated_demo_photos": [
+      "/film/kohaku/source-photos/01-cardboard-home.png",
+      "/film/kohaku/source-photos/02-rainy-window.png",
+      "/film/kohaku/source-photos/03-morning-sunbeam.png",
+      "/film/kohaku/source-photos/04-paper-bag-adventure.png",
+      "/film/kohaku/source-photos/05-waiting-by-the-door.png"
+    ],
     "photo_placeholders": [
       "stories/01-cardboard-home/original/story_01_primary.jpg",
       "stories/02-rainy-window/original/story_02_primary.jpg",
