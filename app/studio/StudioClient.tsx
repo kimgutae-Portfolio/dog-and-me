@@ -1054,22 +1054,35 @@ export function StudioClient() {
       return;
     setApprovingReview(true);
     setError("");
-    const { error: approvalError } = await getSupabaseBrowserClient().rpc(
-      "customer_approve_review",
-      { p_order_id: order.id },
-    );
-    if (approvalError) {
+    const { data: sessionData } = await getSupabaseBrowserClient().auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    const response = accessToken
+      ? await fetch("/api/customer/review-approval", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ orderId: order.id }),
+        })
+      : null;
+    const result = (await response?.json().catch(() => ({}))) as {
+      approved?: boolean;
+      error?: string;
+    };
+    if (!response?.ok || !result.approved) {
       setError(
-        approvalError.message.includes("open revision")
+        result.error === "open_revision"
           ? "対応中の修正依頼があります。反映完了後に確定してください。"
-          : approvalError.message.includes("payment")
+          : result.error === "payment_required"
             ? "入金確認が完了していません。担当者へご確認ください。"
+            : result.error === "consent_required"
+              ? "現在版への同意記録が必要です。内容をご確認ください。"
             : "映像を確定できませんでした。もう一度お試しください。",
       );
     } else {
       setApprovalChecked(false);
       setNotice("この映像で確定しました。担当者が最終納品の準備を進めます。");
-      await notifyAdminFromCustomer(order.id, "review_approved", `${Date.now()}`);
       await Promise.all([loadOrders(), loadDetails(order.id)]);
     }
     setApprovingReview(false);

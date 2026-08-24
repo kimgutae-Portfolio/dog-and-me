@@ -1,5 +1,4 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { sendAdminReviewApprovedNotification } from "./email/messageNotification";
 import { DEFAULT_SITE_ORIGIN } from "./site";
 import { sendWebPushNotification } from "./webPush";
 
@@ -90,7 +89,7 @@ export async function notifyAdmins({
     admin.from("orders").select("id,pet_name,order_number").eq("id", orderId).maybeSingle(),
     (() => {
       const targetId = process.env.ADMIN_PUSH_TARGET_USER_ID?.trim();
-      let query = admin.from("profiles").select("id,email").eq("role", "admin");
+      let query = admin.from("profiles").select("id").eq("role", "admin");
       if (targetId) query = query.eq("id", targetId);
       return query;
     })(),
@@ -107,27 +106,13 @@ export async function notifyAdmins({
   const notificationIds: string[] = [];
   let notified = 0;
 
-  for (const profile of profiles as Array<{ id: string; email: string | null }>) {
+  for (const profile of profiles as Array<{ id: string }>) {
     const { data: existing } = await admin
       .from("admin_notifications")
       .select("id,push_status")
       .eq("admin_user_id", profile.id)
       .eq("dedupe_key", dedupeKey)
       .maybeSingle();
-
-    if (type === "review_approved" && profile.email) {
-      try {
-        await sendAdminReviewApprovedNotification({
-          to: profile.email,
-          petName: order.pet_name,
-          orderNumber: order.order_number,
-          adminUrl: href,
-          idempotencyKey: `review-approved-${orderId}-${eventKey?.trim() || "event"}-${profile.id}`,
-        });
-      } catch {
-        // Approval is authoritative even when the optional email provider is unavailable.
-      }
-    }
 
     if (existing?.push_status === "sent") {
       notificationIds.push(existing.id);

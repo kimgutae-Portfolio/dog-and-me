@@ -1211,20 +1211,22 @@ test("records first-ten production metrics through an admin-only RPC", async () 
   assert.match(types, /runway_credits_used: number/);
 });
 
-test("emails administrators when a customer approves the review video", async () => {
+test("approves review videos and dispatches admin push from one server route", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [studio, adminPush, email] = await Promise.all([
+  const [studio, route] = await Promise.all([
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
-    readFile(new URL("app/lib/adminPush.ts", root), "utf8"),
-    readFile(new URL("app/lib/email/messageNotification.ts", root), "utf8"),
+    readFile(new URL("app/api/customer/review-approval/route.ts", root), "utf8"),
   ]);
 
-  assert.match(studio, /notifyAdminFromCustomer\(order\.id, "review_approved"/);
-  assert.match(adminPush, /select\("id,email"\)/);
-  assert.match(adminPush, /type === "review_approved"/);
-  assert.match(adminPush, /sendAdminReviewApprovedNotification/);
-  assert.match(email, /WAN MEMORY｜\$\{subjectPetName\}ちゃんの完成前映像が承認されました/);
-  assert.match(email, /管理画面で確認する/);
+  assert.match(studio, /fetch\("\/api\/customer\/review-approval"/);
+  assert.doesNotMatch(
+    studio,
+    /notifyAdminFromCustomer\(order\.id, "review_approved"/,
+  );
+  assert.match(route, /rpc\("customer_approve_review"/);
+  assert.match(route, /type: "review_approved"/);
+  assert.match(route, /eventKey: approvedAt/);
+  assert.match(route, /notificationDelivered/);
 });
 
 test("records and enforces consolidated photo-rights and external-service consent", async () => {
