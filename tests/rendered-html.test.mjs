@@ -1648,6 +1648,29 @@ test("loads Vercel Web Analytics from the root layout", async () => {
   assert.ok(JSON.parse(packageSource).dependencies["@vercel/analytics"]);
 });
 
+test("loads Google Tag Manager while excluding customer and operator URLs", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [layout, tagManager, nextConfig, privacy] = await Promise.all([
+    readFile(new URL("app/layout.tsx", root), "utf8"),
+    readFile(new URL("app/components/GoogleTagManager.tsx", root), "utf8"),
+    readFile(new URL("next.config.ts", root), "utf8"),
+    readFile(new URL("app/privacy/page.tsx", root), "utf8"),
+  ]);
+
+  assert.match(layout, /<GoogleTagManager\s*\/>/);
+  assert.match(tagManager, /GTM-WBMHCBXJ/);
+  assert.match(tagManager, /G-31J209RFN1/);
+  assert.match(tagManager, /ga-disable-/);
+  assert.match(tagManager, /pathname\.startsWith\("\/admin\/"\)/);
+  assert.match(tagManager, /pathname\.startsWith\("\/memory\/"\)/);
+  assert.match(tagManager, /pathname !== "\/film\/moka-demo"/);
+  assert.match(tagManager, /remaining top-level dynamic routes are customer website slugs/);
+  assert.match(nextConfig, /https:\/\/www\.googletagmanager\.com/);
+  assert.match(nextConfig, /https:\/\/\*\.google-analytics\.com/);
+  assert.match(privacy, /アクセス解析にはGoogle/);
+  assert.match(privacy, /お客様専用サイトはアクセス解析の対象外/);
+});
+
 test("emails customers only when an administrator sends a studio message", async () => {
   const { readFile } = await import("node:fs/promises");
   const [admin, studio, chat, route, notification, envExample] = await Promise.all([

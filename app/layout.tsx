@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { AuthProvider } from "./components/AuthProvider";
+import { GoogleTagManager } from "./components/GoogleTagManager";
 import { SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
 import { getRequestOrigin } from "./lib/site-server";
 import "./globals.css";
@@ -76,6 +77,7 @@ export default function RootLayout({
     <html lang="ja">
       <body>
         <AuthProvider>{children}</AuthProvider>
+        <GoogleTagManager />
         <Analytics />
       </body>
     </html>
