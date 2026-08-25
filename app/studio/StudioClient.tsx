@@ -1971,7 +1971,7 @@ export function StudioClient() {
                           </span>
                         </aside>
                       ) : (
-                        <>
+                        <div className="stills-approval-action">
                           <label>
                             <input
                               type="checkbox"
@@ -1994,7 +1994,7 @@ export function StudioClient() {
                               ? "確定中…"
                               : "この絵本ページで動画を制作する →"}
                           </button>
-                        </>
+                        </div>
                       )}
                       {!hasOpenStillsChange &&
                         (stillsChangesRemaining > 0 ? (

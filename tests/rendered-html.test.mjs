@@ -1015,7 +1015,7 @@ test("blocks launch-critical skips and records consent and customer approval", a
 
 test("requires a fresh scene-stills publication before video production", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [migration, studio, admin] = await Promise.all([
+  const [migration, studio, admin, css] = await Promise.all([
     readFile(
       new URL(
         "supabase/migrations/202607270001_stills_review_hardening.sql",
@@ -1025,6 +1025,7 @@ test("requires a fresh scene-stills publication before video production", async 
     ),
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
   ]);
   assert.match(migration, /\('concept_selected', 'stills_review'\)/);
   assert.doesNotMatch(migration, /\('concept_selected', 'production'\)/);
@@ -1036,6 +1037,14 @@ test("requires a fresh scene-stills publication before video production", async 
   assert.match(migration, /admin_begin_stills_revision/);
   assert.match(studio, /hasOpenStillsChange/);
   assert.match(studio, /公開後にもう一度ご確認ください/);
+  assert.match(studio, /className="stills-approval-action"/);
+  assert.match(studio, /className="revision-form stills-change-form"/);
+  assert.match(studio, /調整をご希望の場合/);
+  assert.match(
+    css,
+    /\.stills-change-form \.revision-scene-picker label span \{ color: #4f4a43; \}/,
+  );
+  assert.match(css, /\.stills-change-form textarea \{ color: var\(--ink\);/);
   assert.match(admin, /調整を開始する/);
   assert.doesNotMatch(admin, /concept_selected: \["production"\]/);
 });
