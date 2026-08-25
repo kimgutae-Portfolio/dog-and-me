@@ -1494,7 +1494,7 @@ export function AdminStudio() {
       setError("制作メモを保存できませんでした。入力内容をご確認ください。");
     else {
       setNotice(
-        "制作時間・動画制作ツール使用量を記録しました。初期10組の原価検証に利用できます。",
+        "制作時間・動画制作ツール使用量を記録しました。初期20組の原価検証に利用できます。",
       );
       await loadOrders();
     }
@@ -5309,13 +5309,13 @@ export function AdminStudio() {
                   <section className="admin-card" id="admin-metrics">
                     <div className="card-head">
                       <div>
-                        <p className="eyebrow">FIRST 10 METRICS</p>
+                        <p className="eyebrow">FIRST 20 METRICS</p>
                         <h3>制作コストの記録</h3>
                       </div>
                       <span>運営者のみ</span>
                     </div>
                     <p className="admin-operation-note">
-                      最初の10組は、実制作にかかった時間と動画制作ツール使用量を残します。次の料金・制作枠を判断するための内部メモで、お客様には表示されません。
+                      最初の20組は、実制作にかかった時間と動画制作ツール使用量を残します。次の料金・制作枠を判断するための内部メモで、お客様には表示されません。
                     </p>
                     <div className="admin-form-grid">
                       <label>

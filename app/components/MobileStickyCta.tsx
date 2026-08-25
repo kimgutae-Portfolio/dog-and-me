@@ -34,12 +34,14 @@ export function MobileStickyCta() {
       <div>
         <p>
           {APPLICATIONS_OPEN
-            ? `MONITOR PRICE · 物語案の確認までは無料`
+            ? "通常価格 · 物語案の確認までは無料"
             : "COMING SOON"}
         </p>
         <strong>
           {APPLICATIONS_OPEN ? (
             <>
+              <del>¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</del>
+              <small>モニター</small>
               ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}
               <span>（税込）</span>
             </>

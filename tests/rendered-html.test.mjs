@@ -83,7 +83,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /モカの完成作品を見る/);
   assert.match(html, /モカの完成作品/);
   assert.match(html, /動く絵本/);
-  assert.match(html, /初期(?:<!-- -->)?10(?:<!-- -->)?組/);
+  assert.match(html, /初期(?:<!-- -->)?20(?:<!-- -->)?組/);
   assert.match(html, /16,800/);
   assert.match(html, /19,800/);
   assert.match(html, /通常価格/);
@@ -799,9 +799,11 @@ test("includes mobile breathing room, sticky conversion action, and touch story 
   assert.match(css, /\.photo-guide-photo-types/);
   assert.match(page, /MobileStickyCta/);
   assert.doesNotMatch(page, /storybook-quick-facts/);
+  assert.match(mobileCta, /MEMORY_FILM_PRICING\.regularPrice/);
   assert.match(mobileCta, /MEMORY_FILM_PRICING\.launchPrice/);
-  assert.match(mobileCta, /物語案の確認までは無料/);
-  assert.match(mobileCta, /無料で始める/);
+  assert.match(mobileCta, /通常価格/);
+  assert.match(mobileCta, /モニター/);
+  assert.match(mobileCta, /物語をつくる/);
   assert.match(story, /touchstart/);
   assert.match(story, /moveToChapter\(next\)/);
 });
@@ -1193,7 +1195,7 @@ test("uses the lower launch and regular prices for new consultations", async () 
     readFile(new URL("app/lib/pricing.ts", root), "utf8"),
     readFile(
       new URL(
-        "supabase/migrations/202608170004_launch_price_16800.sql",
+        "supabase/migrations/202608250004_launch_monitor_limit_twenty.sql",
         root,
       ),
       "utf8",
@@ -1203,15 +1205,17 @@ test("uses the lower launch and regular prices for new consultations", async () 
 
   assert.match(pricing, /launchPrice: 16_800/);
   assert.match(pricing, /regularPrice: 19_800/);
-  assert.match(pricing, /launch-monitor-16800-10/);
-  assert.match(migration, /case when used < 10 then 16800 else 19800 end/);
-  assert.match(migration, /v_price := 16800/);
-  assert.match(migration, /status = 'awaiting_materials'/);
-  assert.match(legal, /モニター価格 ¥16,800/);
+  assert.match(pricing, /launchLimit: 20/);
+  assert.match(pricing, /launch-monitor-16800-20/);
+  assert.match(migration, /case when used < 20 then 16800 else 19800 end/);
+  assert.match(migration, /greatest\(20 - used, 0\)/);
+  assert.match(migration, /launch-monitor-16800-10/);
+  assert.match(migration, /launch-monitor-16800-20/);
+  assert.match(legal, /初期20組限定 モニター価格 ¥16,800/);
   assert.match(legal, /受付終了後 ¥19,800/);
 });
 
-test("records first-ten production metrics through an admin-only RPC", async () => {
+test("records first-twenty production metrics through an admin-only RPC", async () => {
   const { readFile } = await import("node:fs/promises");
   const [migration, admin, types] = await Promise.all([
     readFile(
@@ -1224,7 +1228,7 @@ test("records first-ten production metrics through an admin-only RPC", async () 
   assert.match(migration, /admin_save_production_metrics/);
   assert.match(migration, /production metrics must be nonnegative/);
   assert.match(migration, /production_metrics_saved/);
-  assert.match(admin, /FIRST 10 METRICS/);
+  assert.match(admin, /FIRST 20 METRICS/);
   assert.match(admin, /動画制作ツール使用クレジット/);
   assert.match(admin, /rpc\(\s*"admin_save_production_metrics"/);
   assert.match(types, /runway_credits_used: number/);
