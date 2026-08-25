@@ -87,11 +87,12 @@ export function AccountDeletion() {
   return (
     <>
       <button
-        className="studio-account-settings-button"
+        className="studio-account-delete-button"
         type="button"
         onClick={() => setOpen(true)}
+        role="menuitem"
       >
-        アカウント設定
+        会員を退会する
       </button>
       {open && (
         <div

@@ -11,6 +11,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useAuth } from "../components/AuthProvider";
@@ -142,6 +143,8 @@ export function StudioClient() {
     useState(false);
   const [consentAiChecked, setConsentAiChecked] = useState(false);
   const [startingPayment, setStartingPayment] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const requestedOrderId = searchParams.get("order") ?? "";
   const received = searchParams.get("received") === "1";
   const paymentResult = searchParams.get("payment");
@@ -149,6 +152,25 @@ export function StudioClient() {
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?next=/studio");
   }, [authLoading, router, user]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const closeProfileMenu = (event: PointerEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent) {
+        if (event.key === "Escape") setProfileMenuOpen(false);
+        return;
+      }
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    window.addEventListener("pointerdown", closeProfileMenu);
+    window.addEventListener("keydown", closeProfileMenu);
+    return () => {
+      window.removeEventListener("pointerdown", closeProfileMenu);
+      window.removeEventListener("keydown", closeProfileMenu);
+    };
+  }, [profileMenuOpen]);
 
   const loadOrders = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -1205,11 +1227,28 @@ export function StudioClient() {
           >
             ログアウト
           </button>
-          <span className="avatar">
-            {(profile?.full_name || user.email || "U")
-              .slice(0, 1)
-              .toUpperCase()}
-          </span>
+          <div className="studio-profile-menu" ref={profileMenuRef}>
+            <button
+              className="avatar"
+              type="button"
+              aria-label="プロフィールメニューを開く"
+              aria-haspopup="menu"
+              aria-expanded={profileMenuOpen}
+              onClick={() => setProfileMenuOpen((current) => !current)}
+            >
+              {(profile?.full_name || user.email || "U")
+                .slice(0, 1)
+                .toUpperCase()}
+            </button>
+            {profileMenuOpen && (
+              <div className="studio-profile-dropdown" role="menu">
+                <small>ACCOUNT</small>
+                <strong>{profile?.full_name || user.email}</strong>
+                {profile?.full_name && <span>{user.email}</span>}
+                <AccountDeletion />
+              </div>
+            )}
+          </div>
         </nav>
       </header>
       {received && (
@@ -1299,7 +1338,6 @@ export function StudioClient() {
             <small>ACCOUNT</small>
             <strong>{profile?.full_name || user.email}</strong>
           </div>
-          <AccountDeletion />
           {orders.length > 1 && (
             <label>
               <span>制作中の動く絵本</span>
