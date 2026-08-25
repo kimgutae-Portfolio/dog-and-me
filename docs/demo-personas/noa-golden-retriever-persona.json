@@ -1,0 +1,230 @@
+{
+  "schema_version": "wan-memory-demo-persona-1.0",
+  "persona_id": "dog-noa-golden-retriever-01",
+  "persona_purpose": "A fictional large-dog customer persona for testing the full WAN MEMORY storybook, film, personal website, album, and animated character workflow with a Golden Retriever.",
+  "customer": {
+    "display_name": "えり",
+    "age_range": "40代",
+    "household": "夫婦と中学生の子ども1人",
+    "location": "長野県の郊外",
+    "relationship_to_pet": "子犬だったノアを迎えて7年目",
+    "service_need": "大きな体で家族を安心させてくれるノアらしさと、季節ごとに増えた外遊びの思い出を一つの作品に残したい",
+    "mobile_usage": "スマートフォン中心。完成したホームページは離れて暮らす家族にも共有したい",
+    "decision_trigger": "大型犬らしい体格を崩さず、完成後も写真を追加してノアの時間を残し続けられること",
+    "concerns": [
+      "AIで小型犬や子犬のような体格にならないか",
+      "長い飾り毛や穏やかな目元が場面ごとに変わらないか",
+      "走る場面で脚や足先が不自然にならないか"
+    ]
+  },
+  "order_input": {
+    "pet_name": "ノア",
+    "name_kana": "ノア",
+    "species": "dog",
+    "breed": "ゴールデン・レトリーバー",
+    "age_text": "7歳",
+    "sex": "女の子",
+    "purpose": "ノアらしい大きな体と優しい表情、家族と重ねた季節の思い出を、いつでも帰れる物語として残したい",
+    "personality": [
+      "穏やか",
+      "人のそばにいるのが好き",
+      "物を運ぶのが得意",
+      "外遊びが大好き"
+    ],
+    "first_meeting": "迎えた日の夜、まだ体の小さかったノアは、用意したベッドより大きな青い毛布をくわえて家の中を歩き回りました。",
+    "favorite_memory": "青い毛布を運んだ日、ボールを初めて手元まで返した日、庭の水しぶき、キャンプの朝、雪原に続いた大きな足あとです。",
+    "message_to_pet": "ノアへ。うれしい日も疲れた日も、大きな体で静かに隣にいてくれてありがとう。これからも季節の匂いを一緒に見つけながら、ゆっくり歩いていこうね。",
+    "avoid_notes": "小型犬や幼い子犬のように頭を大きく、脚を短くしない。胴体を過度に細くしない。長い飾り毛を省略しない。目を大きくしすぎない。ハーネスは描かず、深い青色の首輪だけを維持する。",
+    "style": "明るく澄んだ日本の絵本風水彩。大型犬の自然な骨格、柔らかな長毛、季節の空気と広い屋外空間を繊細に描く。",
+    "aspect_ratio": "16:9",
+    "narration": "なし",
+    "bgm": "穏やかなアコースティックギターとピアノ。屋外の広がりを感じる、明るくゆったりしたテンポ。"
+  },
+  "character_identity": {
+    "species": "dog",
+    "identity_summary": "Natural-proportioned adult female Golden Retriever with a sturdy large frame, warm honey-gold long coat, dark brown almond-shaped eyes, a broad black nose, feathered ears, legs, chest, and tail, and a deep navy collar.",
+    "face": {
+      "head_shape": "成犬のゴールデン・レトリーバーらしい、幅のある自然な頭部。額から鼻先までの傾斜を保ち、子犬のように丸くしない",
+      "eyes": "穏やかな濃い茶色。自然なアーモンド形で、左右の間隔と大きさを誇張しない",
+      "nose": "幅があり、つやを抑えた黒い鼻",
+      "muzzle": "十分な長さと厚みのある淡い金色の口元。細く尖らせず、短く詰めない",
+      "ears": "中くらいの垂れ耳。頬の横へ自然に沿い、柔らかな飾り毛がある"
+    },
+    "body": {
+      "proportions": "7歳の大型成犬らしい、胸幅と骨量のある丈夫な体格。頭身を縮めず、胸から地面までの高さと長い脚を維持する",
+      "coat": "明るい蜂蜜色のダブルコート。背中はなめらかで、胸・腹部・脚の後ろ側に柔らかな長い飾り毛がある",
+      "markings": "顔と胸元はわずかに淡く、人工的な白斑や新しい模様を追加しない",
+      "tail": "太く長い尾。豊かな羽状の飾り毛があり、背中へ巻かず自然な高さで緩やかに動く",
+      "paws": "大型犬らしい幅のある足先。走行中も指や脚の本数、関節位置を正確に保つ"
+    },
+    "accessories": {
+      "preserve": "無地の深い紺色の首輪と、小さな銀色の丸い迷子札",
+      "exclude": "ハーネス、リード、服、リボン、ブランド文字"
+    },
+    "owner_locked_traits": [
+      "穏やかな濃い茶色のアーモンド形の目",
+      "幅のある口元と黒い鼻",
+      "胸・脚・尾に続く蜂蜜色の長い飾り毛",
+      "胸幅と長い脚が分かる大型成犬の体格"
+    ],
+    "negative_identity_rules": [
+      "no oversized animation eyes",
+      "no puppy proportions",
+      "no shortened legs or oversized head",
+      "no small-dog body scale",
+      "no narrow sighthound-like torso or muzzle",
+      "no missing feathering on chest, legs, ears, or tail",
+      "no curled spitz tail",
+      "no harness in the finished illustration",
+      "no malformed running legs, paws, or joints"
+    ]
+  },
+  "photo_policy": {
+    "recommended": "各物語につき、ノアが大きく写り、顔・大型犬らしい全身比率・脚・尾・その場の行動が読み取れる犬だけの写真を1枚選ぶ",
+    "people_policy": "people_fully_removed_no_human_rendering",
+    "contains_people": false,
+    "primary_photo_only": true,
+    "generated_demo_photos": [
+      "/film/noa/source-photos/01-blue-blanket.png",
+      "/film/noa/source-photos/02-first-fetch.png",
+      "/film/noa/source-photos/03-garden-sprinkler.png",
+      "/film/noa/source-photos/04-camp-morning.png",
+      "/film/noa/source-photos/05-first-snow.png"
+    ],
+    "photo_placeholders": [
+      "stories/01-blue-blanket/original/story_01_primary.jpg",
+      "stories/02-first-fetch/original/story_02_primary.jpg",
+      "stories/03-garden-sprinkler/original/story_03_primary.jpg",
+      "stories/04-camp-morning/original/story_04_primary.jpg",
+      "stories/05-first-snow/original/story_05_primary.jpg"
+    ]
+  },
+  "stories": [
+    {
+      "number": 1,
+      "title": "青い毛布を運んだ夜",
+      "when": "7年前の初夏",
+      "location": "迎えたばかりの家の廊下",
+      "description": "家に迎えた最初の夜、ノアは自分の体より大きな青い毛布の端をくわえました。何度も踏みそうになりながら廊下を進み、家族のいる部屋まで一生懸命に運びました。",
+      "dog_behavior": "大きな青い毛布の端を優しくくわえ、前を確かめながら廊下を歩く",
+      "primary_photo_brief": "青い毛布をくわえたノアの顔、首、前脚、胴の長さが確認できる犬だけの写真",
+      "story_caption": "大きな青い毛布を運ぶ姿が、ノアとの暮らしの最初の笑顔でした。"
+    },
+    {
+      "number": 2,
+      "title": "ボールを返せた日",
+      "when": "2歳の春",
+      "location": "河川敷の広い芝生",
+      "description": "追いかけるだけだったボールを、その日は初めてこちらの足元まで運んできました。得意そうに尾を振り、もう一度投げてもらうのを静かに待っていました。",
+      "dog_behavior": "黄色いボールを口にくわえて芝生を走り、手前で止まって尾を大きく振る",
+      "primary_photo_brief": "ボールをくわえて走る全身、長い脚、大きな足先、なびく尾の飾り毛が確認できる写真",
+      "story_caption": "初めて返してくれた黄色いボールは、何度でも遊ぼうという合図でした。"
+    },
+    {
+      "number": 3,
+      "title": "庭いっぱいの水しぶき",
+      "when": "4歳の真夏",
+      "location": "自宅の庭",
+      "description": "暑い日に庭のスプリンクラーを動かすと、ノアは水の輪の中へ迷わず飛び込みました。濡れた飾り毛を揺らしながら、水しぶきを追って何度も駆け回りました。",
+      "dog_behavior": "回る水しぶきへ顔を向け、濡れた長い毛を揺らしながら芝生を駆け抜ける",
+      "primary_photo_brief": "庭の水しぶきの中にいる全身、濡れた毛、自然な脚運び、楽しそうな目元が読める写真",
+      "story_caption": "真夏の庭では、きらめく水しぶきまでノアの遊び相手になりました。"
+    },
+    {
+      "number": 4,
+      "title": "テントを見守る朝",
+      "when": "6歳の秋",
+      "location": "高原のキャンプ場",
+      "description": "朝霧が残るキャンプ場で、ノアはテントの入口に伏せていました。風で揺れる布に耳を動かしながら、家族が起きるまで静かに辺りを見守っていました。",
+      "dog_behavior": "テントの入口で前脚を伸ばして伏せ、頭を上げたまま朝霧の草原を見渡す",
+      "primary_photo_brief": "テントのそばで伏せる全身、胸の厚み、伸ばした前脚、耳と尾の飾り毛が見える写真",
+      "story_caption": "朝霧のテントの前で、ノアは誰より早く一日の始まりを見守っていました。"
+    },
+    {
+      "number": 5,
+      "title": "初雪に続く大きな足あと",
+      "when": "7歳の冬",
+      "location": "家の近くの雪原",
+      "description": "その年の初雪の日、ノアは誰も歩いていない雪へ大きな一歩を踏み出しました。鼻先に雪をつけたまま振り返り、後ろに続く足あとをうれしそうに眺めていました。",
+      "dog_behavior": "新雪をゆっくり踏みしめ、鼻先に少し雪をつけてこちらを振り返る",
+      "primary_photo_brief": "雪の上に立つ全身、自然な大型犬の体高、足あと、振り返った顔と長い尾が確認できる写真",
+      "story_caption": "まっさらな初雪に、ノアの大きな足あとが新しい季節を描きました。"
+    }
+  ],
+  "concepts": [
+    {
+      "slot": "A",
+      "title": "ノアが運んできた、五つの季節",
+      "tone": "のびやかで温かく、大型犬の頼もしさと無邪気さが季節の移ろいにつながる",
+      "summary": "青い毛布を運んだ最初の夜から、春のボール、夏の水しぶき、秋のキャンプ、冬の足あとへ。ノアが家族のもとへ運んできた五つの季節をたどる物語です。",
+      "scenes": [
+        "子犬のノアが青い毛布をくわえ、家の廊下を一歩ずつ進む",
+        "春の広い芝生を走り、黄色いボールを初めて足元へ返す",
+        "真夏の庭で回る水しぶきの輪へ飛び込む",
+        "朝霧の高原で、テントの入口から静かに草原を見守る",
+        "まっさらな雪原へ大きな足あとを残し、穏やかに振り返る"
+      ],
+      "selected": true
+    },
+    {
+      "slot": "B",
+      "title": "大きな背中の、やさしい冒険",
+      "tone": "屋外での躍動感を中心に、最後は静かな安心へ着地する",
+      "summary": "運ぶ、走る、水を追う、見守る、雪を踏む。大きな体で見せるノアらしい五つの行動を、一日の呼吸のようにつないだ物語です。",
+      "scenes": [
+        "毛布を落とさないよう口元へ力を入れ、家族のいる部屋を目指す",
+        "長い脚を大きく伸ばし、ボールをくわえて芝生を駆け戻る",
+        "濡れた飾り毛を輝かせながら、弧を描く水を追いかける",
+        "風に揺れるテントの前で、耳だけを動かして朝を待つ",
+        "雪の感触を確かめるように歩き、足あとを振り返る"
+      ],
+      "selected": false
+    }
+  ],
+  "selected_concept": {
+    "slot": "A",
+    "title": "ノアが運んできた、五つの季節"
+  },
+  "personal_website": {
+    "hero_title": "ノアと、五つの季節",
+    "hero_subtitle": "ゴールデン・レトリーバー · 大きな足あとがつないだ物語",
+    "album_heading": "ノアが運んできた季節を、ひとつの写真帖に。",
+    "closing_letter": "ノアへ。青い毛布を運んだ小さな夜から、雪原に大きな足あとを残す今日まで、いつも私たちのそばにいてくれてありがとう。",
+    "character_voice": {
+      "cover": [
+        "この大きな足あと、わたしのだよ。",
+        "今日は、どの季節から歩こうか。"
+      ],
+      "film": [
+        "青い毛布、ちゃんと覚えているよ。",
+        "水しぶきの場面は、何度見ても楽しいね。"
+      ],
+      "album": [
+        "ボールを運ぶのは、今でも得意だよ。",
+        "新しい写真も、ここに並べてね。"
+      ],
+      "letter": [
+        "これからの季節も、一緒に歩こうね。",
+        "最後まで見てくれて、ありがとう。"
+      ]
+    },
+    "character_pose_notes": [
+      "歩行は大型犬らしく頭と背中の高さを安定させ、長い前脚と後脚を自然な対角で運ぶ",
+      "走行中は胸の厚みと長い脚を保ち、足先や関節を縮めたり増やしたりしない",
+      "待機中は尾全体を振り回さず、羽状の飾り毛がゆっくり揺れる程度にする",
+      "座る姿勢は胸を起こし、左右の前脚を自然に平行に置く。小型犬のように頭を大きく見せない",
+      "伏せる姿勢は胸と腹部が地面へ自然に接し、長い前脚を前へ伸ばす",
+      "発話時は口を大きく開閉せず、穏やかな目元、耳、尾の小さな動きで表現する"
+    ]
+  },
+  "production_policy": {
+    "storybook_revision_allowance_scenes": 2,
+    "review_video_revision_allowance_scenes": 1,
+    "story_count": 5,
+    "video_seconds_per_story": 5,
+    "estimated_complete_film_seconds": 40,
+    "people_rendering": "remove_all_people_and_reconstruct_the_existing_natural_background",
+    "customer_site_duration": "unlimited",
+    "album_photo_limit": "no_fixed_count_limit_with_fair_use_safeguards"
+  }
+}
