@@ -1038,13 +1038,17 @@ test("requires a fresh scene-stills publication before video production", async 
   assert.match(studio, /hasOpenStillsChange/);
   assert.match(studio, /公開後にもう一度ご確認ください/);
   assert.match(studio, /className="stills-approval-action"/);
-  assert.match(studio, /className="revision-form stills-change-form"/);
+  assert.match(studio, /revision-form stills-change-form/);
   assert.match(studio, /調整をご希望の場合/);
+  assert.match(studio, /data-disabled=\{stillsApprovalChecked \? "true" : "false"\}/);
+  assert.match(studio, /disabled=\{stillsApprovalChecked\}/);
+  assert.match(studio, /上の同意チェックを外してください/);
   assert.match(
     css,
     /\.stills-change-form \.revision-scene-picker label span \{ color: #4f4a43; \}/,
   );
   assert.match(css, /\.stills-change-form textarea \{ color: var\(--ink\);/);
+  assert.match(css, /\.stills-change-form\.disabled \.revision-scene-picker/);
   assert.match(admin, /調整を開始する/);
   assert.doesNotMatch(admin, /concept_selected: \["production"\]/);
 });

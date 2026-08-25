@@ -1164,6 +1164,7 @@ export function StudioClient() {
       stillsChangeMemoryIds.length === 0 ||
       stillsChangeMemoryIds.length > stillsChangesRemaining ||
       sendingStillsChange ||
+      stillsApprovalChecked ||
       order.status !== "stills_review"
     )
       return;
@@ -1999,7 +2000,8 @@ export function StudioClient() {
                       {!hasOpenStillsChange &&
                         (stillsChangesRemaining > 0 ? (
                           <form
-                            className="revision-form stills-change-form"
+                            className={`revision-form stills-change-form${stillsApprovalChecked ? " disabled" : ""}`}
+                            data-disabled={stillsApprovalChecked ? "true" : "false"}
                             onSubmit={requestStillsChange}
                           >
                             <p className="stills-change-lead">
@@ -2008,7 +2010,15 @@ export function StudioClient() {
                                 修正するページを選び、直したい内容をまとめてください。1ページにつき1場面分を使用します。
                               </small>
                             </p>
-                            <fieldset className="revision-scene-picker">
+                            {stillsApprovalChecked && (
+                              <p className="stills-change-lock-note" role="status">
+                                動画制作への同意を選択しているため、調整入力を停止しています。調整する場合は、上の同意チェックを外してください。
+                              </p>
+                            )}
+                            <fieldset
+                              className="revision-scene-picker"
+                              disabled={stillsApprovalChecked}
+                            >
                               <legend>
                                 修正する絵本ページ · 残り
                                 {stillsChangesRemaining}場面
@@ -2026,7 +2036,7 @@ export function StudioClient() {
                                       <input
                                         type="checkbox"
                                         checked={selected}
-                                        disabled={disabled}
+                                        disabled={stillsApprovalChecked || disabled}
                                         onChange={() =>
                                           setStillsChangeMemoryIds((current) =>
                                             selected
@@ -2057,6 +2067,7 @@ export function StudioClient() {
                             </fieldset>
                             <textarea
                               required
+                              disabled={stillsApprovalChecked}
                               rows={3}
                               maxLength={3000}
                               value={stillsChangeBody}
@@ -2070,6 +2081,7 @@ export function StudioClient() {
                               type="submit"
                               disabled={
                                 sendingStillsChange ||
+                                stillsApprovalChecked ||
                                 !stillsChangeBody.trim() ||
                                 stillsChangeMemoryIds.length === 0
                               }
