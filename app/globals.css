@@ -1531,7 +1531,6 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .concept-waiting { min-height: 190px; display: flex; flex-direction: column; justify-content: center; }
 .concept-waiting > h2 { margin: 0; }
 .concept-waiting > p:last-child { max-width: 680px; color: var(--muted); font-size: 10px; line-height: 1.9; }
-.studio-grid { display: grid; grid-template-columns: 1.45fr .8fr; gap: 20px; }
 .pet-summary { margin-top: 26px; display: grid; grid-template-columns: 112px 1fr; gap: 24px; }
 .pet-photo { width: 112px; height: 132px; display: grid; place-items: center; color: white; background: linear-gradient(145deg, #9eab97, #5d695b); }
 .pet-photo span { width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.6); border-radius: 50%; font-family: var(--font-serif); }
@@ -1706,7 +1705,6 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .wizard-side li { min-height: auto; flex: 1; flex-direction: column; gap: 5px; font-size: 8px; }
   .wizard-side li::after { left: 50%; right: -50%; top: 13px; bottom: auto; border: 0; border-top: 1px solid rgba(255,255,255,.14); }
   .wizard-main { width: min(100% - 40px, 720px); padding-top: 42px; }
-  .studio-grid { grid-template-columns: 1fr; }
   .album-manager-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .family-share-panel { grid-template-columns: 1fr; gap: 24px; }
   .studio-status { grid-template-columns: 1fr .75fr; }

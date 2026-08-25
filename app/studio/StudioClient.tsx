@@ -2426,7 +2426,6 @@ export function StudioClient() {
             )}
 
             {(order.status !== "delivered" || deliveredTab === "materials") && (
-            <div className="studio-grid">
               <section className="studio-card" id="materials">
                 <div className="card-head">
                   <div>
@@ -2674,7 +2673,6 @@ export function StudioClient() {
                   </p>
                 )}
               </section>
-            </div>
             )}
 
             {(order.status !== "delivered" || deliveredTab === "delivery") && (
