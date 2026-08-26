@@ -22,13 +22,16 @@ function contentSecurityPolicy() {
     "default-src 'self'",
     // 'unsafe-inline' is required by the Next.js bootstrap inline script.
     // Vercel Analytics loads its collector from va.vercel-scripts.com.
-    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://www.googletagmanager.com",
+    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://www.googletagmanager.com https://*.clarity.ms",
     // Inline style attributes are used throughout (thumbnails set backgroundImage).
     "style-src 'self' 'unsafe-inline'",
-    ["img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com", supabase].filter(Boolean).join(" "),
+    [
+      "img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com",
+      supabase,
+    ].filter(Boolean).join(" "),
     ["media-src 'self' blob:", supabase].filter(Boolean).join(" "),
     [
-      "connect-src 'self' https://vitals.vercel-insights.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
+      "connect-src 'self' https://vitals.vercel-insights.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com",
       supabase,
       supabaseWs,
     ].filter(Boolean).join(" "),

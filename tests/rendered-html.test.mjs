@@ -1668,7 +1668,29 @@ test("loads Google Tag Manager while excluding customer and operator URLs", asyn
   assert.match(nextConfig, /https:\/\/www\.googletagmanager\.com/);
   assert.match(nextConfig, /https:\/\/\*\.google-analytics\.com/);
   assert.match(privacy, /アクセス解析にはGoogle/);
-  assert.match(privacy, /お客様専用サイトはアクセス解析の対象外/);
+  assert.match(privacy, /お客様専用サイト、チャットはClarityの記録対象外/);
+});
+
+test("records only public marketing pages with Microsoft Clarity", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [layout, clarity, nextConfig, privacy] = await Promise.all([
+    readFile(new URL("app/layout.tsx", root), "utf8"),
+    readFile(new URL("app/components/MicrosoftClarity.tsx", root), "utf8"),
+    readFile(new URL("next.config.ts", root), "utf8"),
+    readFile(new URL("app/privacy/page.tsx", root), "utf8"),
+  ]);
+
+  assert.match(layout, /<MicrosoftClarity\s*\/>/);
+  assert.match(clarity, /y85hni5ik1/);
+  assert.match(clarity, /"\/film\/moka-demo"/);
+  assert.doesNotMatch(clarity, /"\/studio",/);
+  assert.doesNotMatch(clarity, /"\/story",/);
+  assert.match(clarity, /window\.location\.reload\(\)/);
+  assert.match(clarity, /window\.location\.assign\(url\.href\)/);
+  assert.match(nextConfig, /https:\/\/\*\.clarity\.ms/);
+  assert.match(nextConfig, /https:\/\/c\.bing\.com/);
+  assert.match(privacy, /Microsoft/);
+  assert.match(privacy, /申込フォーム、制作室、お客様専用サイト、チャットはClarityの記録対象外/);
 });
 
 test("emails customers only when an administrator sends a studio message", async () => {

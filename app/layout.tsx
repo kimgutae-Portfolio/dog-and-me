@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { AuthProvider } from "./components/AuthProvider";
 import { GoogleTagManager } from "./components/GoogleTagManager";
+import { MicrosoftClarity } from "./components/MicrosoftClarity";
 import { SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
 import { getRequestOrigin } from "./lib/site-server";
 import "./globals.css";
@@ -78,6 +79,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>{children}</AuthProvider>
         <GoogleTagManager />
+        <MicrosoftClarity />
         <Analytics />
       </body>
     </html>
