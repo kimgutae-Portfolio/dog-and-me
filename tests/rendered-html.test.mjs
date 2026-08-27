@@ -58,7 +58,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.match(html, /物語をつくる/);
   assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
-  assert.match(html, /写真を再現するのではなく/);
+  assert.match(html, /写真そっくりの実写として再現するのではなく/);
   assert.match(html, /水彩・ガッシュ/);
   assert.match(html, /モカの記憶が/);
   assert.match(html, /LINE STICKERS INCLUDED FREE/);
@@ -77,9 +77,10 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /通常10〜14営業日が目安/);
   assert.ok(
     html.indexOf("A COMPLETE MOVING STORYBOOK") <
-      html.indexOf("NOT A RE-CREATION, A NEW STORY"),
+      html.indexOf("FIVE MEMORIES OF MOKA"),
     "the completed film should be the first full section after the hero",
   );
+  assert.doesNotMatch(html, /NOT A RE-CREATION, A NEW STORY/);
   assert.doesNotMatch(
     html,
     /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
@@ -96,6 +97,10 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /人が写っている写真も送れますか/);
   assert.match(html, /完成イラストでは人物をすべて除き/);
   assert.match(html, /物語案2案/);
+  assert.match(
+    html,
+    /<strong>オープン記念：うちの子LINEスタンプ8種類（通常¥3,800相当）<\/strong>/,
+  );
   assert.match(html, /5つの物語を各5秒で制作/);
   assert.match(html, /現在の制作プランと同じ、5秒映像5本で仕上げた約39秒のデモ/);
   assert.match(html, /COMPLETE FILM · 00:39/);

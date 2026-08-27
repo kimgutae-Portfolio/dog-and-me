@@ -4,7 +4,6 @@ import { useEffect } from "react";
 
 const revealSelectors = [
   ".storybook-heading > *",
-  ".storybook-intro-grid > *",
   ".storybook-film-frame",
   ".storybook-memory-track > li",
   ".storybook-personal-site-heading > *",
