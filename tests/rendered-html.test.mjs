@@ -99,7 +99,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /物語案2案/);
   assert.match(
     html,
-    /<strong>オープン記念：うちの子LINEスタンプ8種類（通常¥3,800相当）<\/strong>/,
+    /<strong>オープン記念：うちの子LINEスタンプ8種類（通常¥1,480相当）<\/strong>/,
   );
   assert.match(html, /5つの物語を各5秒で制作/);
   assert.match(html, /現在の制作プランと同じ、5秒映像5本で仕上げた約39秒のデモ/);
@@ -1857,7 +1857,7 @@ test("includes the free LINE sticker benefit with separate consent and operator 
   ]);
 
   assert.match(studio, /<LineStickerPanel/);
-  assert.match(panel, /通常 ¥3,800相当/);
+  assert.match(panel, /通常 ¥1,480相当/);
   assert.match(panel, /追加料金なし/);
   assert.match(panel, /accept_line_sticker_consent/);
   assert.match(panel, /販売管理と売上はWAN MEMORYに帰属/);
@@ -1870,6 +1870,7 @@ test("includes the free LINE sticker benefit with separate consent and operator 
   assert.match(styles, /\.price-card \.price-line-sticker-benefit strong \{ font-size: 13px; font-weight: 800; \}/);
   assert.match(admin, /WAN MEMORY LINE STICKER PRODUCTION v3\.0/);
   assert.match(admin, /wan-memory-line-sticker-input-3\.0/);
+  assert.match(admin, /reference_value_jpy: 1480/);
   assert.match(admin, /line-sticker-style-reference\.png/);
   assert.match(admin, /おはようわん/);
   assert.match(admin, /4_columns_x_2_rows/);

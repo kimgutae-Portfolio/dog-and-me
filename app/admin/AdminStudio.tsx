@@ -2396,7 +2396,7 @@ export function AdminStudio() {
         source_asset: "website-character-sprite.png",
         included_benefit: {
           customer_price_jpy: 0,
-          reference_value_jpy: 3800,
+          reference_value_jpy: 1480,
           customer_revision_available: false,
         },
         phrases: [
@@ -4563,7 +4563,7 @@ export function AdminStudio() {
                     <div className="admin-line-sticker-register">
                       <div className="admin-line-sticker-head">
                         <div>
-                          <span className="admin-free-benefit">FREE BENEFIT · 通常¥3,800相当</span>
+                          <span className="admin-free-benefit">FREE BENEFIT · 通常¥1,480相当</span>
                           <strong>LINEスタンプ 8種類</strong>
                           <p>
                             登録済みキャラクターから固定8文言を制作し、プレビューとLINE登録用ZIPを保存します。顧客の修正工程はありません。

@@ -475,7 +475,7 @@ export default async function Home() {
             </div>
             <div className="storybook-line-sticker-offer">
               <span>OPENING GIFT</span>
-              <del>通常 ¥3,800相当</del>
+              <del>通常 ¥1,480相当</del>
               <strong>制作・登録料 ¥0</strong>
             </div>
           </div>

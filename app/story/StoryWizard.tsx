@@ -1649,7 +1649,7 @@ export function StoryWizard() {
                     </div>
                     <div>
                       <dt>オープン記念特典</dt>
-                      <dd>うちの子LINEスタンプ8種類（通常¥3,800相当）</dd>
+                      <dd>うちの子LINEスタンプ8種類（通常¥1,480相当）</dd>
                     </div>
                   </dl>
                 </section>
