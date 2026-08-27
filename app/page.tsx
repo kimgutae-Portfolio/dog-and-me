@@ -488,35 +488,47 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="storybook-method section" id="memory-story">
+      <section className="storybook-line-stickers section" id="line-stickers">
         <div className="shell">
-          <div className="storybook-heading storybook-method-summary light">
+          <div className="storybook-line-sticker-heading">
             <div>
-              <p className="eyebrow">YOU SHARE THE MEMORIES</p>
+              <p className="eyebrow">LINE STICKERS INCLUDED FREE</p>
               <h2>
-                お送りいただくのは、
+                LINEスタンプ8種類も、
                 <br />
-                5つの思い出と写真だけ。
+                今だけ無料でついてくる。
               </h2>
             </div>
-            <p>
-              物語の構成、文章、絵、動きは、
-              <br />こちらですべて整えます。
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="storybook-directions section-tight">
-        <div className="shell">
-          <div className="section-heading-row">
-            <div>
-              <p className="eyebrow">TWO STORY DIRECTIONS</p>
-              <h2>同じ思い出から、二つの物語案をご提案。</h2>
+            <div className="storybook-line-sticker-offer">
+              <span>OPENING GIFT</span>
+              <del>通常 ¥3,800相当</del>
+              <strong>制作・登録料 ¥0</strong>
             </div>
-            <p>
-              お送りいただいた5つの出来事をもとに、つながり方の異なる2案をお作りします。内容を比べて、心に近い1案をお支払い前にお選びいただけます。
-            </p>
+          </div>
+          <div className="storybook-line-sticker-showcase">
+            <div className="storybook-line-sticker-preview">
+              <Image
+                src="/film/moka/line-stickers-preview.png"
+                alt="モカのキャラクターから作ったLINEスタンプ8種類"
+                width={1560}
+                height={680}
+                sizes="(max-width: 640px) calc(100vw - 36px), 1120px"
+              />
+            </div>
+            <div className="storybook-line-sticker-copy">
+              <p>
+                専用ホームページのために描き起こしたキャラクターから、毎日使いやすい8種類のLINEスタンプを制作します。
+                今だけ、制作とLINEへの登録を追加料金なしでプランに含めます。
+              </p>
+              <ul>
+                <li><span>01</span><strong>その子のキャラクターで8種類</strong></li>
+                <li><span>02</span><strong>毎日送りやすい日本語セット</strong></li>
+                <li><span>03</span><strong>面倒なLINE登録までおまかせ</strong></li>
+              </ul>
+              <small>
+                LINEで実際に使用する際は、LINE STOREでのスタンプ購入代金が別途必要です。文言指定・個別修正は含まれません。
+              </small>
+            </div>
           </div>
         </div>
       </section>

@@ -61,7 +61,11 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /写真を再現するのではなく/);
   assert.match(html, /水彩・ガッシュ/);
   assert.match(html, /モカの記憶が/);
-  assert.match(html, /二つの物語案/);
+  assert.match(html, /LINE STICKERS INCLUDED FREE/);
+  assert.match(html, /LINEスタンプ8種類も/);
+  assert.match(html, /制作・登録料/);
+  assert.match(html, /line-stickers-preview\.png/);
+  assert.doesNotMatch(html, /YOU SHARE THE MEMORIES|TWO STORY DIRECTIONS/);
   assert.match(html, /専用ページで受け取る/);
   assert.match(html, /専用ものがたりサイト/);
   assert.match(html, /公開期限なし/);
