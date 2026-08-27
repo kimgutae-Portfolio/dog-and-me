@@ -484,8 +484,8 @@ export default async function Home() {
               <Image
                 src="/film/moka/line-stickers-preview-v2.png"
                 alt="モカのキャラクターから作った、わん付きLINEスタンプ8種類"
-                width={1899}
-                height={828}
+                width={1536}
+                height={1024}
                 sizes="(max-width: 640px) calc(100vw - 36px), 1120px"
               />
             </div>
