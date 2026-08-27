@@ -1840,11 +1840,12 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
 
 test("includes the free LINE sticker benefit with separate consent and operator delivery", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [studio, panel, admin, pricing, terms, migration] = await Promise.all([
+  const [studio, panel, admin, pricing, styles, terms, migration] = await Promise.all([
     readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
     readFile(new URL("app/studio/LineStickerPanel.tsx", root), "utf8"),
     readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
     readFile(new URL("app/components/LivePriceCard.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
     readFile(new URL("app/terms/page.tsx", root), "utf8"),
     readFile(
       new URL(
@@ -1865,6 +1866,8 @@ test("includes the free LINE sticker benefit with separate consent and operator 
   assert.match(admin, /admin_register_line_sticker_delivery/);
   assert.match(admin, /admin_update_line_sticker_status/);
   assert.match(pricing, /うちの子LINEスタンプ8種類/);
+  assert.match(pricing, /price-line-sticker-benefit/);
+  assert.match(styles, /\.price-card \.price-line-sticker-benefit strong \{ font-size: 13px; font-weight: 800; \}/);
   assert.match(terms, /お客様への売上分配はありません/);
   assert.match(migration, /create table if not exists public\.line_sticker_deliveries/);
   assert.match(migration, /2026-08-27-line-sticker-v1/);

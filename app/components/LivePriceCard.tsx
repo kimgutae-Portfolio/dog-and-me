@@ -84,7 +84,7 @@ export function LivePriceCard() {
         <li>BGM・場面ごとの物語字幕</li>
         <li>完成映像は1場面まで修正</li>
         <li>公開期限・月額料金なしの専用ものがたりサイト</li>
-        <li className="line-sticker-benefit">
+        <li className="price-line-sticker-benefit">
           <strong>オープン記念：うちの子LINEスタンプ8種類（通常¥3,800相当）</strong>
         </li>
       </ul>
