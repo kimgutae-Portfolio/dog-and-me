@@ -1868,8 +1868,9 @@ test("includes the free LINE sticker benefit with separate consent and operator 
   assert.match(pricing, /うちの子LINEスタンプ8種類/);
   assert.match(pricing, /price-line-sticker-benefit/);
   assert.match(styles, /\.price-card \.price-line-sticker-benefit strong \{ font-size: 13px; font-weight: 800; \}/);
-  assert.match(admin, /WAN MEMORY LINE STICKER PRODUCTION v2\.0/);
-  assert.match(admin, /wan-memory-line-sticker-input-2\.0/);
+  assert.match(admin, /WAN MEMORY LINE STICKER PRODUCTION v3\.0/);
+  assert.match(admin, /wan-memory-line-sticker-input-3\.0/);
+  assert.match(admin, /line-sticker-style-reference\.png/);
   assert.match(admin, /おはようわん/);
   assert.match(admin, /4_columns_x_2_rows/);
   assert.match(terms, /お客様への売上分配はありません/);
