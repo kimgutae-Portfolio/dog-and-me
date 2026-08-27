@@ -586,7 +586,7 @@ export default async function Home() {
               <p className="eyebrow">ONE STORYBOOK PLAN</p>
               <h2>物語から、完成ページまで。</h2>
             </div>
-            <p>二つの物語案、絵本ページ、約40秒の映像、公開期限・月額料金なしの専用サイトを含みます。</p>
+            <p>二つの物語案、絵本ページ、約40秒の映像、公開期限・月額料金なしの専用サイトに、今だけLINEスタンプ8種類も追加料金なしで含みます。</p>
           </div>
           <div className="pricing-grid">
             <LivePriceCard />

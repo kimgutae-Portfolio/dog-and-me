@@ -19,6 +19,8 @@ import { APPLICATIONS_OPEN } from "../lib/site";
 import { AdminPushCenter } from "./AdminPushCenter";
 import type {
   FilmConcept,
+  LineStickerDelivery,
+  LineStickerStatus,
   MemoryOrder,
   OrderAsset,
   OrderMemory,
@@ -556,6 +558,37 @@ const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION
   "cross_cell_bleed_check":"passed",
   "customer_review_required":false
 }`;
+
+const LINE_STICKER_PROMPT = `WAN MEMORY LINE STICKER PRODUCTION v1.0
+
+첨부한 website-character-sprite.png의 동일한 강아지 캐릭터를 기준으로, LINE Creators Market 정지 스탬프 8종을 제작한다.
+
+사용 문구와 표정
+1. おはよう — 밝게 인사
+2. ありがとう — 고마운 미소
+3. おつかれさま — 다정하게 격려
+4. 了解！ — 앞발을 들고 대답
+5. ごめんね — 미안한 표정
+6. おやすみ — 편안히 엎드려 쉬기
+7. だいすき — 사랑스러운 표정과 작은 하트
+8. またね — 앞발을 흔들며 인사
+
+제작 규칙
+- 원본 스프라이트의 얼굴형, 눈, 귀, 주둥이, 털색, 미용 형태, 자연스러운 신체 비율, 목걸이와 펜던트를 8종 모두 동일하게 유지한다.
+- 하네스, 새 옷, 새 무늬, 다른 품종의 특징을 추가하지 않는다.
+- 캐릭터와 일본어 문구가 작은 화면에서도 즉시 읽히도록 단순하고 명확하게 배치한다.
+- 과장된 애니메이션 눈, 3D, 사진풍, 복잡한 배경을 사용하지 않는다.
+- 투명 RGBA 배경이며 캐릭터·글자 주변에 충분한 안전 여백을 둔다.
+- 글자는 정확한 일본어만 사용하고 임의 문자, 로고, 워터마크를 넣지 않는다.
+- 각 파일은 370×320px 이내의 PNG, RGB, 각 1MB 이하로 만든다.
+- main.png는 240×240px, tab.png는 96×74px PNG로 함께 만든다.
+- 01.png~08.png, main.png, tab.png를 하나의 ZIP으로 정리한다.
+- 고객 수정·승인용 시안을 만들지 않는다. 운영자가 등록하는 완성 자산이다.
+
+반환
+- 8종을 한눈에 확인할 수 있는 preview.png
+- LINE 등록용 PNG 10개와 ZIP
+- 문구와 파일명이 대응하는 manifest.json`;
 const statusOptions = Object.entries(ORDER_STATUS_LABELS) as Array<
   [OrderStatus, string]
 >;
@@ -677,6 +710,8 @@ export function AdminStudio() {
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [concepts, setConcepts] = useState<FilmConcept[]>([]);
   const [assets, setAssets] = useState<OrderAsset[]>([]);
+  const [lineStickerDelivery, setLineStickerDelivery] =
+    useState<LineStickerDelivery | null>(null);
   const [memories, setMemories] = useState<OrderMemory[]>([]);
   const [assetUrls, setAssetUrls] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<OrderMessage[]>([]);
@@ -716,6 +751,14 @@ export function AdminStudio() {
   >({});
   const [characterSpriteFile, setCharacterSpriteFile] = useState<File | null>(null);
   const [characterSpriteInputKey, setCharacterSpriteInputKey] = useState(0);
+  const [lineStickerPreviewFile, setLineStickerPreviewFile] =
+    useState<File | null>(null);
+  const [lineStickerPackageFile, setLineStickerPackageFile] =
+    useState<File | null>(null);
+  const [lineStickerInputKey, setLineStickerInputKey] = useState(0);
+  const [lineStickerStatus, setLineStickerStatus] =
+    useState<LineStickerStatus>("ready");
+  const [lineStickerStoreUrl, setLineStickerStoreUrl] = useState("");
   const [clipInputKey, setClipInputKey] = useState(0);
   const [bgmTracks, setBgmTracks] = useState<string[]>([]);
   const [renderAvailable, setRenderAvailable] = useState(false);
@@ -928,6 +971,7 @@ export function AdminStudio() {
       conceptResult,
       assetResult,
       memoryResult,
+      lineStickerResult,
       messageResult,
       revisionResult,
     ] = await Promise.all([
@@ -946,6 +990,11 @@ export function AdminStudio() {
         .select("*")
         .eq("order_id", orderId)
         .order("sort_order"),
+      supabase
+        .from("line_sticker_deliveries")
+        .select("*")
+        .eq("order_id", orderId)
+        .maybeSingle(),
       supabase
         .from("messages")
         .select("*")
@@ -970,6 +1019,18 @@ export function AdminStudio() {
     );
     const loadedMemories = (memoryResult.data ?? []) as OrderMemory[];
     setMemories(loadedMemories);
+    const loadedLineSticker =
+      (lineStickerResult.data as LineStickerDelivery | null) ?? null;
+    setLineStickerDelivery(loadedLineSticker);
+    setLineStickerStatus(
+      loadedLineSticker?.status &&
+        !["awaiting_consent", "production"].includes(
+          loadedLineSticker.status,
+        )
+        ? loadedLineSticker.status
+        : "ready",
+    );
+    setLineStickerStoreUrl(loadedLineSticker?.store_url ?? "");
     setMessages((messageResult.data ?? []) as OrderMessage[]);
     setRevisions((revisionResult.data ?? []) as RevisionRequest[]);
     const toDraft = (concept?: FilmConcept): ConceptDraft =>
@@ -1004,6 +1065,8 @@ export function AdminStudio() {
       (asset) =>
         asset.category === "source_image" ||
         asset.category === "character_sprite" ||
+        asset.category === "line_sticker_preview" ||
+        asset.category === "line_sticker_package" ||
         asset.category === "scene_still" ||
         asset.category === "render_clip" ||
         asset.category === "transition_clip" ||
@@ -1090,6 +1153,18 @@ export function AdminStudio() {
   );
   const characterSprite = useMemo(
     () => assets.find((asset) => asset.category === "character_sprite") ?? null,
+    [assets],
+  );
+  const lineStickerPreview = useMemo(
+    () =>
+      assets.find((asset) => asset.category === "line_sticker_preview") ??
+      null,
+    [assets],
+  );
+  const lineStickerPackage = useMemo(
+    () =>
+      assets.find((asset) => asset.category === "line_sticker_package") ??
+      null,
     [assets],
   );
   const selectedConcept = useMemo(
@@ -2255,6 +2330,203 @@ export function AdminStudio() {
     else {
       if (storagePath) await supabase.storage.from("order-assets").remove([storagePath as string]);
       setNotice("ホームページキャラクターを削除しました。");
+      await loadDetails(order.id);
+    }
+    setSaving(false);
+  };
+
+  const downloadLineStickerBundle = async () => {
+    if (!order || !characterSprite) {
+      setError("先に完成したホームページキャラクターを登録してください。");
+      return;
+    }
+    if (!lineStickerDelivery?.consented_at) {
+      setError("お客様のLINEスタンプ制作・販売への同意が必要です。");
+      return;
+    }
+    setExportingBundle(true);
+    setExportProgress("登録済みキャラクターを準備しています…");
+    setError("");
+    try {
+      const [{ strToU8 }, supabase] = await Promise.all([
+        import("fflate"),
+        Promise.resolve(getSupabaseBrowserClient()),
+      ]);
+      const { data, error: downloadError } = await supabase.storage
+        .from("order-assets")
+        .download(characterSprite.storage_path);
+      if (downloadError || !data) throw downloadError ?? new Error("download failed");
+      const root = `${safeArchiveSegment(order.order_number)}-line-stickers`;
+      const manifest = {
+        schema_version: "wan-memory-line-sticker-input-1.0",
+        exported_at: new Date().toISOString(),
+        order_number: order.order_number,
+        pet_name: order.pet_name,
+        source_asset: "website-character-sprite.png",
+        included_benefit: {
+          customer_price_jpy: 0,
+          reference_value_jpy: 3800,
+          customer_revision_available: false,
+        },
+        phrases: [
+          "おはよう",
+          "ありがとう",
+          "おつかれさま",
+          "了解！",
+          "ごめんね",
+          "おやすみ",
+          "だいすき",
+          "またね",
+        ],
+        line_creator_market: {
+          sticker_count: 8,
+          sticker_max_pixels: "370x320",
+          main_pixels: "240x240",
+          tab_pixels: "96x74",
+          transparent_png: true,
+        },
+        consent: {
+          version: lineStickerDelivery.consent_version,
+          accepted_at: lineStickerDelivery.consented_at,
+          sales_revenue_owner: "WAN MEMORY",
+        },
+      };
+      const files: Record<string, Uint8Array> = {
+        [`${root}/01_START_HERE.txt`]: strToU8([
+          "現在プランに無料で含めているLINEスタンプ8種類の制作データです。",
+          "1. website-character-sprite.pngを基準画像として添付します。",
+          "2. 02_PROMPT_LINE_STICKERS.txtをそのまま依頼文として使います。",
+          "3. preview.pngとLINE登録用ZIPを管理画面へ保存します。",
+          "4. 顧客への修正確認は行いません。",
+        ].join("\n")),
+        [`${root}/02_PROMPT_LINE_STICKERS.txt`]: strToU8(LINE_STICKER_PROMPT),
+        [`${root}/manifest.json`]: strToU8(JSON.stringify(manifest, null, 2)),
+        [`${root}/website-character-sprite.png`]: new Uint8Array(
+          await data.arrayBuffer(),
+        ),
+      };
+      setExportProgress("LINEスタンプ制作ZIPを作成しています…");
+      await saveOperatorZip(files, `${root}.zip`);
+      setNotice("登録済みキャラクターとLINEスタンプ制作プロンプトをまとめました。");
+    } catch (bundleError) {
+      console.error(bundleError);
+      setError("LINEスタンプ制作データを準備できませんでした。");
+    } finally {
+      setExportProgress("");
+      setExportingBundle(false);
+    }
+  };
+
+  const uploadLineStickerDelivery = async () => {
+    if (!order || !lineStickerPreviewFile) return;
+    if (!lineStickerDelivery?.consented_at) {
+      setError("お客様のLINEスタンプ制作・販売への同意が必要です。");
+      return;
+    }
+    if (!["image/png", "image/webp", "image/jpeg"].includes(lineStickerPreviewFile.type)) {
+      setError("プレビューはPNG、WebP、JPEGを選択してください。");
+      return;
+    }
+    if (lineStickerPackageFile && !lineStickerPackageFile.name.toLowerCase().endsWith(".zip")) {
+      setError("登録用データはZIPファイルを選択してください。");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const previewExtension = lineStickerPreviewFile.type === "image/webp"
+      ? "webp"
+      : lineStickerPreviewFile.type === "image/jpeg"
+        ? "jpg"
+        : "png";
+    const previewPath = `${order.user_id}/${order.id}/line-stickers/preview/preview-${crypto.randomUUID()}.${previewExtension}`;
+    const packagePath = lineStickerPackageFile
+      ? `admin/${order.id}/line-stickers/package/line-stickers-${crypto.randomUUID()}.zip`
+      : null;
+    const uploadedPaths: string[] = [];
+    try {
+      const { error: previewUploadError } = await supabase.storage
+        .from("order-assets")
+        .upload(previewPath, lineStickerPreviewFile, {
+          contentType: lineStickerPreviewFile.type,
+          upsert: false,
+        });
+      if (previewUploadError) throw previewUploadError;
+      uploadedPaths.push(previewPath);
+
+      if (lineStickerPackageFile && packagePath) {
+        const { error: packageUploadError } = await supabase.storage
+          .from("order-assets")
+          .upload(packagePath, lineStickerPackageFile, {
+            contentType: "application/zip",
+            upsert: false,
+          });
+        if (packageUploadError) throw packageUploadError;
+        uploadedPaths.push(packagePath);
+      }
+
+      const { data, error: registerError } = await supabase.rpc(
+        "admin_register_line_sticker_delivery",
+        {
+          p_order_id: order.id,
+          p_preview_storage_path: previewPath,
+          p_preview_original_filename: lineStickerPreviewFile.name,
+          p_preview_mime_type: lineStickerPreviewFile.type,
+          p_preview_file_size: lineStickerPreviewFile.size,
+          p_package_storage_path: packagePath,
+          p_package_original_filename: lineStickerPackageFile?.name ?? null,
+          p_package_mime_type: lineStickerPackageFile ? "application/zip" : null,
+          p_package_file_size: lineStickerPackageFile?.size ?? null,
+        },
+      );
+      if (registerError || !data) throw registerError ?? new Error("register failed");
+      const result = data as {
+        replaced_preview_storage_path?: string | null;
+        replaced_package_storage_path?: string | null;
+      };
+      const replacedPaths = [
+        result.replaced_preview_storage_path,
+        result.replaced_package_storage_path,
+      ].filter((path): path is string => Boolean(path));
+      if (replacedPaths.length) {
+        await supabase.storage.from("order-assets").remove(replacedPaths);
+      }
+      setLineStickerPreviewFile(null);
+      setLineStickerPackageFile(null);
+      setLineStickerInputKey((current) => current + 1);
+      setNotice("LINEスタンプの完成データを保存し、お客様の制作室へ表示しました。");
+      await loadDetails(order.id);
+    } catch (uploadError) {
+      console.error(uploadError);
+      if (uploadedPaths.length) {
+        await supabase.storage.from("order-assets").remove(uploadedPaths);
+      }
+      setError("LINEスタンプの完成データを保存できませんでした。");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateLineStickerStatus = async () => {
+    if (!order || !lineStickerPreview) return;
+    setSaving(true);
+    setError("");
+    const { error: updateError } = await getSupabaseBrowserClient().rpc(
+      "admin_update_line_sticker_status",
+      {
+        p_order_id: order.id,
+        p_status: lineStickerStatus,
+        p_store_url: lineStickerStoreUrl.trim() || null,
+      },
+    );
+    if (updateError) {
+      setError(
+        lineStickerStatus === "on_sale" && !lineStickerStoreUrl.trim()
+          ? "販売中にする場合はLINE STORE URLを入力してください。"
+          : "LINEスタンプの状態を更新できませんでした。",
+      );
+    } else {
+      setNotice("LINEスタンプの公開状態を更新しました。");
       await loadDetails(order.id);
     }
     setSaving(false);
@@ -4237,6 +4509,148 @@ export function AdminStudio() {
                         </button>
                         {characterSprite && <button className="button button-outline" type="button" disabled={saving} onClick={() => void deleteCharacterSprite()}>登録を解除</button>}
                       </div>
+                    </div>
+                    <div className="admin-line-sticker-register">
+                      <div className="admin-line-sticker-head">
+                        <div>
+                          <span className="admin-free-benefit">FREE BENEFIT · 通常¥3,800相当</span>
+                          <strong>LINEスタンプ 8種類</strong>
+                          <p>
+                            登録済みキャラクターから固定8文言を制作し、プレビューとLINE登録用ZIPを保存します。顧客の修正工程はありません。
+                          </p>
+                        </div>
+                        <span className={`admin-line-consent ${lineStickerDelivery?.consented_at ? "accepted" : "waiting"}`}>
+                          {lineStickerDelivery?.consented_at
+                            ? "顧客同意済み"
+                            : "顧客同意待ち"}
+                        </span>
+                      </div>
+                      <button
+                        className="button button-primary"
+                        type="button"
+                        disabled={
+                          saving ||
+                          exportingBundle ||
+                          !characterSprite ||
+                          !lineStickerDelivery?.consented_at
+                        }
+                        onClick={() => void downloadLineStickerBundle()}
+                      >
+                        {exportingBundle && characterSprite
+                          ? "準備中…"
+                          : "LINEスタンプ制作データをダウンロード"}
+                      </button>
+                      {!characterSprite && (
+                        <em>先にホームページキャラクターを登録してください</em>
+                      )}
+                      {characterSprite && !lineStickerDelivery?.consented_at && (
+                        <em>お客様が制作室で同意すると利用できます</em>
+                      )}
+
+                      {lineStickerPreview && assetUrls[lineStickerPreview.id] && (
+                        <figure>
+                          {/* eslint-disable-next-line @next/next/no-img-element -- Short-lived signed operator preview URL. */}
+                          <img
+                            src={assetUrls[lineStickerPreview.id]}
+                            alt={`${order.pet_name}のLINEスタンプ8種類`}
+                          />
+                          <figcaption>
+                            保存済みプレビュー · {lineStickerDelivery?.status ?? "ready"}
+                          </figcaption>
+                        </figure>
+                      )}
+
+                      <div className="admin-line-sticker-files">
+                        <label>
+                          <span>{lineStickerPreview ? "プレビューを差し替える" : "8種類のプレビュー"}</span>
+                          <input
+                            key={`preview-${lineStickerInputKey}`}
+                            type="file"
+                            accept="image/png,image/webp,image/jpeg"
+                            onChange={(event) =>
+                              setLineStickerPreviewFile(
+                                event.target.files?.[0] ?? null,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          <span>{lineStickerPackage ? "登録用ZIPを差し替える（任意）" : "LINE登録用ZIP（任意）"}</span>
+                          <input
+                            key={`package-${lineStickerInputKey}`}
+                            type="file"
+                            accept=".zip,application/zip,application/x-zip-compressed"
+                            onChange={(event) =>
+                              setLineStickerPackageFile(
+                                event.target.files?.[0] ?? null,
+                              )
+                            }
+                          />
+                        </label>
+                      </div>
+                      <button
+                        className="button button-primary"
+                        type="button"
+                        disabled={
+                          saving ||
+                          !lineStickerPreviewFile ||
+                          !lineStickerDelivery?.consented_at
+                        }
+                        onClick={() => void uploadLineStickerDelivery()}
+                      >
+                        {saving ? "保存中…" : "完成データを保存して顧客画面へ表示"}
+                      </button>
+
+                      {lineStickerPreview && (
+                        <div className="admin-line-sticker-publish">
+                          <label>
+                            <span>公開状態</span>
+                            <select
+                              value={lineStickerStatus}
+                              onChange={(event) =>
+                                setLineStickerStatus(
+                                  event.target.value as LineStickerStatus,
+                                )
+                              }
+                            >
+                              <option value="ready">完成・登録準備中</option>
+                              <option value="submitted">LINE審査中</option>
+                              <option value="on_sale">LINE STOREで販売中</option>
+                              <option value="stopped">公開停止</option>
+                            </select>
+                          </label>
+                          <label>
+                            <span>LINE STORE URL</span>
+                            <input
+                              type="url"
+                              value={lineStickerStoreUrl}
+                              placeholder="https://store.line.me/stickershop/product/..."
+                              onChange={(event) =>
+                                setLineStickerStoreUrl(event.target.value)
+                              }
+                            />
+                          </label>
+                          <div>
+                            {lineStickerPackage && assetUrls[lineStickerPackage.id] && (
+                              <a
+                                className="button button-outline"
+                                href={assetUrls[lineStickerPackage.id]}
+                                download
+                              >
+                                保存済みZIPを確認
+                              </a>
+                            )}
+                            <button
+                              className="button button-outline"
+                              type="button"
+                              disabled={saving}
+                              onClick={() => void updateLineStickerStatus()}
+                            >
+                              公開状態を保存
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     {exportProgress && (
                       <p className="admin-export-progress" role="status">

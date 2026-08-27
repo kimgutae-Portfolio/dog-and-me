@@ -180,7 +180,9 @@ export type OrderAsset = {
     | "final_video"
     | "thumbnail"
     | "character_sprite"
-    | "album_photo";
+    | "album_photo"
+    | "line_sticker_preview"
+    | "line_sticker_package";
   storage_path: string;
   original_filename: string;
   mime_type: string;
@@ -336,6 +338,26 @@ export type Delivery = {
   title: string;
   customer_message: string | null;
   delivered_at: string;
+};
+
+export type LineStickerStatus =
+  | "awaiting_consent"
+  | "production"
+  | "ready"
+  | "submitted"
+  | "on_sale"
+  | "stopped";
+
+export type LineStickerDelivery = {
+  order_id: string;
+  status: LineStickerStatus;
+  preview_asset_id: string | null;
+  package_asset_id: string | null;
+  store_url: string | null;
+  consented_at: string | null;
+  consent_version: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type OrderMessage = {

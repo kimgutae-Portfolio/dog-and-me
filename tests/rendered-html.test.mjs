@@ -1828,3 +1828,38 @@ test("uses Stripe-hosted Checkout and only verified webhooks confirm payment", a
   assert.match(envExample, /STRIPE_MODE=test/);
   assert.ok(JSON.parse(packageSource).dependencies.stripe);
 });
+
+test("includes the free LINE sticker benefit with separate consent and operator delivery", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [studio, panel, admin, pricing, terms, migration] = await Promise.all([
+    readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+    readFile(new URL("app/studio/LineStickerPanel.tsx", root), "utf8"),
+    readFile(new URL("app/admin/AdminStudio.tsx", root), "utf8"),
+    readFile(new URL("app/components/LivePriceCard.tsx", root), "utf8"),
+    readFile(new URL("app/terms/page.tsx", root), "utf8"),
+    readFile(
+      new URL(
+        "supabase/migrations/202608270001_line_sticker_service.sql",
+        root,
+      ),
+      "utf8",
+    ),
+  ]);
+
+  assert.match(studio, /<LineStickerPanel/);
+  assert.match(panel, /通常 ¥3,800相当/);
+  assert.match(panel, /追加料金なし/);
+  assert.match(panel, /accept_line_sticker_consent/);
+  assert.match(panel, /販売管理と売上はWAN MEMORYに帰属/);
+  assert.match(panel, /スタンプ内容の変更・修正受付はありません/);
+  assert.match(admin, /LINEスタンプ制作データをダウンロード/);
+  assert.match(admin, /admin_register_line_sticker_delivery/);
+  assert.match(admin, /admin_update_line_sticker_status/);
+  assert.match(pricing, /うちの子LINEスタンプ8種類/);
+  assert.match(terms, /お客様への売上分配はありません/);
+  assert.match(migration, /create table if not exists public\.line_sticker_deliveries/);
+  assert.match(migration, /2026-08-27-line-sticker-v1/);
+  assert.match(migration, /current LINE sticker consent required/);
+  assert.match(migration, /line_sticker_preview/);
+  assert.match(migration, /line_sticker_package/);
+});

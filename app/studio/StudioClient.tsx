@@ -22,6 +22,7 @@ import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type {
   Delivery,
   FilmConcept,
+  LineStickerDelivery,
   MemoryOrder,
   OrderAsset,
   OrderMemory,
@@ -33,6 +34,7 @@ import { uploadMessageAttachment, uploadOrderImages } from "../lib/supabase/uplo
 import { ChatWidget } from "./ChatWidget";
 import { AccountDeletion } from "./AccountDeletion";
 import { MemoryShareManager } from "./MemoryShareManager";
+import { LineStickerPanel } from "./LineStickerPanel";
 import {
   hasSeenPhotoUploadGuide,
   PhotoUploadGuideDialog,
@@ -92,11 +94,14 @@ export function StudioClient() {
   const [memories, setMemories] = useState<OrderMemory[]>([]);
   const [concepts, setConcepts] = useState<FilmConcept[]>([]);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
+  const [lineStickerDelivery, setLineStickerDelivery] =
+    useState<LineStickerDelivery | null>(null);
   const [messages, setMessages] = useState<OrderMessage[]>([]);
   const [revisions, setRevisions] = useState<RevisionRequest[]>([]);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoDownloadUrl, setVideoDownloadUrl] = useState("");
   const [reviewVideoUrl, setReviewVideoUrl] = useState("");
+  const [lineStickerPreviewUrl, setLineStickerPreviewUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -209,6 +214,7 @@ export function StudioClient() {
       memoryResult,
       conceptResult,
       deliveryResult,
+      lineStickerResult,
       messageResult,
       revisionResult,
     ] = await Promise.all([
@@ -234,6 +240,11 @@ export function StudioClient() {
         .eq("order_id", orderId)
         .maybeSingle(),
       supabase
+        .from("line_sticker_deliveries")
+        .select("*")
+        .eq("order_id", orderId)
+        .maybeSingle(),
+      supabase
         .from("messages")
         .select("*")
         .eq("order_id", orderId)
@@ -248,6 +259,9 @@ export function StudioClient() {
     setMemories((memoryResult.data ?? []) as OrderMemory[]);
     setConcepts((conceptResult.data ?? []) as FilmConcept[]);
     setDelivery((deliveryResult.data as Delivery | null) ?? null);
+    setLineStickerDelivery(
+      (lineStickerResult.data as LineStickerDelivery | null) ?? null,
+    );
     const fetchedMessages = (messageResult.data ?? []) as OrderMessage[];
     setMessages((current) => {
       // A refresh may have started before a just-sent message was inserted.
@@ -267,6 +281,7 @@ export function StudioClient() {
     setVideoUrl("");
     setVideoDownloadUrl("");
     setReviewVideoUrl("");
+    setLineStickerPreviewUrl("");
   }, []);
 
   useEffect(() => {
@@ -336,6 +351,15 @@ export function StudioClient() {
         ),
     [assets],
   );
+  const lineStickerPreviewAsset = useMemo(
+    () =>
+      lineStickerDelivery?.preview_asset_id
+        ? (assets.find(
+            (asset) => asset.id === lineStickerDelivery.preview_asset_id,
+          ) ?? null)
+        : null,
+    [assets, lineStickerDelivery],
+  );
 
   useEffect(() => {
     if (!finalAsset) return;
@@ -363,6 +387,14 @@ export function StudioClient() {
       .createSignedUrl(reviewAsset.storage_path, 3600)
       .then(({ data }) => setReviewVideoUrl(data?.signedUrl ?? ""));
   }, [reviewAsset]);
+
+  useEffect(() => {
+    if (!lineStickerPreviewAsset) return;
+    getSupabaseBrowserClient()
+      .storage.from("order-assets")
+      .createSignedUrl(lineStickerPreviewAsset.storage_path, 3600)
+      .then(({ data }) => setLineStickerPreviewUrl(data?.signedUrl ?? ""));
+  }, [lineStickerPreviewAsset]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1427,6 +1459,7 @@ export function StudioClient() {
                   5つの物語を各5秒で制作 · 完成約40秒 · 絵本
                   {order.stills_revision_limit}場面・映像
                   {order.revision_limit}場面まで修正
+                  {" · "}LINEスタンプ8種類つき
                 </small>
               </div>
               <div className="order-meta">
@@ -1590,6 +1623,17 @@ export function StudioClient() {
                     <span>この表示は顧客画面でのみ操作できます。</span>
                   )}
                 </aside>
+              )}
+
+            {order.status !== "cancelled" &&
+              (order.status !== "delivered" || deliveredTab === "delivery") && (
+              <LineStickerPanel
+                order={order}
+                delivery={lineStickerDelivery}
+                previewUrl={lineStickerPreviewUrl}
+                canConsent={canOperateOrder}
+                onChanged={() => loadDetails(order.id)}
+              />
               )}
 
             {(order.payment_status === "invoice_sent" ||
