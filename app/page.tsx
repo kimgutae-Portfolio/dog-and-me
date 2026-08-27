@@ -482,10 +482,10 @@ export default async function Home() {
           <div className="storybook-line-sticker-showcase">
             <div className="storybook-line-sticker-preview">
               <Image
-                src="/film/moka/line-stickers-preview.png"
-                alt="モカのキャラクターから作ったLINEスタンプ8種類"
-                width={1560}
-                height={680}
+                src="/film/moka/line-stickers-preview-v2.png"
+                alt="モカのキャラクターから作った、わん付きLINEスタンプ8種類"
+                width={1899}
+                height={828}
                 sizes="(max-width: 640px) calc(100vw - 36px), 1120px"
               />
             </div>

@@ -559,31 +559,51 @@ const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION
   "customer_review_required":false
 }`;
 
-const LINE_STICKER_PROMPT = `WAN MEMORY LINE STICKER PRODUCTION v1.0
+const LINE_STICKER_PROMPT = `WAN MEMORY LINE STICKER PRODUCTION v2.0
 
 첨부한 website-character-sprite.png의 동일한 강아지 캐릭터를 기준으로, LINE Creators Market 정지 스탬프 8종을 제작한다.
 
+v2 핵심 방향
+- 홈페이지용 걷기 프레임을 그대로 잘라 쓰지 않고, 각 문구의 감정이 한눈에 읽히는 전신 포즈를 새로 그린다.
+- 8종 모두 문구 끝에 정확히 "わん"을 붙여 이 강아지만의 말투로 통일한다.
+- 큰 둥근 손글씨, 두꺼운 흰색 스티커 외곽선, 작은 감정 장식으로 모바일 대화창에서도 즉시 읽히게 만든다.
+- preview.png는 4열×2행의 완성 예시판으로 만들고, 등록용 개별 파일은 실제 투명 배경으로 별도 납품한다.
+
 사용 문구와 표정
-1. おはよう — 밝게 인사
-2. ありがとう — 고마운 미소
-3. おつかれさま — 다정하게 격려
-4. 了解！ — 앞발을 들고 대답
-5. ごめんね — 미안한 표정
-6. おやすみ — 편안히 엎드려 쉬기
-7. だいすき — 사랑스러운 표정과 작은 하트
-8. またね — 앞발을 흔들며 인사
+1. おはようわん — 밝게 인사하며 앞발을 흔들고 햇살 포인트
+2. ありがとうわん — 고마운 미소와 감사 포즈
+3. おつかれさまわん — 다정하게 격려하며 포근한 분위기
+4. 了解わん！ — 앞발을 들고 씩씩하게 대답
+5. ごめんねわん — 고개를 살짝 숙인 미안한 표정
+6. おやすみわん — 편안히 엎드려 쉬며 졸린 분위기
+7. だいすきわん — 사랑스러운 표정과 작은 하트
+8. またねわん — 앞발을 흔들며 귀엽게 인사
 
 제작 규칙
 - 원본 스프라이트의 얼굴형, 눈, 귀, 주둥이, 털색, 미용 형태, 자연스러운 신체 비율, 목걸이와 펜던트를 8종 모두 동일하게 유지한다.
 - 하네스, 새 옷, 새 무늬, 다른 품종의 특징을 추가하지 않는다.
-- 캐릭터와 일본어 문구가 작은 화면에서도 즉시 읽히도록 단순하고 명확하게 배치한다.
-- 과장된 애니메이션 눈, 3D, 사진풍, 복잡한 배경을 사용하지 않는다.
+- LINE 이모티콘처럼 표정과 동작을 조금 더 크게 표현하되, 캐릭터를 심하게 변형하는 치비 스타일은 사용하지 않는다.
+- 일본어 문구는 둥글고 손글씨 느낌의 굵은 글자로 배치하고, 읽기 쉬운 흰색 외곽선을 충분히 넣는다. 문구별로 주황·파랑·분홍 등 작은 포인트 색상을 사용한다.
+- 캐릭터와 일본어 문구가 작은 화면에서도 즉시 읽히도록 한 장에 하나의 포즈만 명확하게 배치한다.
+- 햇살, 하트, 땀방울, 졸림 표시처럼 의미를 보조하는 작은 장식은 문구와 어울릴 때만 사용한다.
+- 각 스탬프에서 문구는 위쪽, 캐릭터는 그 아래에 배치하고 둘 사이가 겹치지 않게 한다. 문자와 귀·꼬리·발·장식은 안전 여백 안에 완전히 들어와야 한다.
+- 8개 포즈는 서로 명확히 달라야 하며, 인사·절하기·격려·대답·사과·수면·애정·작별의 의미가 글자를 읽지 않아도 구분되어야 한다.
+- 과장된 애니메이션 눈, 3D, 사진풍, 복잡한 배경, 패널 사이의 캐릭터 중복을 사용하지 않는다.
 - 투명 RGBA 배경이며 캐릭터·글자 주변에 충분한 안전 여백을 둔다.
-- 글자는 정확한 일본어만 사용하고 임의 문자, 로고, 워터마크를 넣지 않는다.
-- 각 파일은 370×320px 이내의 PNG, RGB, 각 1MB 이하로 만든다.
+- 최종 개별 PNG에는 배경색을 넣지 않는다. 미리보기 시트는 옅은 청회색 배경을 사용할 수 있지만 등록용 파일은 완전 투명이어야 한다.
+- 글자는 위의 정확한 일본어만 사용하고 임의 문자, 로고, 워터마크를 넣지 않는다. 특히 모든 문구 끝의 わん을 빠뜨리지 않는다.
+- 4열×2행 preview.png에서 각 문구와 포즈가 한눈에 보이도록 구성한다.
+- preview.png만 균일하고 매우 옅은 청회색 배경과 약한 접지 그림자를 사용한다. 셀 구분선은 넣지 않는다.
+- 각 파일은 370×320px 이내의 PNG RGBA, 각 1MB 이하로 만든다.
 - main.png는 240×240px, tab.png는 96×74px PNG로 함께 만든다.
 - 01.png~08.png, main.png, tab.png를 하나의 ZIP으로 정리한다.
 - 고객 수정·승인용 시안을 만들지 않는다. 운영자가 등록하는 완성 자산이다.
+
+필수 검수
+- 01.png~08.png를 각각 단독으로 열어 일본어 문구가 위 목록과 글자 단위로 완전히 같은지 확인한다.
+- 오탈자, 빠진 わん, 추가 문자, 잘린 글자 또는 잘린 신체가 하나라도 있으면 해당 스탬프만 다시 제작한다.
+- 각 등록용 PNG를 흰색·검은색·LINE 채팅 배경 위에 합성해 가짜 배경, 색 테두리, 사각 조각이 없는지 확인한다.
+- 8종에서 얼굴, 털색, 귀, 체형, 목걸이와 펜던트가 동일한 강아지인지 최종 비교한다.
 
 반환
 - 8종을 한눈에 확인할 수 있는 preview.png
@@ -2358,7 +2378,7 @@ export function AdminStudio() {
       if (downloadError || !data) throw downloadError ?? new Error("download failed");
       const root = `${safeArchiveSegment(order.order_number)}-line-stickers`;
       const manifest = {
-        schema_version: "wan-memory-line-sticker-input-1.0",
+        schema_version: "wan-memory-line-sticker-input-2.0",
         exported_at: new Date().toISOString(),
         order_number: order.order_number,
         pet_name: order.pet_name,
@@ -2369,15 +2389,21 @@ export function AdminStudio() {
           customer_revision_available: false,
         },
         phrases: [
-          "おはよう",
-          "ありがとう",
-          "おつかれさま",
-          "了解！",
-          "ごめんね",
-          "おやすみ",
-          "だいすき",
-          "またね",
+          "おはようわん",
+          "ありがとうわん",
+          "おつかれさまわん",
+          "了解わん！",
+          "ごめんねわん",
+          "おやすみわん",
+          "だいすきわん",
+          "またねわん",
         ],
+        phrase_style: {
+          suffix: "わん",
+          lettering: "bold rounded handwritten Japanese with thick white outline",
+          preview_layout: "4_columns_x_2_rows",
+          pose_policy: "eight newly drawn phrase-specific expressive full-body poses",
+        },
         line_creator_market: {
           sticker_count: 8,
           sticker_max_pixels: "370x320",

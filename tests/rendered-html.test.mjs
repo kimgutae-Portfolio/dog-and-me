@@ -64,7 +64,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /LINE STICKERS INCLUDED FREE/);
   assert.match(html, /LINEスタンプ8種類も/);
   assert.match(html, /制作・登録料/);
-  assert.match(html, /line-stickers-preview\.png/);
+  assert.match(html, /line-stickers-preview-v2\.png/);
   assert.doesNotMatch(html, /YOU SHARE THE MEMORIES|TWO STORY DIRECTIONS/);
   assert.match(html, /専用ページで受け取る/);
   assert.match(html, /専用ものがたりサイト/);
@@ -1868,6 +1868,10 @@ test("includes the free LINE sticker benefit with separate consent and operator 
   assert.match(pricing, /うちの子LINEスタンプ8種類/);
   assert.match(pricing, /price-line-sticker-benefit/);
   assert.match(styles, /\.price-card \.price-line-sticker-benefit strong \{ font-size: 13px; font-weight: 800; \}/);
+  assert.match(admin, /WAN MEMORY LINE STICKER PRODUCTION v2\.0/);
+  assert.match(admin, /wan-memory-line-sticker-input-2\.0/);
+  assert.match(admin, /おはようわん/);
+  assert.match(admin, /4_columns_x_2_rows/);
   assert.match(terms, /お客様への売上分配はありません/);
   assert.match(migration, /create table if not exists public\.line_sticker_deliveries/);
   assert.match(migration, /2026-08-27-line-sticker-v1/);
