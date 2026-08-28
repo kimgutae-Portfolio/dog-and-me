@@ -12,6 +12,7 @@ export function GET(request: Request) {
   const publicUrls = [
     origin,
     `${origin}/aiken-omoide-douga`,
+    `${origin}/aiken-shashin-douga`,
     `${origin}/uchinoko-kinenbi-douga`,
     `${origin}/dog-photo-guide`,
     `${origin}/film/moka-demo`,

@@ -16,6 +16,11 @@ const guides = [
     "物語ごとの基準写真と補助写真の準備方法",
     "/dog-photo-guide",
   ],
+  [
+    "愛犬の写真を動画にする方法",
+    "写真選びから構成まで、思い出動画づくりの基本",
+    "/aiken-shashin-douga",
+  ],
 ] as const;
 
 export function SeoGuideLinks({ currentPath }: { currentPath?: string }) {

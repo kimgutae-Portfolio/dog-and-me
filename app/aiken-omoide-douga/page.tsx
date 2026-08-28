@@ -146,7 +146,7 @@ export default function AikenOmoideDougaPage() {
           写真にない角度や動きを実写らしく作ろうとすると、毛並み、目、しっぽ、体型が場面ごとに変わりやすくなります。絵本なら、完全な複製を競うのではなく、ご家族が感じる「この子らしさ」と物語全体の一貫性を優先できます。
         </p>
         <Link className="text-link" href="/film/moka-demo">
-          ミルの動くページを見る →
+          モカの動くページを見る →
         </Link>
       </section>
       <section className="seo-faq">

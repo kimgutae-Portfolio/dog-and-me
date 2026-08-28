@@ -154,6 +154,7 @@ test("serves crawl controls and an absolute public sitemap", async () => {
   }
   for (const path of [
     "aiken-omoide-douga",
+    "aiken-shashin-douga",
     "uchinoko-kinenbi-douga",
     "dog-photo-guide",
   ]) {
@@ -170,6 +171,10 @@ test("renders focused Japanese SEO guide pages", async () => {
     [
       "/aiken-omoide-douga",
       ["愛犬の写真から、一冊のような物語を", "愛犬の写真からつくる動く絵本"],
+    ],
+    [
+      "/aiken-shashin-douga",
+      ["愛犬の写真を、思い出が伝わる動画に", "愛犬の写真を動画にする方法"],
     ],
     [
       "/uchinoko-kinenbi-douga",

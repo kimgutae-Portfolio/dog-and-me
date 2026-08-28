@@ -159,7 +159,7 @@ export default function DogPhotoGuidePage() {
       </section>
       <aside className="seo-cta">
         <p>写真が揃っていなくても、入力途中で保存できます。</p>
-        <h2>まずは、物語にしたい三日を選ぶところから。</h2>
+        <h2>まずは、物語にしたい五日を選ぶところから。</h2>
         <div>
           <StartStoryLink className="button button-primary">
             物語を相談する →
