@@ -8,6 +8,7 @@ const CLARITY_SCRIPT_SELECTOR = "script[data-wm-clarity]";
 const CLARITY_PATHS = new Set([
   "/",
   "/aiken-omoide-douga",
+  "/aiken-shashin-douga",
   "/dog-photo-guide",
   "/film/moka-demo",
   "/uchinoko-kinenbi-douga",

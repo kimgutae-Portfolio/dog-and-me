@@ -32,6 +32,7 @@ export function SiteFooter() {
           </div>
           <div>
             <p>SUPPORT</p>
+            <Link href="/aiken-shashin-douga">愛犬の写真を動画にする方法</Link>
             <Link href="/dog-photo-guide">絵本の写真選び</Link>
             <Link href="/#faq">よくある質問</Link>
             <Link href="/studio">制作室</Link>

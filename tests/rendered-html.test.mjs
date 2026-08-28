@@ -1674,6 +1674,7 @@ test("loads Google Tag Manager while excluding customer and operator URLs", asyn
   assert.match(layout, /<GoogleTagManager\s*\/>/);
   assert.match(tagManager, /GTM-WBMHCBXJ/);
   assert.match(tagManager, /G-31J209RFN1/);
+  assert.match(tagManager, /"aiken-shashin-douga"/);
   assert.match(tagManager, /ga-disable-/);
   assert.match(tagManager, /pathname\.startsWith\("\/admin\/"\)/);
   assert.match(tagManager, /pathname\.startsWith\("\/memory\/"\)/);
@@ -1696,6 +1697,7 @@ test("records only public marketing pages with Microsoft Clarity", async () => {
 
   assert.match(layout, /<MicrosoftClarity\s*\/>/);
   assert.match(clarity, /y85hni5ik1/);
+  assert.match(clarity, /"\/aiken-shashin-douga"/);
   assert.match(clarity, /"\/film\/moka-demo"/);
   assert.doesNotMatch(clarity, /"\/studio",/);
   assert.doesNotMatch(clarity, /"\/story",/);

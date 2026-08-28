@@ -23,6 +23,7 @@ function isAnalyticsPath(pathname: string) {
   const knownFirstSegments = new Set([
     "admin",
     "aiken-omoide-douga",
+    "aiken-shashin-douga",
     "api",
     "auth",
     "contact",
