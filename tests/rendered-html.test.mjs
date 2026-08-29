@@ -62,6 +62,9 @@ test("server-renders the Japanese landing page", async () => {
     /A COMPLETE MOVING STORYBOOK \+ A WEBSITE JUST FOR YOUR DOG/,
   );
   assert.match(html, /一冊の物語と/);
+  assert.match(html, /まず、完成作品をご覧ください/);
+  assert.match(html, /見て、残して、/);
+  assert.match(html, /約40秒の動く絵本と、写真を増やせる専用ホームページ/);
   assert.match(html, /愛犬専用ホームページ/);
   assert.match(html, /育てられる写真アルバム/);
   assert.match(html, /歩いて話すミニキャラクター/);

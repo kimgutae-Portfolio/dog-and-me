@@ -2216,6 +2216,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-heading .eyebrow { position: relative; width: fit-content; }
 .storybook-heading .eyebrow::after { content: ""; width: 42px; height: 1px; position: absolute; left: calc(100% + 14px); top: 50%; background: currentColor; transform-origin: left; animation: storybook-line-breathe 2.8s ease-in-out infinite; }
 .storybook-film-showcase { position: relative; overflow: hidden; }
+.storybook-mobile-result-kicker, .storybook-complete-mobile-copy { display: none; }
 .storybook-complete-experience .storybook-heading { margin-bottom: 32px; }
 .storybook-complete-experience .storybook-heading > p { max-width: 535px; }
 .storybook-complete-includes { margin: 0 0 38px; padding: 0; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border: 1px solid rgba(64,59,53,.15); background: rgba(255,255,255,.33); list-style: none; }
@@ -2524,7 +2525,19 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-hero-actions .text-link { align-self: center; }
   .storybook-hero-note { display: none; }
   .storybook-heading { align-items: start; flex-direction: column; gap: 20px; }
-  .storybook-complete-experience .storybook-heading { margin-bottom: 25px; }
+  .storybook-complete-experience { padding-top: 62px; }
+  .storybook-complete-experience .shell { display: flex; flex-direction: column; }
+  .storybook-mobile-result-kicker { margin: 0 0 15px; order: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #5f5850; font-family: var(--font-serif); font-size: 12px; letter-spacing: .04em; }
+  .storybook-mobile-result-kicker span { color: #a66f70; font-family: var(--font-sans); font-size: 7px; font-weight: 800; letter-spacing: .15em; }
+  .storybook-complete-experience .storybook-film-frame { order: 1; }
+  .storybook-complete-experience .storybook-heading { margin: 38px 0 23px; order: 2; gap: 13px; }
+  .storybook-complete-desktop-copy { display: none; }
+  .storybook-complete-mobile-copy { display: block; }
+  .storybook-complete-experience .storybook-heading .eyebrow { margin-bottom: 15px; }
+  .storybook-complete-experience .storybook-heading h2 { font-size: 35px; line-height: 1.48; }
+  .storybook-complete-experience .storybook-heading > p { margin: 0; font-size: 12px; line-height: 1.85; }
+  .storybook-complete-experience .storybook-complete-includes { order: 3; }
+  .storybook-complete-experience .storybook-complete-website { order: 4; }
   .storybook-complete-includes { margin-bottom: 28px; grid-template-columns: repeat(2,minmax(0,1fr)); }
   .storybook-complete-includes li { padding: 15px 12px; border-bottom: 1px solid rgba(64,59,53,.13); }
   .storybook-complete-includes li:nth-child(2) { border-right: 0; }

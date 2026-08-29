@@ -246,19 +246,32 @@ export default async function Home() {
 
       <section className="storybook-film-showcase storybook-complete-experience section" id="sample-film">
         <div className="shell">
+          <p className="storybook-mobile-result-kicker">
+            <span>01 / COMPLETE WORK</span>
+            まず、完成作品をご覧ください。
+          </p>
           <div className="storybook-heading">
             <div>
-              <p className="eyebrow">A COMPLETE MOVING STORYBOOK + A WEBSITE JUST FOR YOUR DOG</p>
-              <h2>
+              <p className="eyebrow">
+                <span className="storybook-complete-desktop-copy">A COMPLETE MOVING STORYBOOK + A WEBSITE JUST FOR YOUR DOG</span>
+                <span className="storybook-complete-mobile-copy">STORYBOOK + WEBSITE</span>
+              </p>
+              <h2 className="storybook-complete-desktop-copy">
                 一冊の物語と、
                 <br />
                 その子だけの場所を。
               </h2>
+              <h2 className="storybook-complete-mobile-copy">
+                見て、残して、<br />育てていく。
+              </h2>
             </div>
-            <p>
+            <p className="storybook-complete-desktop-copy">
               水彩で描く約40秒の動く絵本と、物語や写真をいつでも開ける専用ホームページ。
               <br />
               これからの思い出も増やしていける、二つで一つの作品です。
+            </p>
+            <p className="storybook-complete-mobile-copy">
+              約40秒の動く絵本と、写真を増やせる専用ホームページを一緒にお届けします。
             </p>
           </div>
           <ul className="storybook-complete-includes" aria-label="制作プランに含まれるもの">
