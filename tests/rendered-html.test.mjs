@@ -89,8 +89,8 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /モカの完成作品/);
   assert.match(html, /動く絵本/);
   assert.match(html, /初期(?:<!-- -->)?20(?:<!-- -->)?組/);
-  assert.match(html, /16,800/);
-  assert.match(html, /19,800/);
+  assert.match(html, /12,800/);
+  assert.match(html, /14,800/);
   assert.match(html, /通常価格/);
   assert.match(html, /税込/);
   assert.match(html, /モニター価格とは何ですか/);
@@ -1216,13 +1216,13 @@ test("limits storybook and video revisions to separate two-and-one scene allowan
   assert.match(css, /\.revision-scene-picker/);
 });
 
-test("uses the lower launch and regular prices for new consultations", async () => {
+test("uses the current launch and regular prices for new consultations", async () => {
   const { readFile } = await import("node:fs/promises");
   const [pricing, migration, legal] = await Promise.all([
     readFile(new URL("app/lib/pricing.ts", root), "utf8"),
     readFile(
       new URL(
-        "supabase/migrations/202608250004_launch_monitor_limit_twenty.sql",
+        "supabase/migrations/202608290001_launch_price_12800.sql",
         root,
       ),
       "utf8",
@@ -1230,16 +1230,18 @@ test("uses the lower launch and regular prices for new consultations", async () 
     readFile(new URL("app/legal/page.tsx", root), "utf8"),
   ]);
 
-  assert.match(pricing, /launchPrice: 16_800/);
-  assert.match(pricing, /regularPrice: 19_800/);
+  assert.match(pricing, /launchPrice: 12_800/);
+  assert.match(pricing, /regularPrice: 14_800/);
   assert.match(pricing, /launchLimit: 20/);
-  assert.match(pricing, /launch-monitor-16800-20/);
-  assert.match(migration, /case when used < 20 then 16800 else 19800 end/);
+  assert.match(pricing, /launch-monitor-12800-20/);
+  assert.match(migration, /case when used < 20 then 12800 else 14800 end/);
   assert.match(migration, /greatest\(20 - used, 0\)/);
-  assert.match(migration, /launch-monitor-16800-10/);
   assert.match(migration, /launch-monitor-16800-20/);
-  assert.match(legal, /初期20組限定 モニター価格 ¥16,800/);
-  assert.match(legal, /受付終了後 ¥19,800/);
+  assert.match(migration, /launch-monitor-12800-20/);
+  assert.match(migration, /v_regular_price integer := 14800/);
+  assert.match(migration, /v_price := 12800/);
+  assert.match(legal, /初期20組限定 モニター価格 ¥12,800/);
+  assert.match(legal, /受付終了後 ¥14,800/);
 });
 
 test("records first-twenty production metrics through an admin-only RPC", async () => {
