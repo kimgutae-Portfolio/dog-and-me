@@ -103,6 +103,9 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /初期(?:<!-- -->)?20(?:<!-- -->)?組/);
   assert.match(html, /12,800/);
   assert.match(html, /14,800/);
+  assert.doesNotMatch(html, /16,800|19,800/);
+  assert.match(html, /ONE STORYBOOK \+ WEBSITE PLAN/);
+  assert.doesNotMatch(html, />ONE STORYBOOK PLAN</);
   assert.match(html, /通常価格/);
   assert.match(html, /税込/);
   assert.match(html, /モニター価格とは何ですか/);
