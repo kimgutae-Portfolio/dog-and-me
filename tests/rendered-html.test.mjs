@@ -57,10 +57,23 @@ test("server-renders the Japanese landing page", async () => {
   assert.equal(structuredData.at(-1).mainEntity.length, 13);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.match(html, /物語をつくる/);
+  assert.match(
+    html,
+    /A COMPLETE MOVING STORYBOOK \+ A WEBSITE JUST FOR YOUR DOG/,
+  );
+  assert.match(html, /映像だけではありません/);
+  assert.match(html, /愛犬専用ホームページ/);
+  assert.match(html, /育てられる写真アルバム/);
+  assert.match(html, /歩いて話すミニキャラクター/);
+  assert.match(
+    html,
+    /storybook-film-showcase storybook-complete-experience section/,
+  );
+  assert.doesNotMatch(html, /storybook-personal-site section/);
   assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
   assert.match(html, /写真そっくりの実写として再現するのではなく/);
   assert.match(html, /水彩・ガッシュ/);
-  assert.match(html, /モカの記憶が/);
+  assert.match(html, /その子のホームページまで、一緒に/);
   assert.match(html, /LINE STICKERS INCLUDED FREE/);
   assert.match(html, /LINEスタンプ8種類も/);
   assert.match(html, /制作・登録料/);
@@ -70,7 +83,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /専用ものがたりサイト/);
   assert.match(html, /公開期限なし/);
   assert.match(html, /月額料金なし/);
-  assert.match(html, /現在の専用サイトはそのままお使いいただけます/);
+  assert.match(html, /現在お届けする専用サイトの閲覧はそのまま続けられます/);
   assert.match(html, /専用ものがたりサイトは、いつまで見られますか/);
   assert.match(html, /hero-owner-dog-rainy-home\.png/);
   assert.match(html, /物語案の確認までは無料/);
@@ -102,7 +115,7 @@ test("server-renders the Japanese landing page", async () => {
     /<strong>オープン記念：うちの子LINEスタンプ8種類（通常¥1,480相当）<\/strong>/,
   );
   assert.match(html, /5つの物語を各5秒で制作/);
-  assert.match(html, /現在の制作プランと同じ、5秒映像5本で仕上げた約39秒のデモ/);
+  assert.match(html, /約40秒の動く絵本と、その後も思い出を増やせる専用ホームページ/);
   assert.match(html, /COMPLETE FILM · 00:39/);
   assert.match(html, /メインエピソードを選ぶ工程はありません/);
   assert.match(html, /送った写真は変更できますか/);

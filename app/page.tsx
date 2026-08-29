@@ -244,23 +244,29 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="storybook-film-showcase section" id="sample-film">
+      <section className="storybook-film-showcase storybook-complete-experience section" id="sample-film">
         <div className="shell">
           <div className="storybook-heading">
             <div>
-              <p className="eyebrow">A COMPLETE MOVING STORYBOOK</p>
+              <p className="eyebrow">A COMPLETE MOVING STORYBOOK + A WEBSITE JUST FOR YOUR DOG</p>
               <h2>
-                モカの記憶が、
+                映像だけではありません。
                 <br />
-                一冊の映像になる。
+                その子のホームページまで、一緒に。
               </h2>
             </div>
             <p>
-              五つの思い出を、水彩の絵と小さな動き、
+              約40秒の動く絵本と、その後も思い出を増やせる専用ホームページ。
               <br />
-              短い文章でつないだ完成作品です。現在の制作プランと同じ、5秒映像5本で仕上げた約39秒のデモです。
+              一度きりの動画納品ではなく、二つを一つの作品としてお届けします。
             </p>
           </div>
+          <ul className="storybook-complete-includes" aria-label="制作プランに含まれるもの">
+            <li><span>01</span><strong>約40秒の動く絵本</strong><small>水彩の5つの物語</small></li>
+            <li><span>02</span><strong>愛犬専用ホームページ</strong><small>公開期限・月額料金なし</small></li>
+            <li><span>03</span><strong>育てられる写真アルバム</strong><small>完成後も写真を追加</small></li>
+            <li><span>04</span><strong>歩いて話すミニキャラクター</strong><small>その子らしい案内役</small></li>
+          </ul>
           <div className="storybook-film-frame">
             <video
               controls
@@ -275,6 +281,53 @@ export default async function Home() {
               <span>COMPLETE FILM · 00:39</span>
               <strong>モカと、五つの記憶</strong>
               <Link href="/film/moka-demo">作品ページで写真と全場面を見る →</Link>
+            </div>
+          </div>
+
+          <div className="storybook-complete-website">
+            <div className="storybook-complete-site-preview" aria-label="モカ専用ホームページのイメージ">
+              <div className="storybook-complete-browser-bar" aria-hidden="true">
+                <i /><i /><i /><span>MOKA&apos;S OWN WEBSITE</span>
+              </div>
+              <div className="storybook-complete-site-canvas">
+                <Image
+                  src="/film/moka/05-storybook-lantern.webp"
+                  alt="モカ専用ホームページのメイン画面"
+                  fill
+                  sizes="(max-width: 900px) 90vw, 52vw"
+                />
+                <div className="storybook-complete-site-shade" aria-hidden="true" />
+                <div className="storybook-complete-site-title">
+                  <span>MOKA &amp; FIVE MEMORIES</span>
+                  <strong>いつでも会える、<br />モカだけの場所。</strong>
+                </div>
+                <div className="storybook-complete-site-cards" aria-hidden="true">
+                  <div><Image src="/film/moka/02-storybook-train.webp" alt="" width={180} height={110} /><span>STORYBOOK</span></div>
+                  <div><Image src="/film/moka/09-autumn-ginkgo.webp" alt="" width={180} height={110} /><span>PHOTO ALBUM</span></div>
+                  <div><Image src="/film/moka/03-storybook-bread.webp" alt="" width={180} height={110} /><span>FAMILY LETTER</span></div>
+                </div>
+                <div className="storybook-complete-site-character" aria-hidden="true">
+                  <div>ぼくのページも、<br />できあがるよ。</div>
+                  <Image src="/film/moka/character/frames/head-tilt.png" alt="" width={362} height={362} />
+                </div>
+              </div>
+            </div>
+
+            <div className="storybook-complete-site-copy">
+              <p className="eyebrow">A WEBSITE JUST FOR YOUR DOG</p>
+              <h3>完成した日から、<br />思い出がまた育ちはじめる。</h3>
+              <p>
+                映像、絵本ページ、元の写真、家族からの手紙を専用URLにまとめます。完成後の写真も追加でき、描き起こしたキャラクターがページを歩いて話しかけます。
+              </p>
+              <div className="storybook-complete-lifetime">
+                <strong>公開期限なし</strong>
+                <i aria-hidden="true" />
+                <strong>月額料金なし</strong>
+              </div>
+              <Link className="button button-outline" href="/film/moka-demo">
+                モカのホームページを体験する →
+              </Link>
+              <small>専用URLはご家族にも共有できます。</small>
             </div>
           </div>
         </div>
@@ -327,138 +380,6 @@ export default async function Home() {
           >
             モカの作品ページを見る →
           </Link>
-        </div>
-      </section>
-
-      <section className="storybook-personal-site section" id="personal-site">
-        <div className="shell">
-          <div className="storybook-heading storybook-personal-site-heading">
-            <div>
-              <p className="eyebrow">A WEBSITE JUST FOR YOUR DOG</p>
-              <h2>
-                完成した物語を、
-                <br />
-                その子だけのホームページに。
-              </h2>
-            </div>
-            <p>
-              映像を受け取って終わりではありません。
-              <br />
-              公開期限を設けず、いつでも会いに行ける小さな居場所としてお届けします。
-            </p>
-          </div>
-
-          <div className="storybook-site-lifetime" aria-label="専用サイトの利用期間と料金">
-            <span>YOUR SITE, ALWAYS THERE</span>
-            <strong>公開期限なし</strong>
-            <i aria-hidden="true" />
-            <strong>月額料金なし</strong>
-            <p>完成後も専用URLから、何度でもその子の物語を見返せます。</p>
-          </div>
-
-          <div className="storybook-personal-site-grid">
-            <div className="storybook-site-window" aria-label="モカの個人ホームページのイメージ">
-              <div className="storybook-site-window-bar" aria-hidden="true">
-                <i /><i /><i />
-                <span>MOKA&apos;S MEMORY SITE</span>
-              </div>
-              <div className="storybook-site-window-collage">
-                <div className="storybook-site-panel storybook-site-panel-cover">
-                  <Image
-                    src="/film/moka/05-storybook-lantern.webp"
-                    alt="モカの個人ホームページのメイン画面"
-                    fill
-                    sizes="(max-width: 900px) 82vw, 47vw"
-                  />
-                  <div className="storybook-site-window-shade" aria-hidden="true" />
-                  <div className="storybook-site-window-copy">
-                    <span>MAIN STORY</span>
-                    <strong>モカと、五つの記憶</strong>
-                    <small>いつもの日々をめぐる物語</small>
-                  </div>
-                </div>
-
-                <div className="storybook-site-panel storybook-site-panel-film">
-                  <Image
-                    src="/film/moka/02-storybook-train.webp"
-                    alt="完成した動く絵本の再生画面"
-                    fill
-                    sizes="(max-width: 640px) 43vw, 25vw"
-                  />
-                  <div className="storybook-site-panel-film-shade" aria-hidden="true" />
-                  <span>01 / COMPLETE FILM</span>
-                  <i aria-hidden="true">▶</i>
-                  <strong>五つの記憶を、一冊の映像に。</strong>
-                </div>
-
-                <div className="storybook-site-panel storybook-site-panel-album">
-                  <span>02 / PHOTO ALBUM</span>
-                  <strong>モカの時間を、写真帖に。</strong>
-                  <div>
-                    {[
-                      "/film/moka/06-rainy-entryway.webp",
-                      "/film/moka/02-storybook-train.webp",
-                      "/film/moka/09-autumn-ginkgo.webp",
-                      "/film/moka/03-storybook-bread.webp",
-                    ].map((src, index) => (
-                      <Image key={src} src={src} alt={`モカの写真アルバム ${index + 1}`} width={160} height={120} />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="storybook-site-panel storybook-site-panel-letter">
-                  <span>03 / FAMILY LETTER</span>
-                  <p>モカへ。<br />何気ない毎日も、<br />ぜんぶ大切な物語だよ。</p>
-                  <small>FROM YOUR FAMILY</small>
-                </div>
-
-                <div className="storybook-site-character" aria-hidden="true">
-                  <div>ぼくの思い出、<br />見ていってね。</div>
-                  <Image
-                    src="/film/moka/character/frames/head-tilt.png"
-                    alt=""
-                    width={362}
-                    height={362}
-                  />
-                </div>
-              </div>
-              <div className="storybook-site-window-bottom" aria-hidden="true">
-                <span>COMPLETE FILM</span>
-                <span>PHOTO ALBUM</span>
-                <span>FAMILY LETTER</span>
-              </div>
-            </div>
-
-            <div className="storybook-personal-site-copy">
-              <p className="storybook-personal-site-lead">
-                スマートフォンでもパソコンでも開ける専用ページに、完成した動く絵本と、その物語をつくった写真を一つにまとめます。
-              </p>
-              <ol className="storybook-personal-site-features">
-                <li>
-                  <span>01</span>
-                  <div><strong>完成した動く絵本</strong><p>約40秒の映像を、いつでもその場で再生できます。</p></div>
-                </li>
-                <li>
-                  <span>02</span>
-                  <div><strong>これからも育つ写真アルバム</strong><p>描き下ろしたページと元の写真から始まり、完成後の毎日もいつでも追加できます。</p></div>
-                </li>
-                <li>
-                  <span>03</span>
-                  <div><strong>家族からの短い手紙</strong><p>その子へ伝えたい言葉を、物語の最後にそっと添えられます。</p></div>
-                </li>
-                <li>
-                  <span>04</span>
-                  <div><strong>歩いて、話しかけるうちの子</strong><p>描き起こしたキャラクターがページを歩き、思い出を案内します。</p></div>
-                </li>
-              </ol>
-              <div className="storybook-personal-site-actions">
-                <Link className="button button-outline" href="/film/moka-demo">
-                  モカのホームページを体験する →
-                </Link>
-                <p>専用URLでご家族にも共有できます。将来追加される機能や別サービスは任意で、現在の専用サイトはそのままお使いいただけます。</p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
