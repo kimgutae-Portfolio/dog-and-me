@@ -12,17 +12,17 @@ export function SiteFooter() {
               WM
             </span>
             <span className="brand-type">
-              WAN MEMORY<small>MOVING STORYBOOKS FOR YOUR DOG</small>
+              WAN MEMORY<small>STORYBOOK &amp; WEBSITE FOR YOUR DOG</small>
             </span>
           </Link>
-          <p>愛犬との時間を、動くものがたりに。</p>
+          <p>愛犬との時間を、動く絵本と育つホームページに。</p>
         </div>
         <div className="footer-links">
           <div>
             <p>SERVICE</p>
-            <Link href="/aiken-omoide-douga">愛犬の動く絵本</Link>
+            <Link href="/aiken-omoide-douga">動く絵本＋専用ホームページ</Link>
             <Link href="/uchinoko-kinenbi-douga">うちの子記念日の物語</Link>
-            <Link href="/film/moka-demo">動くページ</Link>
+            <Link href="/film/moka-demo">完成サイトを見る</Link>
             <Link href="/#plans">プラン</Link>
             {APPLICATIONS_OPEN ? (
               <StartStoryLink>お申し込み</StartStoryLink>

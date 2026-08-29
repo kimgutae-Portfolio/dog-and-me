@@ -32,7 +32,7 @@ test("server-renders the Japanese landing page", async () => {
     html,
     /<link rel="canonical" href="https:\/\/www\.wanmemory\.com\/"/,
   );
-  assert.match(html, /愛犬が主人公になる、動く絵本制作/);
+  assert.match(html, /愛犬の動く絵本と専用ホームページ制作/);
   assert.match(html, /application\/ld\+json/);
   assert.match(html, /"@type":"Service"/);
   assert.match(html, /"@type":"FAQPage"/);
@@ -61,7 +61,7 @@ test("server-renders the Japanese landing page", async () => {
     html,
     /A COMPLETE MOVING STORYBOOK \+ A WEBSITE JUST FOR YOUR DOG/,
   );
-  assert.match(html, /映像だけではありません/);
+  assert.match(html, /一冊の物語と/);
   assert.match(html, /愛犬専用ホームページ/);
   assert.match(html, /育てられる写真アルバム/);
   assert.match(html, /歩いて話すミニキャラクター/);
@@ -73,13 +73,13 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
   assert.match(html, /写真そっくりの実写として再現するのではなく/);
   assert.match(html, /水彩・ガッシュ/);
-  assert.match(html, /その子のホームページまで、一緒に/);
+  assert.match(html, /その子だけの場所を/);
   assert.match(html, /LINE STICKERS INCLUDED FREE/);
   assert.match(html, /LINEスタンプ8種類も/);
   assert.match(html, /制作・登録料/);
   assert.match(html, /line-stickers-preview-v2\.png/);
   assert.doesNotMatch(html, /YOU SHARE THE MEMORIES|TWO STORY DIRECTIONS/);
-  assert.match(html, /専用ページで受け取る/);
+  assert.match(html, /ホームページで受け取る/);
   assert.match(html, /専用ものがたりサイト/);
   assert.match(html, /公開期限なし/);
   assert.match(html, /月額料金なし/);
@@ -98,8 +98,7 @@ test("server-renders the Japanese landing page", async () => {
     html,
     /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
   );
-  assert.match(html, /モカの完成作品を見る/);
-  assert.match(html, /モカの完成作品/);
+  assert.match(html, /モカの絵本とホームページを見る/);
   assert.match(html, /動く絵本/);
   assert.match(html, /初期(?:<!-- -->)?20(?:<!-- -->)?組/);
   assert.match(html, /12,800/);
@@ -115,7 +114,7 @@ test("server-renders the Japanese landing page", async () => {
     /<strong>オープン記念：うちの子LINEスタンプ8種類（通常¥1,480相当）<\/strong>/,
   );
   assert.match(html, /5つの物語を各5秒で制作/);
-  assert.match(html, /約40秒の動く絵本と、その後も思い出を増やせる専用ホームページ/);
+  assert.match(html, /水彩で描く約40秒の動く絵本と、物語や写真をいつでも開ける専用ホームページ/);
   assert.match(html, /COMPLETE FILM · 00:39/);
   assert.match(html, /メインエピソードを選ぶ工程はありません/);
   assert.match(html, /送った写真は変更できますか/);

@@ -43,7 +43,7 @@ export function LivePriceCard() {
   return (
     <article className="price-card price-card-featured price-card-single">
       <div className="monitor-offer-head">
-        <p className="plan-en">MOVING STORYBOOK</p>
+        <p className="plan-en">STORYBOOK + WEBSITE</p>
         <span>
           {APPLICATIONS_OPEN
             ? pricing.campaign_active
@@ -54,7 +54,7 @@ export function LivePriceCard() {
             : "正式公開準備中"}
         </span>
       </div>
-      <h3>うちの子の動く絵本</h3>
+      <h3>うちの子の動く絵本＋専用ホームページ</h3>
       {pricing.campaign_active && (
         <p className="regular-price">
           通常価格 <del>¥{formatYen(pricing.regular_price)}（税込）</del>
@@ -66,7 +66,7 @@ export function LivePriceCard() {
         <small>税込</small>
       </p>
       <p className="price-caption">
-        選んだ物語案を、水彩で描く約40秒の動く絵本に。
+        水彩で描く約40秒の動く絵本と、思い出を増やせる専用ホームページを一つの作品に。
       </p>
       <p className="monitor-price-note">
         {!APPLICATIONS_OPEN
@@ -81,9 +81,9 @@ export function LivePriceCard() {
         <li>水彩・ガッシュの絵本ページ制作</li>
         <li>全ページの事前確認・絵本2場面まで修正</li>
         <li>約40秒の動く絵本映像（5物語・各5秒）</li>
+        <li>写真を追加して育てられる専用ホームページ（公開期限・月額料金なし）</li>
         <li>BGM・場面ごとの物語字幕</li>
         <li>完成映像は1場面まで修正</li>
-        <li>公開期限・月額料金なしの専用ものがたりサイト</li>
         <li className="price-line-sticker-benefit">
           <strong>オープン記念：うちの子LINEスタンプ8種類（通常¥1,480相当）</strong>
         </li>

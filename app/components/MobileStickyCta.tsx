@@ -34,7 +34,7 @@ export function MobileStickyCta() {
       <div>
         <p>
           {APPLICATIONS_OPEN
-            ? "通常価格 · 物語案の確認までは無料"
+            ? "絵本＋専用サイト · 物語案の確認までは無料"
             : "COMING SOON"}
         </p>
         <strong>

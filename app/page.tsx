@@ -26,7 +26,7 @@ import { getRequestOrigin } from "./lib/site-server";
 // segments — a bare string here would render without the brand name, unlike
 // every other page on the site.
 export const metadata: Metadata = {
-  title: { absolute: `愛犬が主人公になる、動く絵本制作｜${SITE_NAME}` },
+  title: { absolute: `愛犬の動く絵本と専用ホームページ制作｜${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
 };
@@ -71,8 +71,8 @@ const storyPages = [
 
 const homeFaqs = [
   [
-    "どんな映像になりますか？",
-    "愛犬を写真そっくりの実写として再現するのではなく、その子の特徴や表情をやわらかな水彩・ガッシュで描きます。5つの物語を各5秒で制作し、花びら、光、水、しっぽなどに小さな動きを加えて、文章とBGMを含む約40秒の『動く絵本』に仕上げます。",
+    "どんな作品が届きますか？",
+    "愛犬を写真そっくりの実写として再現するのではなく、その子の特徴や表情をやわらかな水彩・ガッシュで描きます。5つの物語を各5秒で制作した約40秒の『動く絵本』と、絵本ページ・元の写真・写真アルバム・ミニキャラクターを楽しめる専用ホームページを一緒にお届けします。",
   ],
   [
     "写真は何枚必要ですか？",
@@ -112,7 +112,7 @@ const homeFaqs = [
   ],
   [
     "モニター価格とは何ですか？",
-    `初期${MEMORY_FILM_PRICING.launchLimit}組限定で、動く絵本の制作工程と品質を確認するための価格 ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）です。終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`,
+    `初期${MEMORY_FILM_PRICING.launchLimit}組限定で、動く絵本と専用ホームページの制作工程・品質を確認するための価格 ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）です。終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`,
   ],
   [
     "専用ものがたりサイトは、いつまで見られますか？",
@@ -151,8 +151,8 @@ export default async function Home() {
       "@context": "https://schema.org",
       "@type": "Service",
       "@id": `${origin}/#moving-storybook-service`,
-      name: "愛犬の動く絵本制作",
-      serviceType: "愛犬の写真からつくるオーダーメイド動画絵本",
+      name: "愛犬の動く絵本・専用ホームページ制作",
+      serviceType: "愛犬の写真からつくるオーダーメイド動く絵本・専用ホームページ",
       description: SITE_DESCRIPTION,
       url: `${origin}/#plans`,
       image: `${origin}/og.png`,
@@ -213,16 +213,16 @@ export default async function Home() {
               <p>{PRELAUNCH_COPY}</p>
             </aside>
           )}
-          <p className="eyebrow">A MOVING STORYBOOK FOR YOUR DOG</p>
+          <p className="eyebrow">A STORYBOOK AND WEBSITE FOR YOUR DOG</p>
           <h1 id="hero-title">
-            うちの子が主人公になる、
+            うちの子が主役になる、
             <br />
-            動くものがたり。
+            動く絵本とホームページ。
           </h1>
           <p>
-            お気に入りの写真と、あなたが覚えている五つの出来事から。
+            お気に入りの写真と、あなたが覚えている五つの思い出から。
             <br className="desktop-only" />
-            その子だけの絵を描き、小さな動きと文章を重ねて、一冊のような映像にします。
+            水彩で描く約40秒の動く絵本と、その後も写真を増やせる専用ホームページを一緒にお届けします。
           </p>
           <div className="storybook-hero-actions">
             {APPLICATIONS_OPEN ? (
@@ -235,11 +235,11 @@ export default async function Home() {
               </span>
             )}
             <Link className="text-link" href="/film/moka-demo">
-              モカの完成作品を見る <span aria-hidden="true">↗</span>
+              モカの絵本とホームページを見る <span aria-hidden="true">↗</span>
             </Link>
           </div>
           <span className="storybook-hero-note">
-            STORYBOOK SAMPLE · モカと、五つの記憶
+            STORYBOOK + WEBSITE SAMPLE · モカと、五つの記憶
           </span>
         </div>
       </section>
@@ -250,15 +250,15 @@ export default async function Home() {
             <div>
               <p className="eyebrow">A COMPLETE MOVING STORYBOOK + A WEBSITE JUST FOR YOUR DOG</p>
               <h2>
-                映像だけではありません。
+                一冊の物語と、
                 <br />
-                その子のホームページまで、一緒に。
+                その子だけの場所を。
               </h2>
             </div>
             <p>
-              約40秒の動く絵本と、その後も思い出を増やせる専用ホームページ。
+              水彩で描く約40秒の動く絵本と、物語や写真をいつでも開ける専用ホームページ。
               <br />
-              一度きりの動画納品ではなく、二つを一つの作品としてお届けします。
+              これからの思い出も増やしていける、二つで一つの作品です。
             </p>
           </div>
           <ul className="storybook-complete-includes" aria-label="制作プランに含まれるもの">
@@ -433,7 +433,7 @@ export default async function Home() {
           <p className="eyebrow">HOW YOUR STORYBOOK IS MADE</p>
           <div className="process-head">
             <h2>ご相談からお届けまで。</h2>
-            <p>制作室で、物語・絵本ページ・完成映像を順番に確認できます。</p>
+            <p>制作室で、物語・絵本ページ・動く絵本・専用ホームページを順番に確認できます。</p>
           </div>
           <ol className="process-list">
             {[
@@ -464,13 +464,13 @@ export default async function Home() {
               ],
               [
                 "06",
-                "完成前の作品を確認する",
+                "動く絵本を確認する",
                 "BGMと文章を含む約40秒の映像をご確認いただき、映像は合計1場面まで修正できます。",
               ],
               [
                 "07",
-                "専用ページで受け取る",
-                "完成した動く絵本と写真を、その子だけの専用ページへお届けします。",
+                "ホームページで受け取る",
+                "完成した動く絵本、絵本ページ、写真アルバム、ミニキャラクターを、その子だけのホームページにまとめてお届けします。",
               ],
             ].map(([number, title, copy]) => (
               <li key={number}>
@@ -490,10 +490,10 @@ export default async function Home() {
         <div className="shell">
           <div className="pricing-heading">
             <div>
-              <p className="eyebrow">ONE STORYBOOK PLAN</p>
-              <h2>物語から、完成ページまで。</h2>
+              <p className="eyebrow">ONE STORYBOOK + WEBSITE PLAN</p>
+              <h2>動く絵本も、その後の居場所も。</h2>
             </div>
-            <p>二つの物語案、絵本ページ、約40秒の映像、公開期限・月額料金なしの専用サイトに、今だけLINEスタンプ8種類も追加料金なしで含みます。</p>
+            <p>約40秒の動く絵本と、公開期限・月額料金なしで写真を増やせる専用ホームページ。物語案、絵本ページ、ミニキャラクター、今だけLINEスタンプ8種類まで一つのプランに含みます。</p>
           </div>
           <div className="pricing-grid">
             <LivePriceCard />
@@ -526,11 +526,11 @@ export default async function Home() {
 
       <section className="final-cta storybook-final-cta">
         <div className="shell final-cta-inner">
-          <p className="eyebrow light">OPEN THE FIRST PAGE</p>
+          <p className="eyebrow light">OPEN YOUR STORYBOOK &amp; WEBSITE</p>
           <h2>
-            その子の物語を、
+            その子の物語と、
             <br />
-            一ページ目から。
+            これから育つ居場所を。
           </h2>
           <p>
             {APPLICATIONS_OPEN
@@ -539,7 +539,7 @@ export default async function Home() {
           </p>
           {APPLICATIONS_OPEN ? (
             <StartStoryLink className="button button-cream">
-              物語づくりを始める →
+              物語とホームページをつくる →
             </StartStoryLink>
           ) : (
             <span

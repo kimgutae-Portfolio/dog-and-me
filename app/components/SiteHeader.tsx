@@ -12,12 +12,12 @@ export function SiteHeader() {
             WM
           </span>
           <span className="brand-type">
-            WAN MEMORY<small>MOVING STORYBOOKS FOR YOUR DOG</small>
+            WAN MEMORY<small>STORYBOOK &amp; WEBSITE FOR YOUR DOG</small>
           </span>
         </Link>
         <nav className="desktop-nav" aria-label="メインナビゲーション">
           <Link href="/#story-preview">絵本の世界</Link>
-          <Link href="/film/moka-demo">動くページ</Link>
+          <Link href="/film/moka-demo">完成サイト</Link>
           <Link href="/#flow">制作の流れ</Link>
           <Link href="/#plans">プラン</Link>
           <Link href="/#faq">よくある質問</Link>
@@ -42,7 +42,7 @@ export function SiteHeader() {
           </summary>
           <nav aria-label="モバイルナビゲーション">
             <Link href="/#story-preview">絵本の世界</Link>
-            <Link href="/film/moka-demo">動くページ</Link>
+            <Link href="/film/moka-demo">完成サイト</Link>
             <Link href="/#flow">制作の流れ</Link>
             <Link href="/#plans">プラン</Link>
             <Link href="/#faq">よくある質問</Link>
