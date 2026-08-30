@@ -2242,10 +2242,11 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-complete-site-cards div { padding: 4px 4px 7px; overflow: hidden; color: #675f57; background: #fffaf2; box-shadow: 0 10px 24px rgba(25,21,18,.25); }
 .storybook-complete-site-cards img { width: 100%; aspect-ratio: 4/3; display: block; object-fit: cover; }
 .storybook-complete-site-cards span { margin-top: 6px; display: block; font-size: 4px; font-weight: 800; letter-spacing: .1em; text-align: center; }
-.storybook-complete-site-character { width: 25%; position: absolute; z-index: 5; left: 40%; bottom: -4%; filter: drop-shadow(0 12px 12px rgba(26,21,18,.3)); animation: storybook-site-character-bob 3.2s ease-in-out infinite; }
+.storybook-complete-site-character { width: 25%; position: absolute; z-index: 5; left: 10%; bottom: -4%; filter: drop-shadow(0 12px 12px rgba(26,21,18,.3)); animation: storybook-site-character-bob 3.2s ease-in-out infinite; }
 .storybook-complete-site-character img { width: 100%; height: auto; display: block; }
 .storybook-complete-site-character div { width: max-content; padding: 8px 11px; position: absolute; right: 66%; top: -4%; color: #554d46; border-radius: 12px 12px 3px 12px; background: rgba(255,251,242,.96); box-shadow: 0 8px 22px rgba(31,25,21,.18); font-family: var(--font-serif); font-size: 8px; line-height: 1.55; }
-.storybook-complete-film-trigger { width: 100%; min-height: 96px; padding: 12px 16px; display: grid; grid-template-columns: 120px minmax(0,1fr) 38px; align-items: center; gap: 16px; color: #fffaf2; border: 0; border-top: 1px solid rgba(255,255,255,.14); border-radius: 0; background: #343a37; cursor: pointer; text-align: left; transition: background .3s ease; }
+.storybook-complete-preview-actions { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(190px,.75fr); background: #343a37; }
+.storybook-complete-film-trigger { width: 100%; min-height: 96px; padding: 12px 16px; display: grid; grid-template-columns: 112px minmax(0,1fr) 38px; align-items: center; gap: 16px; color: #fffaf2; border: 0; border-right: 1px solid rgba(255,255,255,.14); border-top: 1px solid rgba(255,255,255,.14); border-radius: 0; background: #343a37; cursor: pointer; text-align: left; transition: background .3s ease; }
 .storybook-complete-film-trigger:hover { background: #3e4541; }
 .storybook-complete-film-trigger-image { aspect-ratio: 16/10; position: relative; display: block; overflow: hidden; border-radius: 2px; background: #302d2a; }
 .storybook-complete-film-trigger-image img { object-fit: cover; }
@@ -2255,6 +2256,12 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-complete-film-trigger-copy small { color: #d8b0aa; font-size: 6px; font-weight: 800; letter-spacing: .15em; white-space: nowrap; }
 .storybook-complete-film-trigger-copy strong { font-family: var(--font-serif); font-size: 15px; font-weight: 400; white-space: nowrap; }
 .storybook-complete-film-trigger-arrow { width: 34px; height: 34px; display: grid; place-items: center; color: #fffaf2; border: 1px solid rgba(255,255,255,.34); border-radius: 50%; font-size: 11px; }
+.storybook-complete-site-trigger { min-width: 0; min-height: 96px; padding: 16px 18px; display: grid; grid-template-columns: minmax(0,1fr) 38px; align-items: center; gap: 12px; color: #343a37; border-top: 1px solid rgba(64,59,53,.14); background: #e8c9bf; text-decoration: none; transition: background .3s ease; }
+.storybook-complete-site-trigger:hover { background: #f0d8d0; }
+.storybook-complete-site-trigger-copy { min-width: 0; display: grid; gap: 7px; }
+.storybook-complete-site-trigger-copy small { color: #805f5b; font-size: 6px; font-weight: 800; letter-spacing: .13em; white-space: nowrap; }
+.storybook-complete-site-trigger-copy strong { font-family: var(--font-serif); font-size: 14px; font-weight: 500; white-space: nowrap; }
+.storybook-complete-site-trigger-arrow { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(52,58,55,.36); border-radius: 50%; font-size: 11px; }
 .storybook-film-dialog { padding: 28px; position: fixed; z-index: 2000; inset: 0; display: grid; place-items: center; background: rgba(27,24,22,.78); backdrop-filter: blur(10px); }
 .storybook-film-dialog-panel { width: min(940px,100%); position: relative; overflow: hidden; color: #fffaf2; border: 1px solid rgba(255,255,255,.2); background: #252927; box-shadow: 0 40px 120px rgba(0,0,0,.48); }
 .storybook-film-dialog-heading { padding: 20px 68px 18px 24px; display: grid; gap: 7px; background: #343a37; }
@@ -2567,13 +2574,19 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-complete-site-title { left: 5%; top: 8%; }
   .storybook-complete-site-title strong { margin-top: 8px; font-size: 23px; }
   .storybook-complete-site-cards { width: 54%; right: 2%; bottom: 3%; }
-  .storybook-complete-site-character { width: 31%; left: 34%; bottom: -2%; }
+  .storybook-complete-site-character { width: 31%; left: 10%; bottom: -2%; }
   .storybook-complete-site-character div { right: 53%; top: -8%; padding: 6px 8px; font-size: 7px; }
-  .storybook-complete-film-trigger { min-height: 72px; padding: 8px 10px; grid-template-columns: 84px minmax(0,1fr) 30px; gap: 10px; }
+  .storybook-complete-preview-actions { grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr); }
+  .storybook-complete-film-trigger { min-height: 72px; padding: 8px 9px; grid-template-columns: 72px minmax(0,1fr); gap: 9px; }
   .storybook-complete-film-trigger-copy { gap: 5px; }
   .storybook-complete-film-trigger-copy small { font-size: 4.5px; }
-  .storybook-complete-film-trigger-copy strong { font-size: 11px; }
-  .storybook-complete-film-trigger-arrow { width: 28px; height: 28px; font-size: 9px; }
+  .storybook-complete-film-trigger-copy strong { font-size: 12px; }
+  .storybook-complete-film-trigger-arrow { display: none; }
+  .storybook-complete-site-trigger { min-height: 72px; padding: 10px 9px; grid-template-columns: minmax(0,1fr) 28px; gap: 6px; }
+  .storybook-complete-site-trigger-copy { gap: 5px; }
+  .storybook-complete-site-trigger-copy small { font-size: 4.5px; letter-spacing: .08em; }
+  .storybook-complete-site-trigger-copy strong { font-size: 11px; }
+  .storybook-complete-site-trigger-arrow { width: 28px; height: 28px; font-size: 9px; }
   .storybook-film-dialog { padding: 0; align-items: center; }
   .storybook-film-dialog-panel { width: 100%; border-right: 0; border-left: 0; }
   .storybook-film-dialog-heading { padding: 17px 62px 15px 18px; }

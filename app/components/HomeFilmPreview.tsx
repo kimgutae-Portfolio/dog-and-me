@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -26,27 +27,36 @@ export function HomeFilmPreview() {
 
   return (
     <>
-      <button
-        className="storybook-complete-film-trigger"
-        type="button"
-        aria-haspopup="dialog"
-        onClick={() => setOpen(true)}
-      >
-        <span className="storybook-complete-film-trigger-image" aria-hidden="true">
-          <Image
-            src="/film/moka/05-storybook-lantern.webp"
-            alt=""
-            fill
-            sizes="(max-width: 640px) 42vw, 240px"
-          />
-          <i>▶</i>
-        </span>
-        <span className="storybook-complete-film-trigger-copy">
-          <small>COMPLETE FILM · 00:39</small>
-          <strong>約40秒の完成映像を見る</strong>
-        </span>
-        <span className="storybook-complete-film-trigger-arrow" aria-hidden="true">↗</span>
-      </button>
+      <div className="storybook-complete-preview-actions">
+        <button
+          className="storybook-complete-film-trigger"
+          type="button"
+          aria-haspopup="dialog"
+          onClick={() => setOpen(true)}
+        >
+          <span className="storybook-complete-film-trigger-image" aria-hidden="true">
+            <Image
+              src="/film/moka/05-storybook-lantern.webp"
+              alt=""
+              fill
+              sizes="(max-width: 640px) 24vw, 180px"
+            />
+            <i>▶</i>
+          </span>
+          <span className="storybook-complete-film-trigger-copy">
+            <small>COMPLETE FILM · 00:39</small>
+            <strong>動画を見る</strong>
+          </span>
+          <span className="storybook-complete-film-trigger-arrow" aria-hidden="true">↗</span>
+        </button>
+        <Link className="storybook-complete-site-trigger" href="/film/moka-demo">
+          <span className="storybook-complete-site-trigger-copy">
+            <small>MOKA&apos;S WEBSITE</small>
+            <strong>ホームページへ</strong>
+          </span>
+          <span className="storybook-complete-site-trigger-arrow" aria-hidden="true">↗</span>
+        </Link>
+      </div>
 
       {open && typeof document !== "undefined"
         ? createPortal(

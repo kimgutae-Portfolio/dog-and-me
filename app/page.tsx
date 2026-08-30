@@ -322,9 +322,6 @@ export default async function Home() {
                 <i aria-hidden="true" />
                 <strong>月額料金なし</strong>
               </div>
-              <Link className="button button-outline" href="/film/moka-demo">
-                モカのホームページを体験する →
-              </Link>
               <small>専用URLはご家族にも共有できます。</small>
             </div>
           </div>
