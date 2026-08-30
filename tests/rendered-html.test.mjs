@@ -173,6 +173,7 @@ test("serves crawl controls and an absolute public sitemap", async () => {
   for (const path of [
     "aiken-omoide-douga",
     "aiken-shashin-douga",
+    "aiken-shashin-seiri",
     "uchinoko-kinenbi-douga",
     "dog-photo-guide",
   ]) {
@@ -193,6 +194,10 @@ test("renders focused Japanese SEO guide pages", async () => {
     [
       "/aiken-shashin-douga",
       ["愛犬の写真を、思い出が伝わる動画に", "愛犬の写真を動画にする方法"],
+    ],
+    [
+      "/aiken-shashin-seiri",
+      ["増え続ける愛犬の写真を、無理なく整理する", "愛犬の写真を整理・保存する方法"],
     ],
     [
       "/uchinoko-kinenbi-douga",
@@ -1695,6 +1700,7 @@ test("loads Google Tag Manager while excluding customer and operator URLs", asyn
   assert.match(tagManager, /GTM-WBMHCBXJ/);
   assert.match(tagManager, /G-31J209RFN1/);
   assert.match(tagManager, /"aiken-shashin-douga"/);
+  assert.match(tagManager, /"aiken-shashin-seiri"/);
   assert.match(tagManager, /ga-disable-/);
   assert.match(tagManager, /pathname\.startsWith\("\/admin\/"\)/);
   assert.match(tagManager, /pathname\.startsWith\("\/memory\/"\)/);
@@ -1718,6 +1724,7 @@ test("records only public marketing pages with Microsoft Clarity", async () => {
   assert.match(layout, /<MicrosoftClarity\s*\/>/);
   assert.match(clarity, /y85hni5ik1/);
   assert.match(clarity, /"\/aiken-shashin-douga"/);
+  assert.match(clarity, /"\/aiken-shashin-seiri"/);
   assert.match(clarity, /"\/film\/moka-demo"/);
   assert.doesNotMatch(clarity, /"\/studio",/);
   assert.doesNotMatch(clarity, /"\/story",/);

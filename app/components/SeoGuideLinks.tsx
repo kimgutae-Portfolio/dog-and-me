@@ -21,6 +21,11 @@ const guides = [
     "写真選びから構成まで、思い出動画づくりの基本",
     "/aiken-shashin-douga",
   ],
+  [
+    "愛犬の写真を整理・保存する方法",
+    "増え続ける写真を無理なく残す整理と保存のコツ",
+    "/aiken-shashin-seiri",
+  ],
 ] as const;
 
 export function SeoGuideLinks({ currentPath }: { currentPath?: string }) {

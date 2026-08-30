@@ -9,6 +9,7 @@ const CLARITY_PATHS = new Set([
   "/",
   "/aiken-omoide-douga",
   "/aiken-shashin-douga",
+  "/aiken-shashin-seiri",
   "/dog-photo-guide",
   "/film/moka-demo",
   "/uchinoko-kinenbi-douga",

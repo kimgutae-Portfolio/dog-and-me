@@ -13,6 +13,7 @@ export function GET(request: Request) {
     origin,
     `${origin}/aiken-omoide-douga`,
     `${origin}/aiken-shashin-douga`,
+    `${origin}/aiken-shashin-seiri`,
     `${origin}/uchinoko-kinenbi-douga`,
     `${origin}/dog-photo-guide`,
     `${origin}/film/moka-demo`,

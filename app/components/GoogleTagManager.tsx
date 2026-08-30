@@ -24,6 +24,7 @@ function isAnalyticsPath(pathname: string) {
     "admin",
     "aiken-omoide-douga",
     "aiken-shashin-douga",
+    "aiken-shashin-seiri",
     "api",
     "auth",
     "contact",
