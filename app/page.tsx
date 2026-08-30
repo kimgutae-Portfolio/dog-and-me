@@ -7,6 +7,7 @@ import { LivePriceCard } from "./components/LivePriceCard";
 import { MobileStickyCta } from "./components/MobileStickyCta";
 import { StartStoryLink } from "./components/StartStoryLink";
 import { HomeStoryMotion } from "./components/HomeStoryMotion";
+import { HomeFilmPreview } from "./components/HomeFilmPreview";
 import { MiruBeforeAfter } from "./components/MiruBeforeAfter";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 import {
@@ -280,23 +281,6 @@ export default async function Home() {
             <li><span>03</span><strong>育てられる写真アルバム</strong><small>完成後も写真を追加</small></li>
             <li><span>04</span><strong>歩いて話すミニキャラクター</strong><small>その子らしい案内役</small></li>
           </ul>
-          <div className="storybook-film-frame">
-            <video
-              controls
-              preload="metadata"
-              playsInline
-              poster="/film/moka/05-storybook-lantern.webp"
-              aria-label="モカと五つの記憶の完成映像"
-            >
-              <source src="/film/moka/complete-film.mp4" type="video/mp4" />
-            </video>
-            <div className="storybook-film-meta">
-              <span>COMPLETE FILM · 00:39</span>
-              <strong>モカと、五つの記憶</strong>
-              <Link href="/film/moka-demo">作品ページで写真と全場面を見る →</Link>
-            </div>
-          </div>
-
           <div className="storybook-complete-website">
             <div className="storybook-complete-site-preview" aria-label="モカ専用ホームページのイメージ">
               <div className="storybook-complete-browser-bar" aria-hidden="true">
@@ -314,6 +298,7 @@ export default async function Home() {
                   <span>MOKA &amp; FIVE MEMORIES</span>
                   <strong>いつでも会える、<br />モカだけの場所。</strong>
                 </div>
+                <HomeFilmPreview />
                 <div className="storybook-complete-site-cards" aria-hidden="true">
                   <div><Image src="/film/moka/02-storybook-train.webp" alt="" width={180} height={110} /><span>STORYBOOK</span></div>
                   <div><Image src="/film/moka/09-autumn-ginkgo.webp" alt="" width={180} height={110} /><span>PHOTO ALBUM</span></div>

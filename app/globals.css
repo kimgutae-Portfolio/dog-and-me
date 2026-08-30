@@ -2225,7 +2225,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-complete-includes span { grid-row: 1 / 3; padding-top: 3px; color: #b47878; font-size: 7px; font-weight: 800; letter-spacing: .12em; }
 .storybook-complete-includes strong { overflow-wrap: anywhere; font-family: var(--font-serif); font-size: 14px; font-weight: 500; line-height: 1.55; }
 .storybook-complete-includes small { margin-top: 4px; color: #797167; font-size: 8px; line-height: 1.5; }
-.storybook-complete-website { margin-top: 76px; padding-top: 72px; display: grid; grid-template-columns: minmax(0,1.2fr) minmax(300px,.8fr); gap: 76px; align-items: center; border-top: 1px solid rgba(64,59,53,.16); }
+.storybook-complete-website { margin-top: 30px; padding-top: 62px; display: grid; grid-template-columns: minmax(0,1.2fr) minmax(300px,.8fr); gap: 76px; align-items: center; border-top: 1px solid rgba(64,59,53,.16); }
 .storybook-complete-site-preview { min-width: 0; overflow: hidden; border: 1px solid rgba(64,59,53,.2); border-radius: 4px; background: #fffaf2; box-shadow: 0 32px 90px rgba(63,49,40,.2); transform: perspective(1300px) rotateY(1.5deg); transition: transform .75s cubic-bezier(.2,.8,.2,1), box-shadow .75s ease; }
 .storybook-complete-experience.is-section-active .storybook-complete-site-preview { transform: perspective(1300px) rotateY(-.6deg) translateY(-5px); box-shadow: 0 42px 110px rgba(63,49,40,.25); }
 .storybook-complete-browser-bar { height: 40px; padding: 0 14px; display: flex; align-items: center; gap: 6px; color: #817970; border-bottom: 1px solid rgba(64,59,53,.12); background: #f9f5ed; }
@@ -2245,6 +2245,23 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-complete-site-character { width: 25%; position: absolute; z-index: 5; left: 40%; bottom: -4%; filter: drop-shadow(0 12px 12px rgba(26,21,18,.3)); animation: storybook-site-character-bob 3.2s ease-in-out infinite; }
 .storybook-complete-site-character img { width: 100%; height: auto; display: block; }
 .storybook-complete-site-character div { width: max-content; padding: 8px 11px; position: absolute; right: 66%; top: -4%; color: #554d46; border-radius: 12px 12px 3px 12px; background: rgba(255,251,242,.96); box-shadow: 0 8px 22px rgba(31,25,21,.18); font-family: var(--font-serif); font-size: 8px; line-height: 1.55; }
+.storybook-complete-film-trigger { width: 37%; min-height: 78px; padding: 7px; position: absolute; z-index: 6; left: 4%; bottom: 5%; display: grid; grid-template-columns: 68px minmax(0,1fr) auto; align-items: center; gap: 10px; color: #4c4540; border: 1px solid rgba(255,255,255,.68); border-radius: 3px; background: rgba(255,250,242,.94); box-shadow: 0 14px 34px rgba(29,24,21,.3); cursor: pointer; text-align: left; transition: transform .3s ease, box-shadow .3s ease, background .3s ease; }
+.storybook-complete-film-trigger:hover { background: #fffaf2; box-shadow: 0 18px 42px rgba(29,24,21,.38); transform: translateY(-3px); }
+.storybook-complete-film-trigger-image { aspect-ratio: 16/10; position: relative; display: block; overflow: hidden; border-radius: 2px; background: #302d2a; }
+.storybook-complete-film-trigger-image img { object-fit: cover; }
+.storybook-complete-film-trigger-image::after { content: ""; position: absolute; inset: 0; background: rgba(30,27,24,.2); }
+.storybook-complete-film-trigger-image i { width: 25px; height: 25px; position: absolute; z-index: 2; left: 50%; top: 50%; display: grid; place-items: center; color: #fff; border: 1px solid rgba(255,255,255,.8); border-radius: 50%; background: rgba(42,38,34,.62); font-size: 8px; font-style: normal; transform: translate(-50%,-50%); }
+.storybook-complete-film-trigger-copy { min-width: 0; display: grid; gap: 7px; }
+.storybook-complete-film-trigger-copy small { color: #a66f70; font-size: 5px; font-weight: 800; letter-spacing: .13em; white-space: nowrap; }
+.storybook-complete-film-trigger-copy strong { font-family: var(--font-serif); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.storybook-complete-film-trigger-arrow { color: #9b716d; font-size: 11px; }
+.storybook-film-dialog { padding: 28px; position: fixed; z-index: 2000; inset: 0; display: grid; place-items: center; background: rgba(27,24,22,.78); backdrop-filter: blur(10px); }
+.storybook-film-dialog-panel { width: min(940px,100%); position: relative; overflow: hidden; color: #fffaf2; border: 1px solid rgba(255,255,255,.2); background: #252927; box-shadow: 0 40px 120px rgba(0,0,0,.48); }
+.storybook-film-dialog-heading { padding: 20px 68px 18px 24px; display: grid; gap: 7px; background: #343a37; }
+.storybook-film-dialog-heading span { color: #d8b0aa; font-size: 7px; font-weight: 700; letter-spacing: .18em; }
+.storybook-film-dialog-heading strong { font-family: var(--font-serif); font-size: 20px; font-weight: 400; letter-spacing: .05em; }
+.storybook-film-dialog-panel video { width: 100%; aspect-ratio: 16/9; display: block; object-fit: contain; background: #111; }
+.storybook-film-dialog-close { width: 44px; height: 44px; position: absolute; z-index: 2; right: 12px; top: 12px; display: grid; place-items: center; color: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 50%; background: rgba(23,25,24,.62); cursor: pointer; font-size: 25px; font-weight: 300; line-height: 1; }
 .storybook-complete-site-copy h3 { margin: 6px 0 22px; font-family: var(--font-serif); font-size: clamp(29px,3.5vw,46px); font-weight: 400; line-height: 1.55; letter-spacing: .04em; }
 .storybook-complete-site-copy > p:not(.eyebrow) { margin: 0; color: #696258; font-size: 12px; line-height: 2; }
 .storybook-complete-lifetime { margin: 28px 0 30px; padding: 17px 0; display: flex; align-items: center; gap: 16px; border-top: 1px solid rgba(64,59,53,.16); border-bottom: 1px solid rgba(64,59,53,.16); }
@@ -2529,7 +2546,6 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-complete-experience .shell { display: flex; flex-direction: column; }
   .storybook-mobile-result-kicker { margin: 0 0 15px; order: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #5f5850; font-family: var(--font-serif); font-size: 12px; letter-spacing: .04em; }
   .storybook-mobile-result-kicker span { color: #a66f70; font-family: var(--font-sans); font-size: 7px; font-weight: 800; letter-spacing: .15em; }
-  .storybook-complete-experience .storybook-film-frame { order: 1; }
   .storybook-complete-experience .storybook-heading { margin: 38px 0 23px; order: 2; gap: 13px; }
   .storybook-complete-desktop-copy { display: none; }
   .storybook-complete-mobile-copy { display: block; }
@@ -2537,13 +2553,14 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-complete-experience .storybook-heading h2 { font-size: 35px; line-height: 1.48; }
   .storybook-complete-experience .storybook-heading > p { margin: 0; font-size: 12px; line-height: 1.85; }
   .storybook-complete-experience .storybook-complete-includes { order: 3; }
-  .storybook-complete-experience .storybook-complete-website { order: 4; }
+  .storybook-complete-experience .storybook-complete-website { display: contents; }
+  .storybook-complete-experience .storybook-complete-site-preview { order: 1; }
+  .storybook-complete-experience .storybook-complete-site-copy { margin-top: 52px; padding-top: 50px; order: 4; border-top: 1px solid rgba(64,59,53,.16); }
   .storybook-complete-includes { margin-bottom: 28px; display: block; border: 0; border-top: 1px solid rgba(64,59,53,.18); background: transparent; }
   .storybook-complete-includes li { padding: 15px 0; display: grid; grid-template-columns: 30px minmax(0,1fr) auto; column-gap: 11px; align-items: center; border-right: 0; border-bottom: 1px solid rgba(64,59,53,.18); }
   .storybook-complete-includes span { width: 25px; height: 25px; padding: 0; grid-row: auto; display: grid; place-items: center; border-radius: 50%; color: #965f62; background: rgba(180,120,120,.12); font-size: 7px; }
   .storybook-complete-includes strong { font-size: 13px; line-height: 1.45; }
   .storybook-complete-includes small { margin: 0; color: #81786e; font-size: 8px; line-height: 1.45; text-align: right; white-space: nowrap; }
-  .storybook-complete-website { margin-top: 54px; padding-top: 50px; gap: 34px; }
   .storybook-complete-site-preview { margin: 0 -10px; width: calc(100% + 20px); }
   .storybook-complete-browser-bar { height: 35px; }
   .storybook-complete-site-canvas { aspect-ratio: 4/3.4; }
@@ -2552,6 +2569,16 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-complete-site-cards { width: 54%; right: 2%; bottom: 3%; }
   .storybook-complete-site-character { width: 31%; left: 34%; bottom: -2%; }
   .storybook-complete-site-character div { right: 53%; top: -8%; padding: 6px 8px; font-size: 7px; }
+  .storybook-complete-film-trigger { width: 44%; min-height: 60px; padding: 5px; left: 3%; bottom: 4%; grid-template-columns: 51px minmax(0,1fr) auto; gap: 7px; }
+  .storybook-complete-film-trigger-copy { gap: 5px; }
+  .storybook-complete-film-trigger-copy small { font-size: 4px; }
+  .storybook-complete-film-trigger-copy strong { font-size: 10px; }
+  .storybook-complete-film-trigger-arrow { display: none; }
+  .storybook-film-dialog { padding: 0; align-items: center; }
+  .storybook-film-dialog-panel { width: 100%; border-right: 0; border-left: 0; }
+  .storybook-film-dialog-heading { padding: 17px 62px 15px 18px; }
+  .storybook-film-dialog-heading strong { font-size: 17px; }
+  .storybook-film-dialog-close { width: 38px; height: 38px; right: 10px; top: 10px; }
   .storybook-complete-site-copy h3 { font-size: 31px; }
   .storybook-complete-site-copy > p:not(.eyebrow) { font-size: 12px; }
   .storybook-complete-lifetime { gap: 12px; }
