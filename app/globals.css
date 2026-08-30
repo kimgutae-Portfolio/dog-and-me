@@ -2375,6 +2375,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .moka-meeting-day strong { grid-column: 2; grid-row: 1 / 3; font-family: var(--font-serif); font-size: 28px; font-weight: 400; line-height: 1; letter-spacing: .04em; }
 .moka-meeting-day small { margin-top: 5px; grid-column: 1; color: #706860; font-size: 7px; letter-spacing: .13em; }
 .moka-meeting-day + a { margin-top: 28px; }
+.personal-storybook-site .moka-meeting-day { margin-top: 0; }
 .moka-cover-copy p, .moka-heading p, .moka-letter > p { margin: 0 0 20px; color: #a16f70; font-size: 8px; font-weight: 700; letter-spacing: .22em; }
 .moka-cover-copy h1 { margin: 0 0 24px; font-family: var(--font-serif); font-size: clamp(58px,7.5vw,98px); font-weight: 400; line-height: 1.42; letter-spacing: .07em; }
 .moka-cover-copy > span { display: block; color: #6c655d; font-size: 10px; letter-spacing: .1em; }

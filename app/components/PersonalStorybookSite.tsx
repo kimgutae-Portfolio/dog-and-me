@@ -23,8 +23,6 @@ export type AlbumImage = {
 type Props = {
   title: string;
   petName: string;
-  breed: string;
-  purpose: string;
   createdAt: string;
   metOn?: string | null;
   message: string;
@@ -45,8 +43,6 @@ type Props = {
 export function PersonalStorybookSite({
   title,
   petName,
-  breed,
-  purpose,
   createdAt,
   metOn = null,
   message,
@@ -147,7 +143,6 @@ export function PersonalStorybookSite({
         <div className="moka-cover-copy">
           <p>A STORY FOR {petName.toUpperCase()}</p>
           <h1>{title}</h1>
-          <span>{breed} · {purpose}</span>
           <MeetingDayBadge metOn={metOn} petName={petName} />
           <a href="#complete-film">作品を再生する <i aria-hidden="true">↓</i></a>
         </div>

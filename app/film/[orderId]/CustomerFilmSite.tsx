@@ -224,8 +224,6 @@ export function CustomerFilmSite() {
     <PersonalStorybookSite
       title={delivery?.title || `${order.pet_name}と、五つの記憶`}
       petName={order.pet_name}
-      breed={order.breed}
-      purpose={order.purpose}
       createdAt={order.created_at}
       metOn={order.met_on}
       message={order.message_to_pet || delivery?.customer_message || "これからも、思い出の中で一緒に。"}
