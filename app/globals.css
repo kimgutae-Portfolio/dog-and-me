@@ -1685,6 +1685,15 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .delivered-studio-tabs strong { font-family: var(--font-serif); font-size: 14px; font-weight: 500; }
 .memory-manager-lead { max-width: 730px; margin: 24px 0 28px; color: var(--muted); font-size: 10px; line-height: 1.9; }
 .studio-lifetime-album { padding-top: 4px; }
+.studio-meeting-day-setting { margin: 22px 0 26px; padding: 20px 22px; display: grid; grid-template-columns: minmax(0,1fr) 190px 130px; align-items: end; gap: 18px; border: 1px solid rgba(117,75,99,.22); background: #f4eee8; }
+.studio-meeting-day-setting > div { display: grid; gap: 5px; }
+.studio-meeting-day-setting .eyebrow { margin: 0; color: #a16f70; font-size: 7px; }
+.studio-meeting-day-setting strong { font-family: var(--font-serif); font-size: 16px; font-weight: 500; }
+.studio-meeting-day-setting small { color: #777067; font-size: 8px; line-height: 1.7; }
+.studio-meeting-day-setting label { display: grid; gap: 7px; }
+.studio-meeting-day-setting label span { color: #6b645c; font-size: 8px; }
+.studio-meeting-day-setting input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 0; color: #403b35; background: white; font: inherit; font-size: 12px; }
+.studio-meeting-day-setting .button { min-height: 44px; }
 .studio-album-intro-row { margin: 24px 0 28px; display: flex; align-items: end; justify-content: space-between; gap: 28px; }
 .studio-album-intro-row .memory-manager-lead { margin: 0; }
 .studio-album-upload-button { min-width: 220px; min-height: 58px; padding: 10px 16px; display: grid; align-content: center; gap: 3px; color: white; background: #754b63; cursor: pointer; }
@@ -1961,6 +1970,9 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .mobile-concept-submit .button { min-height: 50px; padding-inline: 16px; white-space: nowrap; }
   .album-manager-grid { grid-template-columns: 1fr; }
   .studio-album-intro-row { align-items: stretch; flex-direction: column; }
+  .studio-meeting-day-setting { padding: 18px; grid-template-columns: 1fr; align-items: stretch; gap: 15px; }
+  .studio-meeting-day-setting input { min-height: 50px; font-size: 16px; }
+  .studio-meeting-day-setting .button { width: 100%; min-height: 50px; }
   .studio-album-upload-button { width: 100%; min-width: 0; min-height: 58px; }
   .delivered-studio-tabs { overflow-x: auto; grid-template-columns: repeat(4,minmax(168px,1fr)); scroll-snap-type: x mandatory; }
   .delivered-studio-tabs button { min-height: 70px; scroll-snap-align: start; }
@@ -2357,6 +2369,12 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .moka-cover-wash { position: absolute; inset: 0; background: linear-gradient(90deg,rgba(248,243,234,.95) 0%,rgba(248,243,234,.76) 34%,rgba(248,243,234,.12) 70%),linear-gradient(180deg,transparent 60%,rgba(61,49,41,.2)); }
 .moka-cover-wash::after { content: ""; position: absolute; inset: 0; opacity: .12; background-image: repeating-radial-gradient(circle at 0 0,rgba(63,55,48,.35) 0 1px,transparent 1px 5px); }
 .moka-cover-copy { width: min(1160px,calc(100% - 80px)); margin: 0 auto; position: relative; z-index: 1; }
+.moka-meeting-day { width: fit-content; margin-top: 24px; padding: 5px 0 5px 17px; position: relative; display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 18px; color: #4a433d; border-left: 1px solid rgba(161,111,112,.72); }
+.moka-meeting-day::before { content: ""; width: 5px; height: 5px; position: absolute; top: 50%; left: -3px; border-radius: 50%; background: #a16f70; transform: translateY(-50%); }
+.moka-meeting-day span { grid-column: 1; color: #8e6265; font-family: var(--font-serif); font-size: 9px; letter-spacing: .14em; }
+.moka-meeting-day strong { grid-column: 2; grid-row: 1 / 3; font-family: var(--font-serif); font-size: 28px; font-weight: 400; line-height: 1; letter-spacing: .04em; }
+.moka-meeting-day small { margin-top: 5px; grid-column: 1; color: #706860; font-size: 7px; letter-spacing: .13em; }
+.moka-meeting-day + a { margin-top: 28px; }
 .moka-cover-copy p, .moka-heading p, .moka-letter > p { margin: 0 0 20px; color: #a16f70; font-size: 8px; font-weight: 700; letter-spacing: .22em; }
 .moka-cover-copy h1 { margin: 0 0 24px; font-family: var(--font-serif); font-size: clamp(58px,7.5vw,98px); font-weight: 400; line-height: 1.42; letter-spacing: .07em; }
 .moka-cover-copy > span { display: block; color: #6c655d; font-size: 10px; letter-spacing: .1em; }
@@ -2660,6 +2678,11 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .moka-cover > img { object-position: 58% center; }
   .moka-cover-wash { background: linear-gradient(180deg,rgba(248,243,234,.03),rgba(248,243,234,.38) 43%,rgba(248,243,234,.95) 76%); }
   .moka-cover-copy { width: calc(100% - 36px); padding-bottom: 52px; }
+  .moka-meeting-day { margin-top: 18px; padding: 4px 0 4px 12px; column-gap: 13px; }
+  .moka-meeting-day span { font-size: 7px; }
+  .moka-meeting-day strong { font-size: 22px; }
+  .moka-meeting-day small { margin-top: 4px; font-size: 6px; }
+  .moka-meeting-day + a { margin-top: 20px; }
   .moka-cover-copy h1 { font-size: 46px; }
   .personal-storybook-site .moka-cover-copy h1 { font-size: 42px; }
   .moka-cover-copy > a { margin-top: 28px; }

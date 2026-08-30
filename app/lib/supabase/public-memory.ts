@@ -8,6 +8,7 @@ export type SharedMemoryPayload = {
     breed: string;
     purpose: string;
     message_to_pet: string | null;
+    met_on: string | null;
     created_at: string;
   };
   delivery: {

@@ -589,6 +589,38 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
   assert.match(demo, /完成後も写真を追加できます/);
 });
 
+test("stores and displays the day the customer met their dog", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [migration, manager, personalSite, sharedPage, payload, badge, demo] =
+    await Promise.all([
+      readFile(
+        new URL(
+          "supabase/migrations/202608300001_personal_site_met_date.sql",
+          root,
+        ),
+        "utf8",
+      ),
+      readFile(new URL("app/studio/MemoryShareManager.tsx", root), "utf8"),
+      readFile(new URL("app/components/PersonalStorybookSite.tsx", root), "utf8"),
+      readFile(new URL("app/memory/[shareId]/SharedMemorySite.tsx", root), "utf8"),
+      readFile(new URL("app/lib/supabase/public-memory.ts", root), "utf8"),
+      readFile(new URL("app/components/MeetingDayBadge.tsx", root), "utf8"),
+      readFile(new URL("app/film/moka-demo/page.tsx", root), "utf8"),
+    ]);
+  assert.match(migration, /add column if not exists met_on date/);
+  assert.match(migration, /set_personal_site_met_on/);
+  assert.match(migration, /p_met_on > current_date/);
+  assert.match(migration, /'met_on', v_order\.met_on/);
+  assert.match(manager, /type="date"/);
+  assert.match(manager, /出会った日をホームページに残す/);
+  assert.match(personalSite, /<MeetingDayBadge metOn=\{metOn\}/);
+  assert.match(sharedPage, /metOn=\{memory\.order\.met_on\}/);
+  assert.match(payload, /met_on: string \| null/);
+  assert.match(badge, /elapsed \+ 1/);
+  assert.match(badge, /一緒に過ごした時間/);
+  assert.match(demo, /<MeetingDayBadge metOn="2021-05-01" petName="モカ"/);
+});
+
 test("guards generated character sprites against frame-edge bleed", async () => {
   const { readFile } = await import("node:fs/promises");
   const studio = await readFile(

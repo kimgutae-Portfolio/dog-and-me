@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { CustomerCharacterGuide } from "../film/[orderId]/CustomerCharacterGuide";
+import { MeetingDayBadge } from "./MeetingDayBadge";
 
 export type AlbumImage = {
   id: string;
@@ -25,6 +26,7 @@ type Props = {
   breed: string;
   purpose: string;
   createdAt: string;
+  metOn?: string | null;
   message: string;
   videoUrl: string;
   images: AlbumImage[];
@@ -46,6 +48,7 @@ export function PersonalStorybookSite({
   breed,
   purpose,
   createdAt,
+  metOn = null,
   message,
   videoUrl,
   images,
@@ -145,6 +148,7 @@ export function PersonalStorybookSite({
           <p>A STORY FOR {petName.toUpperCase()}</p>
           <h1>{title}</h1>
           <span>{breed} · {purpose}</span>
+          <MeetingDayBadge metOn={metOn} petName={petName} />
           <a href="#complete-film">作品を再生する <i aria-hidden="true">↓</i></a>
         </div>
       </section>

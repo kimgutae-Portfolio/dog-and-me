@@ -66,6 +66,7 @@ export type MemoryOrder = {
   purpose: string;
   personality: string[];
   first_meeting: string | null;
+  met_on: string | null;
   favorite_memory: string | null;
   message_to_pet: string | null;
   avoid_notes: string | null;

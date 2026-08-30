@@ -52,6 +52,7 @@ export function MemoryShareManager({
   const [notice, setNotice] = useState("");
   const [copyPopup, setCopyPopup] = useState(false);
   const [error, setError] = useState("");
+  const [metOnDraft, setMetOnDraft] = useState(order.met_on ?? "");
 
   const photos = useMemo(
     () =>
@@ -84,6 +85,11 @@ export function MemoryShareManager({
       ? `${origin}/${encodeURIComponent(share.customer_slug)}/${encodeURIComponent(share.pet_slug)}`
       : "";
   const siteReady = order.status === "delivered" && Boolean(delivery);
+  const today = useMemo(() => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60_000;
+    return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+  }, []);
 
   useEffect(() => {
     if (!copyPopup) return;
@@ -154,6 +160,34 @@ export function MemoryShareManager({
     if (updateError)
       setError("写真の設定を保存できませんでした。");
     else await onChanged();
+    setWorking(false);
+  };
+
+  const saveMetOn = async () => {
+    if (!siteReady || working || metOnDraft === (order.met_on ?? "")) return;
+    if (metOnDraft && metOnDraft > today) {
+      setError("出会った日は今日以前の日付を選んでください。");
+      return;
+    }
+    setWorking(true);
+    setError("");
+    const { error: saveError } = await getSupabaseBrowserClient().rpc(
+      "set_personal_site_met_on",
+      {
+        p_order_id: order.id,
+        p_met_on: metOnDraft || null,
+      },
+    );
+    if (saveError) {
+      setError("出会った日を保存できませんでした。もう一度お試しください。");
+    } else {
+      setNotice(
+        metOnDraft
+          ? "出会った日を保存しました。ホームページのD-dayへ反映されます。"
+          : "出会った日の表示を外しました。",
+      );
+      await onChanged();
+    }
     setWorking(false);
   };
 
@@ -370,6 +404,33 @@ export function MemoryShareManager({
         </div>
         <span>写真 {managedPhotos.length}枚を管理</span>
       </div>
+      {siteReady && (
+        <div className="studio-meeting-day-setting">
+          <div>
+            <p className="eyebrow">THE DAY WE MET</p>
+            <strong>出会った日をホームページに残す</strong>
+            <small>保存すると、専用ホームページの最初の画面にD-dayが表示されます。</small>
+          </div>
+          <label>
+            <span>出会った日</span>
+            <input
+              type="date"
+              value={metOnDraft}
+              max={today}
+              disabled={working}
+              onChange={(event) => setMetOnDraft(event.currentTarget.value)}
+            />
+          </label>
+          <button
+            className="button button-primary"
+            type="button"
+            disabled={working || metOnDraft === (order.met_on ?? "")}
+            onClick={() => void saveMetOn()}
+          >
+            {working ? "保存中…" : "日付を保存"}
+          </button>
+        </div>
+      )}
       <div className="studio-album-intro-row">
         <p className="memory-manager-lead">
           制作に使った写真も、完成後に追加した写真もここでまとめて管理します。変更内容は専用ホームページの写真帖へ反映されます。

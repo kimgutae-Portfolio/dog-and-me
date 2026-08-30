@@ -227,6 +227,7 @@ export function CustomerFilmSite() {
       breed={order.breed}
       purpose={order.purpose}
       createdAt={order.created_at}
+      metOn={order.met_on}
       message={order.message_to_pet || delivery?.customer_message || "これからも、思い出の中で一緒に。"}
       videoUrl={videoUrl}
       images={images}

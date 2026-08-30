@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StartStoryLink } from "../../components/StartStoryLink";
+import { MeetingDayBadge } from "../../components/MeetingDayBadge";
 import { MokaGuide } from "./MokaGuide";
 
 /* eslint-disable @next/next/no-img-element -- Static WebP album assets preserve their original aspect ratios. */
@@ -65,6 +66,7 @@ export default function MokaDemoPage() {
           <p>A STORY FOR MOKA</p>
           <h1>モカと、<br />五つの記憶</h1>
           <span>トイプードル · いつもの日々をめぐる物語</span>
+          <MeetingDayBadge metOn="2021-05-01" petName="モカ" />
           <a href="#complete-film">作品を再生する <i aria-hidden="true">↓</i></a>
         </div>
       </section>

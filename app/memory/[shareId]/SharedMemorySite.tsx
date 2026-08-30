@@ -155,6 +155,7 @@ export function SharedMemorySite({
       breed={memory.order.breed}
       purpose={memory.order.purpose}
       createdAt={memory.order.created_at}
+      metOn={memory.order.met_on}
       message={memory.order.message_to_pet || memory.delivery.customer_message || "これからも、思い出の中で一緒に。"}
       videoUrl={videoUrl}
       images={images}
