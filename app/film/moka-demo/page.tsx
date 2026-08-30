@@ -67,7 +67,6 @@ export default function MokaDemoPage() {
           <h1>モカと、<br />五つの記憶</h1>
           <span>トイプードル · いつもの日々をめぐる物語</span>
           <MeetingDayBadge metOn="2021-05-01" petName="モカ" />
-          <a href="#complete-film">作品を再生する <i aria-hidden="true">↓</i></a>
         </div>
       </section>
 

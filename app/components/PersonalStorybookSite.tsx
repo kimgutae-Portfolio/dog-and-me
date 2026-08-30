@@ -144,7 +144,6 @@ export function PersonalStorybookSite({
           <p>A STORY FOR {petName.toUpperCase()}</p>
           <h1>{title}</h1>
           <MeetingDayBadge metOn={metOn} petName={petName} />
-          <a href="#complete-film">作品を再生する <i aria-hidden="true">↓</i></a>
         </div>
       </section>
 

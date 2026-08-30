@@ -2374,13 +2374,10 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .moka-meeting-day span { grid-column: 1; color: #8e6265; font-family: var(--font-serif); font-size: 9px; letter-spacing: .14em; }
 .moka-meeting-day strong { grid-column: 2; grid-row: 1 / 3; font-family: var(--font-serif); font-size: 28px; font-weight: 400; line-height: 1; letter-spacing: .04em; }
 .moka-meeting-day small { margin-top: 5px; grid-column: 1; color: #706860; font-size: 7px; letter-spacing: .13em; }
-.moka-meeting-day + a { margin-top: 28px; }
 .personal-storybook-site .moka-meeting-day { margin-top: 0; }
 .moka-cover-copy p, .moka-heading p, .moka-letter > p { margin: 0 0 20px; color: #a16f70; font-size: 8px; font-weight: 700; letter-spacing: .22em; }
 .moka-cover-copy h1 { margin: 0 0 24px; font-family: var(--font-serif); font-size: clamp(58px,7.5vw,98px); font-weight: 400; line-height: 1.42; letter-spacing: .07em; }
 .moka-cover-copy > span { display: block; color: #6c655d; font-size: 10px; letter-spacing: .1em; }
-.moka-cover-copy > a { width: fit-content; margin-top: 42px; padding-bottom: 7px; display: flex; align-items: center; gap: 18px; border-bottom: 1px solid rgba(64,59,53,.58); font-size: 9px; letter-spacing: .1em; }
-.moka-cover-copy > a i { font-size: 16px; font-style: normal; }
 .moka-shell { width: min(1160px,calc(100% - 80px)); margin: 0 auto; }
 .moka-heading { margin-bottom: 46px; display: flex; align-items: end; justify-content: space-between; gap: 40px; }
 .moka-heading h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(36px,4.4vw,58px); font-weight: 400; line-height: 1.55; }
@@ -2683,10 +2680,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .moka-meeting-day span { font-size: 7px; }
   .moka-meeting-day strong { font-size: 22px; }
   .moka-meeting-day small { margin-top: 4px; font-size: 6px; }
-  .moka-meeting-day + a { margin-top: 20px; }
   .moka-cover-copy h1 { font-size: 46px; }
   .personal-storybook-site .moka-cover-copy h1 { font-size: 42px; }
-  .moka-cover-copy > a { margin-top: 28px; }
   .moka-shell { width: calc(100% - 36px); }
   .moka-complete-film, .moka-scenes, .moka-album { padding: 82px 0; }
   .moka-heading { align-items: start; flex-direction: column; gap: 15px; }
