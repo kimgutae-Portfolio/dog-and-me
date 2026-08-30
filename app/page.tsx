@@ -298,7 +298,6 @@ export default async function Home() {
                   <span>MOKA &amp; FIVE MEMORIES</span>
                   <strong>いつでも会える、<br />モカだけの場所。</strong>
                 </div>
-                <HomeFilmPreview />
                 <div className="storybook-complete-site-cards" aria-hidden="true">
                   <div><Image src="/film/moka/02-storybook-train.webp" alt="" width={180} height={110} /><span>STORYBOOK</span></div>
                   <div><Image src="/film/moka/09-autumn-ginkgo.webp" alt="" width={180} height={110} /><span>PHOTO ALBUM</span></div>
@@ -309,6 +308,7 @@ export default async function Home() {
                   <Image src="/film/moka/character/frames/head-tilt.png" alt="" width={362} height={362} />
                 </div>
               </div>
+              <HomeFilmPreview />
             </div>
 
             <div className="storybook-complete-site-copy">

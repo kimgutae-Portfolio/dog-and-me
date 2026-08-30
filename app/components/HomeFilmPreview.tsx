@@ -43,7 +43,7 @@ export function HomeFilmPreview() {
         </span>
         <span className="storybook-complete-film-trigger-copy">
           <small>COMPLETE FILM · 00:39</small>
-          <strong>完成映像を見る</strong>
+          <strong>約40秒の完成映像を見る</strong>
         </span>
         <span className="storybook-complete-film-trigger-arrow" aria-hidden="true">↗</span>
       </button>
