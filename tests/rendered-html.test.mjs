@@ -593,7 +593,11 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
     /\.album-manager-item:not\(\.selected\) \.album-manager-image \{ opacity: \.42; filter: grayscale\(\.55\); \}/,
   );
   assert.doesNotMatch(css, /\.album-manager-kind/);
-  assert.match(css, /\.album-manager-grid \{[^}]*display: flex;[^}]*overflow-x: auto;/);
+  assert.match(manager, /className="album-manager-grid album-manager-scroll"/);
+  assert.match(
+    css,
+    /\.album-manager-grid\.album-manager-scroll \{[^}]*display: flex;[^}]*overflow-x: auto;/,
+  );
   assert.match(css, /scroll-snap-type: x mandatory/);
   assert.doesNotMatch(manager, /GROWING PHOTO ALBUM|STORY SOURCE PHOTOS/);
   assert.match(

@@ -492,7 +492,7 @@ export function MemoryShareManager({
       </div>
 
       {managedPhotos.length ? (
-        <div className="album-manager-grid">
+        <div className="album-manager-grid album-manager-scroll">
           {visiblePhotos.map((asset) => {
             const siblings =
               asset.category === "album_photo" ? addedPhotos : photos;
