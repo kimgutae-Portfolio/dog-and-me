@@ -579,12 +579,18 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
   assert.match(manager, /delete_lifetime_album_photo/);
   assert.match(manager, /写真アルバムと家族共有/);
   assert.match(manager, /asset\.album_visible \? "外す" : "載せる"/);
+  assert.match(manager, /const PHOTO_BATCH_SIZE = 30/);
+  assert.match(manager, /IntersectionObserver/);
+  assert.match(manager, /managedPhotos\.slice\(0, visiblePhotoCount\)/);
+  assert.match(manager, /pendingPhotos\.map\(\(asset\) => asset\.storage_path\)/);
   assert.doesNotMatch(manager, /掲載中|掲載する/);
   assert.doesNotMatch(manager, /アルバムから外す|アルバムに載せる/);
   assert.doesNotMatch(manager, /album-manager-kind/);
   assert.doesNotMatch(manager, /disabled=\{working \|\| index ===/);
   assert.doesNotMatch(css, /\.album-manager-item \{[^}]*opacity:/);
   assert.doesNotMatch(css, /\.album-manager-kind/);
+  assert.match(css, /\.album-manager-grid \{[^}]*display: flex;[^}]*overflow-x: auto;/);
+  assert.match(css, /scroll-snap-type: x mandatory/);
   assert.doesNotMatch(manager, /GROWING PHOTO ALBUM|STORY SOURCE PHOTOS/);
   assert.match(
     studio,

@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { uploadLifetimeAlbumImages } from "../lib/supabase/uploads";
 import type {
@@ -18,6 +18,8 @@ type Props = {
   assets: OrderAsset[];
   onChanged: () => Promise<void>;
 };
+
+const PHOTO_BATCH_SIZE = 30;
 
 function shareRow(data: unknown): MemoryShare | null {
   const row = Array.isArray(data) ? data[0] : data;
@@ -53,6 +55,8 @@ export function MemoryShareManager({
   const [copyPopup, setCopyPopup] = useState(false);
   const [error, setError] = useState("");
   const [metOnDraft, setMetOnDraft] = useState(order.met_on ?? "");
+  const [visiblePhotoCount, setVisiblePhotoCount] = useState(PHOTO_BATCH_SIZE);
+  const loadMorePhotosRef = useRef<HTMLButtonElement>(null);
 
   const photos = useMemo(
     () =>
@@ -80,6 +84,11 @@ export function MemoryShareManager({
     () => [...photos, ...addedPhotos],
     [addedPhotos, photos],
   );
+  const visiblePhotos = useMemo(
+    () => managedPhotos.slice(0, visiblePhotoCount),
+    [managedPhotos, visiblePhotoCount],
+  );
+  const hasMorePhotos = visiblePhotoCount < managedPhotos.length;
   const shareUrl =
     share?.customer_slug && share?.pet_slug && origin
       ? `${origin}/${encodeURIComponent(share.customer_slug)}/${encodeURIComponent(share.pet_slug)}`
@@ -98,23 +107,47 @@ export function MemoryShareManager({
   }, [copyPopup]);
 
   useEffect(() => {
-    if (!managedPhotos.length) return;
+    const pendingPhotos = visiblePhotos.filter(
+      (asset) => !previewUrls[asset.id],
+    );
+    if (!pendingPhotos.length) return;
+    let cancelled = false;
     const supabase = getSupabaseBrowserClient();
     supabase.storage
       .from("order-assets")
       .createSignedUrls(
-        managedPhotos.map((asset) => asset.storage_path),
+        pendingPhotos.map((asset) => asset.storage_path),
         3600,
       )
       .then(({ data }) => {
+        if (cancelled) return;
         const next: Record<string, string> = {};
         data?.forEach((result, index) => {
           if (result.signedUrl)
-            next[managedPhotos[index].id] = result.signedUrl;
+            next[pendingPhotos[index].id] = result.signedUrl;
         });
-        setPreviewUrls(next);
+        setPreviewUrls((current) => ({ ...current, ...next }));
       });
-  }, [managedPhotos]);
+    return () => {
+      cancelled = true;
+    };
+  }, [previewUrls, visiblePhotos]);
+
+  useEffect(() => {
+    const target = loadMorePhotosRef.current;
+    if (!target || !hasMorePhotos) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setVisiblePhotoCount((current) =>
+          Math.min(current + PHOTO_BATCH_SIZE, managedPhotos.length),
+        );
+      },
+      { rootMargin: "0px 240px 240px 0px" },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMorePhotos, managedPhotos.length]);
 
   const manageShare = useCallback(
     async (action: "get" | "enable" | "disable" | "rotate") => {
@@ -460,7 +493,7 @@ export function MemoryShareManager({
 
       {managedPhotos.length ? (
         <div className="album-manager-grid">
-          {managedPhotos.map((asset) => {
+          {visiblePhotos.map((asset) => {
             const siblings =
               asset.category === "album_photo" ? addedPhotos : photos;
             const index = siblings.findIndex((item) => item.id === asset.id);
@@ -539,6 +572,23 @@ export function MemoryShareManager({
               </article>
             );
           })}
+          {hasMorePhotos && (
+            <button
+              ref={loadMorePhotosRef}
+              className="album-manager-load-more"
+              type="button"
+              onClick={() =>
+                setVisiblePhotoCount((current) =>
+                  Math.min(current + PHOTO_BATCH_SIZE, managedPhotos.length),
+                )
+              }
+            >
+              次の写真を読み込む
+              <small>
+                {Math.min(PHOTO_BATCH_SIZE, managedPhotos.length - visiblePhotoCount)}枚
+              </small>
+            </button>
+          )}
         </div>
       ) : (
         <p className="album-manager-empty">
