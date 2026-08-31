@@ -8,7 +8,10 @@ import { MobileStickyCta } from "./components/MobileStickyCta";
 import { StartStoryLink } from "./components/StartStoryLink";
 import { HomeStoryMotion } from "./components/HomeStoryMotion";
 import { HomeFilmPreview } from "./components/HomeFilmPreview";
-import { HomeLineContact } from "./components/HomeLineContact";
+import {
+  HomeLineContact,
+  HomeLineContactLink,
+} from "./components/HomeLineContact";
 import { MiruBeforeAfter } from "./components/MiruBeforeAfter";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 import {
@@ -535,18 +538,21 @@ export default async function Home() {
               ? `先着${MEMORY_FILM_PRICING.launchLimit}組は ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。相談時点では料金は発生しません。`
               : PRELAUNCH_COPY}
           </p>
-          {APPLICATIONS_OPEN ? (
-            <StartStoryLink className="button button-cream">
-              物語とホームページをつくる →
-            </StartStoryLink>
-          ) : (
-            <span
-              className="button button-prelaunch button-prelaunch-light"
-              aria-disabled="true"
-            >
-              {PRELAUNCH_CTA}
-            </span>
-          )}
+          <div className="storybook-final-actions">
+            {APPLICATIONS_OPEN ? (
+              <StartStoryLink className="button button-cream">
+                物語とホームページをつくる →
+              </StartStoryLink>
+            ) : (
+              <span
+                className="button button-prelaunch button-prelaunch-light"
+                aria-disabled="true"
+              >
+                {PRELAUNCH_CTA}
+              </span>
+            )}
+            <HomeLineContactLink />
+          </div>
         </div>
       </section>
 
