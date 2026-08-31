@@ -112,6 +112,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /aria-label="LINEで相談する"/);
   assert.match(html, /LINEで相談する/);
   assert.equal((html.match(/href="https:\/\/lin\.ee\/9ejBIax"/g) ?? []).length, 2);
+  assert.match(html, /storybook-final-cta/);
   assert.match(html, /動く絵本/);
   assert.match(html, /初期(?:<!-- -->)?20(?:<!-- -->)?組/);
   assert.match(html, /12,800/);
