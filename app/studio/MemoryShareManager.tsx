@@ -58,31 +58,18 @@ export function MemoryShareManager({
   const [visiblePhotoCount, setVisiblePhotoCount] = useState(PHOTO_BATCH_SIZE);
   const loadMorePhotosRef = useRef<HTMLButtonElement>(null);
 
-  const photos = useMemo(
-    () =>
-      assets
-        .filter((asset) => asset.category === "source_image")
-        .sort(
-          (a, b) =>
-            a.album_sort_order - b.album_sort_order ||
-            a.created_at.localeCompare(b.created_at),
-        ),
-    [assets],
-  );
-  const addedPhotos = useMemo(
-    () =>
-      assets
-        .filter((asset) => asset.category === "album_photo")
-        .sort(
-          (a, b) =>
-            a.album_sort_order - b.album_sort_order ||
-            a.created_at.localeCompare(b.created_at),
-        ),
-    [assets],
-  );
   const managedPhotos = useMemo(
-    () => [...photos, ...addedPhotos],
-    [addedPhotos, photos],
+    () =>
+      assets
+        .filter((asset) =>
+          ["source_image", "album_photo"].includes(asset.category),
+        )
+        .sort(
+          (a, b) =>
+            a.album_sort_order - b.album_sort_order ||
+            a.created_at.localeCompare(b.created_at),
+        ),
+    [assets],
   );
   const visiblePhotos = useMemo(
     () => managedPhotos.slice(0, visiblePhotoCount),
@@ -229,9 +216,8 @@ export function MemoryShareManager({
   };
 
   const movePhoto = async (asset: OrderAsset, direction: -1 | 1) => {
-    const siblings = asset.category === "album_photo" ? addedPhotos : photos;
-    const index = siblings.findIndex((item) => item.id === asset.id);
-    const target = siblings[index + direction];
+    const index = managedPhotos.findIndex((item) => item.id === asset.id);
+    const target = managedPhotos[index + direction];
     if (!target) return;
     setWorking(true);
     setError("");
@@ -494,9 +480,9 @@ export function MemoryShareManager({
       {managedPhotos.length ? (
         <div className="album-manager-grid album-manager-scroll">
           {visiblePhotos.map((asset) => {
-            const siblings =
-              asset.category === "album_photo" ? addedPhotos : photos;
-            const index = siblings.findIndex((item) => item.id === asset.id);
+            const index = managedPhotos.findIndex(
+              (item) => item.id === asset.id,
+            );
             return (
               <article
                 className={
@@ -528,16 +514,14 @@ export function MemoryShareManager({
                   }}
                 />
                 <div className="album-manager-actions">
-                  {asset.category === "source_image" && (
-                    <button
-                      className="album-manager-visibility"
-                      type="button"
-                      disabled={working}
-                      onClick={() => togglePhoto(asset)}
-                    >
-                      {asset.album_visible ? "外す" : "載せる"}
-                    </button>
-                  )}
+                  <button
+                    className="album-manager-visibility"
+                    type="button"
+                    disabled={working}
+                    onClick={() => togglePhoto(asset)}
+                  >
+                    {asset.album_visible ? "外す" : "載せる"}
+                  </button>
                   {index > 0 && (
                     <button
                       type="button"
@@ -547,7 +531,7 @@ export function MemoryShareManager({
                       ← 前へ
                     </button>
                   )}
-                  {index < siblings.length - 1 && (
+                  {index < managedPhotos.length - 1 && (
                     <button
                       type="button"
                       disabled={working}
