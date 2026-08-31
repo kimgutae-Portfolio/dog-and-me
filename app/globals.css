@@ -2231,7 +2231,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-mobile-result-kicker, .storybook-complete-mobile-copy { display: none; }
 .storybook-complete-experience .storybook-heading { margin-bottom: 32px; }
 .storybook-complete-experience .storybook-heading > p { max-width: 535px; }
-.storybook-complete-includes { margin: 0 0 38px; padding: 0; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border: 1px solid rgba(64,59,53,.15); background: rgba(255,255,255,.33); list-style: none; }
+.storybook-complete-includes { margin: 0 0 38px; padding: 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); border: 1px solid rgba(64,59,53,.15); background: rgba(255,255,255,.33); list-style: none; }
 .storybook-complete-includes li { min-width: 0; padding: 19px 18px 17px; display: grid; grid-template-columns: 25px 1fr; column-gap: 8px; border-right: 1px solid rgba(64,59,53,.13); }
 .storybook-complete-includes li:last-child { border-right: 0; }
 .storybook-complete-includes span { grid-row: 1 / 3; padding-top: 3px; color: #b47878; font-size: 7px; font-weight: 800; letter-spacing: .12em; }

@@ -64,12 +64,15 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /一冊の物語と/);
   assert.match(html, /まず、完成作品をご覧ください/);
   assert.match(html, /見て、残して、/);
-  assert.match(html, /約40秒の動く絵本と、写真を増やせる専用ホームページ/);
-  assert.match(html, /完成映像を見る/);
+  assert.match(html, /5つの思い出を、水彩で描く一冊の動く絵本に/);
+  assert.match(html, /約1分の物語として、絵本ページとともにお届けします/);
+  assert.match(html, /動画を見る/);
+  assert.match(html, /ホームページへ/);
   assert.doesNotMatch(html, /storybook-film-frame/);
-  assert.match(html, /愛犬専用ホームページ/);
-  assert.match(html, /育てられる写真アルバム/);
-  assert.match(html, /歩いて話すミニキャラクター/);
+  assert.match(html, /うちの子専用ホームページ/);
+  assert.match(html, /水彩絵本ページ5枚/);
+  assert.match(html, /写真アルバム/);
+  assert.match(html, /ミニキャラクター/);
   assert.match(
     html,
     /storybook-film-showcase storybook-complete-experience section/,
@@ -121,10 +124,10 @@ test("server-renders the Japanese landing page", async () => {
     html,
     /<strong>オープン記念：うちの子LINEスタンプ8種類（通常¥1,480相当）<\/strong>/,
   );
-  assert.match(html, /5つの物語を各5秒で制作/);
-  assert.match(html, /水彩で描く約40秒の動く絵本と、物語や写真をいつでも開ける専用ホームページ/);
+  assert.doesNotMatch(html, /5つの物語を各5秒で制作/);
+  assert.match(html, /5つの思い出をつないだ約1分の動く絵本/);
   assert.match(html, /COMPLETE FILM · 00:39/);
-  assert.match(html, /メインエピソードを選ぶ工程はありません/);
+  assert.doesNotMatch(html, /メインエピソードを選ぶ工程はありません/);
   assert.match(html, /送った写真は変更できますか/);
   assert.match(html, /担当者が個別に変更を許可すると/);
   assert.match(html, /うちの子の動く絵本/);

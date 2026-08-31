@@ -73,7 +73,7 @@ const storyPages = [
 const homeFaqs = [
   [
     "どんな作品が届きますか？",
-    "愛犬を写真そっくりの実写として再現するのではなく、その子の特徴や表情をやわらかな水彩・ガッシュで描きます。5つの物語を各5秒で制作した約40秒の『動く絵本』と、絵本ページ・元の写真・写真アルバム・ミニキャラクターを楽しめる専用ホームページを一緒にお届けします。",
+    "愛犬を写真そっくりの実写として再現するのではなく、その子の特徴や表情をやわらかな水彩・ガッシュで描きます。5つの思い出をつないだ約1分の『動く絵本』と、水彩絵本ページ5枚・元の写真・写真アルバム・ミニキャラクターを楽しめる専用ホームページを一緒にお届けします。",
   ],
   [
     "写真は何枚必要ですか？",
@@ -267,19 +267,20 @@ export default async function Home() {
               </h2>
             </div>
             <p className="storybook-complete-desktop-copy">
-              水彩で描く約40秒の動く絵本と、物語や写真をいつでも開ける専用ホームページ。
+              5つの思い出を、水彩で描く一冊の動く絵本に。
               <br />
-              これからの思い出も増やしていける、二つで一つの作品です。
+              約1分の物語として、絵本ページとともにお届けします。
             </p>
             <p className="storybook-complete-mobile-copy">
-              約40秒の動く絵本と、写真を増やせる専用ホームページを一緒にお届けします。
+              5つの思い出を、水彩で描く一冊の動く絵本に。約1分の物語として、絵本ページとともにお届けします。
             </p>
           </div>
           <ul className="storybook-complete-includes" aria-label="制作プランに含まれるもの">
-            <li><span>01</span><strong>約40秒の動く絵本</strong><small>水彩の5つの物語</small></li>
-            <li><span>02</span><strong>愛犬専用ホームページ</strong><small>公開期限・月額料金なし</small></li>
-            <li><span>03</span><strong>育てられる写真アルバム</strong><small>完成後も写真を追加</small></li>
-            <li><span>04</span><strong>歩いて話すミニキャラクター</strong><small>その子らしい案内役</small></li>
+            <li><span>01</span><strong>約1分の動く絵本</strong><small>5つの思い出を一つの物語に</small></li>
+            <li><span>02</span><strong>水彩絵本ページ5枚</strong><small>動画になる前の完成イラスト</small></li>
+            <li><span>03</span><strong>うちの子専用ホームページ</strong><small>公開期限・月額料金なし</small></li>
+            <li><span>04</span><strong>ミニキャラクター</strong><small>ホームページを歩いてご案内</small></li>
+            <li><span>05</span><strong>LINEスタンプ8種類</strong><small>オープン記念で無料</small></li>
           </ul>
           <div className="storybook-complete-website">
             <div className="storybook-complete-site-preview" aria-label="モカ専用ホームページのイメージ">
@@ -455,12 +456,12 @@ export default async function Home() {
               [
                 "05",
                 "小さな動きを加える",
-                "承認された5枚の絵をもとに、各物語を5秒ずつ制作します。メインエピソードを選ぶ工程はありません。",
+                "承認された5枚の絵に、その場面らしい小さな動きを加えて一冊の物語につなぎます。",
               ],
               [
                 "06",
                 "動く絵本を確認する",
-                "BGMと文章を含む約40秒の映像をご確認いただき、映像は合計1場面まで修正できます。",
+                "BGMと文章を含む約1分の映像をご確認いただき、映像は合計1場面まで修正できます。",
               ],
               [
                 "07",
@@ -488,7 +489,7 @@ export default async function Home() {
               <p className="eyebrow">ONE STORYBOOK + WEBSITE PLAN</p>
               <h2>動く絵本も、その後の居場所も。</h2>
             </div>
-            <p>約40秒の動く絵本と、公開期限・月額料金なしで写真を増やせる専用ホームページ。物語案、絵本ページ、ミニキャラクター、今だけLINEスタンプ8種類まで一つのプランに含みます。</p>
+            <p>約1分の動く絵本、水彩絵本ページ5枚、専用ホームページ、ミニキャラクター、今だけLINEスタンプ8種類まで一つのプランに含みます。</p>
           </div>
           <div className="pricing-grid">
             <LivePriceCard />
