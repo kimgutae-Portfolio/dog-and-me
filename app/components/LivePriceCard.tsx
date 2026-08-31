@@ -66,7 +66,7 @@ export function LivePriceCard() {
         <small>税込</small>
       </p>
       <p className="price-caption">
-        5つの思い出を、水彩で描く約1分の動く絵本に。絵本ページと専用ホームページまで一緒にお届けします。
+        5つの思い出を、水彩で描く約40秒の動く絵本に。絵本ページと専用ホームページまで一緒にお届けします。
       </p>
       <p className="monitor-price-note">
         {!APPLICATIONS_OPEN
@@ -80,7 +80,7 @@ export function LivePriceCard() {
         <li>選んだ1案の場面構成と文章</li>
         <li>水彩・ガッシュの絵本ページ5枚</li>
         <li>全ページの事前確認・絵本2場面まで修正</li>
-        <li>5つの思い出をつないだ約1分の動く絵本</li>
+        <li>5つの思い出をつないだ約40秒の動く絵本</li>
         <li>写真を追加して育てられる専用ホームページ（公開期限・月額料金なし）</li>
         <li>BGM・場面ごとの物語字幕</li>
         <li>完成映像は1場面まで修正</li>
