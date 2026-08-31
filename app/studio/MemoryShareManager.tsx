@@ -507,9 +507,7 @@ export function MemoryShareManager({
                       disabled={working}
                       onClick={() => togglePhoto(asset)}
                     >
-                      {asset.album_visible
-                        ? "アルバムから外す"
-                        : "アルバムに載せる"}
+                      {asset.album_visible ? "外す" : "載せる"}
                     </button>
                   )}
                   <button

@@ -535,6 +535,7 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
     uploads,
     demo,
     studio,
+    css,
   ] =
     await Promise.all([
       readFile(
@@ -564,6 +565,7 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
       readFile(new URL("app/lib/supabase/uploads.ts", root), "utf8"),
       readFile(new URL("app/film/moka-demo/page.tsx", root), "utf8"),
       readFile(new URL("app/studio/StudioClient.tsx", root), "utf8"),
+      readFile(new URL("app/globals.css", root), "utf8"),
     ]);
 
   assert.match(migration, /'album_photo'/);
@@ -576,9 +578,10 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
   assert.match(manager, /uploadLifetimeAlbumImages/);
   assert.match(manager, /delete_lifetime_album_photo/);
   assert.match(manager, /写真アルバムと家族共有/);
-  assert.match(manager, /アルバムから外す/);
-  assert.match(manager, /アルバムに載せる/);
+  assert.match(manager, /asset\.album_visible \? "外す" : "載せる"/);
   assert.doesNotMatch(manager, /掲載中|掲載する/);
+  assert.doesNotMatch(manager, /アルバムから外す|アルバムに載せる/);
+  assert.doesNotMatch(css, /\.album-manager-item \{[^}]*opacity:/);
   assert.doesNotMatch(manager, /GROWING PHOTO ALBUM|STORY SOURCE PHOTOS/);
   assert.match(
     studio,
