@@ -581,7 +581,10 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
   assert.match(manager, /asset\.album_visible \? "外す" : "載せる"/);
   assert.doesNotMatch(manager, /掲載中|掲載する/);
   assert.doesNotMatch(manager, /アルバムから外す|アルバムに載せる/);
+  assert.doesNotMatch(manager, /album-manager-kind/);
+  assert.doesNotMatch(manager, /disabled=\{working \|\| index ===/);
   assert.doesNotMatch(css, /\.album-manager-item \{[^}]*opacity:/);
+  assert.doesNotMatch(css, /\.album-manager-kind/);
   assert.doesNotMatch(manager, /GROWING PHOTO ALBUM|STORY SOURCE PHOTOS/);
   assert.match(
     studio,

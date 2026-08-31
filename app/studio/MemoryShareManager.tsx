@@ -482,11 +482,6 @@ export function MemoryShareManager({
                   ) : (
                     <span>PHOTO</span>
                   )}
-                  <span className="album-manager-kind">
-                    {asset.category === "album_photo"
-                      ? "追加した写真"
-                      : "制作時の写真"}
-                  </span>
                 </div>
                 <input
                   aria-label="写真の説明"
@@ -510,20 +505,24 @@ export function MemoryShareManager({
                       {asset.album_visible ? "外す" : "載せる"}
                     </button>
                   )}
-                  <button
-                    type="button"
-                    disabled={working || index === 0}
-                    onClick={() => movePhoto(asset, -1)}
-                  >
-                    ← 前へ
-                  </button>
-                  <button
-                    type="button"
-                    disabled={working || index === siblings.length - 1}
-                    onClick={() => movePhoto(asset, 1)}
-                  >
-                    次へ →
-                  </button>
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      disabled={working}
+                      onClick={() => movePhoto(asset, -1)}
+                    >
+                      ← 前へ
+                    </button>
+                  )}
+                  {index < siblings.length - 1 && (
+                    <button
+                      type="button"
+                      disabled={working}
+                      onClick={() => movePhoto(asset, 1)}
+                    >
+                      次へ →
+                    </button>
+                  )}
                   <button
                     className="danger"
                     type="button"
