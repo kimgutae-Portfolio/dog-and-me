@@ -588,6 +588,10 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
   assert.doesNotMatch(manager, /album-manager-kind/);
   assert.doesNotMatch(manager, /disabled=\{working \|\| index ===/);
   assert.doesNotMatch(css, /\.album-manager-item \{[^}]*opacity:/);
+  assert.match(
+    css,
+    /\.album-manager-item:not\(\.selected\) \.album-manager-image \{ opacity: \.42; filter: grayscale\(\.55\); \}/,
+  );
   assert.doesNotMatch(css, /\.album-manager-kind/);
   assert.match(css, /\.album-manager-grid \{[^}]*display: flex;[^}]*overflow-x: auto;/);
   assert.match(css, /scroll-snap-type: x mandatory/);
