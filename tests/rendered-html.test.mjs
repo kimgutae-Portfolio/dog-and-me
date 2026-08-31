@@ -576,6 +576,9 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
   assert.match(manager, /uploadLifetimeAlbumImages/);
   assert.match(manager, /delete_lifetime_album_photo/);
   assert.match(manager, /写真アルバムと家族共有/);
+  assert.match(manager, /アルバムから外す/);
+  assert.match(manager, /アルバムに載せる/);
+  assert.doesNotMatch(manager, /掲載中|掲載する/);
   assert.doesNotMatch(manager, /GROWING PHOTO ALBUM|STORY SOURCE PHOTOS/);
   assert.match(
     studio,

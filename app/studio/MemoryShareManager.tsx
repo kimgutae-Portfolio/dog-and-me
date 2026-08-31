@@ -487,15 +487,6 @@ export function MemoryShareManager({
                       ? "追加した写真"
                       : "制作時の写真"}
                   </span>
-                  {asset.category === "source_image" && (
-                    <button
-                      type="button"
-                      disabled={working}
-                      onClick={() => togglePhoto(asset)}
-                    >
-                      {asset.album_visible ? "掲載中" : "掲載する"}
-                    </button>
-                  )}
                 </div>
                 <input
                   aria-label="写真の説明"
@@ -509,6 +500,18 @@ export function MemoryShareManager({
                   }}
                 />
                 <div className="album-manager-actions">
+                  {asset.category === "source_image" && (
+                    <button
+                      className="album-manager-visibility"
+                      type="button"
+                      disabled={working}
+                      onClick={() => togglePhoto(asset)}
+                    >
+                      {asset.album_visible
+                        ? "アルバムから外す"
+                        : "アルバムに載せる"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     disabled={working || index === 0}
