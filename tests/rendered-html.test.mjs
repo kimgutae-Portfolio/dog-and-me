@@ -107,6 +107,9 @@ test("server-renders the Japanese landing page", async () => {
     /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
   );
   assert.match(html, /モカの絵本とホームページを見る/);
+  assert.match(html, /class="home-line-contact"/);
+  assert.match(html, /href="https:\/\/lin\.ee\/9ejBIax"/);
+  assert.match(html, /aria-label="LINEで相談する"/);
   assert.match(html, /動く絵本/);
   assert.match(html, /初期(?:<!-- -->)?20(?:<!-- -->)?組/);
   assert.match(html, /12,800/);

@@ -8,6 +8,7 @@ import { MobileStickyCta } from "./components/MobileStickyCta";
 import { StartStoryLink } from "./components/StartStoryLink";
 import { HomeStoryMotion } from "./components/HomeStoryMotion";
 import { HomeFilmPreview } from "./components/HomeFilmPreview";
+import { HomeLineContact } from "./components/HomeLineContact";
 import { MiruBeforeAfter } from "./components/MiruBeforeAfter";
 import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
 import {
@@ -193,6 +194,7 @@ export default async function Home() {
       />
       <SiteHeader />
       <MobileStickyCta />
+      <HomeLineContact />
       <HomeStoryMotion />
 
       <section className="storybook-hero" aria-labelledby="hero-title">
