@@ -219,7 +219,7 @@ export default async function Home() {
               <p>{PRELAUNCH_COPY}</p>
             </aside>
           )}
-          <p className="eyebrow">A STORYBOOK AND WEBSITE FOR YOUR DOG</p>
+          <p className="eyebrow">A STORYBOOK FOR YOUR DOG</p>
           <h1 id="hero-title">
             うちの子が主役になる、
             <br />
@@ -228,7 +228,7 @@ export default async function Home() {
           <p>
             お気に入りの写真と、あなたが覚えている五つの思い出から。
             <br className="desktop-only" />
-            水彩で描く約40秒の動く絵本と、その後も写真を増やせる専用ホームページを一緒にお届けします。
+            水彩で描く動く絵本と、その後も写真を増やせる専用ホームページを一緒にお届けします。
           </p>
           <div className="storybook-hero-actions">
             {APPLICATIONS_OPEN ? (
