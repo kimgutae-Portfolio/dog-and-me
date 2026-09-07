@@ -490,6 +490,9 @@ export function StudioClient() {
     ? Math.max(order.stills_revision_limit - order.stills_revision_used, 0)
     : 0;
   const hasOpenStillsChange = Boolean(order?.stills_change_open);
+  const waitingForConcepts = Boolean(
+    order && ["materials_submitted", "reviewing_materials"].includes(order.status),
+  );
   const hasOpenRevisions = revisions.some(
     (revision) => revision.status === "open",
   );
@@ -532,19 +535,19 @@ export function StudioClient() {
     }
     switch (order.status) {
       case "awaiting_materials":
-      case "materials_submitted":
         return {
           title: "写真とお預かり内容を確認",
           copy: "追加したい写真があれば、ここからいつでも送れます。",
           href: "#materials",
           label: "写真を確認・追加する",
         };
+      case "materials_submitted":
       case "reviewing_materials":
         return {
           title: "担当者が写真とお話を確認中",
-          copy: "確認が終わるまでお待ちください。伝え忘れたことはメッセージで送れます。",
+          copy: "送信は完了しています。担当者が内容を確認し、物語案をご用意すると、次の「物語案を選ぶ」ステップが開きます。今はそのままお待ちください。",
           href: "#messages",
-          label: "担当者へ連絡する",
+          label: "質問・変更を相談する",
         };
       case "concepts_ready":
         return {
@@ -1284,13 +1287,13 @@ export function StudioClient() {
           </div>
         </nav>
       </header>
-      {received && (
+      {received && waitingForConcepts && (
         <div className="received-banner">
           <span aria-hidden="true">✓</span>
           <div>
             <strong>ご相談と写真を受け付けました。</strong>
             <p>
-              ここから写真の確認、物語案の選択、絵本ページと約40秒の完成映像の確認、お届けまで進められます。
+              送信は完了しました。担当者が写真とお話を確認し、2つの物語案をご用意します。準備ができると、この制作室で次のステップへ進めます。
             </p>
           </div>
         </div>
@@ -1738,7 +1741,7 @@ export function StudioClient() {
             {nextAction && (
               <aside className="studio-next-action" aria-label="今やること">
                 <div>
-                  <p className="eyebrow">NEXT ACTION · 今やること</p>
+                  <p className="eyebrow">{waitingForConcepts && nextAction.href === "#messages" ? "確認・準備中 · 今はお待ちください" : "NEXT ACTION · 今やること"}</p>
                   <h2>{nextAction.title}</h2>
                   <span>{nextAction.copy}</span>
                 </div>
@@ -1768,12 +1771,23 @@ export function StudioClient() {
                 <p>
                   {order.status === "delivered"
                     ? "完成した動く絵本をいつでもこちらでご覧いただけます。"
+                    : waitingForConcepts
+                      ? order.photo_analysis_status === "approved"
+                        ? "写真とお話の確認が完了しました。担当者が2つの物語案を準備しています。ご提案が届くと、次のステップへ進めます。"
+                        : "写真とお話の送信は完了しています。担当者が内容を確認し、2つの物語案をご用意します。ご提案が届くと、次の「物語案を選ぶ」ステップが開きます。"
                     : order.status === "concepts_ready"
                       ? "お預かりした5つの物語をつなぐ2案から、心に近い1案を選んでください。"
                       : order.status === "stills_review"
                         ? "動画にする前の絵本ページと物語文をご用意しました。内容をご確認ください。"
                         : "進行が変わると、この制作室でお知らせします。写真の追加や削除は、担当者の素材確認が終わる前まで行えます。"}
                 </p>
+                {waitingForConcepts && (
+                  <aside className="studio-review-waiting" aria-label="送信後の流れ">
+                    <strong>{consentCurrent && order.payment_status !== "invoice_sent" ? "今は追加の操作は必要ありません。" : "必要なお手続きは、この画面の案内をご確認ください。"}</strong>
+                    <span>送信完了 → 担当者の確認・物語案の準備 → 物語案を選ぶ</span>
+                    <small>ご確認いただきたいことがある場合は、担当者からメッセージでご連絡します。</small>
+                  </aside>
+                )}
                 <span className="estimate">
                   予定完成日：{formatDate(order.due_date)}
                 </span>
