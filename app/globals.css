@@ -221,14 +221,14 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .memory-site-note span { color: var(--rust); font-size: 7px; font-weight: 700; letter-spacing: .15em; }
 .memory-site-note p { margin: 0; color: var(--muted); font-size: 8px; line-height: 1.7; }
 .memory-site-demo-link { margin-top: 20px; display: inline-block; color: var(--ink); border-bottom: 1px solid var(--ink); font-size: 9px; font-weight: 700; letter-spacing: .06em; }
-.pricing-grid { max-width: 580px; margin: 0 auto; display: grid; grid-template-columns: 1fr; align-items: stretch; }
-.price-card { padding: 42px 34px 36px; border: 1px solid var(--line); background: rgba(255,255,255,.2); }
+.pricing-grid { max-width: 580px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+.price-card { min-width: 0; padding: 42px 34px 36px; border: 1px solid var(--line); background: rgba(255,255,255,.2); overflow-wrap: anywhere; }
 .price-card + .price-card { border-left: 0; }
 .price-card-featured { position: relative; color: white; background: var(--forest); transform: translateY(-14px); box-shadow: 0 18px 44px rgba(37,37,31,.15); }
 .price-card-single { transform: none; }
-.monitor-offer-head { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.monitor-offer-head { margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; }
 .monitor-offer-head .plan-en { margin: 0; }
-.monitor-offer-head > span { padding: 7px 10px; border: 1px solid rgba(255,255,255,.4); color: #f0dfca; font-size: 8px; font-weight: 700; letter-spacing: .12em; white-space: nowrap; }
+.monitor-offer-head > span { max-width: 100%; padding: 7px 10px; border: 1px solid rgba(255,255,255,.4); color: #f0dfca; font-size: 8px; font-weight: 700; letter-spacing: .12em; }
 .recommended { position: absolute; right: 20px; top: 18px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.4); font-size: 9px; }
 .plan-en { margin: 0 0 10px; color: var(--rust); font-size: 9px; font-weight: 700; letter-spacing: .18em; }
 .price-card-featured .plan-en { color: #d8b59b; }
@@ -732,7 +732,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .message-form textarea:focus { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(48,58,49,.1); }
 .message-form textarea:disabled { opacity: .7; cursor: wait; }
 
-.chat-widget { position: fixed; z-index: 1000; right: max(22px, env(safe-area-inset-right)); bottom: max(22px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: auto; }
+.chat-widget { position: fixed; z-index: 1000; right: max(22px, env(safe-area-inset-right)); bottom: max(22px, env(safe-area-inset-bottom)); max-width: calc(100% - 44px); display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; }
+.chat-widget > * { pointer-events: auto; }
 .chat-widget button { font-family: inherit; }
 .chat-widget-toggle { min-width: 58px; height: 58px; padding: 0 18px 0 0; display: inline-flex; align-items: center; gap: 9px; border: 1px solid rgba(255,255,255,.55); border-radius: 999px; color: #fffdf8; background: var(--forest); line-height: 1; cursor: pointer; box-shadow: 0 14px 34px rgba(37,48,39,.28); transition: transform .18s ease, background .18s ease, box-shadow .18s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .chat-widget-toggle:hover { background: #27382b; transform: translateY(-2px); box-shadow: 0 18px 38px rgba(37,48,39,.34); }
@@ -742,7 +743,9 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .chat-widget-toggle-icon svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .chat-widget-toggle-label { font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
 .chat-widget-badge { position: absolute; top: 7px; right: 7px; width: 17px; height: 17px; display: grid; place-items: center; border: 2px solid var(--forest); border-radius: 50%; color: #fff; background: var(--rust); font-size: 9px; font-weight: 800; }
-.chat-widget-panel { width: min(390px, calc(100vw - 32px)); max-height: min(580px, calc(100vh - 128px)); position: relative; z-index: 2; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; padding: 20px; background: #fbfaf5; border: 1px solid rgba(48,58,49,.14); border-radius: 22px; box-shadow: 0 24px 70px rgba(20,24,20,.24); animation: chat-widget-open .2s ease both; }
+.chat-widget-panel { width: 390px; max-width: 100%; max-height: min(580px, calc(100dvh - 44px)); min-width: 0; position: relative; z-index: 2; isolation: isolate; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; padding: 20px; background: #fbfaf5; border: 1px solid rgba(48,58,49,.14); border-radius: 22px; box-shadow: 0 24px 70px rgba(20,24,20,.24); animation: chat-widget-open .2s ease both; }
+.chat-widget-header > div, .chat-widget-panel .message-form, .chat-widget-thread > * { min-width: 0; overflow-wrap: anywhere; }
+.chat-widget-panel textarea { max-width: 100%; max-height: 160px; }
 .chat-widget-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid rgba(48,58,49,.1); }
 .chat-widget-header h2 { margin: 2px 0 4px; font-family: var(--font-serif); font-size: 17px; font-weight: 400; }
 .chat-widget-close { width: 44px; height: 44px; flex: 0 0 44px; position: relative; z-index: 4; display: grid; place-items: center; margin: -7px -7px 0 0; border: 1px solid rgba(48,58,49,.12); border-radius: 50%; color: var(--muted); background: rgba(251,250,245,.96); cursor: pointer; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
@@ -773,9 +776,17 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 @keyframes chat-widget-attention { 0%, 80%, 100% { transform: translateY(0); } 90% { transform: translateY(-6px); } }
 
 @media (max-width: 640px) {
-  .chat-widget { left: 0; right: 0; bottom: 0; align-items: flex-end; }
-  .chat-widget-toggle { margin: 0 16px max(16px, env(safe-area-inset-bottom)); }
-  .chat-widget-panel { width: 100%; max-height: min(72vh, 560px); border-radius: 22px 22px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); }
+  .chat-widget { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: calc(var(--chat-keyboard-offset, 0px) + max(12px, env(safe-area-inset-bottom))); max-width: none; align-items: flex-end; }
+  .chat-widget-toggle { max-width: 100%; margin: 0; }
+  .chat-widget-toggle-label { min-width: 0; white-space: normal; line-height: 1.5; text-align: left; }
+  .chat-widget-panel { width: 100%; max-height: min(560px, calc(var(--chat-visible-height, 100dvh) - 24px - env(safe-area-inset-bottom))); border-radius: 20px; padding: 16px; }
+  .chat-widget-header h2 { font-size: 16px; }
+  .chat-widget-panel .message-thread article p { font-size: 14px; }
+  .chat-widget-panel .message-form textarea { font-size: 16px; }
+  .chat-widget-attach-button { width: 44px; height: 44px; flex-basis: 44px; }
+  .chat-widget-composer-footer-left { flex: 1; }
+  .chat-widget-composer-footer small { display: none; }
+  .chat-widget-panel .message-send-button { min-height: 44px; flex-shrink: 0; font-size: 14px; }
 }
 .delivery-card { margin-bottom: 22px; padding: 52px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 48px; align-items: center; color: white; background: #303a31; }
 .delivery-card h2 { margin: 0; font-family: var(--font-serif); font-size: 34px; font-weight: 400; }

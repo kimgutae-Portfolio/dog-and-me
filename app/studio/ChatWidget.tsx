@@ -61,6 +61,7 @@ export function ChatWidget({
   onOpenChange: (open: boolean) => void;
 }) {
   const panelId = useId();
+  const widgetRef = useRef<HTMLDivElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,6 +82,32 @@ export function ChatWidget({
   // controls may be read-only (for example while an admin previews the page),
   // but that must not hide the customer's conversation composer.
   const canCompose = canOperate || currentUserId === order.user_id;
+
+  // Mobile keyboards resize the visual viewport, not necessarily 100dvh.
+  // Keep the route-owned widget above the keyboard without a body portal.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const widget = widgetRef.current;
+    if (!open || !viewport || !widget) return;
+    const updateViewport = () => {
+      // Don't counteract the user's pinch zoom.
+      if (viewport.scale !== 1) return;
+      widget.style.setProperty("--chat-visible-height", `${viewport.height}px`);
+      widget.style.setProperty(
+        "--chat-keyboard-offset",
+        `${Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)}px`,
+      );
+    };
+    updateViewport();
+    viewport.addEventListener("resize", updateViewport);
+    viewport.addEventListener("scroll", updateViewport);
+    return () => {
+      viewport.removeEventListener("resize", updateViewport);
+      viewport.removeEventListener("scroll", updateViewport);
+      widget.style.removeProperty("--chat-visible-height");
+      widget.style.removeProperty("--chat-keyboard-offset");
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -233,7 +260,7 @@ export function ChatWidget({
   };
 
   const widget = (
-    <div className="chat-widget">
+    <div className="chat-widget" ref={widgetRef}>
       {open && (
         <section
           className="chat-widget-panel"
