@@ -501,10 +501,17 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.1
 
 video_story_prompts 배열은 정확히 5개이며 모든 이야기는 각각 하나의 5초 프롬프트를 갖는다. JSON 외의 설명을 반환하지 않는다.`;
 
-const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.2
+const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION v1.3
 
 역할
 첨부한 order.json과 reference-photos의 고객 원본 사진을 기준으로, 이 강아지의 개인 홈페이지 안을 돌아다니며 말풍선으로 안내하는 투명 배경 캐릭터 프레임을 제작한다.
+
+첨부 이미지의 역할
+- reference-photos: 고객 강아지의 정체성, 얼굴, 체형, 털색, 귀, 꼬리, 목줄의 기준이다.
+- website-character-style-reference.png: 다이후쿠의 4열×3행 캐릭터 예시이며, 수채화 표현·섬세한 털 선·실루엣·포즈 구성의 참고용이다. 고객 강아지의 정체성 참고 사진이 아니다.
+- 예시의 흰 털, 품종, 얼굴, 짧은 다리, 꼬리 모양, 파란 목줄을 고객 캐릭터에 복사하지 않는다. 고객 사진과 충돌하면 고객 사진의 외형과 비율을 우선한다.
+- 예시의 각 포즈는 아래 프레임 순서에 맞춰 고객 강아지로 새로 그린다. 예시를 그대로 잘라 쓰거나 색상만 바꾸지 않는다.
+- 예시에 보이는 검은 배경이나 셀 가장자리의 잘린 조각은 재현하지 않는다. 예시의 간격보다 아래의 8% 투명 안전영역과 경계 검수 규칙을 우선한다.
 
 중요한 사용 정책
 - 이 결과는 운영자가 개인 홈페이지에 직접 등록하는 내부 제작 자산이다.
@@ -547,6 +554,7 @@ const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION
 
 스타일
 - order.json의 website_character_style을 적용한다.
+- website-character-style-reference.png의 부드러운 수채화, 섬세한 털 묘사와 정돈된 캐릭터 실루엣을 공통 화풍 기준으로 적용한다. 자연스러운 고객 강아지의 신체 비율은 그대로 유지한다.
 - 완성 그림책과 같은 밝고 맑은 일본 그림책풍 수채화.
 - 자연스러운 신체 비율, 섬세한 털, 깨끗한 실루엣. 과장된 치비나 3D 표현 금지.
 - 12프레임 모두 동일한 캐릭터 디자인과 액세서리를 유지한다.
@@ -559,6 +567,7 @@ const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION
   "layout": {"columns":4,"rows":3,"frame_count":12},
   "transparent_gutter_percent":8,
   "identity_check":"passed",
+  "style_reference_check":"passed",
   "isolated_frame_preview_check":"passed",
   "black_white_magenta_background_check":"passed",
   "transparent_edge_check":"passed",
@@ -2231,7 +2240,7 @@ export function AdminStudio() {
       ]);
       const root = `${safeArchiveSegment(order.order_number)}-website-character`;
       const characterJson = {
-        schema_version: "wan-memory-website-character-input-1.2",
+        schema_version: "wan-memory-website-character-input-1.3",
         exported_at: new Date().toISOString(),
         job: {
           id: order.order_number,
@@ -2241,6 +2250,10 @@ export function AdminStudio() {
           personality: order.personality,
         },
         website_character_style: {
+          reference_file: "website-character-style-reference.png",
+          reference_role: "style_and_pose_layout_only_not_dog_identity",
+          preserve_customer_identity_over_style_reference: true,
+          do_not_copy_reference_background_or_edge_fragments: true,
           medium: "luminous Japanese picture-book watercolor",
           proportions: "natural dog proportions; readable at small website size",
           background: "transparent RGBA",
@@ -2279,6 +2292,7 @@ export function AdminStudio() {
           admin_only: true,
           apply_to_private_website_automatically: true,
           required_checks: [
+            "style_reference_without_identity_transfer",
             "isolated_frame_preview",
             "black_background",
             "white_background",
@@ -2288,10 +2302,14 @@ export function AdminStudio() {
           ],
         },
       };
+      const characterStyleResponse = await fetch("/operator-assets/website-character-style-reference.png");
+      if (!characterStyleResponse.ok) throw new Error("Character style reference could not be loaded");
+      const characterStyleBytes = new Uint8Array(await characterStyleResponse.arrayBuffer());
       const files: Record<string, Uint8Array> = {
+        [`${root}/website-character-style-reference.png`]: characterStyleBytes,
         [`${root}/01_START_HERE.txt`]: strToU8([
           "OPTIONAL · いつでも作れるホームページキャラクターです。",
-          "1. order.jsonとreference-photosをAIへ添付します。",
+          "1. order.json、reference-photos、website-character-style-reference.pngをAIへ添付します。見本は画風・ポーズ用で、愛犬の外見はお客様の写真を基準にします。",
           "2. 02_PROMPT_WEBSITE_CHARACTER.txtをそのまま依頼文として使います。",
           "3. 返された4×3の透明PNGスプライトを管理画面へ登録します。",
           "4. 顧客確認には出さず、専用ホームページへ自動で反映されます。",
