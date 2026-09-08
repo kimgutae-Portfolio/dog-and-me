@@ -1706,9 +1706,9 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .studio-meeting-day-setting .eyebrow { margin: 0; color: #a16f70; font-size: 7px; }
 .studio-meeting-day-setting strong { font-family: var(--font-serif); font-size: 16px; font-weight: 500; }
 .studio-meeting-day-setting small { color: #777067; font-size: 8px; line-height: 1.7; }
-.studio-meeting-day-setting label { display: grid; gap: 7px; }
+.studio-meeting-day-setting label { min-width: 0; display: grid; gap: 7px; }
 .studio-meeting-day-setting label span { color: #6b645c; font-size: 8px; }
-.studio-meeting-day-setting input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 0; color: #403b35; background: white; font: inherit; font-size: 12px; }
+.studio-meeting-day-setting input { display: block; width: 100%; min-width: 0; max-width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 0; color: #403b35; background: white; font: inherit; font-size: 12px; box-sizing: border-box; }
 .studio-meeting-day-setting .button { min-height: 44px; }
 .studio-album-intro-row { margin: 24px 0 28px; display: flex; align-items: end; justify-content: space-between; gap: 28px; }
 .studio-album-intro-row .memory-manager-lead { margin: 0; }
@@ -1987,7 +1987,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .mobile-concept-submit .button { min-height: 50px; padding-inline: 16px; white-space: nowrap; }
   .studio-album-intro-row { align-items: stretch; flex-direction: column; }
   .studio-meeting-day-setting { padding: 18px; grid-template-columns: 1fr; align-items: stretch; gap: 15px; }
-  .studio-meeting-day-setting input { min-height: 50px; font-size: 16px; }
+  .studio-meeting-day-setting label { width: 100%; min-width: 0; }
+  .studio-meeting-day-setting input { width: 100%; min-width: 0; max-width: 100%; min-height: 50px; font-size: 16px; }
   .studio-meeting-day-setting .button { width: 100%; min-height: 50px; }
   .studio-album-upload-button { width: 100%; min-width: 0; min-height: 58px; }
   .delivered-studio-tabs { overflow-x: auto; grid-template-columns: repeat(4,minmax(168px,1fr)); scroll-snap-type: x mandatory; }
