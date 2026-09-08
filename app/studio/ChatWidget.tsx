@@ -12,6 +12,7 @@ import {
 } from "react";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { MemoryOrder, OrderMessage } from "../lib/supabase/types";
+import { MessageText } from "./MessageText";
 
 function formatTime(value: string) {
   // Realtime postgres_changes payloads carry Postgres's native timestamp
@@ -314,7 +315,7 @@ export function ChatWidget({
                       {fromCustomer ? "あなた" : "担当ディレクター"} ·{" "}
                       {formatTime(message.created_at)}
                     </small>
-                    {message.body && <p>{message.body}</p>}
+                    {message.body && <p><MessageText body={message.body} /></p>}
                     {attachmentUrl && (
                       <a
                         className="chat-widget-attachment"

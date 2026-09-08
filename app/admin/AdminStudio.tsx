@@ -15,7 +15,7 @@ import { useAuth } from "../components/AuthProvider";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { uploadMessageAttachment } from "../lib/supabase/uploads";
 import { hasCurrentConsent } from "../lib/consent";
-import { APPLICATIONS_OPEN } from "../lib/site";
+import { APPLICATIONS_OPEN, DEFAULT_SITE_ORIGIN } from "../lib/site";
 import { AdminPushCenter } from "./AdminPushCenter";
 import type {
   FilmConcept,
@@ -1696,14 +1696,16 @@ export function AdminStudio() {
       .maybeSingle();
     const personalSiteUrl =
       personalSite?.customer_slug && personalSite.pet_slug
-        ? `${window.location.origin}/${encodeURIComponent(personalSite.customer_slug)}/${encodeURIComponent(personalSite.pet_slug)}`
+        ? `${DEFAULT_SITE_ORIGIN}/${encodeURIComponent(personalSite.customer_slug)}/${encodeURIComponent(personalSite.pet_slug)}`
         : null;
     const body = [
       `${currentOrder.pet_name}ちゃんの動く絵本が完成しました。`,
       "制作室から完成映像をご覧いただけます。",
       "",
       `あわせて、${currentOrder.pet_name}ちゃんだけの専用ホームページも公開されました。`,
-      personalSiteUrl ?? "制作室の「YOUR DOG'S WEBSITE」からご覧いただけます。",
+      personalSiteUrl
+        ? `▼ ${currentOrder.pet_name}ちゃんのホームページを見る\n${decodeURI(personalSiteUrl)}`
+        : "制作室の「お届け・ホームページ」からご覧いただけます。",
       "",
       "ホームページの写真アルバムには、これからも新しい写真を追加できます。ご家族みなさまで楽しくご利用いただき、これから先の思い出もたくさん積み重ねていただけたら嬉しいです。",
       "",
