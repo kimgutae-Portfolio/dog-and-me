@@ -181,7 +181,7 @@ const MEMORY_STORYBOOK_PRODUCTION_PROTOCOL = {
   version: "3.1",
   prompt_filename: "MEMORY_STORYBOOK_PRODUCTION_v3_1.txt",
   source_photo_policy:
-    "Use only the one administrator-selected primary customer photo for each story as its identity-locked reference in the original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories; never add unselected photos, pad, blur, crop, or send the raw photo directly to the video generation tool.",
+    "Use only the one administrator-selected primary customer photo for each story as its identity-locked reference in the original aspect ratio. Preserve the same dog's face, proportions, coat, tail, and visible accessories except the leash. Keep the collar, but remove the entire leash, including its handle, lead rope or strap, and leash attachment clip. Naturally reconstruct the revealed fur or existing background without adding objects or changing the dog's pose or proportions. This leash-removal rule overrides accessory preservation and source descriptions. Never add unselected photos, pad, blur, crop, or send the raw photo directly to the video generation tool.",
   page_image_policy:
     "Keep the dog as faithful as possible to the primary reference while recomposing the scene into a new 16:9 watercolor-and-gouache storybook page. Remove every person completely and reconstruct the vacated area as a simple, natural continuation of the existing environment without adding replacement objects.",
   story_pages: {
@@ -253,7 +253,10 @@ style_reference.png에 등장하는 강아지, 체형, 포즈, 목줄, 벚꽃, �
 - 다리를 짧게 만들거나 머리를 크게 만들지 않는다.
 - 털색, 털의 배치, 미용 길이, 곱슬기와 질감을 유지한다.
 - 꼬리의 길이, 말림, 방향을 유지한다.
-- 목줄, 하네스, 옷 등 보이는 액세서리의 형태와 색상을 유지한다.
+- 목줄(collar), 하네스, 옷 등 보이는 액세서리의 형태와 색상을 유지하되, 리드줄(leash)은 예외로 반드시 제거한다.
+- 목에 착용한 목줄은 유지하고, 그 목줄이나 하네스에서 이어지는 산책용 리드줄·손잡이·리드줄 연결 고리는 전체를 제거한다. 목줄 자체의 버클이나 펜던트는 제거하지 않는다.
+- 리드줄이 가렸던 곳은 주변 털이나 기존 배경을 자연스럽게 이어 복원한다. 대체 사물, 줄 조각, 새로운 액세서리를 만들거나 강아지의 자세·신체 비율을 바꾸지 않는다.
+- 이 리드줄 제거 규칙은 액세서리 유지 규칙과 고객 설명에 리드줄이 등장하는 경우보다 우선한다.
 - 액세서리에 있는 글자나 브랜드 표시는 재현하지 않는다.
 - 다른 이야기의 사진이나 style_reference.png 때문에 primary의 외형이나 비율을 변경하지 않는다.
 
@@ -352,6 +355,7 @@ Luminous Japanese picture-book watercolor illustration, watercolor-dominant rend
    - 털색과 미용 형태
    - 꼬리
    - 목줄, 하네스, 의상
+   - 산책용 리드줄·손잡이·연결 고리와 잔여 조각이 제거되었고, 목줄 자체는 유지되었는지
    - 중심 행동과 구도
    - 사람 제거 과정에서 강아지의 정체성과 신체 비율이 달라지지 않았는지
 7. style_reference.png와 비교해 아래 항목을 검수한다.
@@ -431,6 +435,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.1
 
 얼굴 방향 및 정체성 안정 규칙
 - 승인 이미지의 얼굴 형태, 눈 크기와 간격, 눈꺼풀, 귀, 주둥이, 털 배치와 색상, 체형, 꼬리, 보이는 목줄과 옷을 유지한다.
+- 리드줄을 제거한 그림에 산책용 줄·손잡이·연결 고리를 다시 생성하지 않는다. 목에 착용한 목줄(collar)은 그대로 유지한다.
 - 승인 이미지의 camera-facing view를 영상 전체에서 유지한다. 머리는 몸의 이동과 보행 리듬을 따라가되 새로운 얼굴 면을 드러내지 않는다.
 - 영어 prompt에는 다음처럼 짧게 작성한다: “The head moves naturally with the body while keeping the original camera-facing view. The same recognizable facial design remains consistent.”
 - 눈동자만 좌우로 움직이거나 eye darting, eye rolling, wandering pupils, crossed eyes를 만들지 않는다. 눈 깜빡임은 필요한 이야기에서만 한 번 천천히 허용한다.
@@ -513,6 +518,8 @@ const WEBSITE_CHARACTER_PROMPT = `WAN MEMORY WEBSITE CHARACTER SPRITE PRODUCTION
 - 같은 강아지로 인식되도록 얼굴형, 눈 크기와 간격, 귀, 주둥이, 머리와 몸통 비율, 다리 길이, 털색과 미용 형태, 꼬리를 유지한다.
 - 사진에 보이는 목걸이·목줄·펜던트는 강아지의 대표 특징으로 유지한다.
 - 하네스는 캐릭터 정체성에 포함하지 않고 모든 프레임에서 제거한다. reference_photos, selected_appearance_description, owner_locked_traits에 하네스가 있더라도 반영하지 않는다.
+- 리드줄(leash)·손잡이·리드줄 연결 고리도 모든 프레임에서 제거한다. reference_photos와 정체성 설명에 포함되어 있어도 이 제거 규칙을 우선한다. 목줄(collar) 자체와 버클·펜던트는 유지한다.
+- 리드줄이 있던 자리는 주변 털을 자연스럽게 이어 복원하고, 몸 바깥은 투명하게 비운다. 줄 조각이나 대체 사물을 남기지 않는다.
 - 하네스를 제거한 자리에는 새로운 옷이나 액세서리를 만들지 말고, 주변에서 확인되는 털색과 털의 흐름을 이어 자연스러운 몸통으로 표현한다.
 - 여러 사진이 충돌하면 order.json.character_identity.preferred_identity_photo_ids와 primary 역할 사진을 우선한다.
 - 고객 사진에 없는 무늬, 액세서리, 옷, 표정 특징을 추가하지 않는다.
@@ -583,6 +590,7 @@ const LINE_STICKER_PROMPT = `WAN MEMORY LINE STICKER PRODUCTION v3.0
 캐릭터 일관성
 - website-character-sprite.png의 강아지를 모티브로 각 감정 포즈를 새로 그리되, 8종 모두 같은 강아지로 보여야 한다.
 - 얼굴형, 눈 크기와 위치, 귀 모양, 주둥이 길이, 털색, 체형, 목걸이와 펜던트를 임의로 바꾸지 않는다.
+- 원본 캐릭터에 리드줄이 있어도 산책용 리드줄·손잡이·리드줄 연결 고리는 8종 모두에서 제거한다. 목줄 자체는 유지하고, 리드줄이 있던 자리는 자연스러운 털 또는 투명 배경으로 복원한다.
 - line-sticker-style-reference.png 속 갈색 강아지는 스타일 예시일 뿐이다. 주문 캐릭터를 갈색 푸들이나 다른 품종으로 바꾸지 않는다.
 - 과장된 치비 비율, 애니메이션식 큰 눈, 3D, 사진풍, 새 옷, 하네스, 로고, 워터마크를 사용하지 않는다.
 
@@ -2239,6 +2247,7 @@ export function AdminStudio() {
           accessory_policy: {
             preserve_visible_collar_necklace_and_pendant: true,
             exclude_harness_from_all_frames: true,
+            exclude_leash_handle_and_leash_clip_from_all_frames: true,
           },
           layout: { columns: 4, rows: 3, frame_count: 12 },
           frame_safety: {
