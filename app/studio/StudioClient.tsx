@@ -1489,6 +1489,48 @@ export function StudioClient() {
               </div>
             </div>
 
+            {(order.status !== "delivered" || deliveredTab === "materials") && (
+            <section className="studio-status">
+              <div className="status-copy">
+                <span className="status-badge">
+                  現在のステップ {currentStep + 1} / {journeySteps.length}
+                </span>
+                <h2>{ORDER_STATUS_LABELS[order.status]}</h2>
+                <p>
+                  {order.status === "delivered"
+                    ? "完成した動く絵本をいつでもこちらでご覧いただけます。"
+                    : waitingForConcepts
+                      ? order.photo_analysis_status === "approved"
+                        ? "写真とお話の確認が完了しました。担当者が2つの物語案を準備しています。ご提案が届くと、次のステップへ進めます。"
+                        : "写真とお話の送信は完了しています。担当者が内容を確認し、2つの物語案をご用意します。ご提案が届くと、次の「物語案を選ぶ」ステップが開きます。"
+                    : order.status === "concepts_ready"
+                      ? "お預かりした5つの物語をつなぐ2案から、心に近い1案を選んでください。"
+                      : order.status === "stills_review"
+                        ? "動画にする前の絵本ページと物語文をご用意しました。内容をご確認ください。"
+                        : "進行が変わると、この制作室でお知らせします。写真の追加や削除は、担当者の素材確認が終わる前まで行えます。"}
+                </p>
+                {waitingForConcepts && (
+                  <aside className="studio-review-waiting" aria-label="送信後の流れ">
+                    <strong>{consentCurrent && order.payment_status !== "invoice_sent" ? "今は追加の操作は必要ありません。" : "必要なお手続きは、この画面の案内をご確認ください。"}</strong>
+                    <span>送信完了 → 担当者の確認・物語案の準備 → 物語案を選ぶ</span>
+                    <small>ご確認いただきたいことがある場合は、担当者からメッセージでご連絡します。</small>
+                  </aside>
+                )}
+                <span className="estimate">
+                  予定完成日：{formatDate(order.due_date)}
+                </span>
+              </div>
+              <div className="status-visual" aria-hidden="true">
+                <div className="reel-circle">
+                  <span>WM</span>
+                </div>
+                <i />
+                <i />
+                <i />
+              </div>
+            </section>
+            )}
+
             {order.status === "delivered" && (
               <nav className="delivered-studio-tabs" role="tablist" aria-label="完成後の制作室">
                 <button
@@ -1628,16 +1670,6 @@ export function StudioClient() {
                 </aside>
               )}
 
-            {order.status !== "cancelled" &&
-              (order.status !== "delivered" || deliveredTab === "delivery") && (
-              <LineStickerPanel
-                order={order}
-                delivery={lineStickerDelivery}
-                previewUrl={lineStickerPreviewUrl}
-                canConsent={canOperateOrder}
-                onChanged={() => loadDetails(order.id)}
-              />
-              )}
 
             {(order.payment_status === "invoice_sent" ||
               paymentResult === "success" ||
@@ -1761,47 +1793,6 @@ export function StudioClient() {
               </aside>
             )}
 
-            {(order.status !== "delivered" || deliveredTab === "materials") && (
-            <section className="studio-status">
-              <div className="status-copy">
-                <span className="status-badge">
-                  現在のステップ {currentStep + 1} / {journeySteps.length}
-                </span>
-                <h2>{ORDER_STATUS_LABELS[order.status]}</h2>
-                <p>
-                  {order.status === "delivered"
-                    ? "完成した動く絵本をいつでもこちらでご覧いただけます。"
-                    : waitingForConcepts
-                      ? order.photo_analysis_status === "approved"
-                        ? "写真とお話の確認が完了しました。担当者が2つの物語案を準備しています。ご提案が届くと、次のステップへ進めます。"
-                        : "写真とお話の送信は完了しています。担当者が内容を確認し、2つの物語案をご用意します。ご提案が届くと、次の「物語案を選ぶ」ステップが開きます。"
-                    : order.status === "concepts_ready"
-                      ? "お預かりした5つの物語をつなぐ2案から、心に近い1案を選んでください。"
-                      : order.status === "stills_review"
-                        ? "動画にする前の絵本ページと物語文をご用意しました。内容をご確認ください。"
-                        : "進行が変わると、この制作室でお知らせします。写真の追加や削除は、担当者の素材確認が終わる前まで行えます。"}
-                </p>
-                {waitingForConcepts && (
-                  <aside className="studio-review-waiting" aria-label="送信後の流れ">
-                    <strong>{consentCurrent && order.payment_status !== "invoice_sent" ? "今は追加の操作は必要ありません。" : "必要なお手続きは、この画面の案内をご確認ください。"}</strong>
-                    <span>送信完了 → 担当者の確認・物語案の準備 → 物語案を選ぶ</span>
-                    <small>ご確認いただきたいことがある場合は、担当者からメッセージでご連絡します。</small>
-                  </aside>
-                )}
-                <span className="estimate">
-                  予定完成日：{formatDate(order.due_date)}
-                </span>
-              </div>
-              <div className="status-visual" aria-hidden="true">
-                <div className="reel-circle">
-                  <span>WM</span>
-                </div>
-                <i />
-                <i />
-                <i />
-              </div>
-            </section>
-            )}
 
             {(order.status !== "delivered" || deliveredTab === "materials") && (
             <>
@@ -2298,6 +2289,17 @@ export function StudioClient() {
                 )}
               </section>
             )}
+
+            {(["customer_review", "revision_requested", "quality_check"].includes(order.status) ||
+              (order.status === "delivered" && deliveredTab === "delivery")) && (
+              <LineStickerPanel
+                order={order}
+                delivery={lineStickerDelivery}
+                previewUrl={lineStickerPreviewUrl}
+                canConsent={canOperateOrder}
+                onChanged={() => loadDetails(order.id)}
+              />
+              )}
 
             {(order.status !== "delivered" || deliveredTab === "materials") &&
               (order.status === "customer_review" ||
