@@ -4,8 +4,7 @@
 Structure (see docs/MANUAL_PRODUCTION_WORKFLOW.md):
   intro card -> moving storybook pages -> ending card.
 
-Each approved Runway clip is one continuous page. Three selected stories use
-one continuous ten-second clip and the remaining two use one five-second clip.
+Each approved clip is one continuous five-second page.
 A curved page turn is reserved for movement between different stories. There
 is no still-photo hold or standalone bridge background.
 
@@ -24,10 +23,14 @@ import os
 import subprocess
 import sys
 import tempfile
+import shutil
 
 from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1920, 1080
+STORY_IMAGE_TOP = 24
+STORY_IMAGE_HEIGHT = 864
+CAPTION_TOP = STORY_IMAGE_TOP + STORY_IMAGE_HEIGHT
 FPS = 24
 SOURCE_CLIP_SECONDS = 5.0  # legacy bridge source length
 SHORT_STORY_CLIP_SECONDS = 5.0
@@ -148,34 +151,26 @@ def make_ending_card(png_path, lines, mark):
 
 def wrap_story_text(draw, text, font, max_width):
     """Wrap Japanese story text without relying on whitespace boundaries."""
-    return wrap_japanese_text(draw, text, font, max_width)[:2]
+    lines = wrap_ending_lines(draw, text.splitlines(), font, max_width)
+    if len(lines) > 2:
+        raise ValueError("物語字幕は2行以内に収まるよう文章を短くしてください（文章は省略されません）。")
+    return lines
 
 
 def make_story_caption_overlay(png_path, text):
-    """Draw one quiet picture-book sentence on a translucent paper ribbon."""
+    """Draw text only in the reserved footer, never over the moving picture."""
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(MINCHO, 48, index=0)
-    lines = wrap_story_text(draw, text, font, 1460)
+    lines = wrap_story_text(draw, text, font, W - 240)
     line_h = 68
     text_boxes = [draw.textbbox((0, 0), line, font=font) for line in lines]
-    text_w = max((box[2] - box[0] for box in text_boxes), default=0)
-    panel_w = min(W - 180, text_w + 110)
-    panel_h = 54 + line_h * len(lines)
-    x0 = (W - panel_w) / 2
-    y0 = H - panel_h - 72
-    draw.rounded_rectangle(
-        (x0, y0, x0 + panel_w, y0 + panel_h),
-        radius=18,
-        fill=(248, 243, 234, 218),
-        outline=(111, 94, 82, 42),
-        width=1,
-    )
+    y0 = CAPTION_TOP + (H - CAPTION_TOP - line_h * len(lines)) / 2
     for index, line in enumerate(lines):
         box = text_boxes[index]
         width = box[2] - box[0]
         draw.text(
-            ((W - width) / 2, y0 + 27 + index * line_h),
+            ((W - width) / 2 - box[0], y0 + index * line_h - box[1]),
             line,
             font=font,
             fill=(61, 55, 49, 255),
@@ -193,6 +188,7 @@ def burn_story_captions(
 ):
     """Burn approved scene sentences into the assembled storybook with soft caption fades."""
     if not any(caption.strip() for caption in captions):
+        shutil.copyfile(video_path, out_path)
         return
     # Each story now has one continuous motion clip, so every approved sentence
     # receives one uninterrupted caption span.
@@ -247,7 +243,17 @@ def image_to_clip(png_path, out_path, duration):
          "-an", out_path])
 
 
-def normalize_story_clip(src, out_path, motion_duration, start_hold, end_hold):
+def story_picture_filter():
+    """Fit the entire source into an ivory page with a separate caption footer."""
+    color = "0x%02x%02x%02x" % CREAM
+    return (
+        f"scale={W - 48}:{STORY_IMAGE_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2,"
+        f"pad={W}:{H}:(ow-iw)/2:{STORY_IMAGE_TOP}+({STORY_IMAGE_HEIGHT}-ih)/2:color={color},"
+        "setsar=1,"
+    )
+
+
+def normalize_story_clip(src, out_path, motion_duration, start_hold, end_hold, caption_layout=False):
     """Normalize one moving page and surround it with quiet transition frames.
 
     A page turn must not borrow moving frames from either adjacent story. The
@@ -259,7 +265,8 @@ def normalize_story_clip(src, out_path, motion_duration, start_hold, end_hold):
         "ffmpeg", "-y", "-i", src, "-t", str(motion_duration),
         "-vf",
         (
-            f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+            (story_picture_filter() if caption_layout else
+             f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},") +
             f"tpad=start_mode=clone:start_duration={start_hold:.3f}:"
             f"stop_mode=clone:stop_duration={motion_duration + end_hold:.3f},"
             f"fps={FPS},"
@@ -269,14 +276,16 @@ def normalize_story_clip(src, out_path, motion_duration, start_hold, end_hold):
     ])
 
 
-def normalize_bridge_clip(src, out_path):
+def normalize_bridge_clip(src, out_path, caption_layout=False):
     """Use a moving bridge only as a brief visual breath, never a full scene."""
     source_offset = max((SOURCE_CLIP_SECONDS - BRIDGE_CLIP_SECONDS) / 2, 0)
     run([
         "ffmpeg", "-y", "-ss", f"{source_offset:.3f}", "-i", src,
         "-t", str(BRIDGE_CLIP_SECONDS),
         "-vf",
-        f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},format=yuv420p",
+        (story_picture_filter() if caption_layout else
+         f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},") +
+        f"fps={FPS},format=yuv420p",
         "-an", out_path,
     ])
 
@@ -452,13 +461,14 @@ def main():
             nonlocal clips_done
             clip_mp4 = os.path.join(tmp, f"seg_{tag}_clip.mp4")
             if n in bridge_clip_numbers:
-                normalize_bridge_clip(clip_path(n), clip_mp4)
+                normalize_bridge_clip(clip_path(n), clip_mp4, caption_layout=bool(captions))
                 clip_duration = BRIDGE_CLIP_SECONDS
                 clip_kind = "bridge"
             else:
                 clip_duration = SHORT_STORY_CLIP_SECONDS
                 normalize_story_clip(
-                    clip_path(n), clip_mp4, clip_duration, start_hold, end_hold
+                    clip_path(n), clip_mp4, clip_duration, start_hold, end_hold,
+                    caption_layout=bool(captions),
                 )
                 clip_duration += start_hold + end_hold
                 clip_kind = "story"
@@ -524,7 +534,8 @@ def main():
 
         needs_post_process = bool(args.bgm or captions)
         assembled_out = os.path.join(tmp, "assembled.mp4") if needs_post_process else args.out
-        letterbox_pct = args.letterbox_pct if args.letterbox else 0.0
+        # Black cinematic bars must not cover the dedicated caption footer.
+        letterbox_pct = args.letterbox_pct if args.letterbox and not captions else 0.0
         total_duration, segment_starts, transition_durations = concat_with_xfade(
             segments,
             durations,
@@ -560,7 +571,7 @@ def main():
 
         video_for_audio = assembled_out
         if captions:
-            progress(86, "物語の文章を重ねています")
+            progress(86, "映像下の専用余白に物語の字幕を入れています")
             captioned_out = os.path.join(tmp, "captioned.mp4") if args.bgm else args.out
             burn_story_captions(
                 assembled_out, captions, caption_windows, captioned_out,

@@ -5417,6 +5417,9 @@ export function AdminStudio() {
                       <div>
                         <p className="eyebrow">STORYBOOK ASSEMBLY</p>
                         <h3>映像の自動編集</h3>
+                        <p className="admin-operation-note">
+                          映像全体が見えるよう比率を保って配置し、下のアイボリー色の余白に字幕を表示します。字幕は最大2行です。変更済みの配置は、再編集した映像から反映されます。
+                        </p>
                       </div>
                       <span>
                         {assemblyClipCount}/5本
