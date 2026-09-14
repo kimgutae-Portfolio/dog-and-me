@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
+import { memoryAddressPath } from "../../lib/memory-address";
 import type { Metadata } from "next";
 import { getRequestOrigin } from "../../lib/site-server";
-import { getPublicSharedMemory } from "../../lib/supabase/public-memory";
+import { getPublicMemoryClient, getPublicSharedMemory } from "../../lib/supabase/public-memory";
 import { SharedMemorySite } from "./SharedMemorySite";
 
 type PageProps = { params: Promise<{ shareId: string }> };
@@ -54,6 +56,10 @@ export async function generateMetadata({
   };
 }
 
-export default function SharedMemoryPage() {
-  return <SharedMemorySite />;
+export default async function SharedMemoryPage({ params }: PageProps) {
+  const { shareId } = await params;
+  const result = await getPublicMemoryClient()?.rpc("get_memory_address_destination", { p_address: shareId });
+  if (typeof result?.data === "string" && result.data !== shareId) redirect(memoryAddressPath(result.data));
+  const memory = await getPublicSharedMemory(shareId).catch(() => null);
+  return <SharedMemorySite initialMemory={memory} />;
 }

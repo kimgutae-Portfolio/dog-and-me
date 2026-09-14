@@ -1,0 +1,13 @@
+.form { color: var(--ink); display: grid; gap: 12px; padding: 20px; background: #fffdf7; border: 1px solid var(--line); border-radius: 12px; }
+.form label { font-weight: 600; font-size: 1rem; }
+.input { display: flex; align-items: center; border: 1px solid #a5a59a; border-radius: 6px; overflow: hidden; }
+.input span { padding-left: 12px; color: #66675d; font-size: 1rem; }
+.input input { min-width: 0; width: 100%; padding: 13px 8px; border: 0; border-radius: 0; background: transparent; font-size: 1rem; }
+.input:focus-within { outline: 2px solid var(--forest); outline-offset: 2px; }
+.form p { margin: 0; font-size: .875rem; line-height: 1.7; }
+.form .available { color: #306044; }
+.preview { overflow-wrap: anywhere; font-size: .875rem; line-height: 1.6; padding: 10px; background: var(--paper); }
+.form button { justify-self: start; }
+
+:global(.family-share-controls) .form button { min-height: 48px; padding: 10px 18px; font-size: .875rem; color: white; background: var(--forest); border: 1px solid var(--forest); }
+:global(.family-share-controls) .form button:disabled { opacity: .5; cursor: default; }

@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
+import { memoryAddressPath } from "../../lib/memory-address";
 import type { Metadata } from "next";
 import { getRequestOrigin } from "../../lib/site-server";
-import { getPublicSharedMemoryBySlug } from "../../lib/supabase/public-memory";
+import { getPublicMemoryClient, getPublicSharedMemoryBySlug } from "../../lib/supabase/public-memory";
 import { SharedMemorySite } from "../../memory/[shareId]/SharedMemorySite";
 
 type PageProps = {
@@ -45,6 +47,11 @@ export default async function PersonalMemoryPage({ params }: PageProps) {
   const routeParams = await params;
   const customerSlug = decodeRouteSegment(routeParams.customerSlug);
   const petSlug = decodeRouteSegment(routeParams.petSlug);
+  const client = getPublicMemoryClient();
+  const result = await client?.rpc("get_memory_address_for_legacy", {
+    p_customer_slug: customerSlug, p_pet_slug: petSlug,
+  });
+  if (typeof result?.data === "string") redirect(memoryAddressPath(result.data));
   const initialMemory = await getPublicSharedMemoryBySlug(
     customerSlug,
     petSlug,

@@ -90,8 +90,13 @@ export function SharedMemorySite({
         });
         return;
       }
-      if (params.shareId)
-        loadSharedMemory("get_shared_memory_by_code", { p_share_code: params.shareId });
+      if (params.shareId) {
+        if (/^[a-f0-9]{64}$/i.test(params.shareId)) {
+          loadSharedMemory("get_shared_memory_by_code", { p_share_code: params.shareId });
+        } else {
+          loadSharedMemory("get_shared_memory_by_address", { p_address: params.shareId });
+        }
+      }
     }, 0);
     return () => window.clearTimeout(timer);
   }, [customerSlug, initialMemory, loadSharedMemory, params.shareId, petSlug]);
@@ -104,9 +109,10 @@ export function SharedMemorySite({
       setLoadingMore(false);
       return;
     }
+    const legacyCode = /^[a-f0-9]{64}$/i.test(params.shareId ?? "");
     const rpc = customerSlug && petSlug
       ? "get_shared_album_page_by_slug"
-      : "get_shared_album_page_by_code";
+      : legacyCode ? "get_shared_album_page_by_code" : "get_shared_album_page_by_address";
     const rpcParams = customerSlug && petSlug
       ? {
           p_customer_slug: customerSlug,
@@ -115,7 +121,7 @@ export function SharedMemorySite({
           p_limit: 30,
         }
       : {
-          p_share_code: params.shareId,
+          ...(legacyCode ? { p_share_code: params.shareId } : { p_address: params.shareId }),
           p_offset: loadedImageCount,
           p_limit: 30,
         };

@@ -1,3 +1,4 @@
+import { isMemoryAddress } from "../memory-address";
 import { createClient } from "@supabase/supabase-js";
 
 export type SharedMemoryPayload = {
@@ -56,11 +57,13 @@ export function getPublicMemoryClient() {
 }
 
 export async function getPublicSharedMemory(shareCode: string): Promise<SharedMemoryPayload | null> {
-  if (!shareCodePattern.test(shareCode)) return null;
+  if (!shareCodePattern.test(shareCode) && !isMemoryAddress(shareCode)) return null;
   const supabase = getPublicMemoryClient();
   if (!supabase) return null;
 
-  const { data, error } = await supabase.rpc("get_shared_memory_by_code", { p_share_code: shareCode });
+  const { data, error } = shareCodePattern.test(shareCode)
+    ? await supabase.rpc("get_shared_memory_by_code", { p_share_code: shareCode })
+    : await supabase.rpc("get_shared_memory_by_address", { p_address: shareCode });
   if (error || !data || typeof data !== "object") return null;
   return data as SharedMemoryPayload;
 }

@@ -8,6 +8,7 @@ import { MobileStickyCta } from "./components/MobileStickyCta";
 import { StartStoryLink } from "./components/StartStoryLink";
 import { HomeStoryMotion } from "./components/HomeStoryMotion";
 import { HomeFilmPreview } from "./components/HomeFilmPreview";
+import { HomeReviews } from "./components/HomeReviews";
 import {
   HomeLineContact,
   HomeLineContactLink,
@@ -333,6 +334,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <HomeReviews />
 
       <section className="storybook-preview section" id="story-preview">
         <div className="shell">

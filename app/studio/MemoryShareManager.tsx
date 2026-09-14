@@ -3,6 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MemoryAddressForm } from "./MemoryAddressForm";
+import { memoryAddressPath } from "../lib/memory-address";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { uploadLifetimeAlbumImages } from "../lib/supabase/uploads";
 import type {
@@ -27,13 +29,13 @@ function shareRow(data: unknown): MemoryShare | null {
   const candidate = row as Partial<MemoryShare>;
   return typeof candidate.code === "string" &&
     typeof candidate.active === "boolean" &&
-    typeof candidate.customer_slug === "string" &&
-    typeof candidate.pet_slug === "string"
+    typeof candidate.initial_slug === "string" &&
+    (candidate.custom_slug === null || typeof candidate.custom_slug === "string")
     ? {
         code: candidate.code,
         active: candidate.active,
-        customer_slug: candidate.customer_slug,
-        pet_slug: candidate.pet_slug,
+        custom_slug: candidate.custom_slug,
+        initial_slug: candidate.initial_slug,
       }
     : null;
 }
@@ -45,6 +47,7 @@ export function MemoryShareManager({
   onChanged,
 }: Props) {
   const [share, setShare] = useState<MemoryShare | null>(null);
+  const [editingAddress, setEditingAddress] = useState(false);
   const [origin] = useState(() =>
     typeof window === "undefined" ? "" : window.location.origin,
   );
@@ -77,8 +80,8 @@ export function MemoryShareManager({
   );
   const hasMorePhotos = visiblePhotoCount < managedPhotos.length;
   const shareUrl =
-    share?.customer_slug && share?.pet_slug && origin
-      ? `${origin}/${encodeURIComponent(share.customer_slug)}/${encodeURIComponent(share.pet_slug)}`
+    share && (share.custom_slug || share.initial_slug) && origin
+      ? `${origin}${memoryAddressPath(share.custom_slug || share.initial_slug)}`
       : "";
   const siteReady = order.status === "delivered" && Boolean(delivery);
   const today = useMemo(() => {
@@ -137,9 +140,9 @@ export function MemoryShareManager({
   }, [hasMorePhotos, managedPhotos.length]);
 
   const manageShare = useCallback(
-    async (action: "get" | "enable" | "disable" | "rotate") => {
+    async (action: "get") => {
       const { data, error: shareError } = await getSupabaseBrowserClient().rpc(
-        "manage_memory_site",
+        "manage_memory_address",
         {
           p_order_id: order.id,
           p_action: action,
@@ -352,7 +355,7 @@ export function MemoryShareManager({
       <div className="family-share-panel" id="personal-homepage">
         <div>
           <p className="eyebrow">YOUR DOG&apos;S WEBSITE</p>
-          <h3>このURLが、その子だけのホームページです。</h3>
+          <h3>{shareUrl ? "このURLが、その子だけのホームページです。" : "その子だけのホームページのURLを決めましょう。"}</h3>
           <p>
             ご家族も同じURLから、ログインせずに完成映像・写真・キャラクターを楽しめます。検索結果には表示されません。
           </p>
@@ -365,10 +368,10 @@ export function MemoryShareManager({
         ) : (
           <div className="family-share-controls">
             <div className="share-status">
-              <span className="active">公開中</span>
-              <code>{shareUrl || "専用URLを準備しています…"}</code>
+              <span className={shareUrl ? "active" : ""}>{shareUrl ? "公開中" : "URL未設定"}</span>
+              {shareUrl && <code>{shareUrl}</code>}
             </div>
-            <div>
+            <div className="family-share-actions">
               <button
                 className="button button-primary"
                 type="button"
@@ -396,8 +399,24 @@ export function MemoryShareManager({
                 </a>
               )}
             </div>
+            {share && !share.custom_slug && (
+              <div className="memory-address-change">
+                <strong>URLを、覚えやすい名前にしませんか？</strong>
+                <p>今のURLはそのまま使えます。お好きな言葉に変更することもできます。</p>
+                <button type="button" className="memory-address-edit-button"
+                  aria-expanded={editingAddress} aria-controls={`address-editor-${order.id}`}
+                  onClick={() => setEditingAddress(!editingAddress)}>
+                  {editingAddress ? "入力欄を閉じる" : "URLを変更する"}
+                  <span>変更は1回だけ</span>
+                </button>
+                <div id={`address-editor-${order.id}`} hidden={!editingAddress}>
+                  {editingAddress && <MemoryAddressForm orderId={order.id} origin={origin} onSaved={() => manageShare("get").then(() => { setEditingAddress(false); })} />}
+                </div>
+              </div>
+            )}
             <small>
-              写真の追加は下の写真アルバムから行えます。公開期限や月額料金なく、このURLをそのまま使い続けられます。
+              {share?.custom_slug ? "URLの変更は完了しました。再変更はできません。" : "このまま使うことも、お好きなURLに1回だけ変更することもできます。"}
+              変更前のURLからも同じホームページを開けます。公開期限・月額料金はありません。
             </small>
           </div>
         )}

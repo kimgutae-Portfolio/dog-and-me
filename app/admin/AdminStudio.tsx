@@ -1690,13 +1690,13 @@ export function AdminStudio() {
   const notifyFinalDelivery = async (currentOrder: MemoryOrder) => {
     const { data: personalSite } = await getSupabaseBrowserClient()
       .from("share_links")
-      .select("customer_slug,pet_slug")
+      .select("custom_slug,initial_slug")
       .eq("order_id", currentOrder.id)
       .eq("active", true)
       .maybeSingle();
     const personalSiteUrl =
-      personalSite?.customer_slug && personalSite.pet_slug
-        ? `${DEFAULT_SITE_ORIGIN}/${encodeURIComponent(personalSite.customer_slug)}/${encodeURIComponent(personalSite.pet_slug)}`
+      (personalSite?.custom_slug || personalSite?.initial_slug)
+        ? `${DEFAULT_SITE_ORIGIN}/memory/${encodeURIComponent(personalSite.custom_slug || personalSite.initial_slug)}`
         : null;
     const body = [
       `${currentOrder.pet_name}ちゃんの動く絵本が完成しました。`,
@@ -1705,7 +1705,7 @@ export function AdminStudio() {
       `あわせて、${currentOrder.pet_name}ちゃんだけの専用ホームページも公開されました。`,
       personalSiteUrl
         ? `▼ ${currentOrder.pet_name}ちゃんのホームページを見る\n${decodeURI(personalSiteUrl)}`
-        : "制作室の「お届け・ホームページ」からご覧いただけます。",
+        : "制作室の「お届け・ホームページ」でお好きなURLを決めて、ご覧ください。",
       "",
       "ホームページの写真アルバムには、これからも新しい写真を追加できます。ご家族みなさまで楽しくご利用いただき、これから先の思い出もたくさん積み重ねていただけたら嬉しいです。",
       "",

@@ -1,0 +1,31 @@
+/* Artwork-led reviews; native swipe keeps both cards easy to browse on phones. */
+.home-reviews { padding: 56px 0; background: #eee8df; border-block: 1px solid rgba(64,59,53,.09); scroll-margin-top: 24px; }
+.home-reviews-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.home-reviews-heading h2 { margin: 0; color: var(--storybook-ink); font-family: var(--font-serif); font-size: 24px; font-weight: 400; letter-spacing: .05em; }
+.home-reviews-swipe { display: none; }
+.home-reviews-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; align-items: start; }
+.home-reviews-grid:focus-visible { outline: 2px solid #765455; outline-offset: 5px; }
+.home-review { min-width: 0; margin: 0; display: flex; flex-direction: column; overflow: hidden; background: #fffcf6; border: 1px solid #ded4c7; border-radius: 6px 6px 18px 6px; }
+.home-review-work-image { position: relative; aspect-ratio: 16 / 9; background: #e6dfd2; flex-shrink: 0; }
+.home-review-work-image video { display: block; width: 100%; height: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #25251f; }
+.home-review blockquote { margin: 0; padding: 22px 26px 0; flex: 1; }
+.home-review blockquote p { margin: 0; color: #514a43; font-size: 1rem; line-height: 1.85; overflow-wrap: anywhere; white-space: pre-line; }
+.home-review figcaption { display: flex; align-items: center; gap: 8px; padding: 8px 24px 12px; color: #625951; font-size: .875rem; }
+.home-review-character { width: 72px; height: 72px; display: block; flex-shrink: 0; background-size: 400% 300%; background-position: 66.666667% 50%; background-repeat: no-repeat; border-radius: 12px; }
+.home-review figcaption small { margin-left: auto; color: #71675f; font-size: .75rem; }
+.home-reviews-disclosure { margin: 14px 0 0; color: #71675f; font-size: .75rem; line-height: 1.7; }
+@media (max-width: 760px) {
+  .home-reviews { padding: 32px 0; }
+  .home-reviews-heading { margin-bottom: 16px; }
+  .home-reviews-heading h2 { font-size: 21px; }
+  .home-reviews-swipe { display: inline-flex; gap: 8px; align-items: center; color: #71675f; font-size: .875rem; }
+  .home-reviews-grid { display: flex; gap: 14px; overflow-x: auto; margin-inline: -18px; padding: 0 18px 12px; scroll-padding-inline: 18px; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #ad9281 #e6dfd4; }
+  .home-review { flex: 0 0 90%; scroll-snap-align: start; }
+  .home-review blockquote { padding: 18px 18px 0; }
+  .home-review figcaption { padding: 4px 16px 8px; }
+  .home-reviews-disclosure { margin-top: 10px; }
+}
+
+.home-review-excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
+.home-review-read-more { display: block; min-height: 44px; padding: 8px 0; border: 0; background: transparent; color: #765455; font-size: .875rem; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.home-review-read-more:focus-visible { outline: 2px solid #765455; outline-offset: 3px; }
