@@ -7,6 +7,7 @@ const reviews = [
   {
     id: "mua",
     name: "ムア",
+    website: "https://www.wanmemory.com/memory/mua",
     body: "写真を選んで思い出を伝えると、ムアだけの動く絵本になって、とても嬉しかったです。専用のホームページで家族と一緒に見返せるのも気に入っています。完成して終わりではなく、アルバムに新しい写真を追加できるので、これからもムアの思い出を少しずつ残していくのが楽しみです。",
   },
   {
@@ -48,6 +49,14 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
           style={{ backgroundImage: `url(/reviews/${review.id}/character.png)` }} />
         <span>{review.name}のご家族より</span>
       </figcaption>
+      {"website" in review && (
+        <a className={styles["home-review-website"]} href={review.website}
+          target="_blank" rel="noopener noreferrer"
+          aria-label={`${review.name}のホームページを見る（新しいタブで開きます）`}>
+          <span>{review.name}のホームページを見る</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      )}
     </figure>
   );
 }

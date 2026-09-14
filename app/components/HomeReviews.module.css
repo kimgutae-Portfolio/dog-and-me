@@ -29,3 +29,6 @@
 .home-review-excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
 .home-review-read-more { display: block; min-height: 44px; padding: 8px 0; border: 0; background: transparent; color: #765455; font-size: .875rem; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
 .home-review-read-more:focus-visible { outline: 2px solid #765455; outline-offset: 3px; }
+.home-review-website { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; margin: 0 18px 18px; padding: 12px 16px; border: 1px solid #bda998; border-radius: 8px; background: #f1e8dc; color: #58433c; font-size: .875rem; line-height: 1.6; text-decoration: none; }
+.home-review-website:hover { background: #e8dbca; }
+.home-review-website:focus-visible { outline: 2px solid #765455; outline-offset: 3px; }
