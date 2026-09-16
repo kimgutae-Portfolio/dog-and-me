@@ -5,7 +5,7 @@ import { SeoGuideLinks } from "../components/SeoGuideLinks";
 import { StartStoryLink } from "../components/StartStoryLink";
 import { createGuideStructuredData } from "../lib/seo";
 
-const title = "愛犬の写真を動画にする方法";
+const title = "愛犬の写真で動画を作成する方法｜自作と制作依頼の選び方";
 const description =
   "スマホに残る愛犬の写真を、見返したくなる思い出動画にする方法を解説。写真選び、エピソード、構成、音楽と文字のまとめ方をご紹介します。";
 
@@ -60,7 +60,7 @@ export default function AikenShashinDougaPage() {
   return (
     <InfoPage
       eyebrow="PHOTO TO MOVIE GUIDE"
-      title="愛犬の写真を、思い出が伝わる動画に。"
+      title="愛犬の写真で動画を作成するには？"
       lead="写真をたくさん並べるだけではなく、その日の空気や、ご家族だけが知るしぐさを言葉と一緒に残す方法をご紹介します。"
     >
       <script
@@ -111,6 +111,16 @@ export default function AikenShashinDougaPage() {
         </div>
       </section>
 
+      <section>
+        <h2>自分で作る？制作を依頼する？</h2>
+        <p>写真をそのままつなぎたいなら、写真の読み込み・並べ替え・文字入れ・動画保存ができる編集ツールで始められます。写真からイラストや物語を作りたい場合は、その表現に対応した制作サービスの完成例を確認しましょう。</p>
+        <div className="seo-card-grid">
+          <article><strong>自作が向いている場合</strong><p>写真の順番や文字を自分で調整したい、日常の動画を何度も作りたい場合。まず5枚を選び、各写真を約4秒ずつ表示する20秒ほどの動画から試すと、構成を確認しやすくなります。</p></article>
+          <article><strong>依頼が向いている場合</strong><p>編集の時間を取りにくい、絵やストーリーも含めて相談したい場合。料金だけでなく、必要な写真、完成までの日数、修正範囲、受け取れるデータを比べましょう。</p></article>
+        </div>
+        <p>WAN MEMORYでは、五つのエピソードと場面写真から約40秒の動く絵本を制作します。元写真を並べるスライドショーとは仕上がりが異なるため、作品を見てからお選びください。</p>
+        <Link className="text-link" href="/#plans">制作内容・料金・納期を確認する →</Link>
+      </section>
       <section>
         <h2>思い出動画を作る五つの手順</h2>
         <ol className="seo-step-list">
@@ -199,6 +209,11 @@ export default function AikenShashinDougaPage() {
         </Link>
       </section>
 
+      <section>
+        <h2>実際にお届けした動く絵本を見る</h2>
+        <p>ムアとだいふくの完成映像、ご家族からいただいた感想を公開しています。写真とエピソードがどんな作品になるのか、制作前の参考にご覧ください。</p>
+        <Link className="text-link" href="/#reviews">完成映像とご家族のレビューを見る →</Link>
+      </section>
       <section className="seo-faq">
         <h2>愛犬の思い出動画についてよくある質問</h2>
         {faqs.map(([question, answer]) => (

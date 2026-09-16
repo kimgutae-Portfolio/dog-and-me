@@ -5,9 +5,9 @@ import { SeoGuideLinks } from "../components/SeoGuideLinks";
 import { StartStoryLink } from "../components/StartStoryLink";
 import { createGuideStructuredData } from "../lib/seo";
 
-const title = "うちの子記念日を動く絵本に";
+const title = "うちの子記念日のプレゼント｜写真と思い出で作る動く絵本";
 const description =
-  "愛犬が家族になった日から今までの写真とエピソードを、その子が主人公になる約40秒の動く絵本へ。";
+  "うちの子記念日のプレゼントを、日常で使うもの・写真で残すもの・家族で楽しむ物語から選ぶヒント。動く絵本の内容、料金の確認先、通常10〜14営業日の納期をご案内します。";
 export const metadata: Metadata = {
   title,
   description,
@@ -53,7 +53,7 @@ export default function UchinokoKinenbiPage() {
   return (
     <InfoPage
       eyebrow="ANNIVERSARY STORYBOOK"
-      title="家族になった日を、物語のはじまりに。"
+      title="うちの子記念日に、思い出を残すプレゼント。"
       lead="小さかった頃の不安そうな顔も、今の安心した寝顔も。一年ごとの変化を、一冊のような動く絵本に残します。"
     >
       <script
@@ -67,6 +67,24 @@ export default function UchinokoKinenbiPage() {
         <span aria-hidden="true">/</span>
         <span>うちの子記念日の動く絵本</span>
       </nav>
+      <section>
+        <h2>うちの子記念日のプレゼント、何を選ぶ？</h2>
+        <div className="seo-card-grid">
+          <article><strong>愛犬が使うもの</strong><p>お気に入りの遊びに合うおもちゃや、いつもの暮らしで使う品。好みやサイズを確認して選びたい方に向いています。</p></article>
+          <article><strong>家に飾るもの</strong><p>写真立てや似顔絵など、毎日目に入る記念品。飾る場所や、ご家族の好きな色・雰囲気を基準に選べます。</p></article>
+          <article><strong>家族で見返すもの</strong><p>アルバムや動く絵本は、一緒に過ごした時間を振り返る贈り物。離れて暮らすご家族にも、同じ物語を共有できます。</p></article>
+        </div>
+      </section>
+      <section>
+        <h2>動く絵本を贈る前に確認したいこと</h2>
+        <ul>
+          <li>お届け内容：約40秒の動く絵本、水彩の絵本ページ5枚、専用ホームページとミニキャラクター。紙の本の配送はありません。</li>
+          <li>準備するもの：五つのエピソードと、それぞれの場面写真。贈り先のご家族が好きな写真を一緒に選ぶ方法もあります。</li>
+          <li>納期：通常10〜14営業日。確認や修正の時間もあるため、希望の記念日を相談時にお伝えください。お急ぎの場合は、申し込み前に納品可能日をご確認ください。</li>
+          <li>料金：現在の料金・モニター条件はプラン欄でご確認ください。相談時点では料金は発生せず、物語案と条件を確認してから決済します。</li>
+        </ul>
+        <Link className="text-link" href="/#plans">料金とプランの詳細を見る →</Link>
+      </section>
       <section className="seo-lead-panel">
         <p>
           記念日は、ケーキや飾り付けだけの日ではありません。初めて家に来た時、安心して眠った夜、名前を呼ぶと振り向いた日。そこまでの時間すべてが、そのご家族だけの物語です。
@@ -135,6 +153,11 @@ export default function UchinokoKinenbiPage() {
         <Link className="text-link" href="/film/moka-demo">
           完成ページの表現を見る →
         </Link>
+      </section>
+      <section>
+        <h2>実際にお届けした動く絵本を見る</h2>
+        <p>ムアとだいふくの完成映像、ご家族からいただいた感想を公開しています。写真とエピソードがどんな作品になるのか、制作前の参考にご覧ください。</p>
+        <Link className="text-link" href="/#reviews">完成映像とご家族のレビューを見る →</Link>
       </section>
       <section className="seo-faq">
         <h2>うちの子記念日の物語について</h2>

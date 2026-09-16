@@ -1,6 +1,6 @@
 from PIL import Image, ImageFilter
 
-SOURCE = "/Users/gimgutae/.codex/generated_images/01a0369a-0739-7701-8354-ec38e0d188fd/exec-665bc3c9-6cbb-42e5-a0e0-57b1756f7492.png"
+SOURCE = "/Users/gimgutae/.codex/generated_images/01a0369a-0739-7701-8354-ec38e0d188fd/exec-bb718ecc-92f6-4a44-a780-353592ca85ec.png"
 DEST = "/Users/gimgutae/Developer/dog-and-me/website-character-sprite.png"
 
 src = Image.open(SOURCE).convert("RGB")
@@ -22,7 +22,7 @@ for row in range(3):
                 darkest = min(r, g, b)
                 # The generated checkerboard is nearly neutral and very light;
                 # the dog and collar carry hue or substantially darker values.
-                if spread >= 14 or darkest < 224:
+                if spread >= 14 or darkest < 160:
                     mp[x, y] = 255
         # Close tiny holes in the dog silhouette and soften only the outer edge.
         mask = mask.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.MinFilter(3))
@@ -54,6 +54,13 @@ for row in range(3):
                 for xx in range(cell.width):
                     if (xx, yy) not in keep_set:
                         mp[xx, yy] = 0
+        # Remove neutral light remnants such as generated motion-line or
+        # checkerboard pixels while retaining the warm colored fur.
+        for yy in range(cell.height):
+            for xx in range(cell.width):
+                r, g, b = pix[xx, yy]
+                if mp[xx, yy] and max(r, g, b) - min(r, g, b) < 14 and min(r, g, b) > 160:
+                    mp[xx, yy] = 0
         rgba = cell.convert("RGBA")
         rgba.putalpha(mask)
         # Enforce the required transparent gutter on every cell.
