@@ -2400,10 +2400,6 @@ export function AdminStudio() {
       setError("先に完成したホームページキャラクターを登録してください。");
       return;
     }
-    if (!lineStickerDelivery?.consented_at) {
-      setError("お客様のLINEスタンプ制作・販売への同意が必要です。");
-      return;
-    }
     setExportingBundle(true);
     setExportProgress("登録済みキャラクターを準備しています…");
     setError("");
@@ -2453,8 +2449,9 @@ export function AdminStudio() {
           transparent_png: true,
         },
         consent: {
-          version: lineStickerDelivery.consent_version,
-          accepted_at: lineStickerDelivery.consented_at,
+          status: lineStickerDelivery?.consented_at ? "accepted" : "awaiting_consent",
+          version: lineStickerDelivery?.consent_version ?? null,
+          accepted_at: lineStickerDelivery?.consented_at ?? null,
           sales_revenue_owner: "WAN MEMORY",
         },
       };
@@ -2470,6 +2467,9 @@ export function AdminStudio() {
       const files: Record<string, Uint8Array> = {
         [`${root}/01_START_HERE.txt`]: strToU8([
           "現在プランに無料で含めているLINEスタンプ8種類の制作データです。",
+          lineStickerDelivery?.consented_at
+            ? "顧客同意：取得済み。"
+            : "顧客同意：未取得。事前制作は可能ですが、完成データの登録・LINEへの申請・販売は同意取得後に行ってください。",
           "1. website-character-sprite.pngを注文キャラクターの基準画像として使います。",
           "2. line-sticker-style-reference.pngを文字・アクション・輪郭・余白の見本として使います。",
           "3. 02_PROMPT_LINE_STICKERS.txtをそのまま依頼文として使います。",
@@ -4610,8 +4610,7 @@ export function AdminStudio() {
                         disabled={
                           saving ||
                           exportingBundle ||
-                          !characterSprite ||
-                          !lineStickerDelivery?.consented_at
+                          !characterSprite
                         }
                         onClick={() => void downloadLineStickerBundle()}
                       >
@@ -4623,7 +4622,7 @@ export function AdminStudio() {
                         <em>先にホームページキャラクターを登録してください</em>
                       )}
                       {characterSprite && !lineStickerDelivery?.consented_at && (
-                        <em>お客様が制作室で同意すると利用できます</em>
+                        <em>同意前でも事前制作用にダウンロードできます。完成データの登録・LINEへの申請・販売は同意取得後に行ってください。</em>
                       )}
 
                       {lineStickerPreview && assetUrls[lineStickerPreview.id] && (
