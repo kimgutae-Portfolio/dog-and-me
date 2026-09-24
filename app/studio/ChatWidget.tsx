@@ -3,7 +3,6 @@
 import {
   ChangeEvent,
   FormEvent,
-  KeyboardEvent,
   useEffect,
   useId,
   useMemo,
@@ -242,14 +241,6 @@ export function ChatWidget({
     setAttachmentError("");
   };
 
-  const handleComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing)
-      return;
-    event.preventDefault();
-    if (!sending && (event.currentTarget.value.trim() || pendingFile))
-      event.currentTarget.form?.requestSubmit();
-  };
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const body = textareaRef.current?.value.trim() ?? "";
@@ -355,7 +346,7 @@ export function ChatWidget({
               <textarea
                 ref={textareaRef}
                 required={!pendingFile}
-                onKeyDown={handleComposerKeyDown}
+                enterKeyHint="enter"
                 rows={2}
                 maxLength={3000}
                 placeholder="担当者へ伝えたいこと"
@@ -384,7 +375,7 @@ export function ChatWidget({
                       <path d="M21.44 11.05 12.25 20.24a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95L9.41 17.41a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49" />
                     </svg>
                   </button>
-                  <small>Enterで送信 · Shift + Enterで改行</small>
+                  <small>Enterで改行 · 送信ボタンで送信</small>
                 </div>
                 <button
                   className="message-send-button"

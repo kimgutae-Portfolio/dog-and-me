@@ -791,6 +791,7 @@ export function AdminStudio() {
   const [stillCaptions, setStillCaptions] = useState<Record<string, string>>(
     {},
   );
+  const [filmCaptions, setFilmCaptions] = useState<Record<string, string>>({});
   const [captionDrafts, setCaptionDrafts] = useState<Record<string, string>>(
     {},
   );
@@ -1058,6 +1059,15 @@ export function AdminStudio() {
     const loadedAssets = (assetResult.data ?? []) as OrderAsset[];
     setConcepts(loadedConcepts);
     setAssets(loadedAssets);
+    let savedFilmCaptions: Record<string, string> = {};
+    try {
+      const saved = JSON.parse(localStorage.getItem(`wm-film-captions:${orderId}`) ?? "{}");
+      if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+        savedFilmCaptions = Object.fromEntries(Object.entries(saved).filter(([, value]) => typeof value === "string")) as Record<string, string>;
+      }
+    } catch { /* Draft storage may be unavailable. */ }
+    setFilmCaptions(Object.fromEntries(loadedAssets.filter(asset => asset.category === "scene_still").map(asset => [asset.id, savedFilmCaptions[asset.id] ?? asset.story_caption ?? ""])));
+
     setCaptionDrafts(
       Object.fromEntries(
         loadedAssets
@@ -3429,6 +3439,13 @@ export function AdminStudio() {
       return;
     }
 
+    if (requiredRenderSlots.some(({ still }) => {
+      const caption = (filmCaptions[still.id] ?? still.story_caption ?? "").trim();
+      return !caption || caption.length > 500 || caption.split(/\r?\n/).length > 2;
+    })) {
+      setError("各場面の字幕を1〜2行で入力してください（最大500文字）。");
+      return;
+    }
     setRendering(true);
     setError("");
     setRenderProgress("編集を準備しています…");
@@ -3457,6 +3474,7 @@ export function AdminStudio() {
         body: JSON.stringify({
           orderId: order.id,
           items,
+          captions: Object.fromEntries(requiredRenderSlots.map(({ still }) => [still.id, filmCaptions[still.id] ?? still.story_caption ?? ""])),
           title: filmTitle.trim(),
           kicker: filmKicker.trim(),
           endingText: filmEndingText.trim(),
@@ -5502,6 +5520,25 @@ export function AdminStudio() {
                                   )}{" "}
                                   · {still.scene_title ?? "場面"}
                                 </strong>
+                                <label className="admin-scene-caption-editor">
+                                  <span>映像の字幕 · Enterで改行（最大2行）</span>
+                                  <textarea
+                                    rows={3}
+                                    maxLength={500}
+                                    disabled={rendering}
+                                    value={filmCaptions[still.id] ?? still.story_caption ?? ""}
+                                    onChange={(event) => {
+                                      const next = { ...filmCaptions, [still.id]: event.target.value };
+                                      setFilmCaptions(next);
+                                      try { localStorage.setItem(`wm-film-captions:${order.id}`, JSON.stringify(next)); } catch { /* Keep the in-memory draft. */ }
+                                    }}
+                                  />
+                                </label>
+                                <small>この入力内容で映像を制作します。下書きはこのブラウザに保存されます。改行なしの場合は自動で折り返します。</small>
+                                <div aria-label="字幕の改行プレビュー" style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", textAlign: "center", background: "#f4f0e8", padding: "12px", fontSize: "12px" }}>
+                                  {filmCaptions[still.id] ?? still.story_caption}
+                                </div>
+                                <small>改行位置の確認用です。映像の文字幅を超える場合は、文章を短くしてください。</small>
                                 <div className="admin-story-takes">
                                   {takes.map((take) => {
                                     const clip = clipByStillAndTake.get(
@@ -5659,7 +5696,7 @@ export function AdminStudio() {
                           </label>
                         </div>
                         <aside className="admin-operation-note">
-                          各絵本ページに保存した物語文は、場面の長さに合わせて自動でフェード表示されます。動く絵本の色と紙の質感を保つため、シネマ調の黒帯・粒子加工は使用しません。
+                          上で編集した字幕と改行を、新しく制作する映像に反映します。各クリップのプレビューと以前の完成映像は変更されません。動く絵本の色と紙の質感を保つため、シネマ調の黒帯・粒子加工は使用しません。
                         </aside>
                         <div className="admin-still-actions">
                           <button
@@ -5694,8 +5731,9 @@ export function AdminStudio() {
                     {assembledFilms.length > 0 && (
                       <div className="admin-video-history">
                         <strong>編集された映像</strong>
-                        {assembledFilms.map((asset) => (
+                        {assembledFilms.map((asset, index) => (
                           <div className="admin-render-result" key={asset.id}>
+                            <strong>{index === 0 ? "最新の編集結果" : "以前の編集結果"}</strong>
                             {assetUrls[asset.id] ? (
                               <video
                                 src={assetUrls[asset.id]}
@@ -5707,7 +5745,7 @@ export function AdminStudio() {
                             )}
                             <div>
                               <small>
-                                {formatDate(asset.created_at)} ·{" "}
+                                {new Date(asset.created_at).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })} ·{" "}
                                 {(asset.file_size / 1024 / 1024).toFixed(1)} MB
                               </small>
                               <button

@@ -151,7 +151,15 @@ def make_ending_card(png_path, lines, mark):
 
 def wrap_story_text(draw, text, font, max_width):
     """Wrap Japanese story text without relying on whitespace boundaries."""
-    lines = wrap_ending_lines(draw, text.splitlines(), font, max_width)
+    text = text.strip()
+    if "\n" in text or "\r" in text:
+        lines = text.splitlines()
+        for line in lines:
+            bbox = draw.textbbox((0, 0), line, font=font)
+            if bbox[2] - bbox[0] > max_width:
+                raise ValueError("指定した字幕の1行が長すぎます。改行位置を調整するか文章を短くしてください。")
+    else:
+        lines = wrap_japanese_text(draw, text, font, max_width)
     if len(lines) > 2:
         raise ValueError("物語字幕は2行以内に収まるよう文章を短くしてください（文章は省略されません）。")
     return lines

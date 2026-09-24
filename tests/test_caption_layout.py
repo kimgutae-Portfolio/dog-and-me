@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import unittest
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 spec = importlib.util.spec_from_file_location(
     "assemble_film", Path(__file__).resolve().parents[1] / "scripts/assemble_film.py"
@@ -15,6 +15,23 @@ spec.loader.exec_module(film)
 
 
 class CaptionLayoutTest(unittest.TestCase):
+    def test_manual_breaks_are_preserved_exactly(self):
+        draw = ImageDraw.Draw(Image.new("RGB", (film.W, film.H)))
+        font = ImageFont.truetype(film.MINCHO, 48)
+        self.assertEqual(film.wrap_story_text(draw, "初めての旅行。\nルルと一緒に。", font, film.W - 240), ["初めての旅行。", "ルルと一緒に。"])
+
+    def test_manual_long_line_is_rejected_not_rewrapped(self):
+        draw = ImageDraw.Draw(Image.new("RGB", (film.W, film.H)))
+        font = ImageFont.truetype(film.MINCHO, 48)
+        with self.assertRaisesRegex(ValueError, "1行が長すぎ"):
+            film.wrap_story_text(draw, "旅" * 60 + "\n思い出。", font, film.W - 240)
+
+    def test_three_manual_lines_are_rejected(self):
+        draw = ImageDraw.Draw(Image.new("RGB", (film.W, film.H)))
+        font = ImageFont.truetype(film.MINCHO, 48)
+        with self.assertRaisesRegex(ValueError, "2行"):
+            film.wrap_story_text(draw, "春\n夏\n秋", font, film.W - 240)
+
     def test_caption_pixels_stay_below_picture(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = str(Path(tmp) / "caption.png")

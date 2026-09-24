@@ -311,6 +311,19 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const renderCaptions = new Map<string, string>();
+  const overrides = payload.captions;
+  if (overrides !== undefined && (!overrides || typeof overrides !== "object" || Array.isArray(overrides))) {
+    return Response.json({ error: "invalid_captions" }, { status: 400 });
+  }
+  for (const id of stillIds) {
+    const value = overrides === undefined ? stillById.get(id)!.story_caption : (overrides as Record<string, unknown>)[id];
+    if (typeof value !== "string" || !value.trim() || value.length > 500 || value.trim().split(/\r?\n/).length > 2) {
+      return Response.json({ error: "invalid_caption", message: "各場面の字幕を1〜2行で入力してください（最大500文字）。" }, { status: 400 });
+    }
+    renderCaptions.set(id, value.replace(/\r\n?/g, "\n").trim());
+  }
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (event: RenderProgressEvent) =>
@@ -355,9 +368,7 @@ export async function POST(request: NextRequest) {
           captionsPath,
           JSON.stringify(
             ordered.map((clip) =>
-              stillById
-                .get(clip.source_still_asset_id as string)!
-                .story_caption!.trim(),
+              renderCaptions.get(clip.source_still_asset_id as string)!,
             ),
           ),
           "utf8",
