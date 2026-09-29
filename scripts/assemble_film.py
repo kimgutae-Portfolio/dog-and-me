@@ -261,19 +261,32 @@ def story_picture_filter():
     )
 
 
-def normalize_story_clip(src, out_path, motion_duration, start_hold, end_hold, caption_layout=False):
+def story_zoom_filter(zoom, duration, width, height):
+    # One output frame per moving input frame; hold frames are added afterwards.
+    frames = max(1, round(duration * FPS) - 1)
+    return (f"fps={FPS},zoompan=z='1+({zoom['scale']}-1)*min(on/{frames},1)':"
+            f"x='(iw-iw/zoom)*{zoom['x']}':y='(ih-ih/zoom)*{zoom['y']}':"
+            f"d=1:s={width}x{height}:fps={FPS},")
+
+
+def normalize_story_clip(src, out_path, motion_duration, start_hold, end_hold, caption_layout=False, zoom=None):
     """Normalize one moving page and surround it with quiet transition frames.
 
     A page turn must not borrow moving frames from either adjacent story. The
     first frame is held while the page is revealed, then the complete source
     motion plays, and the final frame is held while the page turns away.
     """
+    zoom_filter = ""
+    if zoom and zoom["scale"] > 1:
+        info = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "json", src], text=True))["streams"][0]
+        width, height = info["width"] // 2 * 2, info["height"] // 2 * 2
+        zoom_filter = story_zoom_filter(zoom, motion_duration, width, height)
     output_duration = start_hold + motion_duration + end_hold
     run([
         "ffmpeg", "-y", "-i", src, "-t", str(motion_duration),
         "-vf",
         (
-            (story_picture_filter() if caption_layout else
+            zoom_filter + (story_picture_filter() if caption_layout else
              f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},") +
             f"tpad=start_mode=clone:start_duration={start_hold:.3f}:"
             f"stop_mode=clone:stop_duration={motion_duration + end_hold:.3f},"
@@ -419,6 +432,7 @@ def main():
     ap.add_argument("--title", required=True)
     ap.add_argument("--ending-text", required=True, help="use \\n for line breaks")
     ap.add_argument("--ending-mark", default="WAN MEMORY")
+    ap.add_argument("--zooms-json", default=None)
     ap.add_argument("--captions-json", default=None,
                     help="JSON array with one approved story sentence per scene")
     ap.add_argument("--bgm", default=None)
@@ -430,6 +444,11 @@ def main():
                      help="unify color grade + vignette + subtle grain across the whole film")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
+
+    zooms = []
+    if args.zooms_json:
+        with open(args.zooms_json, encoding="utf-8") as handle:
+            zooms = json.load(handle)
 
     captions = []
     if args.captions_json:
@@ -476,7 +495,7 @@ def main():
                 clip_duration = SHORT_STORY_CLIP_SECONDS
                 normalize_story_clip(
                     clip_path(n), clip_mp4, clip_duration, start_hold, end_hold,
-                    caption_layout=bool(captions),
+                    caption_layout=bool(captions), zoom=zooms[n - 1] if zooms else None,
                 )
                 clip_duration += start_hold + end_hold
                 clip_kind = "story"

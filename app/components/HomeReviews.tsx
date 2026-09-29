@@ -5,7 +5,16 @@ import styles from "./HomeReviews.module.css";
 
 const reviews = [
   {
+    id: "anzu",
+    name: "あんず",
+    website: "https://www.wanmemory.com/memory/anzu",
+    hasArtwork: true,
+    body: "制作過程においても細かい段取りや説明が\nあり、進み具合も確認出来て安心して\nお任せ出来ました。\n修正にもわがままを快く聞いていただき\n感謝しております。\n出来上がった作品は素晴らしく家族みんな\n感動しました。\nぜひ皆さんにも大事な家族との思い出を\nこういう形で残せるという事を\n知っていただきたいです。",
+  },
+
+  {
     id: "mua",
+    hasArtwork: true,
     name: "ムア",
     website: "https://www.wanmemory.com/memory/mua",
     body: "写真を選んで思い出を伝えると、ムアだけの動く絵本になって、とても嬉しかったです。専用のホームページで家族と一緒に見返せるのも気に入っています。完成して終わりではなく、アルバムに新しい写真を追加できるので、これからもムアの思い出を少しずつ残していくのが楽しみです。",
@@ -13,6 +22,8 @@ const reviews = [
   {
     id: "daifuku",
     name: "だいふく",
+    hasArtwork: true,
+    website: "https://www.wanmemory.com/memory/daihuku15",
     body: "愛犬との大切な思い出を、こんな素敵な形に残すことができて本当に嬉しいです。\n写真だけでは残せない、その時の気持ちや思い出まで一冊に詰まっていて、何度でも見返したくなる特別なアルバムになりました。\n\n今は当たり前のように一緒に過ごしている毎日も、いつか振り返ったときにきっと大切な宝物になると思います。\nいつかのために、そして一生大事にするために残しておきたい、自分だけの特別な一冊です。\n素敵な絵本を作っていただき、本当にありがとうございました。🐶",
   },
 ] as const;
@@ -21,7 +32,7 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <figure className={styles["home-review"]}>
-      <div className={styles["home-review-work-image"]}>
+      {review.hasArtwork && <div className={styles["home-review-work-image"]}>
         <video
           controls playsInline preload="none"
           poster={`/reviews/${review.id}/poster.jpg`}
@@ -36,7 +47,7 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
           <source src={`/reviews/${review.id}/storybook.mp4`} type="video/mp4" />
           お使いのブラウザでは動画を再生できません。
         </video>
-      </div>
+      </div>}
       <blockquote>
         <p id={`review-${review.id}`} className={expanded ? undefined : styles["home-review-excerpt"]}>{review.body}</p>
         <button type="button" className={styles["home-review-read-more"]}
@@ -45,8 +56,8 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
           onClick={() => setExpanded(!expanded)}>{expanded ? "閉じる −" : "続きを読む ＋"}</button>
       </blockquote>
       <figcaption>
-        <span className={styles["home-review-character"]} role="img" aria-label={`${review.name}のキャラクター`}
-          style={{ backgroundImage: `url(/reviews/${review.id}/character.png)` }} />
+        {review.hasArtwork && <span className={styles["home-review-character"]} role="img" aria-label={`${review.name}のキャラクター`}
+          style={{ backgroundImage: `url(/reviews/${review.id}/character.png)` }} />}
         <span>{review.name}のご家族より</span>
       </figcaption>
       {"website" in review && (
@@ -69,7 +80,7 @@ export function HomeReviews() {
           <h2 id="reviews-title">ご家族の声</h2>
           <span className={styles["home-reviews-swipe"]}>横にスワイプ <span aria-hidden="true">↔</span></span>
         </div>
-        <div className={styles["home-reviews-grid"]} tabIndex={0} role="group" aria-label="ご家族のレビュー2件。横にスクロールしてご覧ください。">
+        <div className={styles["home-reviews-grid"]} tabIndex={0} role="group" aria-label={`ご家族のレビュー${reviews.length}件。横にスクロールしてご覧ください。`}>
           {reviews.map((review) => <ReviewCard key={review.id} review={review} />)}
         </div>
       </div>

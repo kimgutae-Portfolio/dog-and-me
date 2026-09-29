@@ -1,0 +1,20 @@
+.panel { grid-column: 2; grid-row: 1; }
+
+.toggle, .close { display: none; }
+@media (max-width: 1320px) {
+  .toggle { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 90; display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 14px 20px; border: 0; border-radius: 999px; background: var(--forest); color: white; box-shadow: 0 8px 28px #25302740; font: inherit; font-size: 14px; cursor: pointer; }
+  .toggle span { padding: 5px 8px; border-radius: 20px; background: #fff; color: var(--forest); font-size: 12px; }
+  .panel { display: none; grid-column: auto; grid-row: auto; }
+  .panel.open { display: flex; position: fixed; z-index: 91; top: calc(var(--chat-top, 0px) + 12px); right: 12px; width: min(420px, calc(100vw - 24px)); height: min(720px, calc(var(--chat-height, 100dvh) - 24px)); max-height: none; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); margin: 0; border-radius: 18px; background: #faf8f2; overflow-y: auto; overscroll-behavior: contain; box-shadow: 0 16px 60px #25302750; }
+  .close { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: white; color: var(--forest); font-size: 25px; cursor: pointer; }
+  .panel :global(.card-head) { gap: 8px; margin-bottom: 10px; }
+  .panel :global(.card-head) h3 { font-size: 18px; }
+  .panel :global(.admin-chat-guide) { display: none; }
+  .panel :global(.admin-message-list) { flex: 1 1 auto; min-height: 80px; max-height: none; margin-bottom: 10px; overflow-y: auto; overscroll-behavior: contain; }
+  .panel :global(.admin-message-list) article p { font-size: 14px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .panel :global(.admin-message-form) { flex: 0 0 auto; gap: 8px; }
+  .panel :global(.admin-message-form) textarea { height: 84px; min-height: 64px; max-height: 140px; font-size: 16px; resize: vertical; }
+  .panel :global(.admin-message-form) label > small { font-size: 10px; }
+  .panel :global(.admin-message-form-actions) button { min-height: 44px; padding: 10px; font-size: 12px; }
+  .toggle:focus-visible, .close:focus-visible { outline: 3px solid #b48260; outline-offset: 3px; }
+}

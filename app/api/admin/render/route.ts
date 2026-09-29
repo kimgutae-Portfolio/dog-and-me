@@ -324,6 +324,16 @@ export async function POST(request: NextRequest) {
     renderCaptions.set(id, value.replace(/\r\n?/g, "\n").trim());
   }
 
+  const zooms = payload.zooms;
+  if (zooms !== undefined && (!zooms || typeof zooms !== "object" || Array.isArray(zooms))) return Response.json({ error: "invalid_zooms" }, { status: 400 });
+  const renderZooms: Array<{ x: number; y: number; scale: number }> = [];
+  for (const clip of ordered) {
+    const z = (zooms as Record<string, unknown> | undefined)?.[clip.id] ?? { x: 0.5, y: 0.5, scale: 1 };
+    const zoom = z as { x: number; y: number; scale: number };
+    if (!zoom || ![zoom.x, zoom.y, zoom.scale].every(Number.isFinite) || zoom.x < 0 || zoom.x > 1 || zoom.y < 0 || zoom.y > 1 || zoom.scale < 1 || zoom.scale > 2) return Response.json({ error: "invalid_zoom", message: "ズーム設定を確認してください。" }, { status: 400 });
+    renderZooms.push(zoom);
+  }
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (event: RenderProgressEvent) =>
@@ -373,6 +383,8 @@ export async function POST(request: NextRequest) {
           ),
           "utf8",
         );
+        const zoomsPath = path.join(workDir, "zooms.json");
+        await writeFile(zoomsPath, JSON.stringify(renderZooms), "utf8");
         const memoryClips = ordered
           .slice(1, -1)
           .map((_, index) => String(index + 2));
@@ -393,6 +405,8 @@ export async function POST(request: NextRequest) {
           endingText.replace(/\n/g, "\\n"),
           "--ending-mark",
           endingMark,
+          "--zooms-json",
+          zoomsPath,
           "--captions-json",
           captionsPath,
           "--out",

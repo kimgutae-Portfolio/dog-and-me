@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import chatStyles from "./AdminChat.module.css";
+import { ClipZoomEditor, DEFAULT_ZOOM, type ClipZoom } from "./ClipZoomEditor";
 import {
   ChangeEvent,
   FormEvent,
@@ -753,6 +755,7 @@ function photoAnalysisStatusLabel(value: PhotoAnalysisStatus) {
 export function AdminStudio() {
   const router = useRouter();
   const { user, profile, loading: authLoading, signOut } = useAuth();
+  const adminUserId = user?.id;
   const [orders, setOrders] = useState<MemoryOrder[]>([]);
   const [customers, setCustomers] = useState<Profile[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
@@ -791,6 +794,7 @@ export function AdminStudio() {
   const [stillCaptions, setStillCaptions] = useState<Record<string, string>>(
     {},
   );
+  const [clipZooms, setClipZooms] = useState<Record<string, ClipZoom>>({});
   const [filmCaptions, setFilmCaptions] = useState<Record<string, string>>({});
   const [captionDrafts, setCaptionDrafts] = useState<Record<string, string>>(
     {},
@@ -843,6 +847,9 @@ export function AdminStudio() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [messageDraft, setMessageDraft] = useState("");
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const chatPanelRef = useRef<HTMLElement>(null);
+  const chatToggleRef = useRef<HTMLButtonElement>(null);
   const [messageAttachmentFile, setMessageAttachmentFile] = useState<File | null>(null);
   const [messageAttachmentPreviewUrl, setMessageAttachmentPreviewUrl] = useState<string | null>(null);
   const [messageAttachmentError, setMessageAttachmentError] = useState("");
@@ -857,6 +864,31 @@ export function AdminStudio() {
     Record<string, string>
   >({});
   const knownMessageAttachmentPathsRef = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!mobileChatOpen) return;
+    const viewport = window.visualViewport;
+    const resize = () => {
+      if (viewport && viewport.scale !== 1) return;
+      chatPanelRef.current?.style.setProperty("--chat-height", `${viewport?.height ?? window.innerHeight}px`);
+      chatPanelRef.current?.style.setProperty("--chat-top", `${viewport?.offsetTop ?? 0}px`);
+    };
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileChatOpen(false);
+        chatToggleRef.current?.focus();
+      }
+    };
+    resize();
+    viewport?.addEventListener("resize", resize);
+    viewport?.addEventListener("scroll", resize);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      viewport?.removeEventListener("resize", resize);
+      viewport?.removeEventListener("scroll", resize);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileChatOpen]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth?next=/admin");
@@ -979,7 +1011,7 @@ export function AdminStudio() {
   }, [profile?.role]);
 
   const loadOrders = useCallback(async () => {
-    if (!user || profile?.role !== "admin") return;
+    if (!adminUserId || profile?.role !== "admin") return;
     setLoading(true);
     const supabase = getSupabaseBrowserClient();
     const [ordersResult, profilesResult, messageResult, revisionResult] =
@@ -1011,7 +1043,9 @@ export function AdminStudio() {
     setAttentionByOrder(attention);
     setSelectedOrderId((current) => current || loaded[0]?.id || "");
     setLoading(false);
-  }, [profile?.role, user]);
+  // Auth revalidation can replace the User object on tab focus. Reload only
+  // when the account or role changes, so unsaved production work stays intact.
+  }, [profile?.role, adminUserId]);
 
   const loadDetails = useCallback(async (orderId: string) => {
     if (!orderId) return;
@@ -1059,6 +1093,14 @@ export function AdminStudio() {
     const loadedAssets = (assetResult.data ?? []) as OrderAsset[];
     setConcepts(loadedConcepts);
     setAssets(loadedAssets);
+    const zooms: Record<string, ClipZoom> = {};
+    for (const asset of loadedAssets) {
+      try {
+        const z = JSON.parse(localStorage.getItem(`wm-clip-zoom:${asset.id}`) ?? "null");
+        if (z && [z.x, z.y, z.scale].every(Number.isFinite) && z.x >= 0 && z.x <= 1 && z.y >= 0 && z.y <= 1 && z.scale >= 1 && z.scale <= 2) zooms[asset.id] = z;
+      } catch { /* Local draft unavailable. */ }
+    }
+    setClipZooms(zooms);
     let savedFilmCaptions: Record<string, string> = {};
     try {
       const saved = JSON.parse(localStorage.getItem(`wm-film-captions:${orderId}`) ?? "{}");
@@ -1183,19 +1225,36 @@ export function AdminStudio() {
         },
       )
       .subscribe();
-    const refreshTimer = window.setInterval(async () => {
-      const { data } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("order_id", order.id)
-        .order("created_at");
-      if (data) setMessages(data as OrderMessage[]);
-    }, 20000);
+    let active = true;
+    let refreshing = false;
+    const refreshMessages = async () => {
+      if (!active || refreshing) return;
+      refreshing = true;
+      try {
+        const { data } = await supabase
+          .from("messages")
+          .select("*")
+          .eq("order_id", order.id)
+          .order("created_at");
+        if (active && data) setMessages(data as OrderMessage[]);
+      } catch {
+        // Keep the current conversation on transient reconnect failures.
+      } finally {
+        refreshing = false;
+      }
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refreshMessages();
+    };
+    const refreshTimer = window.setInterval(refreshMessages, 20000);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
+      active = false;
       window.clearInterval(refreshTimer);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
-  }, [order?.id, profile?.role]);
+  }, [order?.id, profile?.role, adminUserId]);
 
   const productionFields = useMemo(
     () => getProductionFields(order ?? {}),
@@ -1462,6 +1521,7 @@ export function AdminStudio() {
       setFilmBgm("");
       setRenderProgress("");
       setCustomerInputPending(false);
+      setMobileChatOpen(false);
       loadDetails(order.id);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -1473,7 +1533,7 @@ export function AdminStudio() {
         messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [messages, selectedOrderId]);
+  }, [messages, selectedOrderId, mobileChatOpen]);
 
   useEffect(() => {
     const newPaths = messages
@@ -2597,28 +2657,44 @@ export function AdminStudio() {
   };
 
   const updateLineStickerStatus = async () => {
-    if (!order || !lineStickerPreview) return;
+    if (!order || !lineStickerPreview || saving) return;
+    const storeUrl = lineStickerStatus === "on_sale" ? lineStickerStoreUrl.trim() : null;
+    if (lineStickerStatus === "on_sale" && (!storeUrl || !/^https:\/\/(store\.line\.me|line\.me)\//.test(storeUrl))) {
+      setError("販売中にする場合は、有効なLINE STORE URLを入力してください。");
+      return;
+    }
     setSaving(true);
     setError("");
-    const { error: updateError } = await getSupabaseBrowserClient().rpc(
-      "admin_update_line_sticker_status",
-      {
+    setNotice("");
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { error: updateError } = await supabase.rpc("admin_update_line_sticker_status", {
         p_order_id: order.id,
         p_status: lineStickerStatus,
-        p_store_url: lineStickerStoreUrl.trim() || null,
-      },
-    );
-    if (updateError) {
-      setError(
-        lineStickerStatus === "on_sale" && !lineStickerStoreUrl.trim()
-          ? "販売中にする場合はLINE STORE URLを入力してください。"
-          : "LINEスタンプの状態を更新できませんでした。",
-      );
-    } else {
-      setNotice("LINEスタンプの公開状態を更新しました。");
+        p_store_url: storeUrl,
+      });
+      if (updateError) throw new Error("LINEスタンプの状態を更新できませんでした。");
+      if (lineStickerStatus === "on_sale") {
+        const body = `${order.pet_name}ちゃんのLINEスタンプがLINEの審査を通過し、ご購入いただけるようになりました！\n\nスタンプの販売価格は基本価格に設定しています。ご購入時にはLINE STOREに表示される料金がかかりますので、価格をご確認のうえお求めください。\n\nこちらからご覧いただけます。\n${storeUrl}`;
+        // Check the saved conversation, so repeated saves do not resend this announcement.
+        const { data: existing, error: lookupError } = await supabase.from("messages").select("id").eq("order_id", order.id).eq("body", body).limit(1);
+        if (lookupError) throw new Error("販売状態は保存しましたが、案内の送信確認に失敗しました。もう一度保存してください。");
+        if (!existing?.length) {
+          const result = await notifyCustomerByMessage(order.id, body);
+          if (!result.saved) throw new Error("販売状態は保存しましたが、案内メッセージを送信できませんでした。もう一度保存してください。");
+          setNotice(result.notificationSent ? "販売状態を保存し、お客様へ購入案内を送信しました。" : "販売状態と購入案内メッセージを保存しました。新着メールは送信できませんでした。");
+        } else {
+          setNotice("販売状態を保存しました。この購入案内は送信済みです。");
+        }
+      } else {
+        setNotice("LINEスタンプの公開状態を更新しました。");
+      }
       await loadDetails(order.id);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "LINEスタンプの状態を更新できませんでした。");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const downloadRunwayBundle = async () => {
@@ -2825,13 +2901,9 @@ export function AdminStudio() {
           ].join("\n"),
     );
     setCustomerInputPending(true);
+    setMobileChatOpen(true);
     setError("");
     window.requestAnimationFrame(() => {
-      if (window.matchMedia("(max-width: 1320px)").matches) {
-        document
-          .getElementById("admin-message")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
       messageComposerRef.current?.focus();
     });
   };
@@ -3474,6 +3546,7 @@ export function AdminStudio() {
         body: JSON.stringify({
           orderId: order.id,
           items,
+          zooms: Object.fromEntries(items.map(item => [item.clipAssetId, clipZooms[item.clipAssetId] ?? DEFAULT_ZOOM])),
           captions: Object.fromEntries(requiredRenderSlots.map(({ still }) => [still.id, filmCaptions[still.id] ?? still.story_caption ?? ""])),
           title: filmTitle.trim(),
           kicker: filmKicker.trim(),
@@ -4297,7 +4370,12 @@ export function AdminStudio() {
                     <a href="#admin-render">編集</a>
                     <a href="#admin-revisions">修正</a>
                     <a href="#admin-video">映像</a>
-                    <a href="#admin-message">連絡</a>
+                    <a href="#admin-message" onClick={(event) => {
+                      if (window.matchMedia("(max-width: 1320px)").matches) {
+                        event.preventDefault();
+                        setMobileChatOpen(true);
+                      }
+                    }}>連絡</a>
                     <a href="#admin-danger">取消</a>
                   </nav>
 
@@ -4703,6 +4781,7 @@ export function AdminStudio() {
                             <span>公開状態</span>
                             <select
                               value={lineStickerStatus}
+                              disabled={saving}
                               onChange={(event) =>
                                 setLineStickerStatus(
                                   event.target.value as LineStickerStatus,
@@ -4719,13 +4798,19 @@ export function AdminStudio() {
                             <span>LINE STORE URL</span>
                             <input
                               type="url"
-                              value={lineStickerStoreUrl}
+                              value={lineStickerStatus === "on_sale" ? lineStickerStoreUrl : ""}
+                              disabled={saving || lineStickerStatus !== "on_sale"}
                               placeholder="https://store.line.me/stickershop/product/..."
                               onChange={(event) =>
                                 setLineStickerStoreUrl(event.target.value)
                               }
                             />
                           </label>
+                          <p className="admin-operation-note">
+                            {lineStickerStatus === "on_sale"
+                              ? "保存すると、審査完了・購入可能・基本価格での販売について、購入URL付きでお客様へメッセージを送信します。LINE側の販売価格を確認してから保存してください。"
+                              : "「LINE STOREで販売中」を選ぶと購入URLを入力できます。"}
+                          </p>
                           <div>
                             {lineStickerPackage && assetUrls[lineStickerPackage.id] && (
                               <a
@@ -5555,12 +5640,11 @@ export function AdminStudio() {
                                         {clip ? (
                                           <>
                                             {assetUrls[clip.id] && (
-                                              <video
-                                                className="admin-render-preview"
-                                                src={assetUrls[clip.id]}
-                                                controls
-                                                preload="metadata"
-                                              />
+                                              <ClipZoomEditor key={clip.id} src={assetUrls[clip.id]} value={clipZooms[clip.id] ?? DEFAULT_ZOOM} disabled={rendering}
+                                                onChange={value => {
+                                                  setClipZooms(current => ({ ...current, [clip.id]: value }));
+                                                  try { localStorage.setItem(`wm-clip-zoom:${clip.id}`, JSON.stringify(value)); } catch { /* Keep draft in memory. */ }
+                                                }} />
                                             )}
                                             <button
                                               className="button button-outline"
@@ -6301,16 +6385,28 @@ export function AdminStudio() {
                     )}
                   </section>
                 </div>
+                <button type="button" ref={chatToggleRef}
+                  className={chatStyles.toggle}
+                  aria-expanded={mobileChatOpen} aria-controls="admin-message"
+                  onClick={() => setMobileChatOpen(!mobileChatOpen)}>
+                  {mobileChatOpen ? "閉じる ×" : "お客様とチャット"}
+                  {!mobileChatOpen && openMessages.length > 0 && <span>{openMessages.length}件 未対応</span>}
+                </button>
                 <aside
-                  className="admin-card admin-chat-panel"
+                  ref={chatPanelRef}
+                  className={`admin-card admin-chat-panel ${chatStyles.panel}${mobileChatOpen ? ` ${chatStyles.open}` : ""}`}
                   id="admin-message"
+                  aria-label={`${order.pet_name}のご家族との連絡`}
                 >
                   <div className="card-head">
                     <div>
                       <p className="eyebrow">MESSAGES</p>
                       <h3>お客様との連絡</h3>
+                      <small className="admin-chat-customer">{order.pet_name}のご家族</small>
                     </div>
                     <span>{openMessages.length}件 未対応</span>
+                    <button type="button" className={chatStyles.close} aria-label="チャットを閉じる"
+                      onClick={() => { setMobileChatOpen(false); chatToggleRef.current?.focus(); }}>×</button>
                   </div>
                   <p className="admin-chat-guide">
                     ここから送った内容は制作室に保存され、お客様にはメールでも新着をお知らせします。
@@ -6424,6 +6520,7 @@ export function AdminStudio() {
                         ref={messageComposerRef}
                         name="body"
                         rows={5}
+                        enterKeyHint="enter"
                         maxLength={3000}
                         value={messageDraft}
                         onChange={(event) =>
