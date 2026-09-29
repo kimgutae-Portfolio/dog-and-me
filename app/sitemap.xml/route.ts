@@ -16,6 +16,7 @@ export function GET(request: Request) {
     `${origin}/aiken-shashin-seiri`,
     `${origin}/uchinoko-kinenbi-douga`,
     `${origin}/dog-photo-guide`,
+    `${origin}/dog-birthday-message`,
     `${origin}/film/moka-demo`,
     `${origin}/contact`,
     `${origin}/terms`,

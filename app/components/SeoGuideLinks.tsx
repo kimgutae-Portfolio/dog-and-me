@@ -2,6 +2,11 @@ import Link from "next/link";
 
 const guides = [
   [
+    "愛犬の誕生日メッセージ例文8選",
+    "その子らしい言葉の書き方と、写真・動画への残し方",
+    "/dog-birthday-message",
+  ],
+  [
     "愛犬の思い出を残す方法",
     "写真・動画・日記・動く絵本の選び方",
     "/aiken-omoide-douga",
