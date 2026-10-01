@@ -1,0 +1,9 @@
+.root { margin: 22px 0; }
+.button { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 48px; padding: 12px 18px; border: 1px solid #747775; border-radius: 6px; background: white; color: #1f1f1f; font-family: Arial, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
+.button:hover { background: #f7f8f8; }
+.button:disabled { opacity: .6; cursor: wait; }
+.button:focus-visible { outline: 3px solid #4285f4; outline-offset: 3px; }
+.button svg { flex-shrink: 0; }
+.note { margin: 10px 0; font-size: 12px; line-height: 1.7; color: #68645d; text-align: center; }
+.divider { display: flex; align-items: center; gap: 12px; margin-top: 22px; color: #68645d; font-size: 12px; }
+.divider::before, .divider::after { content: ""; height: 1px; background: #ddd8ce; flex: 1; }

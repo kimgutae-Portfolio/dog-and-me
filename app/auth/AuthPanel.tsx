@@ -6,6 +6,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { APPLICATIONS_OPEN } from "../lib/site";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
+import { safeAuthNext } from "../lib/auth-navigation";
+import { GoogleSignIn } from "./GoogleSignIn";
 
 type AuthMode = "login" | "signup" | "reset" | "update-password";
 
@@ -18,7 +20,7 @@ function requestedMode(value: string | null): AuthMode {
 }
 
 function safeNext(value: string | null) {
-  return value?.startsWith("/") && !value.startsWith("//") ? value : "/studio";
+  return safeAuthNext(value);
 }
 
 function friendlyError(message: string) {
@@ -450,6 +452,9 @@ export function AuthPanel() {
               会員登録
             </button>
           </div>
+        )}
+        {APPLICATIONS_OPEN && (mode === "login" || mode === "signup") && (
+          <GoogleSignIn nextPath={mode === "signup" ? signupNextPath : nextPath} disabled={pending} />
         )}
         <form className="auth-form" onSubmit={submit}>
           {mode === "signup" && (
