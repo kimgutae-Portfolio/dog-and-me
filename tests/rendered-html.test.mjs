@@ -78,7 +78,7 @@ test("server-renders the Japanese landing page", async () => {
     /storybook-film-showcase storybook-complete-experience section/,
   );
   assert.doesNotMatch(html, /storybook-personal-site section/);
-  assert.match(html, /href="\/auth\?mode=signup&amp;next=\/story"/);
+  assert.match(html, /href="\/start"/);
   assert.match(html, /写真そっくりの実写として再現するのではなく/);
   assert.match(html, /水彩・ガッシュ/);
   assert.match(html, /その子だけの場所を/);
@@ -763,9 +763,9 @@ test("starter preview was removed", async () => {
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });
 
-test("signup stores the dog name and the story form reuses it", async () => {
+test("the guided start stores the dog name and the signup and story forms reuse it", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [authPanel, storyWizard, migration, startStoryLink] = await Promise.all(
+  const [authPanel, storyWizard, migration, startStoryLink, storyStart, site] = await Promise.all(
     [
       readFile(new URL("app/auth/AuthPanel.tsx", root), "utf8"),
       readFile(new URL("app/story/StoryWizard.tsx", root), "utf8"),
@@ -774,9 +774,23 @@ test("signup stores the dog name and the story form reuses it", async () => {
         "utf8",
       ),
       readFile(new URL("app/components/StartStoryLink.tsx", root), "utf8"),
+      readFile(new URL("app/start/StoryStart.tsx", root), "utf8"),
+      readFile(new URL("app/lib/site.ts", root), "utf8"),
     ],
   );
+  assert.match(site, /START_STORY_HREF = "\/start"/);
+  assert.match(storyStart, /STORY_START_STORAGE_KEY/);
+  assert.match(storyStart, /ここではまだ注文・決済されません/);
+  assert.match(storyStart, /\/auth\?mode=signup&next=\/story&source=start/);
+  assert.match(storyStart, /入力した内容を保存して、あとから続きを作れるように/);
+  assert.match(storyStart, /GoogleSignIn nextPath="\/story"/);
+  assert.match(storyStart, /メールアドレスで登録する/);
+  assert.match(storyStart, /setStep\("signup"\)/);
   assert.match(authPanel, /愛犬のお名前/);
+  assert.match(authPanel, /登録だけでは注文・決済されません/);
+  assert.match(authPanel, /STORY_START_STORAGE_KEY/);
+  assert.match(authPanel, /authSource === "start" && Boolean\(petName\.trim\(\)\)/);
+  assert.match(authPanel, /前の画面で入力したお名前を引き継ぎました/);
   assert.match(authPanel, /pet_name: petName\.trim\(\)/);
   assert.match(authPanel, /requestedMode\(searchParams\.get\("mode"\)\)/);
   assert.match(
@@ -797,6 +811,18 @@ test("signup stores the dog name and the story form reuses it", async () => {
   assert.match(startStoryLink, /user \? "\/story" : START_STORY_HREF/);
   assert.match(startStoryLink, /if \(!loading\) return/);
   assert.match(storyWizard, /profile\?\.primary_pet_name/);
+  assert.match(storyWizard, /preAuthPetName/);
+  for (const eventName of [
+    "story_view",
+    "story_input_start",
+    "story_photo_added",
+    "story_step_complete",
+    "story_draft_saved",
+    "story_exit",
+    "story_submit",
+  ]) {
+    assert.match(storyWizard, new RegExp(`trackEvent\\("${eventName}"`));
+  }
   assert.match(storyWizard, /五つの思い出が、その子だけの物語になります/);
   assert.match(storyWizard, /最初の一場面から、物語を始めましょう/);
   assert.match(storyWizard, /ここまでを保存して、あとで続ける/);

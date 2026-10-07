@@ -233,7 +233,7 @@ export default async function Home() {
           </p>
           <div className="storybook-hero-actions">
             {APPLICATIONS_OPEN ? (
-              <StartStoryLink className="button button-primary">
+              <StartStoryLink className="button button-primary" ctaLocation="home_hero">
                 物語をつくる <span aria-hidden="true">→</span>
               </StartStoryLink>
             ) : (
@@ -543,7 +543,7 @@ export default async function Home() {
           </p>
           <div className="storybook-final-actions">
             {APPLICATIONS_OPEN ? (
-              <StartStoryLink className="button button-cream">
+              <StartStoryLink className="button button-cream" ctaLocation="home_footer">
                 物語とホームページをつくる →
               </StartStoryLink>
             ) : (

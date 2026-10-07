@@ -10,13 +10,15 @@ import {
   START_STORY_HREF,
 } from "../lib/site";
 import { useAuth } from "./AuthProvider";
+import { trackEvent } from "../lib/analytics";
 
 type StartStoryLinkProps = {
   children: ReactNode;
   className?: string;
+  ctaLocation?: string;
 };
 
-export function StartStoryLink({ children, className }: StartStoryLinkProps) {
+export function StartStoryLink({ children, className, ctaLocation = "unspecified" }: StartStoryLinkProps) {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [queued, setQueued] = useState(false);
@@ -28,6 +30,12 @@ export function StartStoryLink({ children, className }: StartStoryLinkProps) {
   }, [loading, queued, router, user]);
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    trackEvent("start_story_click", {
+      cta_location: ctaLocation,
+      destination: href,
+      signed_in: Boolean(user),
+      page_path: window.location.pathname,
+    });
     if (!loading) return;
     event.preventDefault();
     setQueued(true);

@@ -34,6 +34,7 @@ function isAnalyticsPath(pathname: string) {
     "memory",
     "privacy",
     "story",
+    "start",
     "studio",
     "terms",
     "uchinoko-kinenbi-douga",

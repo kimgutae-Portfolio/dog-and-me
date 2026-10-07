@@ -14,6 +14,8 @@ import { CONSENT_VERSIONS } from "../lib/consent";
 import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { notifyAdminFromCustomer } from "../lib/adminPushClient";
+import { STORY_START_STORAGE_KEY } from "../lib/site";
+import { trackEvent } from "../lib/analytics";
 import type { StoryDraftAsset, StoryDraftRecord } from "../lib/supabase/types";
 import {
   deleteStoryDraftImage,
@@ -236,11 +238,23 @@ export function StoryWizard() {
   const [activeMemoryKey, setActiveMemoryKey] = useState("memory-1");
   const [stepValidationAttempted, setStepValidationAttempted] = useState(false);
   const [pendingPhotoInputId, setPendingPhotoInputId] = useState("");
+  const [preAuthPetName] = useState(() => {
+    if (typeof window === "undefined") return "";
+    try {
+      const stored = sessionStorage.getItem(STORY_START_STORAGE_KEY);
+      return stored ? (JSON.parse(stored) as { petName?: string }).petName?.trim() || "" : "";
+    } catch { return ""; }
+  });
   const photoFilesRef = useRef<PhotoDraft[]>([]);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const photoPreviewDialogRef = useRef<HTMLElement>(null);
   const memoryCardRefs = useRef<Record<string, HTMLElement | null>>({});
   const saveSequenceRef = useRef(0);
+  const storyViewTrackedRef = useRef(false);
+  const inputStartedRef = useRef(false);
+  const draftSavedTrackedRef = useRef(false);
+  const submittedRef = useRef(false);
+  const currentStepRef = useRef(0);
 
   const openPhotoInput = (inputId: string) => {
     if (hasSeenPhotoUploadGuide()) {
@@ -261,9 +275,36 @@ export function StoryWizard() {
     if (!authLoading && !user) router.replace("/auth?mode=signup&next=/story");
   }, [authLoading, router, user]);
 
+  useEffect(() => {
+    currentStepRef.current = step;
+  }, [step]);
+
+  useEffect(() => {
+    if (!hydrated || !user || storyViewTrackedRef.current) return;
+    storyViewTrackedRef.current = true;
+    trackEvent("story_view", {
+      restored_draft: restored,
+      starting_step: step + 1,
+    });
+  }, [hydrated, restored, step, user]);
+
+  useEffect(() => {
+    if (!hydrated || !user) return;
+    const trackExit = () => {
+      if (submittedRef.current) return;
+      trackEvent("story_exit", {
+        input_started: inputStartedRef.current,
+        last_step: currentStepRef.current + 1,
+      });
+    };
+    window.addEventListener("pagehide", trackExit);
+    return () => window.removeEventListener("pagehide", trackExit);
+  }, [hydrated, user]);
+
   const preferredPetName = (
     profile?.primary_pet_name ||
     user?.user_metadata?.pet_name ||
+    preAuthPetName ||
     ""
   ).trim();
 
@@ -415,6 +456,10 @@ export function StoryWizard() {
       );
       if (saveSequenceRef.current !== sequence) return;
       setSaveStatus(saveError ? "error" : "saved");
+      if (!saveError && inputStartedRef.current && !draftSavedTrackedRef.current) {
+        draftSavedTrackedRef.current = true;
+        trackEvent("story_draft_saved", { step_number: step + 1 });
+      }
     }, 700);
     return () => window.clearTimeout(timer);
   }, [draft, draftId, hydrated, step, user]);
@@ -590,6 +635,11 @@ export function StoryWizard() {
     }
     const added = ingestPhotos(files, room);
     if (!added.length) return;
+    trackEvent("story_photo_added", {
+      added_count: added.length,
+      total_photo_count: photoFiles.length + added.length,
+      step_number: step + 1,
+    });
     updateMemory(memoryKey, "photoKeys", [
       ...memory.photoKeys,
       ...added.map((photo) => photo.clientKey),
@@ -779,7 +829,17 @@ export function StoryWizard() {
       window.requestAnimationFrame(() => errorSummaryRef.current?.focus());
       return;
     }
+    trackEvent("story_step_complete", {
+      step_number: step + 1,
+      step_name: steps[step],
+    });
     goToStep(Math.min(step + 1, steps.length - 1));
+  };
+
+  const trackFirstInput = () => {
+    if (inputStartedRef.current) return;
+    inputStartedRef.current = true;
+    trackEvent("story_input_start", { step_number: step + 1 });
   };
 
   const submit = async () => {
@@ -971,6 +1031,11 @@ export function StoryWizard() {
         },
       );
       if (completeDraftError) console.error(completeDraftError);
+      submittedRef.current = true;
+      trackEvent("story_submit", {
+        story_count: draft.memories.length,
+        photo_count: photoFiles.length,
+      });
       await notifyAdminFromCustomer(orderId, "order_submitted", orderId);
       window.localStorage.removeItem("kimi-film-draft");
       window.localStorage.removeItem(`wan-memory-story-draft-${user.id}`);
@@ -1042,7 +1107,11 @@ export function StoryWizard() {
           </blockquote>
         </aside>
 
-        <section className="wizard-main" aria-labelledby="step-title">
+        <section
+          className="wizard-main"
+          aria-labelledby="step-title"
+          onChange={trackFirstInput}
+        >
           {restored && (
             <aside className="draft-restored-notice" role="status">
               <span aria-hidden="true">✓</span>

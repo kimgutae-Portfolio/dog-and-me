@@ -24,7 +24,7 @@ export function SiteHeader() {
           <AuthNavLink />
         </nav>
         {APPLICATIONS_OPEN ? (
-          <StartStoryLink className="header-cta">
+          <StartStoryLink className="header-cta" ctaLocation="header_desktop">
             物語をつくる <span aria-hidden="true">↗</span>
           </StartStoryLink>
         ) : (
@@ -48,7 +48,7 @@ export function SiteHeader() {
             <Link href="/#faq">よくある質問</Link>
             <AuthNavLink />
             {APPLICATIONS_OPEN ? (
-              <StartStoryLink>物語をつくる</StartStoryLink>
+              <StartStoryLink ctaLocation="header_mobile">物語をつくる</StartStoryLink>
             ) : (
               <span className="mobile-prelaunch-link">
                 お申し込み受付は準備中

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
-import { APPLICATIONS_OPEN } from "../lib/site";
+import { trackEvent } from "../lib/analytics";
+import { APPLICATIONS_OPEN, STORY_START_STORAGE_KEY } from "../lib/site";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { safeAuthNext } from "../lib/auth-navigation";
 import { GoogleSignIn } from "./GoogleSignIn";
@@ -59,11 +60,20 @@ export function AuthPanel() {
     [searchParams],
   );
   const signupNextPath = nextPath === "/studio" ? "/story" : nextPath;
+  const authSource = searchParams.get("source") || "unknown";
   const [mode, setMode] = useState<AuthMode>(() => {
     const requested = requestedMode(searchParams.get("mode"));
     return !APPLICATIONS_OPEN && requested === "signup" ? "login" : requested;
   });
-  const [petName, setPetName] = useState("");
+  const [petName, setPetName] = useState(() => {
+    if (typeof window === "undefined") return "";
+    try {
+      const stored = sessionStorage.getItem(STORY_START_STORAGE_KEY);
+      return stored ? (JSON.parse(stored) as { petName?: string }).petName || "" : "";
+    } catch {
+      return "";
+    }
+  });
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -75,6 +85,15 @@ export function AuthPanel() {
   const [signupConfirmationEmail, setSignupConfirmationEmail] = useState("");
   const [mfaPending, setMfaPending] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
+  const hasGuidedPetName = authSource === "start" && Boolean(petName.trim());
+
+  useEffect(() => {
+    trackEvent("auth_view", {
+      auth_mode: mode,
+      source: authSource,
+      next_path: nextPath,
+    });
+  }, [authSource, mode, nextPath]);
 
   useEffect(() => {
     if (
@@ -176,6 +195,7 @@ export function AuthPanel() {
       }
 
       if (mode === "signup") {
+        trackEvent("email_signup_start", { source: authSource });
         if (!APPLICATIONS_OPEN) {
           setError("現在、新規会員登録は準備中です。受付開始までお待ちください。");
           return;
@@ -200,6 +220,7 @@ export function AuthPanel() {
           },
         });
         if (signupError) throw signupError;
+        trackEvent("signup_complete", { signup_method: "email" });
         if (data.session) router.replace(signupNextPath);
         else setSignupConfirmationEmail(email.trim());
         return;
@@ -248,6 +269,10 @@ export function AuthPanel() {
 
       router.replace(nextPath);
     } catch (caught) {
+      trackEvent("signup_error", {
+        auth_mode: mode,
+        error_type: caught instanceof Error ? caught.message.slice(0, 80) : "unknown",
+      });
       setError(friendlyError(caught instanceof Error ? caught.message : ""));
     } finally {
       setPending(false);
@@ -416,13 +441,19 @@ export function AuthPanel() {
         </h1>
         <p className="auth-lead">
           {mode === "signup"
-            ? "制作状況と完成映像を、ひとつの制作室で大切にお預かりします。"
+            ? `${petName ? `${petName}ちゃんの` : "うちの子の"}物語づくりを保存するため、かんたん登録をお願いします。登録だけでは注文・決済されません。`
             : mode === "reset"
               ? "登録したメールアドレスへ再設定リンクをお送りします。"
               : mode === "update-password"
                 ? "これからログインに使う新しいパスワードを入力してください。"
               : "写真の追加から完成映像のお届けまで、こちらでご確認いただけます。"}
         </p>
+        {mode === "signup" && (
+          <div className="auth-assurance" role="note">
+            <strong>次は、写真と5つの思い出を入力します</strong>
+            <span>写真はあとから追加できます。途中保存もでき、料金は内容と納期をご確認いただいた後にお支払いいただきます。</span>
+          </div>
+        )}
         {searchParams.get("deleted") === "1" && (
           <p className="form-success" role="status">
             退会が完了しました。すべての制作データを削除しました。同じメールアドレスで、いつでも新しく会員登録できます。
@@ -459,18 +490,25 @@ export function AuthPanel() {
         <form className="auth-form" onSubmit={submit}>
           {mode === "signup" && (
             <>
-              <label>
-                <span>
-                  愛犬のお名前 <em>必須</em>
-                </span>
-                <input
-                  required
-                  value={petName}
-                  onChange={(event) => setPetName(event.target.value)}
-                  autoComplete="off"
-                  placeholder="例：ひなた"
-                />
-              </label>
+              {hasGuidedPetName ? (
+                <p className="auth-prefill-note auth-pet-confirmation">
+                  <strong>{petName.trim()}ちゃんの物語</strong>
+                  前の画面で入力したお名前を引き継ぎました。
+                </p>
+              ) : (
+                <label>
+                  <span>
+                    愛犬のお名前 <em>必須</em>
+                  </span>
+                  <input
+                    required
+                    value={petName}
+                    onChange={(event) => setPetName(event.target.value)}
+                    autoComplete="off"
+                    placeholder="例：ひなた"
+                  />
+                </label>
+              )}
               <label>
                 <span>
                   飼い主さまのお名前 <small>任意</small>
@@ -482,9 +520,11 @@ export function AuthPanel() {
                   placeholder="例：山田 花子"
                 />
               </label>
-              <p className="auth-prefill-note">
-                愛犬のお名前は、次の申込フォームへ自動で引き継がれます。
-              </p>
+              {!hasGuidedPetName && (
+                <p className="auth-prefill-note">
+                  愛犬のお名前は、次の申込フォームへ自動で引き継がれます。
+                </p>
+              )}
             </>
           )}
           {mode !== "update-password" && (
