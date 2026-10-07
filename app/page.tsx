@@ -224,28 +224,43 @@ export default async function Home() {
           )}
           <p className="eyebrow">A STORYBOOK FOR YOUR DOG</p>
           <h1 id="hero-title">
-            うちの子が主役になる、
-            <br />
-            動く絵本とホームページ。
+            <span className="storybook-hero-title-intro">
+              <span>うちの子が</span><span>主役になる、</span>
+            </span>
+            <span className="storybook-hero-title-product">
+              <span>動く絵本と</span><span>ホームページ。</span>
+            </span>
           </h1>
-          <p>
-            お気に入りの写真と、あなたが覚えている五つの思い出から。
+          <p className="storybook-hero-lead">
+            お気に入りの写真と、覚えていることをひとつずつ。
             <br className="desktop-only" />
-            水彩で描く動く絵本と、その後も写真を増やせる専用ホームページを一緒にお届けします。
+            動く絵本と、写真を増やしていける専用ホームページに仕上げます。
           </p>
+          <div className="storybook-hero-offer" aria-label="モニタープランの価格と内容">
+            <ul>
+              <li>約40秒の動く絵本</li>
+              <li>水彩絵本5枚</li>
+              <li>専用ホームページ</li>
+            </ul>
+            <div className="storybook-hero-offer-price">
+              <span>先着{MEMORY_FILM_PRICING.launchLimit}組 · モニター価格</span>
+              <strong>
+                ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}<small>税込</small>
+              </strong>
+            </div>
+            <p><strong>物語案の確認までは無料。</strong>注文・決済は内容を見てからです。</p>
+          </div>
           <div className="storybook-hero-actions">
+            <Link className="button button-primary storybook-hero-demo-cta" href="/film/moka-demo">
+              完成したホームページを見る <span aria-hidden="true">↗</span>
+            </Link>
             {APPLICATIONS_OPEN ? (
-              <StartStoryLink className="button button-primary" ctaLocation="home_hero">
-                物語をつくる <span aria-hidden="true">→</span>
+              <StartStoryLink className="button button-outline" ctaLocation="home_hero">
+                無料で物語づくりを始める <span aria-hidden="true">→</span>
               </StartStoryLink>
             ) : (
-              <span className="button button-prelaunch" aria-disabled="true">
-                {PRELAUNCH_CTA}
-              </span>
+              <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
             )}
-            <Link className="text-link" href="/film/moka-demo">
-              モカの絵本とホームページを見る <span aria-hidden="true">↗</span>
-            </Link>
           </div>
           <span className="storybook-hero-note">
             STORYBOOK + WEBSITE SAMPLE · モカと、五つの記憶
@@ -280,7 +295,7 @@ export default async function Home() {
               約40秒の物語として、絵本ページとともにお届けします。
             </p>
             <p className="storybook-complete-mobile-copy">
-              5つの思い出を、水彩で描く一冊の動く絵本に。約40秒の物語として、絵本ページとともにお届けします。
+              覚えている出来事をひとつずつ伺い、5つの場面を一冊の動く絵本に。約40秒の物語としてお届けします。
             </p>
           </div>
           <ul className="storybook-complete-includes" aria-label="制作プランに含まれるもの">
@@ -290,6 +305,41 @@ export default async function Home() {
             <li><span>04</span><strong>ミニキャラクター</strong><small>ホームページを歩いてご案内</small></li>
             <li><span>05</span><strong>LINEスタンプ8種類</strong><small>オープン記念で無料</small></li>
           </ul>
+          <div className="storybook-phone-features">
+            <div className="storybook-phone-features-heading">
+              <p className="eyebrow">WHAT YOU CAN DO ON YOUR WEBSITE</p>
+              <h3>届くホームページを、<br />実際のスマホ画面で。</h3>
+              <p>完成した作品を見るだけでなく、その後の写真も増やしながら、ご家族でいつでも見返せます。</p>
+            </div>
+            <div className="storybook-phone-feature-grid">
+              {[
+                ["01", "動く絵本をいつでも再生", "約40秒の完成映像と5枚の絵本ページを、専用URLから見返せます。", "/film/moka/05-storybook-lantern.webp", "モカの動く絵本を再生するスマホ画面"],
+                ["02", "完成後も写真を追加", "新しい日々の写真をアルバムに追加して、その子の場所を育てていけます。", "/film/moka/09-autumn-ginkgo.webp", "モカの写真アルバムを表示するスマホ画面"],
+                ["03", "家族にURLで共有", "アプリのインストールなし。離れているご家族も同じページを開けます。", "/film/moka/02-storybook-train.webp", "モカの専用ホームページを家族と見るスマホ画面"],
+              ].map(([number, title, copy, image, alt]) => (
+                <article key={number}>
+                  <div className="storybook-phone-frame">
+                    <div className="storybook-phone-status" aria-hidden="true"><span>9:41</span><i /></div>
+                    <div className="storybook-phone-screen">
+                      <Image src={image} alt={alt} fill sizes="(max-width: 640px) 58vw, 210px" />
+                      <div className="storybook-phone-screen-shade" aria-hidden="true" />
+                      <span>MOKA&apos;S WEBSITE</span>
+                      <strong>{title}</strong>
+                    </div>
+                    <div className="storybook-phone-nav" aria-hidden="true"><i /><i /><i /></div>
+                  </div>
+                  <div className="storybook-phone-feature-copy">
+                    <span>{number}</span>
+                    <strong>{title}</strong>
+                    <p>{copy}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <Link className="button button-primary storybook-phone-demo-link" href="/film/moka-demo">
+              実際の完成ホームページを開く <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
           <div className="storybook-complete-website">
             <div className="storybook-complete-site-preview" aria-label="モカ専用ホームページのイメージ">
               <div className="storybook-complete-browser-bar" aria-hidden="true">
@@ -395,9 +445,7 @@ export default async function Home() {
             <div>
               <p className="eyebrow">LINE STICKERS INCLUDED FREE</p>
               <h2>
-                LINEスタンプ8種類も、
-                <br />
-                今だけ無料でついてくる。
+                オープン記念に、<br />LINEスタンプも。
               </h2>
             </div>
             <div className="storybook-line-sticker-offer">
@@ -418,14 +466,8 @@ export default async function Home() {
             </div>
             <div className="storybook-line-sticker-copy">
               <p>
-                専用ホームページのために描き起こしたキャラクターから、毎日使いやすい8種類のLINEスタンプを制作します。
-                今だけ、制作とLINEへの登録を追加料金なしでプランに含めます。
+                専用ホームページのキャラクターから、毎日使いやすい8種類を制作。今だけ追加料金なしでプランに含めます。
               </p>
-              <ul>
-                <li><span>01</span><strong>その子のキャラクターで8種類</strong></li>
-                <li><span>02</span><strong>毎日送りやすい日本語セット</strong></li>
-                <li><span>03</span><strong>面倒なLINE登録までおまかせ</strong></li>
-              </ul>
               <small>
                 LINEで実際に使用する際は、LINE STOREでのスタンプ購入代金が別途必要です。文言指定・個別修正は含まれません。
               </small>
@@ -445,8 +487,8 @@ export default async function Home() {
             {[
               [
                 "01",
-                "5つの物語と写真を送る",
-                "物語にしたい出来事ごとに、その日の写真を1枚添えます。途中保存もできます。",
+                "覚えていることを、ひとつずつ",
+                "短い一言と、その日の写真1枚から始められます。途中保存しながら、あとで5つまでゆっくり追加できます。",
               ],
               [
                 "02",

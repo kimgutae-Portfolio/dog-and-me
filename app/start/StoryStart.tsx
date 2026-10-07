@@ -92,7 +92,7 @@ export function StoryStart() {
         <p className="eyebrow">FIRST STEP · ABOUT 1 MINUTE</p>
         <p className="start-step">1 / 2　思い出づくりの準備</p>
         <h1>うちの子について、<br />最初に少しだけ教えてください。</h1>
-        <p className="start-lead">ここではまだ注文・決済されません。入力内容は次の制作フォームへ引き継がれ、途中でやめても大丈夫です。</p>
+        <p className="start-lead">ここではまだ注文・決済されません。最初から5つの出来事を決める必要はなく、短い一言から始めて途中保存できます。</p>
         <form className="start-form" onSubmit={submit}>
           <label>
             <span>愛犬のお名前 <em>必須</em></span>
@@ -111,7 +111,7 @@ export function StoryStart() {
         </form>
         <ul className="start-assurances" aria-label="お申し込み前のご案内">
           <li>登録だけでは料金は発生しません</li>
-          <li>写真は次の画面以降でゆっくり選べます</li>
+          <li>まず1つから。写真もあとでゆっくり選べます</li>
           <li>入力途中でも保存して続けられます</li>
         </ul>
       </section>

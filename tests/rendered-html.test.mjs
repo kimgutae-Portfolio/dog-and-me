@@ -69,7 +69,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /一冊の物語と/);
   assert.match(html, /まず、完成作品をご覧ください/);
   assert.match(html, /見て、残して、/);
-  assert.match(html, /5つの思い出を、水彩で描く一冊の動く絵本に/);
+  assert.match(html, /覚えている出来事をひとつずつ伺い/);
   assert.match(html, /約40秒の物語として、絵本ページとともにお届けします/);
   assert.match(html, /動画を見る/);
   assert.match(html, /ホームページへ/);
@@ -88,7 +88,7 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /水彩・ガッシュ/);
   assert.match(html, /その子だけの場所を/);
   assert.match(html, /LINE STICKERS INCLUDED FREE/);
-  assert.match(html, /LINEスタンプ8種類も/);
+  assert.match(html, /オープン記念に/);
   assert.match(html, /制作・登録料/);
   assert.match(html, /line-stickers-preview-v2\.png/);
   assert.doesNotMatch(html, /YOU SHARE THE MEMORIES|TWO STORY DIRECTIONS/);
@@ -111,7 +111,11 @@ test("server-renders the Japanese landing page", async () => {
     html,
     /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
   );
-  assert.match(html, /モカの絵本とホームページを見る/);
+  assert.match(html, /完成したホームページを見る/);
+  assert.match(html, /実際の完成ホームページを開く/);
+  assert.match(html, /動く絵本をいつでも再生/);
+  assert.match(html, /完成後も写真を追加/);
+  assert.match(html, /家族にURLで共有/);
   assert.match(html, /class="home-line-contact"/);
   assert.match(html, /href="https:\/\/lin\.ee\/9ejBIax"/);
   assert.match(html, /aria-label="LINEで相談する"/);
