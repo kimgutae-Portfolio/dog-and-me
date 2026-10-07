@@ -55,6 +55,11 @@ test("server-renders the Japanese landing page", async () => {
     "https://schema.org/InStock",
   );
   assert.equal(structuredData.at(-1).mainEntity.length, 13);
+  assert.deepEqual(
+    structuredData.find((entry) => entry["@type"] === "Organization").sameAs,
+    ["https://www.instagram.com/wanmemory.official/"],
+  );
+  assert.match(html, /href="https:\/\/www\.instagram\.com\/wanmemory\.official\/"/);
   assert.doesNotMatch(html, /現在、正式公開に向けて準備中です/);
   assert.match(html, /物語をつくる/);
   assert.match(
@@ -183,6 +188,7 @@ test("serves crawl controls and an absolute public sitemap", async () => {
   }
   for (const path of [
     "aiken-omoide-douga",
+    "pet-loss-aiken-omoide",
     "aiken-shashin-douga",
     "aiken-shashin-seiri",
     "uchinoko-kinenbi-douga",
@@ -198,6 +204,10 @@ test("serves crawl controls and an absolute public sitemap", async () => {
 
 test("renders focused Japanese SEO guide pages", async () => {
   const expected = new Map([
+    [
+      "/pet-loss-aiken-omoide",
+      ["悲しみの中で、愛犬との思い出を残す", "ペットロスと愛犬の思い出の残し方"],
+    ],
     [
       "/aiken-omoide-douga",
       ["愛犬の写真から、一冊のような物語を", "愛犬の写真からつくる動く絵本"],

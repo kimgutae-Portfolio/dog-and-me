@@ -2,6 +2,11 @@ import Link from "next/link";
 
 const guides = [
   [
+    "ペットロスと愛犬の思い出の残し方",
+    "写真・メモリアルグッズ・物語という選択肢",
+    "/pet-loss-aiken-omoide",
+  ],
+  [
     "愛犬の誕生日メッセージ例文8選",
     "その子らしい言葉の書き方と、写真・動画への残し方",
     "/dog-birthday-message",

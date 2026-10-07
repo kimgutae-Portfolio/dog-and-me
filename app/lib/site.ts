@@ -3,6 +3,7 @@ export const SITE_DESCRIPTION =
   "愛犬の5つの思い出と写真から、水彩で描く約40秒の『動く絵本』と、完成後も写真を増やせる専用ホームページを一緒に制作するオーダーメイドサービスです。水彩絵本ページ5枚、文章、BGM、ミニキャラクター、写真アルバムまで一つに仕上げます。";
 export const DEFAULT_SITE_ORIGIN = "https://www.wanmemory.com";
 export const SUPPORT_EMAIL = "info@wanmemory.com";
+export const INSTAGRAM_URL = "https://www.instagram.com/wanmemory.official/";
 export const BUSINESS_NAME = "WAN MEMORY";
 export const BUSINESS_OPERATOR = "金具泰";
 export const START_STORY_HREF = "/start";

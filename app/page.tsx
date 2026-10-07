@@ -25,6 +25,7 @@ import {
   BUSINESS_NAME,
   BUSINESS_OPERATOR,
   SUPPORT_EMAIL,
+  INSTAGRAM_URL,
 } from "./lib/site";
 import { getRequestOrigin } from "./lib/site-server";
 
@@ -152,6 +153,7 @@ export default async function Home() {
       url: origin,
       email: SUPPORT_EMAIL,
       description: SITE_DESCRIPTION,
+      sameAs: [INSTAGRAM_URL],
     },
     {
       "@context": "https://schema.org",
