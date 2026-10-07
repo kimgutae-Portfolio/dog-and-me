@@ -516,8 +516,8 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .auth-pet-confirmation { display: grid; gap: 4px; }
 .auth-pet-confirmation strong { color: var(--ink); font-size: 15px; }
 
-.start-page { min-height: 100svh; padding: 72px 24px; display: grid; place-items: center; position: relative; background: radial-gradient(circle at 70% 16%, rgba(211,178,137,.28), transparent 24%), #303a31; }
-.start-card { box-sizing: border-box; width: min(620px, 100%); padding: 54px; background: #f8f5ed; box-shadow: 0 35px 90px rgba(12,18,14,.28); }
+.start-page { min-height: 100svh; padding: 72px 24px; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; position: relative; overflow-x: hidden; background: radial-gradient(circle at 70% 16%, rgba(211,178,137,.28), transparent 24%), #303a31; }
+.start-card { box-sizing: border-box; width: 100%; max-width: 620px; min-width: 0; padding: 54px; justify-self: center; background: #f8f5ed; box-shadow: 0 35px 90px rgba(12,18,14,.28); }
 .start-card h1 { margin: 12px 0 0; font-family: var(--font-serif); font-size: 36px; font-weight: 400; line-height: 1.55; letter-spacing: .04em; }
 .start-step { margin: 0 0 8px; color: var(--rust); font-size: 12px; font-weight: 700; }
 .start-lead { margin: 18px 0 30px; color: var(--muted); font-size: 14px; line-height: 1.9; }
