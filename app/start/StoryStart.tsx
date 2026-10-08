@@ -74,6 +74,9 @@ export function StoryStart() {
               メールアドレスで登録する
             </Link>
           </div>
+          <Link className="auth-text-button" href="/auth?mode=login&next=/story">
+            すでに登録済みの方はこちらからログイン
+          </Link>
           <ul className="start-assurances" aria-label="無料登録についてのご案内">
             <li>登録・入力途中では料金は発生しません</li>
             <li>内容と納期を確認したあとに注文できます</li>

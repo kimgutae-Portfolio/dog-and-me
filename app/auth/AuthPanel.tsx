@@ -485,7 +485,11 @@ export function AuthPanel() {
           </div>
         )}
         {APPLICATIONS_OPEN && (mode === "login" || mode === "signup") && (
-          <GoogleSignIn nextPath={mode === "signup" ? signupNextPath : nextPath} disabled={pending} />
+          <GoogleSignIn
+            nextPath={mode === "signup" ? signupNextPath : nextPath}
+            disabled={pending}
+            mode={mode}
+          />
         )}
         <form className="auth-form" onSubmit={submit}>
           {mode === "signup" && (

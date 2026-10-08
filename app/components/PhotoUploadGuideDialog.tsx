@@ -25,10 +25,12 @@ export function PhotoUploadGuideDialog({
   open,
   onClose,
   onContinue,
+  reviewOnly = false,
 }: {
   open: boolean;
   onClose: () => void;
   onContinue: () => void;
+  reviewOnly?: boolean;
 }) {
   const [page, setPage] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -174,7 +176,7 @@ export function PhotoUploadGuideDialog({
                 ← 戻る
               </button>
               <button className="button button-primary" type="button" onClick={continueToPhotos}>
-                写真を選ぶ
+                {reviewOnly ? "確認して閉じる" : "写真を選ぶ"}
               </button>
             </>
           )}

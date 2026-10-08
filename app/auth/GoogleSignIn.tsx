@@ -10,10 +10,12 @@ export function GoogleSignIn({
   nextPath,
   disabled,
   showDivider = true,
+  mode = "signup",
 }: {
   nextPath: string;
   disabled: boolean;
   showDivider?: boolean;
+  mode?: "login" | "signup";
 }) {
   const [enabled, setEnabled] = useState(true);
   const [pending, setPending] = useState(false);
@@ -42,7 +44,9 @@ export function GoogleSignIn({
     if (pending || disabled) return;
     setPending(true);
     setError("");
-    trackEvent("google_signup_click", { next_path: nextPath });
+    trackEvent(mode === "login" ? "google_login_click" : "google_signup_click", {
+      next_path: nextPath,
+    });
     try {
       const callback = new URL("/auth", window.location.origin);
       callback.searchParams.set("next", safeAuthNext(nextPath));
@@ -66,9 +70,19 @@ export function GoogleSignIn({
         <path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.78 24c0-1.59.27-3.13.75-4.59l-7.98-6.19A23.8 23.8 0 0 0 0 24c0 3.87.93 7.53 2.56 10.78l7.97-6.19Z"/>
         <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.8l-7.73-6c-2.15 1.45-4.92 2.3-8.17 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"/>
       </svg>
-      <span>{pending ? "Googleに接続しています…" : "Googleで無料ではじめる"}</span>
+      <span>
+        {pending
+          ? "Googleに接続しています…"
+          : mode === "login"
+            ? "Googleでログインする"
+            : "Googleで無料登録する"}
+      </span>
     </button>
-    <p className={styles.note}>約1分で登録できます。登録だけでは料金は発生しません。</p>
+    <p className={styles.note}>
+      {mode === "login"
+        ? "登録時に使用したGoogleアカウントを選んでください。"
+        : "約1分で登録できます。登録だけでは料金は発生しません。"}
+    </p>
     {error && <p role="alert" className="form-error">{error}</p>}
     {showDivider && <div className={styles.divider}>またはメールアドレスで</div>}
   </div>;

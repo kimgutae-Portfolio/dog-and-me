@@ -3066,6 +3066,8 @@ button.memory-photo-add { width: 100%; color: inherit; font: inherit; }
 .wizard-page .people-photo-policy > p { font-size: 14px; line-height: 1.85; }
 .wizard-page .reference-slot > p,
 .wizard-page .memory-photo-linker > p { font-size: 14px; line-height: 1.8; }
+.memory-photo-guide-button { margin: -2px 0 17px; padding: 0 0 3px; border: 0; border-bottom: 1px solid currentColor; color: #7d5b48; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; line-height: 1.5; }
+.memory-photo-guide-button:hover { color: var(--rust); }
 .wizard-page .reference-slot-empty strong { font-size: 18px; }
 .wizard-page .reference-slot-empty small,
 .wizard-page .reference-slot-meta small { font-size: 12px; }

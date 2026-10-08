@@ -238,6 +238,7 @@ export function StoryWizard() {
   const [activeMemoryKey, setActiveMemoryKey] = useState("memory-1");
   const [stepValidationAttempted, setStepValidationAttempted] = useState(false);
   const [pendingPhotoInputId, setPendingPhotoInputId] = useState("");
+  const [photoGuideReviewOpen, setPhotoGuideReviewOpen] = useState(false);
   const [preAuthPetName] = useState(() => {
     if (typeof window === "undefined") return "";
     try {
@@ -1456,6 +1457,13 @@ export function StoryWizard() {
                             <p>
                               先に写真を選ぶと、その日のことを思い出しながら書きやすくなります。最終的にどの写真を制作の基準にするかは、担当者がすべて確認して選びます。
                             </p>
+                            <button
+                              className="memory-photo-guide-button"
+                              type="button"
+                              onClick={() => setPhotoGuideReviewOpen(true)}
+                            >
+                              写真選びの注意を見る <span aria-hidden="true">→</span>
+                            </button>
                             <div className="memory-photo-grid">
                               {memory.photoKeys.map((photoKey, photoIndex) => {
                                 const photo = photoByKey.get(photoKey);
@@ -1993,9 +2001,19 @@ export function StoryWizard() {
         </div>
       )}
       <PhotoUploadGuideDialog
-        open={Boolean(pendingPhotoInputId)}
-        onClose={() => setPendingPhotoInputId("")}
-        onContinue={continueToFirstPhoto}
+        open={Boolean(pendingPhotoInputId) || photoGuideReviewOpen}
+        reviewOnly={photoGuideReviewOpen}
+        onClose={() => {
+          setPendingPhotoInputId("");
+          setPhotoGuideReviewOpen(false);
+        }}
+        onContinue={() => {
+          if (photoGuideReviewOpen) {
+            setPhotoGuideReviewOpen(false);
+            return;
+          }
+          continueToFirstPhoto();
+        }}
       />
     </main>
   );
