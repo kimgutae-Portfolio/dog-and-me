@@ -1443,9 +1443,10 @@ export function AdminStudio() {
   );
   const conceptPublishingStatusValid = Boolean(
     order &&
-      ["materials_submitted", "reviewing_materials", "concepts_ready"].includes(
-        order.status,
-      ),
+      ["materials_submitted", "reviewing_materials"].includes(order.status),
+  );
+  const conceptDeliveryPublished = Boolean(
+    order?.status === "concepts_ready" && concepts.length === 2,
   );
   const canRequestPayment = Boolean(
     order &&
@@ -5097,6 +5098,14 @@ export function AdminStudio() {
                         </aside>
                       )
                     )}
+                    {conceptDeliveryPublished && !order.selected_concept_slot && (
+                      <aside className="admin-operation-note strong">
+                        <strong>公開済み・お客様の選択待ちです。</strong>
+                        <span>
+                          二重通知を防ぐため、公開ボタンを停止しています。修正して再公開する場合は、先に進行状況を「写真とお話を確認しています」へ戻してください。
+                        </span>
+                      </aside>
+                    )}
                     {order.status === "materials_submitted" &&
                       photoAnalysisApproved && (
                         <aside className="admin-operation-note strong">
@@ -5106,7 +5115,7 @@ export function AdminStudio() {
                           </span>
                         </aside>
                       )}
-                    {!conceptPublishingStatusValid && (
+                    {!conceptPublishingStatusValid && !conceptDeliveryPublished && (
                       <aside className="admin-operation-note warning">
                         <strong>現在の工程では公開できません。</strong>
                         <span>
@@ -5244,7 +5253,9 @@ export function AdminStudio() {
                       }
                       onClick={saveConcepts}
                     >
-                      物語案2案を顧客へ公開する →
+                      {conceptDeliveryPublished
+                        ? "公開済み・お客様の選択待ち"
+                        : "物語案2案を顧客へ公開する →"}
                     </button>
                   </section>
 
