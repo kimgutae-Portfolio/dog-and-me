@@ -405,22 +405,22 @@ story_caption 규칙
   "embedded_text_check": "passed"
 }`;
 
-const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.1
+const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.2
 
 첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
 
 이야기 1~5를 각각 하나의 5초 영상 생성 프롬프트로 작성한다. 총 5개의 이미지 투 비디오 프롬프트를 범용 영상 생성 AI가 명확하게 이해하도록 영어로 작성한다. 메인 에피소드나 중요 이야기를 별도로 고르지 않으며, 모든 이야기는 동일한 5초 규격이다.
 
-한 이야기를 여러 take로 분리하지 않는다. 연결 배경 이미지와 연결 영상은 만들지 않는다. 각 5초 영상 안에서 하나의 작고 분명한 행동이 시작되어 자연스럽게 안정되는 흐름으로 설계한다.
+한 이야기를 여러 take로 분리하지 않는다. 연결 배경 이미지와 연결 영상은 만들지 않는다. 각 5초 영상은 승인 이미지에서 자연스럽게 시작해 하나의 읽기 쉬운 행동 비트가 전개되고, 다음 장면으로 넘기기 좋은 안정된 순간에 끝나야 한다.
 
 핵심 연출 목표
 - 강아지가 실제로 살아 움직이는 영상으로 보이게 한다.
 - 이미지 전체가 미끄러지거나 확대되는 PowerPoint식 움직임으로 만들지 않는다.
 - 강아지의 실제 동작이 카메라 움직임이나 환경 움직임보다 분명하게 보여야 한다.
-- 다섯 장면이 모두 같은 정지 자세처럼 보이지 않게 한다.
+- 다섯 장면이 모두 같은 정지 자세, 같은 머리 움직임, 같은 카메라 연출로 보이지 않게 한다.
 - 각 이야기의 고객 사실과 selected_concept 장면 문장을 강아지 행동의 원인으로 사용한다.
 - 얼굴 정체성을 지키는 것과 강아지의 신체 움직임을 없애는 것을 혼동하지 않는다.
-- 얼굴 특징과 카메라를 향한 얼굴 방향은 안정적으로 유지하되, 머리는 몸의 이동과 보행 리듬을 자연스럽게 따라가게 한다.
+- 얼굴 특징은 안정적으로 유지하되, 승인 이미지가 허용하는 범위 안에서 시선·머리·몸의 방향이 행동을 자연스럽게 따라가게 한다.
 - 감정은 사람처럼 표정을 크게 바꾸거나 눈동자를 굴리는 방식이 아니라, 호흡, 귀 반응, 코의 움직임, 체중 이동, 앞발, 몸통, 꼬리의 움직임으로 표현한다.
 
 승인 이미지 분석
@@ -428,38 +428,49 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.1
 
 실제 신체 움직임 설계
 - 프롬프트에서는 정체성 고정보다 primary dog action을 먼저 설명한다.
+- 장면마다 locomotion(걷기·가벼운 달리기), interaction(냄새 맡기·앞발로 확인하기), attention shift(소리를 듣고 고개와 귀가 반응), settling(앉기·눕기·자세 고쳐 앉기), affectionate energy(몸을 기대기·편안히 꼬리를 흔들기) 중 승인 이미지와 이야기에 가장 맞는 하나를 선택한다. 이미지에서 불가능한 행동은 만들지 않는다.
 - walking 또는 달리는 자세에서는 기존 진행 방향을 이어가며 뒷다리가 지면을 밀고 앞발과 뒷발이 차례로 착지하고 어깨·엉덩이·몸통이 연결된 보행 리듬을 만든다.
 - 강아지가 걷거나 달릴 때 울타리, 길, 풀, 가구 등 배경 기준 요소에 대해 실제로 위치를 바꾼다.
 - 앉거나 누운 자세에서는 걷기를 강제로 만들지 않고 가슴 호흡, 앞발 조정, 몸통 체중 이동, 편안한 자세 정돈을 사용한다.
-- primary action 외 secondary motion은 최대 2개만 사용한다. 귀·털·꼬리·옷은 primary action이나 보이는 바람에 자연스럽게 반응시킨다.
+- secondary motion은 개수를 기계적으로 채우지 않는다. 귀·털·꼬리·옷·호흡 중 장면에 보이고 원인과 연결되는 1~3개를 선택해 primary action과 같은 리듬으로 반응시킨다.
+- 5초 내내 같은 속도로 움직이지 않는다. 준비 → 분명한 행동 → 작은 반응 또는 여운의 속도 변화를 만든다.
 - “tiny movement”, “almost still”, “barely moves”처럼 움직임을 지나치게 축소하는 표현을 사용하지 않는다.
 - 고객이 제공하지 않은 사건이나 물체를 추가하지 않는다.
+
+다섯 장면의 움직임 다양성
+- 다섯 primary action은 가능한 한 서로 달라야 하며, blink·고개 들기·꼬리 흔들기를 반복적인 기본 해법으로 사용하지 않는다.
+- 최소 2개 장면은 몸통의 확실한 체중 이동 또는 공간상의 위치 변화가 보여야 한다. 단, 승인 이미지의 자세상 가능한 경우에만 적용한다.
+- 조용한 장면과 활동적인 장면, 가까이 집중하는 장면과 공간을 느끼는 장면의 리듬을 섞어 전체 작품에 호흡을 만든다.
+- 각 story_beat에는 그 움직임이 고객의 이야기와 어떻게 연결되는지 한 문장으로 설명한다.
 
 얼굴 방향 및 정체성 안정 규칙
 - 승인 이미지의 얼굴 형태, 눈 크기와 간격, 눈꺼풀, 귀, 주둥이, 털 배치와 색상, 체형, 꼬리, 보이는 목줄과 옷을 유지한다.
 - 리드줄을 제거한 그림에 산책용 줄·손잡이·연결 고리를 다시 생성하지 않는다. 목에 착용한 목줄(collar)은 그대로 유지한다.
-- 승인 이미지의 camera-facing view를 영상 전체에서 유지한다. 머리는 몸의 이동과 보행 리듬을 따라가되 새로운 얼굴 면을 드러내지 않는다.
-- 영어 prompt에는 다음처럼 짧게 작성한다: “The head moves naturally with the body while keeping the original camera-facing view. The same recognizable facial design remains consistent.”
+- 승인 이미지에서 확인 가능한 얼굴 범위 안에서 자연스러운 작은 머리 회전과 시선 이동을 허용한다. 정면을 억지로 고정하거나, 반대로 이미지에 없는 반대쪽 얼굴·귀·몸의 정보를 크게 드러내지 않는다.
+- 영어 prompt의 정체성 문장은 짧게 쓴다: “Preserve the same recognizable facial design, coat pattern, body proportions, and visible accessories throughout the natural motion.”
 - 눈동자만 좌우로 움직이거나 eye darting, eye rolling, wandering pupils, crossed eyes를 만들지 않는다. 눈 깜빡임은 필요한 이야기에서만 한 번 천천히 허용한다.
 - 눈 확대, 눈꺼풀 변형, 과도한 반짝임, 새 눈물자국, 말하는 입, 갑작스러운 미소, 과장된 헐떡임을 만들지 않는다.
 
 5초 동작 구성
-0.0~0.3초 승인 이미지의 자세를 안정적으로 유지하고, 0.3~4.2초 하나의 primary action을 분명하게 수행한 뒤, 4.2~5.0초 처음 상태로 강제 복귀하지 않고 자연스럽게 감속·안정한다.
-모든 영상은 끊김 없는 single continuous shot이며, 첫 프레임을 오래 정지시키거나 처음 위치로 강제 복귀시키지 않는다.
+승인 이미지의 자세에서 즉시 자연스럽게 출발해 setup → action → response/settle의 세 박자를 5초 안에 구성한다. 초 단위 구간을 모든 장면에 똑같이 강제하지 말고 행동의 속도와 이야기에 맞게 배분한다.
+모든 영상은 끊김 없는 single continuous shot이며, 첫 프레임을 오래 정지시키거나 처음 위치로 강제 복귀시키거나 완벽한 루프를 만들지 않는다.
 
 카메라와 배경 규칙
-- 5개 영상 모두 locked camera를 사용한다. push-in, lateral drift, pan, zoom, 회전, 흔들림을 사용하지 않는다.
-- 카메라는 배경에 고정하고, 강아지가 움직일 때 정적인 배경은 함께 이동하지 않게 한다.
-- environment motion은 승인 이미지에 실제로 보이는 꽃잎, 풀끝, 잔물결, 커튼 빛 등 국소 요소 하나만 사용한다.
+- 먼저 locked camera가 행동을 가장 잘 보여주는지 판단한다. 대부분의 장면은 locked 또는 nearly locked로 유지하되, 이야기에 도움이 되고 이미지의 공간 구조가 충분할 때만 subtle push-in, gentle lateral follow, slow controlled pan 중 하나를 사용할 수 있다.
+- 움직이는 카메라는 전체 5개 중 최대 2개 장면에만 사용하며, 강아지 행동을 대신하거나 정지 이미지를 단순 확대하는 연출이 되어서는 안 된다.
+- 카메라 이동은 느리고 안정적이어야 하며 handheld shake, 빠른 zoom, 큰 회전, parallax 왜곡을 사용하지 않는다.
+- 정적인 배경의 구조는 안정적으로 유지한다. 강아지와 배경 전체가 한 장의 평면처럼 함께 미끄러지지 않게 한다.
+- environment motion은 승인 이미지에 실제로 보이고 장면의 원인이 분명한 요소 0~2개만 사용한다. 꽃잎, 풀끝, 잔물결, 나뭇잎 그림자, 커튼 빛 등이 강아지 행동과 같은 바람·물·빛에 자연스럽게 반응하게 한다.
 
 영어 프롬프트 작성 원칙
-1. 강아지의 primary action과 실제 이동량
-2. 다리·발·어깨·엉덩이·몸통의 연결된 관절 움직임
-3. 귀·털·꼬리·옷의 자연스러운 반응
-4. 짧은 얼굴 방향 및 정체성 안정 문장
-5. 배경 기준 요소에 대한 실제 위치 변화
-6. 고정 카메라와 정적인 배경
-7. “Single continuous shot” 또는 “Continuous natural action”으로 마무리
+1. 첫 문장에 장면의 의도와 primary action을 능동형으로 명확히 쓴다.
+2. 보이는 신체 부위의 연결된 움직임과 실제 이동량을 설명한다. 보이지 않는 관절을 장황하게 추측하지 않는다.
+3. setup → action → response/settle의 리듬과 속도 변화를 설명한다.
+4. 귀·털·꼬리·옷과 환경 반응은 primary action의 원인에 연결되는 것만 적는다.
+5. 필요할 때만 배경 기준 요소에 대한 위치 변화와 선택한 카메라 움직임을 적는다.
+6. 정체성 안전 문장은 짧게 한 문장으로 제한한다.
+7. 긍정적인 연출 지시를 먼저 쓰고, 금지 문구를 반복해서 프롬프트를 과밀하게 만들지 않는다.
+8. 각 prompt는 구체적인 영어 90~150단어로 작성하고 “Single continuous shot, natural coherent motion.”으로 마무리한다.
 
 금지 사항
 - 승인 이미지에 없는 사람, 동물, 사물, 액세서리, 사건 생성
@@ -467,6 +478,8 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.1
 - 첫 프레임을 영상 길이 내내 거의 그대로 유지하는 정지 영상
 - primary action 없이 blink, 귀 움직임 또는 꼬리 흔들기만 수행하는 영상
 - 이미지 전체가 미끄러지는 평면 이동으로 강아지 동작을 대신하는 연출
+- 모든 장면에 동일한 행동, 동일한 속도 변화, 동일한 카메라 움직임을 복사하는 구성
+- 이유 없이 계속 움직이는 털·귀·꼬리·배경 요소와 서로 다른 방향으로 반응하는 물리 현상
 
 전체 5개 프롬프트 검수
 - video_story_prompts 배열이 정확히 5개이고 이야기 1~5가 각각 한 번씩 포함되는가?
@@ -478,6 +491,9 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.1
 - 앉거나 누운 장면에 단순 blink가 아닌 실제 몸통 또는 체중 움직임이 있는가?
 - 얼굴 방향을 유지하면서 머리가 몸의 움직임을 자연스럽게 따라가는가?
 - 고객 사실과 selected_concept가 행동과 환경 반응에 반영되는가?
+- 다섯 장면의 primary action과 motion_profile이 충분히 구분되는가?
+- 카메라 움직임을 사용한 장면이 2개 이하이며 실제 행동을 더 잘 보여주는가?
+- 프롬프트가 제한 문구보다 원하는 움직임과 장면의 인과관계를 더 명확히 설명하는가?
 
 반환 형식
 {
@@ -488,12 +504,14 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.1
       "pose_assessment": "standing | walking | sitting | lying",
       "facial_view": "front | three-quarter | side",
       "story_beat": "",
+      "motion_profile": "locomotion | interaction | attention_shift | settling | affectionate_energy",
       "primary_dog_action": "",
       "articulated_body_motion": "",
       "secondary_motions": [""],
       "environment_motion": "",
       "background_reference_for_position": "",
-      "camera_motion": "locked",
+      "camera_motion": "locked | nearly_locked | subtle_push_in | gentle_lateral_follow | slow_controlled_pan",
+      "motion_arc": "setup -> action -> response/settle",
       "identity_and_face_safety": "",
       "duration_seconds": 5,
       "prompt": ""
@@ -2716,7 +2734,7 @@ export function AdminStudio() {
       ]);
       const root = `${safeArchiveSegment(order.order_number)}-03-video-prompts`;
       const runwayData = {
-        schema_version: "wan-memory-video-prompt-input-4.1",
+        schema_version: "wan-memory-video-prompt-input-4.2",
         exported_at: new Date().toISOString(),
         job: exportData.productionData.job,
         style: exportData.productionData.style,
@@ -2747,7 +2765,7 @@ export function AdminStudio() {
             "1. order.jsonとapproved-pagesの5枚をAIへ添付します。",
             "2. 02_PROMPT_VIDEO.txtをそのまま依頼文として使います。",
             "3. AIがStory用の動画生成プロンプトを合計5本作ります。5物語すべて各5秒です。メインエピソードの選択、接続背景、接続映像はありません。",
-            "4. 各物語を複数takeに分けず、1本の5秒動画の中で一つの行動が自然に始まり、落ち着くように設計します。",
+            "4. 各物語を複数takeに分けず、1本の5秒動画の中で setup → action → response/settle の流れを作ります。5場面で同じ動きやカメラ演出を繰り返しません。",
             "5. 動画生成AIでStory 5本を、すべて5秒で制作します。",
             "6. 完成した5本を管理画面の各物語1本スロットへ登録します。物語間のページめくりは自動編集されます。",
           ].join("\n"),
