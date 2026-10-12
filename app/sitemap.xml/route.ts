@@ -11,6 +11,7 @@ export function GET(request: Request) {
   const origin = new URL(request.url).origin;
   const publicUrls = [
     origin,
+    `${origin}/inu-omoide-zukuri`,
     `${origin}/aiken-omoide-douga`,
     `${origin}/pet-loss-aiken-omoide`,
     `${origin}/aiken-shashin-douga`,

@@ -222,19 +222,19 @@ export default async function Home() {
               <p>{PRELAUNCH_COPY}</p>
             </aside>
           )}
-          <p className="eyebrow">A STORYBOOK FOR YOUR DOG</p>
+          <p className="eyebrow">SEE THE COMPLETE WORK FIRST</p>
           <h1 id="hero-title">
             <span className="storybook-hero-title-intro">
-              <span>うちの子が</span><span>主役になる、</span>
+              <span>写真5枚から、</span>
             </span>
             <span className="storybook-hero-title-product">
-              <span>動く絵本と</span><span>ホームページ。</span>
+              <span>愛犬だけの動く絵本と</span><span>ホームページを。</span>
             </span>
           </h1>
           <p className="storybook-hero-lead">
-            お気に入りの写真と、覚えていることをひとつずつ。
+            5つの思い出を水彩で描き、約40秒の物語に。
             <br className="desktop-only" />
-            動く絵本と、写真を増やしていける専用ホームページに仕上げます。
+            完成後も写真を増やせる、その子専用のホームページと一緒にお届けします。
           </p>
           <div className="storybook-hero-offer" aria-label="モニタープランの価格と内容">
             <ul>
@@ -252,16 +252,21 @@ export default async function Home() {
           </div>
           <div className="storybook-hero-actions">
             <Link className="button button-primary storybook-hero-demo-cta" href="/film/moka-demo">
-              完成したホームページを見る <span aria-hidden="true">↗</span>
+              実際の完成作品を見る <span aria-hidden="true">↗</span>
             </Link>
             {APPLICATIONS_OPEN ? (
               <StartStoryLink className="button button-outline" ctaLocation="home_hero">
-                無料で物語づくりを始める <span aria-hidden="true">→</span>
+                うちの子で試してみる <span aria-hidden="true">→</span>
               </StartStoryLink>
             ) : (
               <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
             )}
           </div>
+          <ul className="storybook-hero-reassurance" aria-label="相談前に確認できること">
+            <li>物語案を見るまでは無料</li>
+            <li>料金・納期を確認してから注文</li>
+            <li>公開期限・月額料金なし</li>
+          </ul>
           <span className="storybook-hero-note">
             STORYBOOK + WEBSITE SAMPLE · モカと、五つの記憶
           </span>

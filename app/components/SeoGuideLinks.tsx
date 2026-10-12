@@ -2,6 +2,11 @@ import Link from "next/link";
 
 const guides = [
   [
+    "犬との思い出作りアイデア10選",
+    "何気ない毎日を、写真と言葉で大切に残す方法",
+    "/inu-omoide-zukuri",
+  ],
+  [
     "ペットロスと愛犬の思い出の残し方",
     "写真・メモリアルグッズ・物語という選択肢",
     "/pet-loss-aiken-omoide",

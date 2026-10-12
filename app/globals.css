@@ -323,6 +323,14 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .seo-lead-panel ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 20px; list-style: none; }
 .seo-lead-panel li { position: relative; padding-left: 20px; }
 .seo-lead-panel li::before { content: "✓"; position: absolute; left: 0; color: var(--rust); font-size: 10px; font-weight: 700; }
+.seo-toc { padding: 24px 26px; border: 1px solid var(--line); background: rgba(255,255,255,.38); }
+.seo-toc > p { margin: 0 0 12px; color: var(--rust); font-size: 9px; font-weight: 700; letter-spacing: .14em; }
+.seo-toc ul { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; list-style: none; counter-reset: seo-toc; }
+.seo-toc li { min-width: 0; border-top: 1px solid var(--line); counter-increment: seo-toc; }
+.seo-toc a { min-height: 54px; padding: 10px 28px 10px 30px; position: relative; display: flex; align-items: center; color: var(--ink); font-family: var(--font-serif); font-size: 13px; line-height: 1.55; transition: color .2s ease, background .2s ease; }
+.seo-toc a::before { content: "0" counter(seo-toc); position: absolute; left: 0; color: var(--rust); font-family: var(--font-sans); font-size: 8px; font-weight: 700; letter-spacing: .06em; }
+.seo-toc a::after { content: "↓"; position: absolute; right: 3px; color: var(--rust); font-family: var(--font-sans); font-size: 11px; }
+.seo-toc a:hover { color: var(--rust); background: rgba(157,92,62,.05); }
 .seo-card-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .seo-card-grid article { padding: 20px; border: 1px solid var(--line); background: rgba(255,255,255,.32); }
 .seo-card-grid strong { display: block; margin-bottom: 9px; font-family: var(--font-serif); font-size: 15px; font-weight: 400; line-height: 1.6; }
@@ -2103,6 +2111,10 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .seo-breadcrumb { margin-top: -10px; font-size: 11px; }
   .seo-lead-panel { padding: 22px 20px; }
   .info-content > .seo-lead-panel p { font-size: 14px; }
+  .seo-toc { padding: 20px 18px; }
+  .seo-toc > p { margin-bottom: 8px; font-size: 10px; }
+  .seo-toc ul { grid-template-columns: 1fr; }
+  .seo-toc a { min-height: 58px; padding-left: 32px; font-size: 15px; }
   .seo-lead-panel ul, .seo-card-grid { grid-template-columns: 1fr; }
   .seo-lead-panel li, .info-content > section .seo-card-grid p, .info-content > section .seo-step-list p, .info-content > section .seo-photo-list p, .info-content > .seo-faq details p { font-size: 12px; }
   .seo-card-grid article { padding: 20px; }
@@ -2154,7 +2166,7 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-hero-copy h1 { max-width: 940px; margin: 0; font-family: var(--font-serif); font-size: clamp(46px,5.1vw,72px); font-weight: 400; line-height: 1.38; letter-spacing: .045em; }
 .storybook-hero-copy h1 > span { display: block; }
 .storybook-hero-title-intro > span { display: inline; }
-.storybook-hero-title-product { display: flex !important; flex-wrap: nowrap; }
+.storybook-hero-title-product { display: block !important; }
 .storybook-hero-title-product > span { white-space: nowrap; }
 .storybook-hero-copy > .storybook-hero-lead { margin: 20px 0 0; color: rgba(64,59,53,.78); font-size: 14px; line-height: 1.9; letter-spacing: .035em; }
 .storybook-hero-offer { width: min(690px,100%); margin-top: 20px; padding: 14px 17px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 7px 22px; border: 1px solid rgba(64,59,53,.17); border-radius: 3px; background: rgba(255,251,244,.8); box-shadow: 0 15px 34px rgba(72,55,44,.08); backdrop-filter: blur(8px); }
@@ -2171,6 +2183,10 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .storybook-hero-actions .button { min-width: 245px; }
 .storybook-hero-actions .button-outline { color: #4b4841; border-color: rgba(64,59,53,.36); background: rgba(255,251,244,.56); }
 .storybook-hero-demo-cta { min-width: 285px !important; }
+.storybook-hero-reassurance { width: min(690px,100%); margin: 15px 0 0; padding: 12px 16px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); list-style: none; border: 1px solid rgba(64,59,53,.14); border-radius: 3px; background: rgba(255,251,244,.66); box-shadow: 0 12px 28px rgba(72,55,44,.06); backdrop-filter: blur(8px); }
+.storybook-hero-reassurance li { min-width: 0; padding: 2px 14px; display: flex; align-items: center; justify-content: center; gap: 9px; color: rgba(64,59,53,.78); font-size: 9px; font-weight: 700; line-height: 1.5; letter-spacing: .025em; text-align: left; }
+.storybook-hero-reassurance li + li { border-left: 1px solid rgba(64,59,53,.13); }
+.storybook-hero-reassurance li::before { content: "✓"; width: 19px; height: 19px; display: grid; place-items: center; flex: 0 0 auto; color: #fffaf2; border-radius: 50%; background: #9d6668; box-shadow: 0 4px 10px rgba(126,77,79,.18); font-size: 9px; }
 .storybook-hero-note { position: absolute; left: 40px; bottom: -255px; color: rgba(64,59,53,.56); font-size: 9px; letter-spacing: .18em; }
 .storybook-heading h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(38px,4.2vw,59px); font-weight: 400; line-height: 1.55; letter-spacing: .05em; }
 .storybook-comparison { background: #f1e9dd; }
@@ -2683,6 +2699,9 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
   .storybook-hero-actions { align-items: stretch; flex-direction: column; gap: 12px; }
   .storybook-hero-actions .button { width: 100%; min-width: 0; }
   .storybook-hero-demo-cta { min-width: 0 !important; min-height: 58px; font-size: 13px; }
+  .storybook-hero-reassurance { margin-top: 13px; padding: 7px 14px; grid-template-columns: 1fr; background: rgba(255,251,244,.9); }
+  .storybook-hero-reassurance li { min-height: 36px; padding: 5px 1px; justify-content: flex-start; font-size: 10px; }
+  .storybook-hero-reassurance li + li { border-top: 1px solid rgba(64,59,53,.12); border-left: 0; }
   .storybook-hero-note { display: none; }
   .storybook-heading { align-items: start; flex-direction: column; gap: 20px; }
   .storybook-complete-experience { padding-top: 62px; }

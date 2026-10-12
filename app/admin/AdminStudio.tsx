@@ -405,7 +405,7 @@ story_caption 규칙
   "embedded_text_check": "passed"
 }`;
 
-const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.2
+const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.3
 
 첨부한 order.json과 approved-pages/의 고객 승인 완료 그림책 이미지 5장을 읽어줘. 이미지는 다시 만들거나 수정하지 않는다.
 
@@ -421,21 +421,36 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.2
 - 각 이야기의 고객 사실과 selected_concept 장면 문장을 강아지 행동의 원인으로 사용한다.
 - 얼굴 정체성을 지키는 것과 강아지의 신체 움직임을 없애는 것을 혼동하지 않는다.
 - 얼굴 특징은 안정적으로 유지하되, 승인 이미지가 허용하는 범위 안에서 시선·머리·몸의 방향이 행동을 자연스럽게 따라가게 한다.
-- 감정은 사람처럼 표정을 크게 바꾸거나 눈동자를 굴리는 방식이 아니라, 호흡, 귀 반응, 코의 움직임, 체중 이동, 앞발, 몸통, 꼬리의 움직임으로 표현한다.
+- 감정은 사람처럼 표정을 크게 바꾸거나 눈동자를 굴리는 방식이 아니라, 자세 정돈, 체중 이동, 앞발, 몸통, 코, 꼬리 등 승인 이미지에서 안전하게 움직일 수 있는 부위로 표현한다. 호흡과 귀 움직임을 생동감의 기본 해법으로 자동 사용하지 않는다.
 
 승인 이미지 분석
 각 이야기마다 먼저 자세(standing, walking, sitting, lying), 기존 진행 방향, 얼굴 각도(front, three-quarter, side), 실제로 보이는 다리·발·꼬리·목줄·옷의 범위, 움직일 수 있는 신체 부위, 배경 기준 요소를 분석한다.
+두 마리 이상이 보이면 각 강아지를 화면 위치(left dog, right dog 등)로 구분하고, 얼굴 각도·자세·움직일 수 있는 부위를 각각 따로 분석한다. 어느 강아지가 주동작을 하고 어느 강아지가 반응하는지 명시하되, 반응하는 강아지를 호흡만 하는 정지 피사체로 남기지 않는다.
 
 실제 신체 움직임 설계
 - 프롬프트에서는 정체성 고정보다 primary dog action을 먼저 설명한다.
 - 장면마다 locomotion(걷기·가벼운 달리기), interaction(냄새 맡기·앞발로 확인하기), attention shift(소리를 듣고 고개와 귀가 반응), settling(앉기·눕기·자세 고쳐 앉기), affectionate energy(몸을 기대기·편안히 꼬리를 흔들기) 중 승인 이미지와 이야기에 가장 맞는 하나를 선택한다. 이미지에서 불가능한 행동은 만들지 않는다.
 - walking 또는 달리는 자세에서는 기존 진행 방향을 이어가며 뒷다리가 지면을 밀고 앞발과 뒷발이 차례로 착지하고 어깨·엉덩이·몸통이 연결된 보행 리듬을 만든다.
 - 강아지가 걷거나 달릴 때 울타리, 길, 풀, 가구 등 배경 기준 요소에 대해 실제로 위치를 바꾼다.
-- 앉거나 누운 자세에서는 걷기를 강제로 만들지 않고 가슴 호흡, 앞발 조정, 몸통 체중 이동, 편안한 자세 정돈을 사용한다.
-- secondary motion은 개수를 기계적으로 채우지 않는다. 귀·털·꼬리·옷·호흡 중 장면에 보이고 원인과 연결되는 1~3개를 선택해 primary action과 같은 리듬으로 반응시킨다.
+- 앉거나 누운 자세에서는 걷기를 강제로 만들지 않고 앞발 조정, 어깨·몸통의 체중 이동, 편안한 자세 정돈을 우선한다. 호흡은 primary action으로 사용하지 않는다.
+- secondary motion은 개수를 기계적으로 채우지 않는다. 털·꼬리·옷·앞발 중 장면에 보이고 원인과 연결되는 0~3개를 선택해 primary action과 같은 리듬으로 반응시킨다. 귀와 호흡은 아래 전용 안전 규칙을 통과할 때만 사용한다.
 - 5초 내내 같은 속도로 움직이지 않는다. 준비 → 분명한 행동 → 작은 반응 또는 여운의 속도 변화를 만든다.
 - “tiny movement”, “almost still”, “barely moves”처럼 움직임을 지나치게 축소하는 표현을 사용하지 않는다.
 - 고객이 제공하지 않은 사건이나 물체를 추가하지 않는다.
+
+다견 장면 규칙
+- 두 마리 이상이 보이면 subject_motion_plan에 각 강아지의 화면 위치, 시작 얼굴 각도, primary 또는 response action을 각각 작성한다.
+- 주동작 강아지는 하나여도 되지만, 다른 강아지도 승인 자세에서 가능한 앞발 조정, 상체 체중 이동, 자세 정돈, 제한된 머리 회전 중 하나의 읽을 수 있는 반응을 갖게 한다. 단순 호흡만 배정하지 않는다.
+- 두 강아지가 똑같은 순간에 똑같은 속도와 방향으로 움직이는 거울 동작을 피한다. setup과 response의 시작 시점을 약간 달리해 자연스러운 교류로 만든다.
+- 한 강아지의 얼굴 방향을 바꾸는 경우 시선 → 코와 머리 → 목 → 상부 가슴 순서로 연결하고, 엉덩이와 앉은 위치는 고정한다. 얼굴만 회전하거나 몸은 옆을 향한 채 얼굴만 정면이 되는 비틀림을 금지한다.
+- 정면 전환은 승인 이미지에서 확인 가능한 범위까지만 near-frontal로 제한하고, 보이지 않던 반대쪽 얼굴·귀를 새로 크게 만들어 내지 않는다.
+
+귀·호흡·잔잔한 장면 안전 규칙
+- 긴 귀, 무거운 늘어진 귀, 장식으로 묶은 귀는 중력 방향으로 원래 실루엣을 유지한다. 명확한 달리기나 실제 바람의 원인이 없으면 귀 반응을 쓰지 않는다.
+- 귀 움직임이 필요하더라도 몸이나 머리 움직임에 따른 짧고 작은 관성 반응만 허용한다. 귀가 옆으로 펼쳐지거나 들리거나 펄럭이거나 반복적으로 흔들리지 않게 구체적으로 적는다.
+- 리본·핀·꽃 장식은 귀 움직임과 별개로 머리에 단단히 고정하며 위치·개수·형태를 유지한다.
+- 호흡은 기본적으로 normal resting respiration으로만 취급한다. deep inhale, pronounced chest expansion, exaggerated rise and fall, body pulsing을 지시하지 않는다.
+- 선대견·회상·추억처럼 잔잔한 장면은 큰 동작을 억지로 만들지 않는다. 앞발에 체중을 편안히 싣기, 어깨를 정돈하기, 한 번의 자연스러운 눈 깜빡임처럼 작지만 원인이 분명한 동작으로 여운을 만든다.
 
 다섯 장면의 움직임 다양성
 - 다섯 primary action은 가능한 한 서로 달라야 하며, blink·고개 들기·꼬리 흔들기를 반복적인 기본 해법으로 사용하지 않는다.
@@ -447,6 +462,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.2
 - 승인 이미지의 얼굴 형태, 눈 크기와 간격, 눈꺼풀, 귀, 주둥이, 털 배치와 색상, 체형, 꼬리, 보이는 목줄과 옷을 유지한다.
 - 리드줄을 제거한 그림에 산책용 줄·손잡이·연결 고리를 다시 생성하지 않는다. 목에 착용한 목줄(collar)은 그대로 유지한다.
 - 승인 이미지에서 확인 가능한 얼굴 범위 안에서 자연스러운 작은 머리 회전과 시선 이동을 허용한다. 정면을 억지로 고정하거나, 반대로 이미지에 없는 반대쪽 얼굴·귀·몸의 정보를 크게 드러내지 않는다.
+- 얼굴 방향을 바꿀 때 눈동자만 먼저 멀리 이동시키지 않는다. 짧은 시선 이동 뒤 코·머리·목·상부 가슴이 순차적으로 따라오게 하며, near-frontal에 도달하면 자연스럽게 안정시킨다.
 - 영어 prompt의 정체성 문장은 짧게 쓴다: “Preserve the same recognizable facial design, coat pattern, body proportions, and visible accessories throughout the natural motion.”
 - 눈동자만 좌우로 움직이거나 eye darting, eye rolling, wandering pupils, crossed eyes를 만들지 않는다. 눈 깜빡임은 필요한 이야기에서만 한 번 천천히 허용한다.
 - 눈 확대, 눈꺼풀 변형, 과도한 반짝임, 새 눈물자국, 말하는 입, 갑작스러운 미소, 과장된 헐떡임을 만들지 않는다.
@@ -471,6 +487,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.2
 6. 정체성 안전 문장은 짧게 한 문장으로 제한한다.
 7. 긍정적인 연출 지시를 먼저 쓰고, 금지 문구를 반복해서 프롬프트를 과밀하게 만들지 않는다.
 8. 각 prompt는 구체적인 영어 90~150단어로 작성하고 “Single continuous shot, natural coherent motion.”으로 마무리한다.
+9. 생성 비용을 줄이기 위해 프롬프트 작성 전에 장면별 예상 실패 요인을 하나씩 점검한다. 긴 귀의 펄럭임, 깊은 호흡, 얼굴만 회전하는 비틀림, 다견 장면에서 한 마리의 정지, 액세서리 흔들림이 예상되면 해당 장면에만 짧고 직접적인 예방 문장을 넣는다.
 
 금지 사항
 - 승인 이미지에 없는 사람, 동물, 사물, 액세서리, 사건 생성
@@ -480,6 +497,10 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.2
 - 이미지 전체가 미끄러지는 평면 이동으로 강아지 동작을 대신하는 연출
 - 모든 장면에 동일한 행동, 동일한 속도 변화, 동일한 카메라 움직임을 복사하는 구성
 - 이유 없이 계속 움직이는 털·귀·꼬리·배경 요소와 서로 다른 방향으로 반응하는 물리 현상
+- 긴 귀가 바람 없이 들리거나 옆으로 펼쳐지거나 펄럭이는 움직임
+- normal resting respiration을 넘어서는 깊은 들숨, 과장된 가슴 팽창, 반복적인 몸통 펄스
+- 두 마리 이상인 장면에서 한 마리만 움직이고 다른 강아지는 호흡만 하며 정지하는 구성
+- 몸통과 목이 따라오지 않은 채 얼굴만 정면으로 돌아가는 비틀린 회전
 
 전체 5개 프롬프트 검수
 - video_story_prompts 배열이 정확히 5개이고 이야기 1~5가 각각 한 번씩 포함되는가?
@@ -494,6 +515,10 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.2
 - 다섯 장면의 primary action과 motion_profile이 충분히 구분되는가?
 - 카메라 움직임을 사용한 장면이 2개 이하이며 실제 행동을 더 잘 보여주는가?
 - 프롬프트가 제한 문구보다 원하는 움직임과 장면의 인과관계를 더 명확히 설명하는가?
+- 두 마리 이상이면 subject_motion_plan에 모든 강아지의 서로 다른 동작 또는 반응이 포함되는가?
+- 긴 귀와 머리 장식이 있는 장면에서 불필요한 바람 반응을 제거하고 중력 방향과 고정 상태를 명시했는가?
+- 조용한 장면의 호흡이 깊은 들숨이나 큰 가슴 팽창으로 오해될 표현을 포함하지 않는가?
+- 얼굴 방향 전환 시 시선·머리·목·상부 가슴이 연결되고 앉은 위치가 안정적으로 유지되는가?
 
 반환 형식
 {
@@ -505,6 +530,7 @@ const RUNWAY_PROMPT_REQUEST = `WAN MEMORY VIDEO MOTION PROMPT PRODUCTION v4.2
       "facial_view": "front | three-quarter | side",
       "story_beat": "",
       "motion_profile": "locomotion | interaction | attention_shift | settling | affectionate_energy",
+      "subject_motion_plan": [{"subject":"dog | left dog | right dog","start_view":"front | three-quarter | side","role":"primary | response","action":""}],
       "primary_dog_action": "",
       "articulated_body_motion": "",
       "secondary_motions": [""],
