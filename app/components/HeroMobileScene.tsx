@@ -18,6 +18,9 @@ export function HeroMobileScene() {
   const [introDone, setIntroDone] = useState(false);
   const [inView, setInView] = useState(true);
   const [playing, setPlaying] = useState(false);
+  const [fullVideo, setFullVideo] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [mobile, setMobile] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [artVisible, setArtVisible] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -46,25 +49,40 @@ export function HeroMobileScene() {
 
   useEffect(() => {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobileQuery = window.matchMedia("(max-width: 640px)");
+    const updateMobile = () => setMobile(mobileQuery.matches);
     const update = () => { setReduced(motion.matches); if (motion.matches) setIntroDone(true); };
-    const frame = requestAnimationFrame(update); motion.addEventListener("change", update);
+    const frame = requestAnimationFrame(() => { update(); updateMobile(); }); motion.addEventListener("change", update);
+    mobileQuery.addEventListener("change", updateMobile);
     const observer = new IntersectionObserver(([entry]) => {
       setInView(entry.isIntersecting);
       document.documentElement.toggleAttribute("data-hero-service-in-view", entry.isIntersecting);
     }, { threshold: .5 });
     if (root.current) observer.observe(root.current);
-    return () => { cancelAnimationFrame(frame); motion.removeEventListener("change", update); observer.disconnect(); document.documentElement.removeAttribute("data-hero-service-in-view"); };
+    return () => { cancelAnimationFrame(frame); motion.removeEventListener("change", update); mobileQuery.removeEventListener("change", updateMobile); observer.disconnect(); document.documentElement.removeAttribute("data-hero-service-in-view"); };
   }, []);
   useEffect(() => {
-    if (!introDone || paused || keyboardFocused || reduced || playing || !inView || !pageVisible || !window.matchMedia("(max-width: 640px)").matches) return;
+    if (!introDone || paused || keyboardFocused || reduced || (playing && fullVideo) || !inView || !pageVisible || !mobile) return;
     const timer = setTimeout(() => {
       if (document.hidden) return;
       setCurrent(prev => (prev + 1) % scenes.length);
     }, 4000);
     return () => clearTimeout(timer);
-  }, [introDone, paused, keyboardFocused, reduced, playing, inView, pageVisible, current]);
+  }, [introDone, paused, keyboardFocused, reduced, playing, fullVideo, inView, pageVisible, mobile, current]);
   useEffect(() => {
-    if (current !== 1 || !inView) video.current?.pause();
+    const element = video.current;
+    if (!element) return;
+    if (current !== 1 || !inView || !pageVisible || !mobile) {
+      element.pause();
+      return;
+    }
+    if (fullVideo || reduced) return;
+    element.muted = true;
+    element.play().catch(() => {
+      // Leave the manual play button available when autoplay is blocked.
+    });
+  }, [current, inView, pageVisible, mobile, fullVideo, reduced]);
+  useEffect(() => {
     if (current !== 0 || reduced || !introDone || paused) return;
     const reset = setTimeout(() => setArtVisible(false), 0);
     const timer = setTimeout(() => setArtVisible(true), 1200);
@@ -72,7 +90,7 @@ export function HeroMobileScene() {
   }, [current, inView, reduced, introDone, paused]);
 
   const select = (index: number) => {
-    setCurrent(index); pauseTemporarily(); setIntroDone(true); setPlaying(false);
+    setCurrent(index); pauseTemporarily(); setIntroDone(true); setPlaying(false); setFullVideo(false); setMuted(true);
     trackEvent("hero_service_select", { service: index + 1, page_path: "/" });
   };
   return <div ref={root} className="hero-service-showcase" role="region" aria-label="写真から始まる、3つの楽しみ" aria-roledescription="カルーセル" onFocus={event => { if (event.target.matches(":focus-visible")) setKeyboardFocused(true); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setKeyboardFocused(false); }}>
@@ -85,8 +103,8 @@ export function HeroMobileScene() {
             <button className="hero-example-toggle" type="button" onClick={() => { setArtVisible(value => !value); pauseTemporarily(); setIntroDone(true); }}>{artVisible ? "元の写真を見る" : "絵本ページを見る"} <span aria-hidden="true">⇄</span></button>
           </>}
           {index === 1 && <>
-            <video ref={video} controls={playing} playsInline preload="none" poster="/film/moka/05-storybook-lantern.webp" aria-label="モカの完成した動く絵本" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)}><source src="/film/moka/complete-film.mp4" type="video/mp4" /></video>
-            {!playing && <button className="hero-film-play" type="button" onClick={() => { setIntroDone(true); setPlaying(true); video.current?.play().catch(() => setPlaying(false)); trackEvent("hero_film_play", { page_path: "/" }); }}><span aria-hidden="true">▶</span>完成動画を再生</button>}
+            <video ref={video} controls={fullVideo} muted={muted} loop={!fullVideo} playsInline preload="none" poster="/film/moka/05-storybook-lantern.webp" aria-label="モカの完成した動く絵本" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setFullVideo(false); setMuted(true); setCurrent(2); }}><source src="/film/moka/complete-film.mp4" type="video/mp4" /></video>
+            {(!fullVideo || !playing) && <button className="hero-film-play" type="button" onClick={() => { setIntroDone(true); setFullVideo(true); setMuted(false); const element = video.current; if (element) { element.muted = false; element.currentTime = 0; element.play().catch(() => setPlaying(false)); } trackEvent("hero_film_play", { page_path: "/" }); }}><span aria-hidden="true">▶</span>{playing ? "音声つきで全編を見る" : "完成動画を再生"}</button>}
           </>}
           {index === 2 && <Link className="hero-phone-link" href="/film/moka-demo" tabIndex={current === 2 ? 0 : -1} onClick={() => trackEvent("hero_website_click", { page_path: "/" })}>
             <div className="hero-service-phone"><div className="hero-phone-notch" /><Image src="/film/moka/05-storybook-lantern.webp" alt="モカの完成作品を表示した専用ホームページのイメージ" width={1672} height={941} /><strong>モカと、五つの記憶</strong><div className="hero-phone-album"><Image src="/film/moka/06-rainy-entryway.webp" alt="" width={1448} height={1086} /><Image src="/film/moka/09-autumn-ginkgo.webp" alt="" width={1447} height={1087} /><span>＋</span></div></div>

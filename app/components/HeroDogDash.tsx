@@ -33,7 +33,7 @@ export function HeroDogDash({ paused = false, onComplete }: { paused?: boolean; 
     window.addEventListener("scroll", onScroll, { passive: true });
     const onMotionChange = () => { if (motion.matches) hide(); };
     motion.addEventListener("change", onMotionChange);
-    const timer = setTimeout(() => { setSettled(true); onComplete?.(); }, 14900);
+    const timer = setTimeout(() => { setSettled(true); onComplete?.(); }, 13300);
     if (window.scrollY > 20) hide();
     return () => { clearTimeout(timer); if (fadeTimer) clearTimeout(fadeTimer); window.removeEventListener("scroll", onScroll); motion.removeEventListener("change", onMotionChange); };
   }, [paused, onComplete]);

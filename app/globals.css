@@ -3304,25 +3304,25 @@ button.memory-photo-add { width: 100%; color: inherit; font: inherit; }
 .memory-address-edit-button:focus-visible { outline: 3px solid #62465e; outline-offset: 3px; }
 .memory-address-change > div:not([hidden]) { margin-top: 16px; }
 
-.hero-dog-dash { --dog-group-width: min(430px,calc(100vw - 24px)); position: fixed; z-index: 45; left: 0; bottom: max(4px,env(safe-area-inset-bottom)); width: 100%; height: 118px; overflow: hidden; pointer-events: none; transition: opacity .4s ease, transform .4s ease; }
+.hero-dog-dash { --dog-group-width: min(430px,calc(100vw - 24px)); --dog-trip-duration: 10.6s; position: fixed; z-index: 45; left: 0; bottom: max(4px,env(safe-area-inset-bottom)); width: 100%; height: 118px; overflow: hidden; pointer-events: none; transition: opacity .4s ease, transform .4s ease; }
 .hero-dog-dash.is-fading { opacity: 0; transform: translateY(12px); }
-.hero-dog-dash-runner { --dog-rest-left: calc((100vw - var(--dog-group-width)) / 2 + var(--dog-group-width) * var(--dog-seat-offset)); position: absolute; bottom: 4px; left: -130px; width: calc(var(--dog-group-width) * var(--dog-seat-width)); height: calc(var(--dog-group-width) * var(--dog-seat-width)); animation: hero-dog-roundtrip 12.2s linear var(--dog-delay) both; }
+.hero-dog-dash-runner { --dog-rest-left: calc((100vw - var(--dog-group-width)) / 2 + var(--dog-group-width) * var(--dog-seat-offset)); position: absolute; bottom: 4px; left: -130px; width: calc(var(--dog-group-width) * var(--dog-seat-width)); height: calc(var(--dog-group-width) * var(--dog-seat-width)); animation: hero-dog-roundtrip var(--dog-trip-duration) linear var(--dog-delay) both; }
 .hero-dog-dash-runner.dog-first { animation-name: hero-dog-first-roundtrip; }
 .hero-dog-dash.is-settled .hero-dog-dash-runner.dog-first { transform: translateX(calc(var(--dog-rest-left) - 10px)); }
-@keyframes hero-dog-first-roundtrip { 0% { transform: translateX(0); } 30%,60% { transform: translateX(calc(100vw + 120px)); } 100% { transform: translateX(calc(var(--dog-rest-left) - 10px)); } }
-.hero-dog-moving { width: 100%; height: 100%; display: block; transform-origin: 50% 85%; animation: hero-dog-turn 12.2s steps(1,end) var(--dog-delay) both; }
+@keyframes hero-dog-first-roundtrip { 0% { transform: translateX(0); } 34.53%,53.96% { transform: translateX(calc(100vw + 120px)); } 100% { transform: translateX(calc(var(--dog-rest-left) - 10px)); } }
+.hero-dog-moving { width: 100%; height: 100%; display: block; transform-origin: 50% 85%; animation: hero-dog-turn var(--dog-trip-duration) steps(1,end) var(--dog-delay) both; }
 .hero-dog-dash-sprite { position: relative; width: 100%; height: 100%; display: block; background-size: 400% var(--dog-sheet-height); background-position: 0 var(--dog-row); background-repeat: no-repeat; animation: hero-dog-dash-gait .52s steps(1,end) infinite; }
-.dog-stumble .hero-dog-moving { animation: hero-dog-turn 12.2s steps(1,end) var(--dog-delay) both, hero-dog-stumble .8s ease-in-out 3s; }
+.dog-stumble .hero-dog-moving { animation: hero-dog-turn var(--dog-trip-duration) steps(1,end) var(--dog-delay) both, hero-dog-stumble .8s ease-in-out 3s; }
 .hero-dog-seated { position: absolute; inset: 0; opacity: 0; display: block; background-image: none; background-size: var(--dog-seated-size); background-position: var(--dog-seated-position); background-repeat: no-repeat; }
 .hero-dog-dash.is-settled .hero-dog-moving { opacity: 0; animation: none; }
 .hero-dog-dash.is-settled .hero-dog-seated { opacity: 1; transition: opacity .25s ease; }
 .hero-dog-dash.is-settled .hero-dog-dash-runner { animation: none; transform: translateX(calc(var(--dog-rest-left) + 130px)); }
 .hero-dog-dash.is-settled .hero-dog-dust { display: none; }
-.hero-dog-dust { animation: hero-dust-direction 12.2s steps(1,end) var(--dog-delay) both; }
-@keyframes hero-dog-roundtrip { 0% { transform: translateX(var(--dog-start-x,0px)); } 30%,60% { transform: translateX(calc(100vw + 260px)); } 100% { transform: translateX(calc(var(--dog-rest-left) + 130px)); } }
-@keyframes hero-dog-turn { 0% { transform: scaleX(1); } 60%,100% { transform: scaleX(-1); } }
+.hero-dog-dust { animation: hero-dust-direction var(--dog-trip-duration) steps(1,end) var(--dog-delay) both; }
+@keyframes hero-dog-roundtrip { 0% { transform: translateX(var(--dog-start-x,0px)); } 34.53%,53.96% { transform: translateX(calc(100vw + 260px)); } 100% { transform: translateX(calc(var(--dog-rest-left) + 130px)); } }
+@keyframes hero-dog-turn { 0% { transform: scaleX(1); } 53.96%,100% { transform: scaleX(-1); } }
 @keyframes hero-dog-stumble { 0%,100% { transform: rotate(0); } 30% { transform: translateY(7px) rotate(20deg); } 55% { transform: translateY(7px) rotate(65deg); } 80% { transform: translateY(-4px) rotate(-8deg); } }
-@keyframes hero-dust-direction { 0% { transform: none; opacity: 1; } 60% { transform: translateX(calc(var(--dog-size) - 18px)) scaleX(-1); opacity: 1; } 100% { transform: translateX(calc(var(--dog-size) - 18px)) scaleX(-1); opacity: 0; } }
+@keyframes hero-dust-direction { 0% { transform: none; opacity: 1; } 53.96% { transform: translateX(calc(var(--dog-size) - 18px)) scaleX(-1); opacity: 1; } 100% { transform: translateX(calc(var(--dog-size) - 18px)) scaleX(-1); opacity: 0; } }
 .hero-dog-dash .dog-last { animation: hero-dog-dash-pause 5.2s linear var(--dog-delay) both; }
 .hero-dog-dash .dog-last .hero-dog-dash-sprite { animation: hero-dog-dash-gait .52s steps(1,end) infinite, hero-dog-bounce .52s ease-in-out infinite, hero-dog-dash-look 1.4s steps(1,end) 4.9s; }
 .hero-dog-dust { position: absolute; left: 7px; bottom: 10px; width: 20px; height: 15px; }
