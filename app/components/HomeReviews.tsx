@@ -6,6 +6,7 @@ import styles from "./HomeReviews.module.css";
 const reviews = [
   {
     id: "anzu",
+    poster: "poster-29s.jpg",
     name: "あんず",
     website: "https://www.wanmemory.com/memory/anzu",
     hasArtwork: true,
@@ -14,6 +15,7 @@ const reviews = [
 
   {
     id: "mua",
+    poster: "poster.jpg",
     hasArtwork: true,
     name: "ムア",
     website: "https://www.wanmemory.com/memory/mua",
@@ -21,6 +23,7 @@ const reviews = [
   },
   {
     id: "daifuku",
+    poster: "poster-30s.jpg",
     name: "だいふく",
     hasArtwork: true,
     website: "https://www.wanmemory.com/memory/daihuku15",
@@ -35,7 +38,7 @@ function ReviewCard({ review }: { review: (typeof reviews)[number] }) {
       {review.hasArtwork && <div className={styles["home-review-work-image"]}>
         <video
           controls playsInline preload="none"
-          poster={`/reviews/${review.id}/poster.jpg`}
+          poster={`/reviews/${review.id}/${review.poster}`}
           aria-label={`${review.name}の動く絵本を再生`}
           onPlay={(event) => {
             const current = event.currentTarget;

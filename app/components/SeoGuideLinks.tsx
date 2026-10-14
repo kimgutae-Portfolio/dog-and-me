@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const guides = [
+export const guides = [
   [
     "犬との思い出作りアイデア10選",
     "何気ない毎日を、写真と言葉で大切に残す方法",
@@ -46,7 +46,12 @@ const guides = [
 export function SeoGuideLinks({ currentPath }: { currentPath?: string }) {
   return (
     <nav className="seo-guide-links" aria-label="愛犬の動く絵本ガイド">
-      <p>WAN MEMORY GUIDE</p>
+      <p><Link href="/guides">愛犬の思い出ガイド一覧 →</Link></p>
+      {currentPath && <aside className="guide-author">
+        <strong>この記事の制作：WAN MEMORY</strong>
+        <p>愛犬の写真とエピソードから、動く絵本と専用ホームページを制作しています。写真選びや思い出の整理に役立つガイドをお届けします。</p>
+        <Link href="/contact">制作担当・お問い合わせについて →</Link>
+      </aside>}
       <div>
         {guides
           .filter(([, , path]) => path !== currentPath)

@@ -7,7 +7,6 @@ const revealSelectors = [
   ".storybook-memory-track > li",
   ".storybook-complete-includes > li",
   ".storybook-complete-site-preview",
-  ".storybook-complete-site-copy > *",
   ".storybook-line-sticker-heading > *",
   ".storybook-line-sticker-preview",
   ".storybook-line-sticker-copy > *",

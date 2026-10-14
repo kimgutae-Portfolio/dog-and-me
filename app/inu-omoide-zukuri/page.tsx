@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { InfoPage } from "../components/InfoPage";
 import { SeoGuideLinks } from "../components/SeoGuideLinks";
 import { StartStoryLink } from "../components/StartStoryLink";
@@ -173,6 +174,17 @@ export default function InuOmoideZukuriPage() {
       </section>
 
       <section id="keep">
+        <h2>いつもの散歩の写真を、絵本の一ページに</h2>
+        <p>WAN MEMORYの公開サンプル「モカと、五つの記憶」では、秋の散歩を写真と絵で表現しています。以下はサービス紹介用のサンプルで、お客様の実体験やレビューではありません。</p>
+        <div className="guide-example-images">
+          <figure><Image src="/film/moka/09-autumn-ginkgo.webp" alt="モカの公開サンプルに使われた、銀杏の散歩道の写真" width={1447} height={1087} sizes="(max-width: 640px) 90vw, 400px" /><figcaption>元の写真：秋の散歩道</figcaption></figure>
+          <figure><Image src="/film/moka/04-storybook-autumn.webp" alt="銀杏色の散歩道を水彩で描いた、モカの絵本ページ" width={1672} height={941} sizes="(max-width: 640px) 90vw, 400px" /><figcaption>絵本ページ：銀杏色の散歩道</figcaption></figure>
+        </div>
+        <p>写真に写っている場所や季節に加えて「この道で、どんなふうに歩いていたか」を言葉にすると、残したい場面が具体的になります。写真だけでは伝わらないことは、ご家族が実際に覚えている範囲で添えてください。</p>
+        <Link href="/film/moka-demo">モカの完成作品を見る →</Link>
+      </section>
+
+      <section>
         <h2>写真を「見返せる思い出」にする3つのコツ</h2>
         <div className="seo-card-grid">
           <article>

@@ -1707,12 +1707,10 @@ export function StoryWizard() {
                       <dt>料金</dt>
                       <dd className="review-monitor-price">
                         <strong>
-                          初期{MEMORY_FILM_PRICING.launchLimit}組限定 モニター価格 ¥
-                          {formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）
+                          ¥{formatYen(MEMORY_FILM_PRICING.price)}（税込）
                         </strong>
                         <small>
-                          必要な思い出と写真の送信が完了した時点で確定・モニター受付終了後は
-                          ¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）
+                          内容・納期・キャンセル条件をご確認後、お支払いへ進みます
                         </small>
                       </dd>
                     </div>
@@ -1725,8 +1723,8 @@ export function StoryWizard() {
                       <dd>プランに含まれます</dd>
                     </div>
                     <div>
-                      <dt>オープン記念特典</dt>
-                      <dd>うちの子LINEスタンプ8種類（通常¥1,480相当）</dd>
+                      <dt>プランに含まれるもの</dt>
+                      <dd>うちの子LINEスタンプ8種類</dd>
                     </div>
                   </dl>
                 </section>

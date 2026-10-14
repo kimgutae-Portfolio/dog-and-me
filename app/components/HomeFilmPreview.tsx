@@ -44,15 +44,15 @@ export function HomeFilmPreview() {
             <i>▶</i>
           </span>
           <span className="storybook-complete-film-trigger-copy">
-            <small>COMPLETE FILM · 00:39</small>
-            <strong>動画を見る</strong>
+            <small>完成した動く絵本 · 39秒</small>
+            <strong>完成動画を見る</strong>
           </span>
           <span className="storybook-complete-film-trigger-arrow" aria-hidden="true">↗</span>
         </button>
         <Link className="storybook-complete-site-trigger" href="/film/moka-demo">
           <span className="storybook-complete-site-trigger-copy">
-            <small>MOKA&apos;S WEBSITE</small>
-            <strong>ホームページへ</strong>
+            <small>写真アルバム・絵本ページも</small>
+            <strong>完成ホームページを見る</strong>
           </span>
           <span className="storybook-complete-site-trigger-arrow" aria-hidden="true">↗</span>
         </Link>

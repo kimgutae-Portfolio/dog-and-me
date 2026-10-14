@@ -24,7 +24,7 @@ export function createGuideStructuredData({
       description,
       inLanguage: "ja-JP",
       isPartOf: { "@id": `${DEFAULT_SITE_ORIGIN}/#website` },
-      about: { "@id": `${DEFAULT_SITE_ORIGIN}/#memory-film-service` },
+      about: { "@id": `${DEFAULT_SITE_ORIGIN}/#moving-storybook-service` },
     },
     {
       "@context": "https://schema.org",

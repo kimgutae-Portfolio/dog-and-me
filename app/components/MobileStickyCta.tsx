@@ -40,9 +40,7 @@ export function MobileStickyCta() {
         <strong>
           {APPLICATIONS_OPEN ? (
             <>
-              <del>¥{formatYen(MEMORY_FILM_PRICING.regularPrice)}</del>
-              <small>モニター</small>
-              ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}
+              ¥{formatYen(MEMORY_FILM_PRICING.price)}
               <span>（税込）</span>
             </>
           ) : (

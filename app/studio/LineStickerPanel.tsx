@@ -76,7 +76,7 @@ export function LineStickerPanel({
           </p>
         </div>
         <div className="line-sticker-benefit">
-          <span>オープン記念特典</span>
+          <span>プランに含まれています</span>
           <del>通常 ¥1,480相当</del>
           <strong>追加料金なし</strong>
         </div>

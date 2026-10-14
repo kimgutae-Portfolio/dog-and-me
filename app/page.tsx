@@ -9,6 +9,8 @@ import { StartStoryLink } from "./components/StartStoryLink";
 import { HomeStoryMotion } from "./components/HomeStoryMotion";
 import { HomeFilmPreview } from "./components/HomeFilmPreview";
 import { HomeReviews } from "./components/HomeReviews";
+import { HeroMobileScene } from "./components/HeroMobileScene";
+import { ScrollHangingDog } from "./components/ScrollHangingDog";
 import {
   HomeLineContact,
   HomeLineContactLink,
@@ -118,8 +120,8 @@ const homeFaqs = [
     "必要な素材とお支払いの確認後、通常10〜14営業日が目安です。絵本ページの確認や修正期間によって前後する場合があります。",
   ],
   [
-    "モニター価格とは何ですか？",
-    `初期${MEMORY_FILM_PRICING.launchLimit}組限定で、動く絵本と専用ホームページの制作工程・品質を確認するための価格 ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）です。終了後は通常価格 ¥${formatYen(MEMORY_FILM_PRICING.regularPrice)}（税込）になります。`,
+    "料金には何が含まれますか？",
+    `¥${formatYen(MEMORY_FILM_PRICING.price)}（税込）に、水彩絵本ページ5枚、約40秒の動く絵本、専用ホームページ、ミニキャラクター、LINEスタンプ8種類が含まれます。専用ホームページに公開期限や月額料金はありません。`,
   ],
   [
     "専用ものがたりサイトは、いつまで見られますか？",
@@ -171,7 +173,7 @@ export default async function Home() {
         ? {
             offers: {
               "@type": "Offer",
-              price: MEMORY_FILM_PRICING.launchPrice,
+              price: MEMORY_FILM_PRICING.price,
               priceCurrency: "JPY",
               availability: "https://schema.org/InStock",
               url: `${origin}/#plans`,
@@ -199,20 +201,13 @@ export default async function Home() {
         }}
       />
       <SiteHeader />
+      <ScrollHangingDog />
       <MobileStickyCta />
       <HomeLineContact />
       <HomeStoryMotion />
 
       <section className="storybook-hero" aria-labelledby="hero-title">
-        <Image
-          className="storybook-hero-image"
-          src="/hero-owner-dog-rainy-home.png"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          aria-hidden="true"
-        />
+        <Image className="storybook-hero-image" src="/hero-owner-dog-rainy-home.png" alt="" fill priority sizes="100vw" aria-hidden="true" />
         <div className="storybook-hero-wash" aria-hidden="true" />
         <div className="shell storybook-hero-copy">
           {!APPLICATIONS_OPEN && (
@@ -232,20 +227,24 @@ export default async function Home() {
             </span>
           </h1>
           <p className="storybook-hero-lead">
+            <span className="hero-desktop-lead-copy">
             5つの思い出を水彩で描き、約40秒の物語に。
             <br className="desktop-only" />
             完成後も写真を増やせる、その子専用のホームページと一緒にお届けします。
+            </span>
+            <span className="hero-mobile-lead-copy">写真と思い出から、動く絵本と専用サイトを。</span>
           </p>
-          <div className="storybook-hero-offer" aria-label="モニタープランの価格と内容">
+          <HeroMobileScene />
+          <div className="storybook-hero-offer" aria-label="制作プランの価格と内容">
             <ul>
               <li>約40秒の動く絵本</li>
               <li>水彩絵本5枚</li>
               <li>専用ホームページ</li>
             </ul>
             <div className="storybook-hero-offer-price">
-              <span>先着{MEMORY_FILM_PRICING.launchLimit}組 · モニター価格</span>
+              <span>制作料金</span>
               <strong>
-                ¥{formatYen(MEMORY_FILM_PRICING.launchPrice)}<small>税込</small>
+                ¥{formatYen(MEMORY_FILM_PRICING.price)}<small>税込</small>
               </strong>
             </div>
             <p><strong>物語案の確認までは無料。</strong>注文・決済は内容を見てからです。</p>
@@ -262,11 +261,6 @@ export default async function Home() {
               <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
             )}
           </div>
-          <ul className="storybook-hero-reassurance" aria-label="相談前に確認できること">
-            <li>物語案を見るまでは無料</li>
-            <li>料金・納期を確認してから注文</li>
-            <li>公開期限・月額料金なし</li>
-          </ul>
           <span className="storybook-hero-note">
             STORYBOOK + WEBSITE SAMPLE · モカと、五つの記憶
           </span>
@@ -306,9 +300,9 @@ export default async function Home() {
           <ul className="storybook-complete-includes" aria-label="制作プランに含まれるもの">
             <li><span>01</span><strong>約40秒の動く絵本</strong><small>5つの思い出を一つの物語に</small></li>
             <li><span>02</span><strong>水彩絵本ページ5枚</strong><small>動画になる前の完成イラスト</small></li>
-            <li><span>03</span><strong>うちの子専用ホームページ</strong><small>公開期限・月額料金なし</small></li>
+            <li><span>03</span><strong>専用ホームページ</strong><small>公開期限・月額料金なし</small></li>
             <li><span>04</span><strong>ミニキャラクター</strong><small>ホームページを歩いてご案内</small></li>
-            <li><span>05</span><strong>LINEスタンプ8種類</strong><small>オープン記念で無料</small></li>
+            <li><span>05</span><strong>LINEスタンプ8種類</strong><small>プラン料金に含まれます</small></li>
           </ul>
           <div className="storybook-phone-features">
             <div className="storybook-phone-features-heading">
@@ -374,20 +368,6 @@ export default async function Home() {
               </div>
               <HomeFilmPreview />
             </div>
-
-            <div className="storybook-complete-site-copy">
-              <p className="eyebrow">A WEBSITE JUST FOR YOUR DOG</p>
-              <h3>完成した日から、<br />思い出がまた育ちはじめる。</h3>
-              <p>
-                映像、絵本ページ、元の写真、家族からの手紙を専用URLにまとめます。完成後の写真も追加でき、描き起こしたキャラクターがページを歩いて話しかけます。
-              </p>
-              <div className="storybook-complete-lifetime">
-                <strong>公開期限なし</strong>
-                <i aria-hidden="true" />
-                <strong>月額料金なし</strong>
-              </div>
-              <small>専用URLはご家族にも共有できます。</small>
-            </div>
           </div>
         </div>
       </section>
@@ -448,15 +428,15 @@ export default async function Home() {
         <div className="shell">
           <div className="storybook-line-sticker-heading">
             <div>
-              <p className="eyebrow">LINE STICKERS INCLUDED FREE</p>
+              <p className="eyebrow">LINE STICKERS INCLUDED</p>
               <h2>
-                オープン記念に、<br />LINEスタンプも。
+                物語のキャラクターを、<br />LINEスタンプにも。
               </h2>
             </div>
             <div className="storybook-line-sticker-offer">
-              <span>OPENING GIFT</span>
-              <del>通常 ¥1,480相当</del>
-              <strong>制作・登録料 ¥0</strong>
+              <span>PLAN INCLUDED</span>
+              <strong>8種類を制作</strong>
+              <small>追加の制作料金なし</small>
             </div>
           </div>
           <div className="storybook-line-sticker-showcase">
@@ -471,7 +451,7 @@ export default async function Home() {
             </div>
             <div className="storybook-line-sticker-copy">
               <p>
-                専用ホームページのキャラクターから、毎日使いやすい8種類を制作。今だけ追加料金なしでプランに含めます。
+                専用ホームページのキャラクターから、毎日使いやすい8種類を制作。追加料金なしでプランに含まれます。
               </p>
               <small>
                 LINEで実際に使用する際は、LINE STOREでのスタンプ購入代金が別途必要です。文言指定・個別修正は含まれません。
@@ -546,7 +526,7 @@ export default async function Home() {
               <p className="eyebrow">ONE STORYBOOK + WEBSITE PLAN</p>
               <h2>動く絵本も、その後の居場所も。</h2>
             </div>
-            <p>約40秒の動く絵本、水彩絵本ページ5枚、専用ホームページ、ミニキャラクター、今だけLINEスタンプ8種類まで一つのプランに含みます。</p>
+            <p>約40秒の動く絵本、水彩絵本ページ5枚、専用ホームページ、ミニキャラクター、LINEスタンプ8種類まで一つのプランに含みます。</p>
           </div>
           <div className="pricing-grid">
             <LivePriceCard />
@@ -587,7 +567,7 @@ export default async function Home() {
           </h2>
           <p>
             {APPLICATIONS_OPEN
-              ? `先着${MEMORY_FILM_PRICING.launchLimit}組は ¥${formatYen(MEMORY_FILM_PRICING.launchPrice)}（税込）。相談時点では料金は発生しません。`
+              ? `制作料金は ¥${formatYen(MEMORY_FILM_PRICING.price)}（税込）。相談時点では料金は発生しません。`
               : PRELAUNCH_COPY}
           </p>
           <div className="storybook-final-actions">

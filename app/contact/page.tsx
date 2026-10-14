@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "../components/InfoPage";
 import { StartStoryLink } from "../components/StartStoryLink";
-import { MEMORY_FILM_PRICING } from "../lib/pricing";
 import {
   APPLICATIONS_OPEN,
   BUSINESS_NAME,
@@ -29,7 +28,7 @@ export default function ContactPage() {
         <h2>{APPLICATIONS_OPEN ? "動く絵本のお申し込み" : PRELAUNCH_TITLE}</h2>
         <p>
           {APPLICATIONS_OPEN
-            ? `現在、初期${MEMORY_FILM_PRICING.launchLimit}組限定のモニター価格でご相談を受け付けています。愛犬のことや残したい思い出をフォームからゆっくりお聞かせください。`
+            ? "愛犬のことや残したい思い出を、フォームからゆっくりお聞かせください。相談フォームの送信時には料金は発生しません。"
             : PRELAUNCH_COPY}
         </p>
         <StartStoryLink className="button button-primary">

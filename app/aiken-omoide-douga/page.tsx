@@ -4,6 +4,8 @@ import { InfoPage } from "../components/InfoPage";
 import { SeoGuideLinks } from "../components/SeoGuideLinks";
 import { StartStoryLink } from "../components/StartStoryLink";
 import { createGuideStructuredData } from "../lib/seo";
+import { GuideWorkExample } from "../components/GuideWorkExample";
+import { GuideWorkLink } from "../components/GuideWorkLink";
 
 const title = "愛犬の思い出を残す方法｜写真・動画・オリジナル絵本";
 const description =
@@ -88,6 +90,7 @@ export default function AikenOmoideDougaPage() {
         <p>誕生日や旅行だけでなく、普段の暮らしも大切な思い出です。お別れのあとに整理する場合も、一度にまとめようとせず、今見られる一枚から始めてください。</p>
         <Link className="text-link" href="/aiken-shashin-seiri">写真の整理と保存方法を見る →</Link>
       </section>
+      <GuideWorkExample location="memory_guide_example" />
       <section className="seo-lead-panel">
         <p>
           WAN
@@ -161,9 +164,9 @@ export default function AikenOmoideDougaPage() {
         <p>
           写真にない角度や動きを実写らしく作ろうとすると、毛並み、目、しっぽ、体型が場面ごとに変わりやすくなります。絵本なら、完全な複製を競うのではなく、ご家族が感じる「この子らしさ」と物語全体の一貫性を優先できます。
         </p>
-        <Link className="text-link" href="/film/moka-demo">
+        <GuideWorkLink className="text-link" location="memory_guide_body">
           モカの動くページを見る →
-        </Link>
+        </GuideWorkLink>
       </section>
       <section>
         <h2>実際にお届けした動く絵本を見る</h2>
@@ -186,12 +189,12 @@ export default function AikenOmoideDougaPage() {
         <p>物語がまとまっていなくても大丈夫です。</p>
         <h2>覚えていることから、最初のページへ。</h2>
         <div>
-          <StartStoryLink className="button button-primary">
+          <StartStoryLink className="button button-primary" ctaLocation="memory_guide_footer">
             物語を相談する →
           </StartStoryLink>
-          <Link className="button button-outline" href="/film/moka-demo">
+          <GuideWorkLink className="button button-outline" location="memory_guide_footer">
             動くページを見る
-          </Link>
+          </GuideWorkLink>
         </div>
       </aside>
       <SeoGuideLinks currentPath="/aiken-omoide-douga" />

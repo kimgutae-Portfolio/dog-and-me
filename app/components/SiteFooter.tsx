@@ -36,6 +36,7 @@ export function SiteFooter() {
           </div>
           <div>
             <p>SUPPORT</p>
+            <Link href="/guides">愛犬の思い出ガイド一覧</Link>
             <Link href="/inu-omoide-zukuri">犬との思い出作りアイデア10選</Link>
             <Link href="/aiken-shashin-seiri">愛犬の写真を整理・保存する方法</Link>
             <Link href="/aiken-shashin-douga">愛犬の写真を動画にする方法</Link>

@@ -4,6 +4,8 @@ import { InfoPage } from "../components/InfoPage";
 import { SeoGuideLinks } from "../components/SeoGuideLinks";
 import { StartStoryLink } from "../components/StartStoryLink";
 import { createGuideStructuredData } from "../lib/seo";
+import { GuideWorkExample } from "../components/GuideWorkExample";
+import { GuideWorkLink } from "../components/GuideWorkLink";
 
 const title = "愛犬の写真で動画を作成する方法｜自作と制作依頼の選び方";
 const description =
@@ -121,6 +123,7 @@ export default function AikenShashinDougaPage() {
         <p>WAN MEMORYでは、五つのエピソードと場面写真から約40秒の動く絵本を制作します。元写真を並べるスライドショーとは仕上がりが異なるため、作品を見てからお選びください。</p>
         <Link className="text-link" href="/#plans">制作内容・料金・納期を確認する →</Link>
       </section>
+      <GuideWorkExample location="photo_video_guide_example" />
       <section>
         <h2>思い出動画を作る五つの手順</h2>
         <ol className="seo-step-list">
@@ -231,12 +234,12 @@ export default function AikenShashinDougaPage() {
         <p>写真とエピソードから、愛犬だけの物語をご提案します。</p>
         <h2>思い出を選ぶところから、相談できます。</h2>
         <div>
-          <StartStoryLink className="button button-primary">
+          <StartStoryLink className="button button-primary" ctaLocation="photo_video_guide_footer">
             動く絵本を相談する →
           </StartStoryLink>
-          <Link className="button button-outline" href="/film/moka-demo">
+          <GuideWorkLink className="button button-outline" location="photo_video_guide_footer">
             完成例を見る
-          </Link>
+          </GuideWorkLink>
         </div>
       </aside>
 
