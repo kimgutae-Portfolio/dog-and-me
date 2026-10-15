@@ -3304,7 +3304,8 @@ button.memory-photo-add { width: 100%; color: inherit; font: inherit; }
 .memory-address-edit-button:focus-visible { outline: 3px solid #62465e; outline-offset: 3px; }
 .memory-address-change > div:not([hidden]) { margin-top: 16px; }
 
-.hero-dog-dash { --dog-group-width: min(430px,calc(100vw - 24px)); --dog-trip-duration: 10.6s; position: fixed; z-index: 45; left: 0; bottom: max(4px,env(safe-area-inset-bottom)); width: 100%; height: 118px; overflow: hidden; pointer-events: none; transition: opacity .4s ease, transform .4s ease; }
+.hero-dog-lane { display: none; }
+.hero-dog-dash { --dog-group-width: min(430px,calc(100vw - 24px)); --dog-trip-duration: 10.6s; position: absolute; z-index: 1; left: 0; bottom: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; transition: opacity .4s ease, transform .4s ease; }
 .hero-dog-dash.is-fading { opacity: 0; transform: translateY(12px); }
 .hero-dog-dash-runner { --dog-rest-left: calc((100vw - var(--dog-group-width)) / 2 + var(--dog-group-width) * var(--dog-seat-offset)); position: absolute; bottom: 4px; left: -130px; width: calc(var(--dog-group-width) * var(--dog-seat-width)); height: calc(var(--dog-group-width) * var(--dog-seat-width)); animation: hero-dog-roundtrip var(--dog-trip-duration) linear var(--dog-delay) both; }
 .hero-dog-dash-runner.dog-first { animation-name: hero-dog-first-roundtrip; }
@@ -3342,7 +3343,7 @@ button.memory-photo-add { width: 100%; color: inherit; font: inherit; }
 .hero-mobile-scene.is-current { opacity: 1; transform: translateX(0); }
 .hero-scene-controls { display: none; }
 @media (max-width: 640px) {
-  .hero-dog-dash { height: 102px; }
+  .hero-dog-lane { height: clamp(80px,23vw,104px); width: 100vw; margin: 4px 0 0 calc((100% - 100vw) / 2); position: relative; display: block; overflow: hidden; pointer-events: none; }
   .hero-dog-dash-runner { width: calc(var(--dog-group-width) * var(--dog-seat-width)); height: calc(var(--dog-group-width) * var(--dog-seat-width)); }
   .hero-mobile-scene .storybook-hero-image { animation: none; }
   .hero-scene-controls { position: absolute; top: 72px; right: 10px; z-index: 4; display: flex; align-items: center; padding: 0 4px; border: 1px solid rgba(75,59,43,.18); border-radius: 24px; background: rgba(255,251,244,.88); }
@@ -3410,7 +3411,7 @@ button.memory-photo-add { width: 100%; color: inherit; font: inherit; }
   .storybook-home .storybook-hero-lead { margin-top: 10px; color: #514a43; font-size: 13px; line-height: 1.7; }
   .storybook-hero-image { opacity: .22; }
   .storybook-hero-wash { background: linear-gradient(180deg,rgba(248,243,234,.7),#f8f3ea 65%); }
-  .hero-service-showcase { margin-top: 16px; display: block; color: #40372e; border: 1px solid #d9c8b6; border-radius: 16px; overflow: hidden; background: #fffcf7; box-shadow: 0 8px 24px rgba(81,59,37,.08); }
+  .hero-service-showcase { margin-top: 16px; display: block; color: #40372e; border: 1px solid #d9c8b6; border-radius: 16px; overflow: hidden; background: #fffcf7; box-shadow: 0 8px 24px rgba(81,59,37,.08); animation: hero-service-enter .55s ease 1.6s both; }
   .hero-service-viewport { height: 252px; position: relative; overflow: hidden; touch-action: pan-y; }
   .hero-service-slide { position: absolute; inset: 0; margin: 0; padding: 0; opacity: 0; visibility: hidden; transform: translateX(22px); transition: opacity .55s ease,transform .55s ease,visibility .55s; }
   .hero-service-slide.is-active { opacity: 1; visibility: visible; transform: none; }
@@ -3470,7 +3471,14 @@ button.memory-photo-add { width: 100%; color: inherit; font: inherit; }
   .hero-service-phone { height: 140px; width: 96px; min-width: 96px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .hero-service-showcase { animation: none; }
+  .hero-dog-lane { display: none; }
   .hero-service-slide, .hero-art-image { transition: none; }
+}
+@keyframes hero-service-enter {
+  from { opacity: 0; visibility: hidden; transform: translateY(8px); }
+  1% { visibility: visible; }
+  to { opacity: 1; visibility: visible; transform: translateY(0); }
 }
 @media (max-width: 640px) and (max-height: 660px) {
   .hero-service-viewport { height: 204px; }

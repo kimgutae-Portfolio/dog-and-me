@@ -35,8 +35,8 @@ export function HeroMobileScene() {
   };
 
   useEffect(() => {
-    // Start the showcase after the dogs' first pass, without waiting for their return.
-    const start = setTimeout(() => setIntroDone(true), 6500);
+    // Give the dogs' entrance and return more room before the service demo starts.
+    const start = setTimeout(() => setIntroDone(true), 9500);
     const updateVisibility = () => setPageVisible(!document.hidden);
     updateVisibility();
     document.addEventListener("visibilitychange", updateVisibility);
@@ -93,7 +93,7 @@ export function HeroMobileScene() {
     setCurrent(index); pauseTemporarily(); setIntroDone(true); setPlaying(false); setFullVideo(false); setMuted(true);
     trackEvent("hero_service_select", { service: index + 1, page_path: "/" });
   };
-  return <div ref={root} className="hero-service-showcase" role="region" aria-label="写真から始まる、3つの楽しみ" aria-roledescription="カルーセル" onFocus={event => { if (event.target.matches(":focus-visible")) setKeyboardFocused(true); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setKeyboardFocused(false); }}>
+  return <><div ref={root} className="hero-service-showcase" role="region" aria-label="写真から始まる、3つの楽しみ" aria-roledescription="カルーセル" onFocus={event => { if (event.target.matches(":focus-visible")) setKeyboardFocused(true); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setKeyboardFocused(false); }}>
     <div className="hero-service-viewport" onTouchStart={event => { const touch = event.touches[0]; swipeStart.current = { x: touch.clientX, y: touch.clientY }; }} onTouchEnd={event => { const touch = event.changedTouches[0]; const start = swipeStart.current; swipeStart.current = null; if (!start) return; const dx = touch.clientX - start.x; const dy = touch.clientY - start.y; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) select((current + (dx < 0 ? 1 : 2)) % 3); }}>
       {scenes.map((scene, index) => <section key={scene.label} className={`hero-service-slide${current === index ? " is-active" : ""}`} aria-hidden={current !== index} inert={current !== index} aria-label={`${index + 1} / 3：${scene.label}`}>
         <div className={`hero-service-media media-${index}`}>
@@ -120,6 +120,9 @@ export function HeroMobileScene() {
       <div className="hero-service-dots">{scenes.map((scene, index) => <button key={scene.label} type="button" aria-label={scene.label} aria-pressed={current === index} onClick={() => select(index)}><span />{index + 1}</button>)}</div>
       <button type="button" className="hero-service-arrow" aria-label="次のサービスを見る" onClick={() => select((current + 1) % 3)}>›</button>
     </div>
-    <HeroDogDash paused={!inView} onComplete={finishIntro} />
-  </div>;
+  </div>
+    <div className="hero-dog-lane" aria-hidden="true">
+      <HeroDogDash paused={!inView} onComplete={finishIntro} />
+    </div>
+  </>;
 }
