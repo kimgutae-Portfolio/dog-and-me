@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { trackEvent } from "../lib/analytics";
 import { HeroDogDash } from "./HeroDogDash";
@@ -15,7 +15,7 @@ export function HeroMobileScene() {
   const [paused, setPaused] = useState(false);
   const [keyboardFocused, setKeyboardFocused] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
-  const [introDone, setIntroDone] = useState(false);
+  const [showcaseReady, setShowcaseReady] = useState(false);
   const [inView, setInView] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [fullVideo, setFullVideo] = useState(false);
@@ -27,7 +27,6 @@ export function HeroMobileScene() {
   const video = useRef<HTMLVideoElement>(null);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const finishIntro = useCallback(() => setIntroDone(true), []);
   const pauseTemporarily = () => {
     setPaused(true);
     if (resumeTimer.current) clearTimeout(resumeTimer.current);
@@ -35,13 +34,10 @@ export function HeroMobileScene() {
   };
 
   useEffect(() => {
-    // Give the dogs' entrance and return more room before the service demo starts.
-    const start = setTimeout(() => setIntroDone(true), 9500);
     const updateVisibility = () => setPageVisible(!document.hidden);
     updateVisibility();
     document.addEventListener("visibilitychange", updateVisibility);
     return () => {
-      clearTimeout(start);
       if (resumeTimer.current) clearTimeout(resumeTimer.current);
       document.removeEventListener("visibilitychange", updateVisibility);
     };
@@ -51,7 +47,7 @@ export function HeroMobileScene() {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const mobileQuery = window.matchMedia("(max-width: 640px)");
     const updateMobile = () => setMobile(mobileQuery.matches);
-    const update = () => { setReduced(motion.matches); if (motion.matches) setIntroDone(true); };
+    const update = () => setReduced(motion.matches);
     const frame = requestAnimationFrame(() => { update(); updateMobile(); }); motion.addEventListener("change", update);
     mobileQuery.addEventListener("change", updateMobile);
     const observer = new IntersectionObserver(([entry]) => {
@@ -62,13 +58,31 @@ export function HeroMobileScene() {
     return () => { cancelAnimationFrame(frame); motion.removeEventListener("change", update); mobileQuery.removeEventListener("change", updateMobile); observer.disconnect(); document.documentElement.removeAttribute("data-hero-service-in-view"); };
   }, []);
   useEffect(() => {
-    if (!introDone || paused || keyboardFocused || reduced || (playing && fullVideo) || !inView || !pageVisible || !mobile) return;
+    if (!mobile || reduced) return;
+    // Start the first slide's clock when its own entrance finishes, not when the dogs return.
+    // A finished animation is still available after late hydration because it uses fill: both.
+    const entrance = root.current?.getAnimations().find(animation =>
+      "animationName" in animation && animation.animationName === "hero-service-enter"
+    );
+    let cancelled = false;
+    void Promise.resolve().then(async () => {
+      if (cancelled) return;
+      if (entrance && entrance.playState !== "finished") setShowcaseReady(false);
+      await entrance?.finished;
+      if (!cancelled) setShowcaseReady(true);
+    }).catch(() => {
+      // A cancelled entrance is rechecked if the viewport or motion preference changes.
+    });
+    return () => { cancelled = true; };
+  }, [mobile, reduced]);
+  useEffect(() => {
+    if (!showcaseReady || paused || keyboardFocused || reduced || (playing && fullVideo) || !inView || !pageVisible || !mobile) return;
     const timer = setTimeout(() => {
       if (document.hidden) return;
       setCurrent(prev => (prev + 1) % scenes.length);
     }, 4000);
     return () => clearTimeout(timer);
-  }, [introDone, paused, keyboardFocused, reduced, playing, fullVideo, inView, pageVisible, mobile, current]);
+  }, [showcaseReady, paused, keyboardFocused, reduced, playing, fullVideo, inView, pageVisible, mobile, current]);
   useEffect(() => {
     const element = video.current;
     if (!element) return;
@@ -83,14 +97,14 @@ export function HeroMobileScene() {
     });
   }, [current, inView, pageVisible, mobile, fullVideo, reduced]);
   useEffect(() => {
-    if (current !== 0 || reduced || !introDone || paused) return;
+    if (current !== 0 || reduced || !showcaseReady || paused || !inView || !pageVisible || !mobile) return;
     const reset = setTimeout(() => setArtVisible(false), 0);
     const timer = setTimeout(() => setArtVisible(true), 1200);
     return () => { clearTimeout(reset); clearTimeout(timer); };
-  }, [current, inView, reduced, introDone, paused]);
+  }, [current, inView, pageVisible, mobile, reduced, showcaseReady, paused]);
 
   const select = (index: number) => {
-    setCurrent(index); pauseTemporarily(); setIntroDone(true); setPlaying(false); setFullVideo(false); setMuted(true);
+    setCurrent(index); pauseTemporarily(); setPlaying(false); setFullVideo(false); setMuted(true);
     trackEvent("hero_service_select", { service: index + 1, page_path: "/" });
   };
   return <><div ref={root} className="hero-service-showcase" role="region" aria-label="写真から始まる、3つの楽しみ" aria-roledescription="カルーセル" onFocus={event => { if (event.target.matches(":focus-visible")) setKeyboardFocused(true); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setKeyboardFocused(false); }}>
@@ -100,11 +114,11 @@ export function HeroMobileScene() {
           {index === 0 && <>
             <Image src="/film/moka/09-autumn-ginkgo.webp" alt="秋の散歩道を歩くモカのサンプル写真" fill loading="eager" sizes="(max-width:640px) 90vw, 1px" />
             <Image className={artVisible ? "hero-art-image is-revealed" : "hero-art-image"} src="/film/moka/04-storybook-autumn.webp" alt="写真をもとに水彩で描いた完成絵本ページ" fill sizes="(max-width:640px) 90vw, 1px" />
-            <button className="hero-example-toggle" type="button" onClick={() => { setArtVisible(value => !value); pauseTemporarily(); setIntroDone(true); }}>{artVisible ? "元の写真を見る" : "絵本ページを見る"} <span aria-hidden="true">⇄</span></button>
+            <button className="hero-example-toggle" type="button" onClick={() => { setArtVisible(value => !value); pauseTemporarily(); }}>{artVisible ? "元の写真を見る" : "絵本ページを見る"} <span aria-hidden="true">⇄</span></button>
           </>}
           {index === 1 && <>
             <video ref={video} controls={fullVideo} muted={muted} loop={!fullVideo} playsInline preload="none" poster="/film/moka/05-storybook-lantern.webp" aria-label="モカの完成した動く絵本" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setFullVideo(false); setMuted(true); setCurrent(2); }}><source src="/film/moka/complete-film.mp4" type="video/mp4" /></video>
-            {(!fullVideo || !playing) && <button className="hero-film-play" type="button" onClick={() => { setIntroDone(true); setFullVideo(true); setMuted(false); const element = video.current; if (element) { element.muted = false; element.currentTime = 0; element.play().catch(() => setPlaying(false)); } trackEvent("hero_film_play", { page_path: "/" }); }}><span aria-hidden="true">▶</span>{playing ? "音声つきで全編を見る" : "完成動画を再生"}</button>}
+            {(!fullVideo || !playing) && <button className="hero-film-play" type="button" onClick={() => { setFullVideo(true); setMuted(false); const element = video.current; if (element) { element.muted = false; element.currentTime = 0; element.play().catch(() => setPlaying(false)); } trackEvent("hero_film_play", { page_path: "/" }); }}><span aria-hidden="true">▶</span>{playing ? "音声つきで全編を見る" : "完成動画を再生"}</button>}
           </>}
           {index === 2 && <Link className="hero-phone-link" href="/film/moka-demo" tabIndex={current === 2 ? 0 : -1} onClick={() => trackEvent("hero_website_click", { page_path: "/" })}>
             <div className="hero-service-phone"><div className="hero-phone-notch" /><Image src="/film/moka/05-storybook-lantern.webp" alt="モカの完成作品を表示した専用ホームページのイメージ" width={1672} height={941} /><strong>モカと、五つの記憶</strong><div className="hero-phone-album"><Image src="/film/moka/06-rainy-entryway.webp" alt="" width={1448} height={1086} /><Image src="/film/moka/09-autumn-ginkgo.webp" alt="" width={1447} height={1087} /><span>＋</span></div></div>
@@ -122,7 +136,7 @@ export function HeroMobileScene() {
     </div>
   </div>
     <div className="hero-dog-lane" aria-hidden="true">
-      <HeroDogDash paused={!inView} onComplete={finishIntro} />
+      <HeroDogDash paused={!inView} />
     </div>
   </>;
 }
