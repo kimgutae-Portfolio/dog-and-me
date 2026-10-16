@@ -28,6 +28,20 @@ export function MokaGuide() {
   const [message, setMessage] = useState(messages.cover[0]);
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const [resting, setResting] = useState(false);
+  const [filmInView, setFilmInView] = useState(false);
+
+  useEffect(() => {
+    const player = document.querySelector(".moka-main-player");
+    if (!player) return;
+    // Keep the character and speech bubble away from native video controls,
+    // especially on narrow phones. It returns once the player leaves view.
+    const observer = new IntersectionObserver(([entry]) => {
+      setFilmInView(entry.isIntersecting);
+      if (entry.isIntersecting) setBubbleVisible(false);
+    });
+    observer.observe(player);
+    return () => observer.disconnect();
+  }, []);
 
   const speak = useCallback((nextPose: Pose = "head-tilt") => {
     const lines = messages[activeSection.current];
@@ -60,7 +74,7 @@ export function MokaGuide() {
   }, []);
 
   useEffect(() => {
-    if (resting) return;
+    if (resting || filmInView) return;
     const guide = guideRef.current;
     if (!guide) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -94,10 +108,10 @@ export function MokaGuide() {
     };
     animationId = requestAnimationFrame(move);
     return () => cancelAnimationFrame(animationId);
-  }, [resting]);
+  }, [resting, filmInView]);
 
   useEffect(() => {
-    if (resting) return;
+    if (resting || filmInView) return;
     let lastScrollAt = performance.now();
     const hideWhileReading = () => {
       lastScrollAt = performance.now();
@@ -116,7 +130,9 @@ export function MokaGuide() {
       window.removeEventListener("scroll", hideWhileReading);
       if (reactionTimer.current) clearTimeout(reactionTimer.current);
     };
-  }, [resting, speak]);
+  }, [resting, filmInView, speak]);
+
+  if (filmInView) return null;
 
   if (resting) {
     return <button className="moka-guide-wake" type="button" onClick={() => setResting(false)}>モカを呼ぶ <span aria-hidden="true">♡</span></button>;

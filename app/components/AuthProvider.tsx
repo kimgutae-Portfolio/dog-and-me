@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type { Profile } from "../lib/supabase/types";
+import { trackConfirmedSignup } from "../lib/signup-analytics";
 
 type AuthContextValue = {
   user: User | null;
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabaseBrowserClient();
     const { data: authData } = await supabase.auth.getUser();
     const currentUser = authData.user;
+    if (currentUser) trackConfirmedSignup(currentUser);
     setUser(currentUser);
     if (!currentUser) {
       setProfile(null);
@@ -37,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabaseBrowserClient();
     const timer = window.setTimeout(() => refreshProfile().finally(() => setLoading(false)), 0);
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) trackConfirmedSignup(session.user);
       setUser(session?.user ?? null);
       window.setTimeout(() => refreshProfile(), 0);
     });

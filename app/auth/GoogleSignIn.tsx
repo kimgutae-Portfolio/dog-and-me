@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { safeAuthNext } from "../lib/auth-navigation";
 import { trackEvent } from "../lib/analytics";
+import { rememberSignupAttempt } from "../lib/signup-analytics";
 import styles from "./GoogleSignIn.module.css";
 
 export function GoogleSignIn({
@@ -44,6 +45,7 @@ export function GoogleSignIn({
     if (pending || disabled) return;
     setPending(true);
     setError("");
+    rememberSignupAttempt("Google");
     trackEvent(mode === "login" ? "google_login_click" : "google_signup_click", {
       next_path: nextPath,
     });
@@ -56,6 +58,7 @@ export function GoogleSignIn({
       });
       if (authError) throw authError;
     } catch {
+      trackEvent("signup_error", { auth_mode: mode, error_type: "google_connection_failed" });
       setError("Googleとの接続を開始できませんでした。もう一度お試しいただくか、メールアドレスで続けてください。");
       setPending(false);
     }

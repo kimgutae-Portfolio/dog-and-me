@@ -34,7 +34,7 @@ export function MobileStickyCta() {
       <div>
         <p>
           {APPLICATIONS_OPEN
-            ? "絵本＋専用サイト · 物語案の確認までは無料"
+            ? "お名前 → 登録 → 写真と思い出を入力"
             : "COMING SOON"}
         </p>
         <strong>
@@ -48,11 +48,10 @@ export function MobileStickyCta() {
           )}
         </strong>
       </div>
-      {/* The price sits right beside this button, so the label stays a plain
-          action — "無料で始める" reads as a contradiction next to a paid price. What is
-          free (everything up to seeing the proposals) is stated in the line above. */}
+      {/* The price stays explicit; the action starts a consultation, not a paid
+          order or an instantly generated sample. The next steps are shown above. */}
       <StartStoryLink className="button button-cream" ctaLocation="mobile_sticky">
-        物語をつくる <span aria-hidden="true">→</span>
+        制作相談を始める <span aria-hidden="true">→</span>
       </StartStoryLink>
     </aside>
   );

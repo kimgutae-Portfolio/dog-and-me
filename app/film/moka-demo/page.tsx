@@ -67,36 +67,9 @@ export default function MokaDemoPage() {
           <h1>モカと、<br />五つの記憶</h1>
           <span>トイプードル · いつもの日々をめぐる物語</span>
           <MeetingDayBadge metOn="2021-05-01" petName="モカ" />
-        </div>
-      </section>
-
-      <section className="moka-scenes moka-storybook-pages" id="storybook-pages">
-        <div className="moka-shell">
-          <div className="moka-heading">
-            <div>
-              <p>01 / STORYBOOK PAGES</p>
-              <h2>思い出から生まれた、<br />五つの絵本ページ。</h2>
-            </div>
-            <span>映像になる前の、一場面ずつをご覧いただけます。</span>
-          </div>
-          <ol className="moka-scene-grid">
-            {storybookPages.map((page, index) => (
-              <li key={page.src}>
-                <img
-                  className="moka-storybook-page-image"
-                  src={page.src}
-                  alt={`${page.title}の絵本ページ`}
-                  width={page.width}
-                  height={page.height}
-                  loading={index === 0 ? "eager" : "lazy"}
-                />
-                <div>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <h3>{page.title}</h3>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <a className="button button-primary moka-cover-watch" href="#complete-film">
+            <span aria-hidden="true">▶</span> 完成動画を見る <small>約40秒</small>
+          </a>
         </div>
       </section>
 
@@ -104,10 +77,10 @@ export default function MokaDemoPage() {
         <div className="moka-shell">
           <div className="moka-heading">
             <div>
-              <p>02 / COMPLETE FILM</p>
+              <p>01 / COMPLETE FILM</p>
               <h2>五つの記憶を、<br />一冊の映像に。</h2>
             </div>
-            <span>約39秒 · 画面を大きくしてお楽しみください</span>
+            <span>約39秒 · 再生ボタンを押すと音声つきでご覧いただけます</span>
           </div>
           <div className="moka-main-player">
             <video
@@ -121,6 +94,36 @@ export default function MokaDemoPage() {
             </video>
           </div>
           <p className="moka-note">雨音、旅、朝の匂い、秋の散歩、夕暮れの灯り。家族が覚えている時間を一つの物語としてつないでいます。</p>
+        </div>
+      </section>
+
+      <section className="moka-scenes moka-storybook-pages" id="storybook-pages">
+        <div className="moka-shell">
+          <div className="moka-heading">
+            <div>
+              <p>02 / STORYBOOK PAGES</p>
+              <h2>思い出から生まれた、<br />五つの絵本ページ。</h2>
+            </div>
+            <span>映像になる前の、一場面ずつをご覧いただけます。</span>
+          </div>
+          <ol className="moka-scene-grid">
+            {storybookPages.map((page, index) => (
+              <li key={page.src}>
+                <img
+                  className="moka-storybook-page-image"
+                  src={page.src}
+                  alt={`${page.title}の絵本ページ`}
+                  width={page.width}
+                  height={page.height}
+                  loading="lazy"
+                />
+                <div>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <h3>{page.title}</h3>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
@@ -177,7 +180,10 @@ export default function MokaDemoPage() {
           <span className="brand-mark" aria-hidden="true">WM</span>
           <p>THIS STORY WAS DRAWN FOR MOKA<br /><small>© WAN MEMORY</small></p>
         </div>
-        <StartStoryLink className="button button-cream">うちの子の物語を相談する →</StartStoryLink>
+        <div className="moka-footer-consultation">
+          <p className="consultation-steps">お名前 → 無料登録 → 写真と思い出を入力</p>
+          <StartStoryLink className="button button-cream">うちの子の制作相談を始める →</StartStoryLink>
+        </div>
       </footer>
       <MokaGuide />
     </main>

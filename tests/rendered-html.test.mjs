@@ -72,9 +72,9 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /覚えている出来事をひとつずつ伺い/);
   assert.match(html, /約40秒の物語として、絵本ページとともにお届けします/);
   assert.match(html, /動画を見る/);
-  assert.match(html, /ホームページへ/);
+  assert.match(html, /完成ホームページを見る/);
   assert.doesNotMatch(html, /storybook-film-frame/);
-  assert.match(html, /うちの子専用ホームページ/);
+  assert.match(html, /専用ホームページ/);
   assert.match(html, /水彩絵本ページ5枚/);
   assert.match(html, /写真アルバム/);
   assert.match(html, /ミニキャラクター/);
@@ -87,14 +87,14 @@ test("server-renders the Japanese landing page", async () => {
   assert.match(html, /写真そっくりの実写として再現するのではなく/);
   assert.match(html, /水彩・ガッシュ/);
   assert.match(html, /その子だけの場所を/);
-  assert.match(html, /LINE STICKERS INCLUDED FREE/);
-  assert.match(html, /オープン記念に/);
-  assert.match(html, /制作・登録料/);
+  assert.match(html, /LINE STICKERS INCLUDED/);
+  assert.doesNotMatch(html, /オープン記念に/);
+  assert.match(html, /制作料金/);
   assert.match(html, /line-stickers-preview-v2\.png/);
   assert.doesNotMatch(html, /YOU SHARE THE MEMORIES|TWO STORY DIRECTIONS/);
   assert.match(html, /ホームページで受け取る/);
   assert.match(html, /専用ものがたりサイト/);
-  assert.match(html, /公開期限なし/);
+  assert.match(html, /公開期限・月額料金なし/);
   assert.match(html, /月額料金なし/);
   assert.match(html, /現在お届けする専用サイトの閲覧はそのまま続けられます/);
   assert.match(html, /専用ものがたりサイトは、いつまで見られますか/);
@@ -111,7 +111,7 @@ test("server-renders the Japanese landing page", async () => {
     html,
     /家族共有URL|家族へ共有する|ご家族にはログイン不要/,
   );
-  assert.match(html, /完成したホームページを見る/);
+  assert.match(html, /完成ホームページを見る/);
   assert.match(html, /実際の完成ホームページを開く/);
   assert.match(html, /動く絵本をいつでも再生/);
   assert.match(html, /完成後も写真を追加/);
@@ -123,25 +123,21 @@ test("server-renders the Japanese landing page", async () => {
   assert.equal((html.match(/href="https:\/\/lin\.ee\/9ejBIax"/g) ?? []).length, 2);
   assert.match(html, /storybook-final-cta/);
   assert.match(html, /動く絵本/);
-  assert.match(html, /初期(?:<!-- -->)?20(?:<!-- -->)?組/);
+  assert.doesNotMatch(html, /初期(?:<!-- -->)?20(?:<!-- -->)?組/);
   assert.match(html, /12,800/);
-  assert.match(html, /14,800/);
-  assert.doesNotMatch(html, /16,800|19,800/);
+  assert.doesNotMatch(html, /14,800|16,800|19,800/);
   assert.match(html, /ONE STORYBOOK \+ WEBSITE PLAN/);
   assert.doesNotMatch(html, />ONE STORYBOOK PLAN</);
-  assert.match(html, /通常価格/);
+  assert.doesNotMatch(html, /通常価格/);
   assert.match(html, /税込/);
-  assert.match(html, /モニター価格とは何ですか/);
+  assert.doesNotMatch(html, /モニター価格とは何ですか/);
   assert.match(html, /人が写っている写真も送れますか/);
   assert.match(html, /完成イラストでは人物をすべて除き/);
   assert.match(html, /物語案2案/);
-  assert.match(
-    html,
-    /<strong>オープン記念：うちの子LINEスタンプ8種類（通常¥1,480相当）<\/strong>/,
-  );
+  assert.match(html, /うちの子LINEスタンプ8種類/);
   assert.doesNotMatch(html, /5つの物語を各5秒で制作/);
   assert.match(html, /5つの思い出をつないだ約40秒の動く絵本/);
-  assert.match(html, /COMPLETE FILM · 00:39/);
+  assert.match(html, /完成した動く絵本 · 39秒/);
   assert.doesNotMatch(html, /メインエピソードを選ぶ工程はありません/);
   assert.match(html, /送った写真は変更できますか/);
   assert.match(html, /担当者が個別に変更を許可すると/);
@@ -638,8 +634,8 @@ test("keeps delivered albums growing from one Studio photo manager", async () =>
   assert.match(personalSite, /続きの写真を見る/);
   assert.match(uploads, /LIFETIME_ALBUM_MAX_EDGE = 2400/);
   assert.match(uploads, /canvas\.toBlob\(resolve, "image\/jpeg", 0\.84\)/);
-  assert.match(demo, /01 \/ STORYBOOK PAGES/);
-  assert.match(demo, /02 \/ COMPLETE FILM/);
+  assert.match(demo, /01 \/ COMPLETE FILM/);
+  assert.match(demo, /02 \/ STORYBOOK PAGES/);
   assert.match(demo, /03 \/ MOKA.*PHOTO ALBUM/);
   assert.match(demo, /完成後も写真を追加できます/);
 });
@@ -759,7 +755,7 @@ test("renders the moving storybook demo", async () => {
   assert.doesNotMatch(html, /FIVE MOVING PAGES|一場面ずつ、そっと動きはじめる/);
   assert.match(html, /雨音を待つ玄関/);
   assert.match(html, /MOKA'S PHOTO ALBUM/);
-  assert.match(html, /01 \/ STORYBOOK PAGES/);
+  assert.match(html, /02 \/ STORYBOOK PAGES/);
   assert.match(html, /制作に使った5枚の思い出/);
   assert.doesNotMatch(html, /FROM PHOTO TO STORYBOOK|before-after|比較位置/);
 });
@@ -951,11 +947,10 @@ test("includes mobile breathing room, sticky conversion action, and touch story 
   assert.match(css, /\.photo-guide-photo-types/);
   assert.match(page, /MobileStickyCta/);
   assert.doesNotMatch(page, /storybook-quick-facts/);
-  assert.match(mobileCta, /MEMORY_FILM_PRICING\.regularPrice/);
-  assert.match(mobileCta, /MEMORY_FILM_PRICING\.launchPrice/);
-  assert.match(mobileCta, /通常価格/);
-  assert.match(mobileCta, /モニター/);
-  assert.match(mobileCta, /物語をつくる/);
+  assert.match(mobileCta, /MEMORY_FILM_PRICING\.price/);
+  assert.doesNotMatch(mobileCta, /MEMORY_FILM_PRICING\.(?:regularPrice|launchPrice)/);
+  assert.doesNotMatch(mobileCta, /通常価格|モニター/);
+  assert.match(mobileCta, /制作相談を始める/);
   assert.match(story, /touchstart/);
   assert.match(story, /moveToChapter\(next\)/);
 });
@@ -1354,13 +1349,13 @@ test("limits storybook and video revisions to separate two-and-one scene allowan
   assert.match(css, /\.revision-scene-picker/);
 });
 
-test("uses the current launch and regular prices for new consultations", async () => {
+test("uses the permanent standard price for new consultations", async () => {
   const { readFile } = await import("node:fs/promises");
   const [pricing, migration, legal] = await Promise.all([
     readFile(new URL("app/lib/pricing.ts", root), "utf8"),
     readFile(
       new URL(
-        "supabase/migrations/202608290001_launch_price_12800.sql",
+        "supabase/migrations/202610150001_permanent_memory_film_price.sql",
         root,
       ),
       "utf8",
@@ -1368,18 +1363,15 @@ test("uses the current launch and regular prices for new consultations", async (
     readFile(new URL("app/legal/page.tsx", root), "utf8"),
   ]);
 
-  assert.match(pricing, /launchPrice: 12_800/);
-  assert.match(pricing, /regularPrice: 14_800/);
-  assert.match(pricing, /launchLimit: 20/);
-  assert.match(pricing, /launch-monitor-12800-20/);
-  assert.match(migration, /case when used < 20 then 12800 else 14800 end/);
-  assert.match(migration, /greatest\(20 - used, 0\)/);
-  assert.match(migration, /launch-monitor-16800-20/);
-  assert.match(migration, /launch-monitor-12800-20/);
-  assert.match(migration, /v_regular_price integer := 14800/);
+  assert.match(pricing, /price: 12_800/);
+  assert.doesNotMatch(pricing, /launchPrice|regularPrice|launchLimit/);
+  assert.match(migration, /select 12800, 12800, 0, 0, 0, false/);
+  assert.match(migration, /alter column regular_price set default 12800/);
+  assert.match(migration, /v_regular_price integer := 12800/);
   assert.match(migration, /v_price := 12800/);
-  assert.match(legal, /初期20組限定 モニター価格 ¥12,800/);
-  assert.match(legal, /受付終了後 ¥14,800/);
+  assert.match(migration, /Resolve existing higher-priced Stripe sessions/);
+  assert.match(legal, /¥12,800（税込）/);
+  assert.doesNotMatch(legal, /初期20組|モニター価格|14,800/);
 });
 
 test("records first-twenty production metrics through an admin-only RPC", async () => {
@@ -1804,9 +1796,10 @@ test("loads Vercel Web Analytics from the root layout", async () => {
 
 test("loads Google Tag Manager while excluding customer and operator URLs", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [layout, tagManager, nextConfig, privacy] = await Promise.all([
+  const [layout, tagManager, analyticsConfig, nextConfig, privacy] = await Promise.all([
     readFile(new URL("app/layout.tsx", root), "utf8"),
     readFile(new URL("app/components/GoogleTagManager.tsx", root), "utf8"),
+    readFile(new URL("app/lib/analytics-config.ts", root), "utf8"),
     readFile(new URL("next.config.ts", root), "utf8"),
     readFile(new URL("app/privacy/page.tsx", root), "utf8"),
   ]);
@@ -1814,13 +1807,13 @@ test("loads Google Tag Manager while excluding customer and operator URLs", asyn
   assert.match(layout, /<GoogleTagManager\s*\/>/);
   assert.match(tagManager, /GTM-WBMHCBXJ/);
   assert.match(tagManager, /G-31J209RFN1/);
-  assert.match(tagManager, /"aiken-shashin-douga"/);
-  assert.match(tagManager, /"aiken-shashin-seiri"/);
+  assert.match(analyticsConfig, /"aiken-shashin-douga"/);
+  assert.match(analyticsConfig, /"aiken-shashin-seiri"/);
   assert.match(tagManager, /ga-disable-/);
-  assert.match(tagManager, /pathname\.startsWith\("\/admin\/"\)/);
-  assert.match(tagManager, /pathname\.startsWith\("\/memory\/"\)/);
-  assert.match(tagManager, /pathname !== "\/film\/moka-demo"/);
-  assert.match(tagManager, /remaining top-level dynamic routes are customer website slugs/);
+  assert.match(analyticsConfig, /pathname\.startsWith\("\/admin\/"\)/);
+  assert.match(analyticsConfig, /pathname\.startsWith\("\/memory\/"\)/);
+  assert.match(analyticsConfig, /pathname !== "\/film\/moka-demo"/);
+  assert.match(analyticsConfig, /remaining top-level dynamic routes are customer website slugs/);
   assert.match(nextConfig, /https:\/\/www\.googletagmanager\.com/);
   assert.match(nextConfig, /https:\/\/\*\.google-analytics\.com/);
   assert.match(privacy, /アクセス解析にはGoogle/);

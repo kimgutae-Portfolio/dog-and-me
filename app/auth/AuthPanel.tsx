@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { trackEvent } from "../lib/analytics";
+import { rememberSignupAttempt, trackConfirmedSignup } from "../lib/signup-analytics";
 import { APPLICATIONS_OPEN, STORY_START_STORAGE_KEY } from "../lib/site";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { safeAuthNext } from "../lib/auth-navigation";
@@ -208,6 +209,7 @@ export function AuthPanel() {
           setError("確認用パスワードが一致していません。");
           return;
         }
+        rememberSignupAttempt("email");
         const { data, error: signupError } = await supabase.auth.signUp({
           email,
           password,
@@ -220,7 +222,8 @@ export function AuthPanel() {
           },
         });
         if (signupError) throw signupError;
-        trackEvent("signup_complete", { signup_method: "email" });
+        if (data.session?.user) trackConfirmedSignup(data.session.user);
+        else trackEvent("signup_confirmation_sent", { method: "email" });
         if (data.session) router.replace(signupNextPath);
         else setSignupConfirmationEmail(email.trim());
         return;
@@ -271,7 +274,7 @@ export function AuthPanel() {
     } catch (caught) {
       trackEvent("signup_error", {
         auth_mode: mode,
-        error_type: caught instanceof Error ? caught.message.slice(0, 80) : "unknown",
+        error_type: "authentication_failed",
       });
       setError(friendlyError(caught instanceof Error ? caught.message : ""));
     } finally {

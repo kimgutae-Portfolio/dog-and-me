@@ -18,6 +18,8 @@ import { useAuth } from "../components/AuthProvider";
 import { CONSENT_VERSIONS, hasCurrentConsent } from "../lib/consent";
 import { APPLICATIONS_OPEN } from "../lib/site";
 import { notifyAdminFromCustomer } from "../lib/adminPushClient";
+import { trackCommerceEvent, trackEvent, trackOnce } from "../lib/analytics";
+import { storybookCommerce } from "../lib/analytics-config";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type {
   Delivery,
@@ -422,6 +424,10 @@ export function StudioClient() {
       (searchParams.get("preview") === "1" || !isOrderOwner),
   );
   const canOperateOrder = isOrderOwner && !readOnlyPreview;
+  useEffect(() => {
+    if (paymentResult !== "cancelled" || !order || !canOperateOrder || profile?.role === "admin") return;
+    trackOnce(`checkout-cancel:${order.id}`, () => trackEvent("checkout_cancel", { payment_provider: "stripe" }));
+  }, [canOperateOrder, order, paymentResult, profile?.role]);
   const canManageDeliveredWebsite = Boolean(
     order &&
       profile?.role === "admin" &&
@@ -439,6 +445,42 @@ export function StudioClient() {
     canOperateOrder &&
     (order?.status === "concepts_ready" ||
       order?.status === "concept_selected");
+  useEffect(() => {
+    if (!order || !canOperateOrder || profile?.role === "admin" || concepts.length === 0) return;
+    const section = document.getElementById("concepts");
+    if (!section) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      trackOnce(`proposal-view:${order.id}`, () => trackEvent("proposal_view", { proposal_count: concepts.length }));
+      observer.disconnect();
+    }, { threshold: 0.1 });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [canOperateOrder, concepts.length, order, profile?.role]);
+
+  useEffect(() => {
+    if (!order || !user || !canOperateOrder || profile?.role === "admin" || order.payment_status !== "paid" || order.quoted_price <= 0) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data } = await getSupabaseBrowserClient().auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) return;
+        const response = await fetch("/api/payments/analytics", {
+          method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: order.id }),
+        });
+        const result = await response.json() as { purchase?: { transaction_id?: unknown; value?: unknown; currency?: unknown } };
+        const purchase = result.purchase;
+        if (cancelled || !response.ok || !purchase || typeof purchase.transaction_id !== "string" || !/^wm_[0-9a-f]{32}$/.test(purchase.transaction_id) || typeof purchase.value !== "number" || !Number.isSafeInteger(purchase.value) || purchase.value <= 0 || purchase.currency !== "JPY") return;
+        const { value, transaction_id } = purchase;
+        trackOnce(`purchase:${purchase.transaction_id}`, () => trackCommerceEvent("purchase", {
+          ...storybookCommerce(value), transaction_id,
+        }), true);
+      } catch { /* Payment and customer access never depend on marketing analytics. */ }
+    })();
+    return () => { cancelled = true; };
+  }, [canOperateOrder, order, profile?.role, user]);
   const sourceAssets = assets.filter(
     (asset) => asset.category === "source_image",
   );
@@ -650,6 +692,7 @@ export function StudioClient() {
       setConfirmingConcept(false);
       return;
     }
+    if (profile?.role !== "admin") trackEvent("proposal_select", { proposal_slot: slot });
     setOrders((current) =>
       current.map((item) =>
         item.id === order.id
@@ -1085,6 +1128,7 @@ export function StudioClient() {
         return null;
       }
       if (!response.ok || !result.url) {
+        if (profile?.role !== "admin") trackEvent("checkout_error", { error_code: response.status >= 500 ? "server_error" : "checkout_unavailable" });
         setError(
           result.error === "applications_paused"
             ? "現在、お支払い受付は準備中です。受付開始までお待ちください。"
@@ -1102,8 +1146,14 @@ export function StudioClient() {
         );
         return null;
       }
+      if (autoRedirect && profile?.role !== "admin") trackOnce(`begin-checkout:${order.id}`, () =>
+        trackCommerceEvent("begin_checkout", storybookCommerce(order.quoted_price)));
       if (autoRedirect) window.location.assign(result.url);
       return result.url;
+    } catch {
+      if (profile?.role !== "admin") trackEvent("checkout_error", { error_code: "network_error" });
+      setError("決済画面を開けませんでした。通信状態をご確認のうえ、もう一度お試しください。");
+      return null;
     } finally {
       setStartingPayment(false);
     }
@@ -1341,9 +1391,11 @@ export function StudioClient() {
                   autoFocus
                   className="button button-primary"
                   type="button"
-                  onClick={() =>
-                    window.location.assign(conceptReceipt.checkoutUrl as string)
-                  }
+                  onClick={() => {
+                    if (order && profile?.role !== "admin") trackOnce(`begin-checkout:${order.id}`, () =>
+                      trackCommerceEvent("begin_checkout", storybookCommerce(order.quoted_price)));
+                    window.location.assign(conceptReceipt.checkoutUrl as string);
+                  }}
                 >
                   お支払いへ進む →
                 </button>

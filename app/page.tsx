@@ -78,6 +78,16 @@ const storyPages = [
   },
 ] as const;
 
+const productionSteps = [
+  ["覚えていることを、ひとつずつ", "短い一言と、その日の写真1枚から始められます。途中保存しながら、あとで5つまでゆっくり追加できます。"],
+  ["二つの物語案を受け取る", "担当者が写真とお話を読み、つながり方の異なる二つのあらすじをご提案します。"],
+  ["1案を選び、そのまま決済する", "選んだ物語、確定料金、予定納期、キャンセル条件を確認すると、そのままカードでお支払いいただけます。"],
+  ["絵本ページと文章を確認する", "全場面の絵と、その場面に入る短い文章を先にお見せします。絵本ページは合計2場面まで修正できます。"],
+  ["小さな動きを加える", "承認された5枚の絵に、その場面らしい小さな動きを加えて一冊の物語につなぎます。"],
+  ["動く絵本を確認する", "BGMと文章を含む約40秒の映像をご確認いただき、映像は合計1場面まで修正できます。"],
+  ["ホームページで受け取る", "完成した動く絵本、絵本ページ、写真アルバム、ミニキャラクターを、その子だけのホームページにまとめてお届けします。"],
+] as const;
+
 const homeFaqs = [
   [
     "どんな作品が届きますか？",
@@ -254,9 +264,12 @@ export default async function Home() {
               実際の完成作品を見る <span aria-hidden="true">↗</span>
             </Link>
             {APPLICATIONS_OPEN ? (
-              <StartStoryLink className="button button-outline" ctaLocation="home_hero">
-                うちの子で試してみる <span aria-hidden="true">→</span>
-              </StartStoryLink>
+              <div className="consultation-action">
+                <p className="consultation-steps">お名前 → 無料登録 → 写真と思い出を入力</p>
+                <StartStoryLink className="button button-outline" ctaLocation="home_hero">
+                  うちの子の制作相談を始める <span aria-hidden="true">→</span>
+                </StartStoryLink>
+              </div>
             ) : (
               <span className="button button-prelaunch" aria-disabled="true">{PRELAUNCH_CTA}</span>
             )}
@@ -466,45 +479,13 @@ export default async function Home() {
           <p className="eyebrow">HOW YOUR STORYBOOK IS MADE</p>
           <div className="process-head">
             <h2>ご相談からお届けまで。</h2>
-            <p>制作室で、物語・絵本ページ・動く絵本・専用ホームページを順番に確認できます。</p>
+            <p>まずは写真と思い出を。物語案と料金に納得してから、ご注文いただけます。</p>
           </div>
-          <ol className="process-list">
+          <ol className="process-list process-overview" aria-label="ご相談からお届けまでの3ステップ">
             {[
-              [
-                "01",
-                "覚えていることを、ひとつずつ",
-                "短い一言と、その日の写真1枚から始められます。途中保存しながら、あとで5つまでゆっくり追加できます。",
-              ],
-              [
-                "02",
-                "二つの物語案を受け取る",
-                "担当者が写真とお話を読み、つながり方の異なる二つのあらすじをご提案します。",
-              ],
-              [
-                "03",
-                "1案を選び、そのまま決済する",
-                "選んだ物語、確定料金、予定納期、キャンセル条件を確認すると、そのままカードでお支払いいただけます。",
-              ],
-              [
-                "04",
-                "絵本ページと文章を確認する",
-                "全場面の絵と、その場面に入る短い文章を先にお見せします。絵本ページは合計2場面まで修正できます。",
-              ],
-              [
-                "05",
-                "小さな動きを加える",
-                "承認された5枚の絵に、その場面らしい小さな動きを加えて一冊の物語につなぎます。",
-              ],
-              [
-                "06",
-                "動く絵本を確認する",
-                "BGMと文章を含む約40秒の映像をご確認いただき、映像は合計1場面まで修正できます。",
-              ],
-              [
-                "07",
-                "ホームページで受け取る",
-                "完成した動く絵本、絵本ページ、写真アルバム、ミニキャラクターを、その子だけのホームページにまとめてお届けします。",
-              ],
+              ["01", "写真と思い出を送る", "お名前を入力し、無料登録。写真とお話は一つずつ、途中保存しながら準備できます。"],
+              ["02", "物語案を選んで、お支払い", "二つの物語案からお好きな1案を。料金・納期・条件を確認してから、カードで決済します。"],
+              ["03", "作品を確認して、受け取る", "絵本ページと映像を順番に確認。完成した作品は、愛犬専用のホームページでお届けします。"],
             ].map(([number, title, copy]) => (
               <li key={number}>
                 <span className="process-number">{number}</span>
@@ -516,6 +497,18 @@ export default async function Home() {
               </li>
             ))}
           </ol>
+          <details className="process-details">
+            <summary>制作・確認の詳しい流れを見る <span aria-hidden="true">＋</span></summary>
+            <ol className="process-list process-detail-list" aria-label="制作と確認の詳しい7ステップ">
+              {productionSteps.map(([title, copy], index) => (
+                <li key={title}>
+                  <span className="process-number">{String(index + 1).padStart(2, "0")}</span>
+                  <div className="process-rule" aria-hidden="true" />
+                  <div><h3>{title}</h3><p>{copy}</p></div>
+                </li>
+              ))}
+            </ol>
+          </details>
         </div>
       </section>
 
@@ -572,9 +565,12 @@ export default async function Home() {
           </p>
           <div className="storybook-final-actions">
             {APPLICATIONS_OPEN ? (
-              <StartStoryLink className="button button-cream" ctaLocation="home_footer">
-                物語とホームページをつくる →
-              </StartStoryLink>
+              <div className="consultation-action">
+                <p className="consultation-steps">お名前 → 無料登録 → 写真と思い出を入力</p>
+                <StartStoryLink className="button button-cream" ctaLocation="home_footer">
+                  うちの子の制作相談を始める →
+                </StartStoryLink>
+              </div>
             ) : (
               <span
                 className="button button-prelaunch button-prelaunch-light"

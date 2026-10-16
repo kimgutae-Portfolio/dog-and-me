@@ -38,9 +38,12 @@ export function LivePriceCard() {
         写真をそのまま動かす実写再現ではありません。愛犬の特徴とエピソードをもとに新しい絵本として描き、全ページをご確認いただいてから動きを加えます。
       </p>
       {APPLICATIONS_OPEN ? (
-        <StartStoryLink className="button button-primary">
-          このプランで相談する
-        </StartStoryLink>
+        <div className="consultation-action">
+          <p className="consultation-steps">お名前 → 無料登録 → 写真と思い出を入力</p>
+          <StartStoryLink className="button button-primary">
+            うちの子の制作相談を始める
+          </StartStoryLink>
+        </div>
       ) : (
         <span className="button button-prelaunch" aria-disabled="true">
           {PRELAUNCH_CTA}

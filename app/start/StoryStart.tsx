@@ -59,7 +59,7 @@ export function StoryStart() {
         <section className="start-card start-signup-card">
           <p className="eyebrow">SAVE &amp; CONTINUE</p>
           <p className="start-step">2 / 2　無料登録</p>
-          <h1>{cleanPetName}ちゃんの<br />物語づくりを始めます。</h1>
+          <h1>{cleanPetName}ちゃんの<br />制作相談を始めます。</h1>
           <p className="start-lead">
             入力した内容を保存して、あとから続きを作れるように、無料登録をお願いします。
             登録だけで注文や決済が行われることはありません。
@@ -96,6 +96,7 @@ export function StoryStart() {
         <p className="start-step">1 / 2　思い出づくりの準備</p>
         <h1>うちの子について、<br />最初に少しだけ教えてください。</h1>
         <p className="start-lead">ここではまだ注文・決済されません。最初から5つの出来事を決める必要はなく、短い一言から始めて途中保存できます。</p>
+        <p className="consultation-steps start-consultation-steps">お名前 → 無料登録 → 写真と思い出を入力</p>
         <form className="start-form" onSubmit={submit}>
           <label>
             <span>愛犬のお名前 <em>必須</em></span>
@@ -110,7 +111,7 @@ export function StoryStart() {
               </label>
             ))}
           </fieldset>
-          <button className="button button-primary" type="submit" disabled={loading}>次へ進む →</button>
+          <button className="button button-primary" type="submit" disabled={loading}>{user ? "写真と思い出の入力へ →" : "無料登録へ進む →"}</button>
         </form>
         <ul className="start-assurances" aria-label="お申し込み前のご案内">
           <li>登録だけでは料金は発生しません</li>
