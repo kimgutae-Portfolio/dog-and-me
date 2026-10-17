@@ -122,7 +122,7 @@ export function HeroMobileScene() {
           </>}
           {index === 2 && <Link className="hero-phone-link" href="/film/moka-demo" tabIndex={current === 2 ? 0 : -1} onClick={() => trackEvent("hero_website_click", { page_path: "/" })}>
             <div className="hero-service-phone"><div className="hero-phone-notch" /><Image src="/film/moka/05-storybook-lantern.webp" alt="モカの完成作品を表示した専用ホームページのイメージ" width={1672} height={941} /><strong>モカと、五つの記憶</strong><div className="hero-phone-album"><Image src="/film/moka/06-rainy-entryway.webp" alt="" width={1448} height={1086} /><Image src="/film/moka/09-autumn-ginkgo.webp" alt="" width={1447} height={1087} /><span>＋</span></div></div>
-            <span className="hero-phone-benefits"><strong>写真を追加</strong><strong>家族に共有</strong><small>月額料金なし</small><span className="hero-phone-cta"><span>実際のページ<br />を見る</span><span aria-hidden="true">↗</span></span></span>
+            <span className="hero-phone-benefits"><span className="hero-phone-benefit-copy"><strong>写真追加・家族と共有</strong><small>月額料金なし</small></span><span className="hero-phone-cta"><span>実際のページ<br />を見る</span><span aria-hidden="true">↗</span></span></span>
           </Link>}
           <span className="hero-service-number" aria-hidden="true">0{index + 1}</span>
         </div>
