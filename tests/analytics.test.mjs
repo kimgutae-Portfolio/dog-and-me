@@ -28,7 +28,7 @@ function browser(path = "/studio?order=private-order&session_id=private-session#
 
 test("analytics excludes customer/operator paths and strips private URL data without losing landing attribution", () => {
   for (const path of ["/admin", "/admin/orders", "/memory/private", "/film/customer", "/moka01"]) assert.equal(config.isAnalyticsPath(path), false);
-  for (const path of ["/", "/start", "/auth", "/story", "/studio", "/film/moka-demo", "/guides", "/inu-omoide-zukuri", "/pet-loss-aiken-omoide", "/dog-birthday-message"]) assert.equal(config.isAnalyticsPath(path), true);
+  for (const path of ["/", "/start", "/auth", "/story", "/studio", "/film/moka-demo", "/guides", "/inu-omoide-zukuri", "/pet-loss-aiken-omoide", "/dog-birthday-message", "/aiken-photo-goods"]) assert.equal(config.isAnalyticsPath(path), true);
   assert.equal(config.analyticsPageLocation("https://www.wanmemory.com/studio?order=UUID&session_id=secret#payment"), "https://www.wanmemory.com/studio");
   assert.equal(config.analyticsPageLocation("https://www.wanmemory.com/?utm_source=google&utm_campaign=pet_memory&gclid=click-ID&email=hello@example.com#x"), "https://www.wanmemory.com/?utm_source=google&utm_campaign=pet_memory&gclid=click-ID");
   assert.equal(config.analyticsPageLocation("https://www.wanmemory.com/private-dog?token=secret"), "");
@@ -44,6 +44,7 @@ test("referrer sanitization preserves Google and Instagram acquisition origins w
     ["https://l.instagram.com/?u=https%3A%2F%2Fexample.com&e=tracking", "https://l.instagram.com"],
     ["https://www.instagram.com/customer-profile/?igsh=private", "https://www.instagram.com"],
     ["https://www.wanmemory.com/auth?access_token=secret#token", "https://www.wanmemory.com/auth"],
+    ["https://www.wanmemory.com/aiken-photo-goods?utm_source=google&email=private#photos", "https://www.wanmemory.com/aiken-photo-goods"],
     ["https://wanmemory.com/private-dog?token=secret", ""],
     ["https://www.wanmemory.com/admin/orders?order=private", ""],
     ["https://www.wanmemory.com/film/customer?token=secret", ""],
@@ -61,6 +62,7 @@ test("initial GTM bootstrap applies the same safe referrer before loading any ta
     ["https://l.instagram.com/?u=private", "https://l.instagram.com"],
     ["https://www.wanmemory.com/private-dog?order=private", ""],
     ["https://www.wanmemory.com/studio?session_id=secret", "https://www.wanmemory.com/studio"],
+    ["https://www.wanmemory.com/aiken-photo-goods?email=private#photos", "https://www.wanmemory.com/aiken-photo-goods"],
   ]) {
     const window = { location: new URL("https://www.wanmemory.com/?utm_source=google&email=private") };
     const document = { referrer, getElementsByTagName: () => [{ parentNode: { insertBefore() {} } }], createElement: () => ({}) };
@@ -69,6 +71,24 @@ test("initial GTM bootstrap applies the same safe referrer before loading any ta
     assert.equal(settings.page_referrer, expected);
     assert.equal(settings.page_location, "https://www.wanmemory.com/?utm_source=google");
   }
+});
+
+test("photo goods guide landing attribution excludes personal query and hash data", () => {
+  const raw = "https://www.wanmemory.com/aiken-photo-goods?utm_source=google&utm_medium=organic&email=private&order=private-order#photos";
+  const expected = "https://www.wanmemory.com/aiken-photo-goods?utm_source=google&utm_medium=organic";
+  assert.equal(config.analyticsPageLocation(raw), expected);
+  assert.equal(config.isAnalyticsPath("/aiken-photo-goods-customer"), false);
+
+  const component = readFileSync(new URL("../app/components/GoogleTagManager.tsx", import.meta.url), "utf8");
+  const script = component.match(/\{`(\(function[\s\S]*?)`\}/)?.[1].replace("${GOOGLE_TAG_MANAGER_ID}", "GTM-test");
+  assert.ok(script);
+  const window = { location: new URL(raw) };
+  const document = { referrer: "https://www.google.co.jp/search?q=private", getElementsByTagName: () => [{ parentNode: { insertBefore() {} } }], createElement: () => ({}) };
+  vm.runInNewContext(script, { window, document, URL, URLSearchParams, Date });
+  const settings = window.dataLayer.find((item) => item[0] === "set")[1];
+  assert.equal(settings.page_location, expected);
+  assert.equal(settings.page_referrer, "https://www.google.co.jp");
+  assert.doesNotMatch(JSON.stringify(settings), /email|private-order|#photos/);
 });
 
 test("legacy GTM events and new direct Google tag events have one forwarding path", () => {

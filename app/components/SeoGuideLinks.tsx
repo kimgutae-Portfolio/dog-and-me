@@ -37,6 +37,11 @@ export const guides = [
     "/aiken-shashin-douga",
   ],
   [
+    "愛犬の写真で作るオーダーメイドグッズ",
+    "フォトブック・写真小物・動く絵本の選び方",
+    "/aiken-photo-goods",
+  ],
+  [
     "愛犬の写真を整理・保存する方法",
     "増え続ける写真を無理なく残す整理と保存のコツ",
     "/aiken-shashin-seiri",

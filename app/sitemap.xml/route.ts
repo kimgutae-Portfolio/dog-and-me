@@ -17,6 +17,7 @@ export function GET(request: Request) {
     `${origin}/pet-loss-aiken-omoide`,
     `${origin}/aiken-shashin-douga`,
     `${origin}/aiken-shashin-seiri`,
+    `${origin}/aiken-photo-goods`,
     `${origin}/uchinoko-kinenbi-douga`,
     `${origin}/dog-photo-guide`,
     `${origin}/dog-birthday-message`,

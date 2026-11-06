@@ -4,12 +4,13 @@ import { SiteFooter } from "./SiteFooter";
 
 type Props = {
   eyebrow: string;
-  title: string;
+  title: ReactNode;
   lead: string;
+  articleClassName?: string;
   children: ReactNode;
 };
 
-export function InfoPage({ eyebrow, title, lead, children }: Props) {
+export function InfoPage({ eyebrow, title, lead, articleClassName, children }: Props) {
   return (
     <main className="info-page">
       <header className="info-header">
@@ -25,7 +26,7 @@ export function InfoPage({ eyebrow, title, lead, children }: Props) {
           <Link href="/">トップへ戻る</Link>
         </div>
       </header>
-      <article className="info-shell">
+      <article className={articleClassName ? `info-shell ${articleClassName}` : "info-shell"}>
         <div className="info-title">
           <p className="eyebrow">{eyebrow}</p>
           <h1>{title}</h1>

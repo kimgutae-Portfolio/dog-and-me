@@ -40,6 +40,7 @@ export function SiteFooter() {
             <Link href="/inu-omoide-zukuri">犬との思い出作りアイデア10選</Link>
             <Link href="/aiken-shashin-seiri">愛犬の写真を整理・保存する方法</Link>
             <Link href="/aiken-shashin-douga">愛犬の写真を動画にする方法</Link>
+            <Link href="/aiken-photo-goods">愛犬の写真で作るオーダーメイドグッズ</Link>
             <Link href="/pet-loss-aiken-omoide">ペットロスと愛犬の思い出の残し方</Link>
             <Link href="/dog-photo-guide">絵本の写真選び</Link>
             <Link href="/dog-birthday-message">愛犬の誕生日メッセージ例文8選</Link>

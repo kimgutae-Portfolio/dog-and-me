@@ -5,12 +5,12 @@ import { guides } from "../components/SeoGuideLinks";
 import { createGuideStructuredData } from "../lib/seo";
 
 const title = "愛犬の思い出ガイド｜写真の整理・動画・記念日の残し方";
-const description = "犬との思い出作り、写真の整理と保存、思い出動画、誕生日やうちの子記念日。愛犬との時間を残すためのWAN MEMORYガイドをテーマ別にご紹介します。";
+const description = "犬との思い出作り、写真の整理と保存、写真グッズの選び方、思い出動画、誕生日やうちの子記念日。愛犬との時間を残すためのWAN MEMORYガイドをテーマ別にご紹介します。";
 export const metadata: Metadata = { title, description, alternates: { canonical: "/guides" } };
 
 const topics = [
   { title: "毎日の思い出を作る・残す", paths: ["/inu-omoide-zukuri", "/aiken-omoide-douga", "/pet-loss-aiken-omoide"] },
-  { title: "写真を整理して、作品にする", paths: ["/aiken-shashin-seiri", "/dog-photo-guide", "/aiken-shashin-douga"] },
+  { title: "写真を整理して、作品・記念品にする", paths: ["/aiken-shashin-seiri", "/dog-photo-guide", "/aiken-shashin-douga", "/aiken-photo-goods"] },
   { title: "誕生日・うちの子記念日", paths: ["/dog-birthday-message", "/uchinoko-kinenbi-douga"] },
 ];
 
