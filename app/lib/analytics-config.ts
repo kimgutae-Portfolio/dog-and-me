@@ -7,7 +7,7 @@ export function isAnalyticsPath(pathname: string) {
       (pathname.startsWith("/film/") && pathname !== "/film/moka-demo")) return false;
   const knownFirstSegments = new Set([
     "aiken-omoide-douga", "aiken-shashin-douga", "aiken-shashin-seiri", "aiken-photo-goods", "api",
-    "auth", "contact", "dog-birthday-message", "dog-photo-guide", "film", "guides",
+    "auth", "contact", "dog-birthday-message", "dog-birthday-message-english", "dog-photo-guide", "film", "guides",
     "inu-omoide-zukuri", "legal", "pet-loss-aiken-omoide", "privacy", "story",
     "start", "studio", "terms", "uchinoko-kinenbi-douga",
   ]);

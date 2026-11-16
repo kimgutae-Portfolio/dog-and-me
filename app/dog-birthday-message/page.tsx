@@ -57,6 +57,9 @@ export default function DogBirthdayMessagePage() {
       <section className="seo-lead-panel">
         <p>「お誕生日おめでとう」のあとに、何を書こう。そんなときは、立派な文章にしようとせず、最近かわいいと思った仕草や一緒に過ごした場面を思い浮かべてみてください。写真だけでは思い出しにくい、その日の気持ちも残せます。</p>
         <p>この記事の例文は、ご家族が書くためのオリジナル文例です。お客様のレビューや実際のエピソードではありません。愛犬に合う言葉に置き換えてお使いください。</p>
+        <Link href="/dog-birthday-message-english" className="text-link">
+          愛犬の誕生日に使える英語の例文と和訳を見る →
+        </Link>
       </section>
       <nav className="seo-toc" aria-label="この記事の目次"><p>この記事の目次</p><ul>
         <li><a href="#examples">場面別のメッセージ例文8選</a></li>

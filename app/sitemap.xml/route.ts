@@ -21,6 +21,7 @@ export function GET(request: Request) {
     `${origin}/uchinoko-kinenbi-douga`,
     `${origin}/dog-photo-guide`,
     `${origin}/dog-birthday-message`,
+    `${origin}/dog-birthday-message-english`,
     `${origin}/film/moka-demo`,
     `${origin}/contact`,
     `${origin}/terms`,

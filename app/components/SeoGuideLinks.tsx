@@ -17,6 +17,11 @@ export const guides = [
     "/dog-birthday-message",
   ],
   [
+    "愛犬の誕生日メッセージを英語で",
+    "写真・ケーキ・SNSに使える英語の例文と和訳",
+    "/dog-birthday-message-english",
+  ],
+  [
     "愛犬の思い出を残す方法",
     "写真・動画・日記・動く絵本の選び方",
     "/aiken-omoide-douga",

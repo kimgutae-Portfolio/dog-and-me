@@ -11,7 +11,7 @@ export const metadata: Metadata = { title, description, alternates: { canonical:
 const topics = [
   { title: "毎日の思い出を作る・残す", paths: ["/inu-omoide-zukuri", "/aiken-omoide-douga", "/pet-loss-aiken-omoide"] },
   { title: "写真を整理して、作品・記念品にする", paths: ["/aiken-shashin-seiri", "/dog-photo-guide", "/aiken-shashin-douga", "/aiken-photo-goods"] },
-  { title: "誕生日・うちの子記念日", paths: ["/dog-birthday-message", "/uchinoko-kinenbi-douga"] },
+  { title: "誕生日・うちの子記念日", paths: ["/dog-birthday-message", "/dog-birthday-message-english", "/uchinoko-kinenbi-douga"] },
 ];
 
 export default function GuidesPage() {

@@ -1,0 +1,118 @@
+.article {
+  width: min(880px, calc(100% - 40px));
+}
+
+.article :global(.info-title h1) {
+  font-size: clamp(22px, 5.8vw, 42px);
+  line-height: 1.5;
+}
+
+.titlePhrase {
+  white-space: nowrap;
+}
+
+.article :global(.info-title > p:not(.eyebrow)),
+.article :global(.info-content > section p),
+.article :global(.seo-faq summary) {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.article :global(.info-content > section a:not(.button)) {
+  color: #824729;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.article :global(.info-content > section[id]) {
+  scroll-margin-top: 24px;
+}
+
+.article :global(.seo-toc > p) {
+  font-size: 13px;
+}
+
+.article :global(.seo-toc a) {
+  min-height: 58px;
+  padding-left: 8px;
+  font-size: 15px;
+}
+
+.article :global(.seo-toc a::before) {
+  content: none;
+}
+
+.article :global(.info-content > section) .examples {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.examples li {
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .36);
+}
+
+.examples h3 {
+  margin: 0 0 12px;
+  color: #824729;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article :global(.info-content > section) .english {
+  color: var(--ink);
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.ages {
+  margin: 20px 0;
+  border-block-start: 1px solid var(--line);
+}
+
+.ages div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 8px;
+  padding: 12px 0;
+  border-block-end: 1px solid var(--line);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.ages dd {
+  margin: 0;
+  font-weight: 650;
+}
+
+.article :global(.seo-cta > p) {
+  margin: 12px 0 0;
+  color: #fff;
+  font-size: 15px;
+}
+
+.article :global(.seo-faq > p) {
+  padding-top: 18px;
+}
+
+@media (max-width: 640px) {
+  .article :global(.info-content > section) .examples {
+    grid-template-columns: 1fr;
+  }
+
+  .examples li {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 350px) {
+  .titlePhrase {
+    white-space: normal;
+  }
+}
