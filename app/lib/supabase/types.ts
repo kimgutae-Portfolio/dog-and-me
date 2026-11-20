@@ -1,3 +1,5 @@
+import type { MemoryPlanId } from "../pricing";
+
 export type ProfileRole = "customer" | "admin";
 
 export type Profile = {
@@ -59,6 +61,7 @@ export type MemoryOrder = {
   id: string;
   user_id: string;
   order_number: string;
+  plan_id?: MemoryPlanId | null;
   pet_name: string;
   name_kana: string | null;
   breed: string;

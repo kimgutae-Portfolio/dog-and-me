@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { hasCurrentConsent } from "../../../lib/consent";
+import { getMemoryPlan, isMemoryPlanId } from "../../../lib/pricing";
 import { sendPaymentRequestNotification } from "../../../lib/email/messageNotification";
 import { APPLICATIONS_OPEN, DEFAULT_SITE_ORIGIN } from "../../../lib/site";
 import { getStripeMode, isStripeLiveMode } from "../../../lib/stripe-mode";
@@ -103,6 +104,10 @@ export async function POST(request: NextRequest) {
   }
 
   let order = orderData as MemoryOrder;
+  if (order.plan_id != null && !isMemoryPlanId(order.plan_id)) {
+    return NextResponse.json({ error: "invalid_plan" }, { status: 409 });
+  }
+  const plan = getMemoryPlan(order.plan_id);
   if (order.payment_status === "paid") {
     return NextResponse.json({ paid: true });
   }
@@ -316,6 +321,7 @@ export async function POST(request: NextRequest) {
     order_number: order.order_number,
     user_id: order.user_id,
     checkout_record_id: reservation.id,
+    plan_id: plan.planId,
   };
 
   try {
@@ -333,7 +339,7 @@ export async function POST(request: NextRequest) {
               currency: "jpy",
               unit_amount: order.quoted_price,
               product_data: {
-                name: "WAN MEMORY うちの子の動く絵本",
+                name: `WAN MEMORY ${plan.name}`,
                 description: `${order.pet_name}ちゃんの動く絵本制作（${order.order_number}・税込）`,
               },
             },

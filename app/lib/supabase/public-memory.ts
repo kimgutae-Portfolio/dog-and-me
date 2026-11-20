@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 export type SharedMemoryPayload = {
   order: {
     id: string;
+    plan_id?: string | null;
     order_number: string;
     pet_name: string;
     breed: string;
@@ -65,7 +66,8 @@ export async function getPublicSharedMemory(shareCode: string): Promise<SharedMe
     ? await supabase.rpc("get_shared_memory_by_code", { p_share_code: shareCode })
     : await supabase.rpc("get_shared_memory_by_address", { p_address: shareCode });
   if (error || !data || typeof data !== "object") return null;
-  return data as SharedMemoryPayload;
+  const payload = data as SharedMemoryPayload;
+  return payload.order?.plan_id === "video-only" ? null : payload;
 }
 
 export async function getPublicSharedMemoryBySlug(
@@ -87,7 +89,8 @@ export async function getPublicSharedMemoryBySlug(
     p_pet_slug: petSlug,
   });
   if (error || !data || typeof data !== "object") return null;
-  return data as SharedMemoryPayload;
+  const payload = data as SharedMemoryPayload;
+  return payload.order?.plan_id === "video-only" ? null : payload;
 }
 
 export async function getPublicMemoryHeroUrl(memory: SharedMemoryPayload): Promise<string | null> {

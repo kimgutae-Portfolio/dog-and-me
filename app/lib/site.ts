@@ -1,6 +1,6 @@
 export const SITE_NAME = "WAN MEMORY";
 export const SITE_DESCRIPTION =
-  "愛犬の5つの思い出と写真から、水彩で描く約40秒の『動く絵本』と、完成後も写真を増やせる専用ホームページを一緒に制作するオーダーメイドサービスです。水彩絵本ページ5枚、文章、BGM、ミニキャラクター、写真アルバムまで一つに仕上げます。";
+  "愛犬の5つの思い出と写真から、水彩で描く約40秒の『動く絵本』を制作します。動画MP4をお届けする7,800円のプランと、絵本ページ・専用ホームページ・LINEスタンプも一緒に残せる12,800円のプランをご用意しています。いずれも税込です。";
 export const DEFAULT_SITE_ORIGIN = "https://www.wanmemory.com";
 export const SUPPORT_EMAIL = "info@wanmemory.com";
 export const INSTAGRAM_URL = "https://www.instagram.com/wanmemory.official/";

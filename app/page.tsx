@@ -16,7 +16,7 @@ import {
   HomeLineContactLink,
 } from "./components/HomeLineContact";
 import { MiruBeforeAfter } from "./components/MiruBeforeAfter";
-import { formatYen, MEMORY_FILM_PRICING } from "./lib/pricing";
+import { formatYen, getMemoryPlan, MEMORY_FILM_PRICING, MEMORY_VIDEO_PRICING } from "./lib/pricing";
 import {
   APPLICATIONS_OPEN,
   PRELAUNCH_COPY,
@@ -85,13 +85,13 @@ const productionSteps = [
   ["絵本ページと文章を確認する", "全場面の絵と、その場面に入る短い文章を先にお見せします。絵本ページは合計2場面まで修正できます。"],
   ["小さな動きを加える", "承認された5枚の絵に、その場面らしい小さな動きを加えて一冊の物語につなぎます。"],
   ["動く絵本を確認する", "BGMと文章を含む約40秒の映像をご確認いただき、映像は合計1場面まで修正できます。"],
-  ["ホームページで受け取る", "完成した動く絵本、絵本ページ、写真アルバム、ミニキャラクターを、その子だけのホームページにまとめてお届けします。"],
+  ["選んだプランで受け取る", "動画プランは完成映像MP4をダウンロード。ホームページ付きプランは、絵本ページと専用ホームページ、写真アルバム、ミニキャラクターも一緒にお届けします。"],
 ] as const;
 
 const homeFaqs = [
   [
     "どんな作品が届きますか？",
-    "愛犬を写真そっくりの実写として再現するのではなく、その子の特徴や表情をやわらかな水彩・ガッシュで描きます。5つの思い出をつないだ約40秒の『動く絵本』と、水彩絵本ページ5枚・元の写真・写真アルバム・ミニキャラクターを楽しめる専用ホームページを一緒にお届けします。",
+    "愛犬の特徴や表情を水彩・ガッシュの絵で描き、5つの思い出を約40秒の『動く絵本』にまとめます。動画プランは完成映像MP4、ホームページ付きプランは絵本ページ5枚・写真アルバム・ミニキャラクターのある専用ホームページもお届けします。",
   ],
   [
     "写真は何枚必要ですか？",
@@ -131,15 +131,15 @@ const homeFaqs = [
   ],
   [
     "料金には何が含まれますか？",
-    `¥${formatYen(MEMORY_FILM_PRICING.price)}（税込）に、水彩絵本ページ5枚、約40秒の動く絵本、専用ホームページ、ミニキャラクター、LINEスタンプ8種類が含まれます。専用ホームページに公開期限や月額料金はありません。`,
+    `動画プランは¥${formatYen(MEMORY_VIDEO_PRICING.price)}（税込）で約40秒の完成映像MP4を納品します。¥${formatYen(MEMORY_FILM_PRICING.price)}（税込）のホームページ付きプランには、絵本ページ5枚・専用ホームページ・ミニキャラクター・LINEスタンプ8種類も含まれます。両プランにBGM・字幕、絵本と文章2場面・確認映像1場面の修正が含まれます。`,
   ],
   [
     "専用ものがたりサイトは、いつまで見られますか？",
-    "公開期限は設けておらず、追加の月額料金もありません。専用URLからいつでも見返せます。将来、新しい機能や別サービスが加わる場合も、現在お届けする専用サイトの閲覧はそのまま続けられます。",
+    "ホームページ付きプランの専用サイトには公開期限や追加の月額料金はありません。専用URLからいつでも見返せます。",
   ],
   [
     "完成後も写真を追加できますか？",
-    "はい。専用サイトのアルバムには、完成後の新しい日々もいつでも追加できます。写真の枚数を気にせず続けられるよう、30枚ずつ軽く読み込みます。写真は1枚20MBまで、一度に50枚まで追加できます。",
+    "ホームページ付きプランでは、専用サイトのアルバムに完成後の新しい写真を追加できます。写真は1枚20MBまで、一度に50枚まで追加できます。",
   ],
 ] as const;
 
@@ -181,13 +181,14 @@ export default async function Home() {
       availableLanguage: "日本語",
       ...(APPLICATIONS_OPEN
         ? {
-            offers: {
+            offers: [MEMORY_VIDEO_PRICING, MEMORY_FILM_PRICING].map((pricing) => ({
               "@type": "Offer",
-              price: MEMORY_FILM_PRICING.price,
+              name: getMemoryPlan(pricing.planId).name,
+              price: pricing.price,
               priceCurrency: "JPY",
               availability: "https://schema.org/InStock",
               url: `${origin}/#plans`,
-            },
+            })),
           }
         : {}),
     },
@@ -233,28 +234,28 @@ export default async function Home() {
               <span>写真5枚から、</span>
             </span>
             <span className="storybook-hero-title-product">
-              <span>愛犬だけの動く絵本と</span><span>ホームページを。</span>
+              <span>愛犬が主人公の、</span><span>動く絵本を。</span>
             </span>
           </h1>
           <p className="storybook-hero-lead">
             <span className="hero-desktop-lead-copy">
             5つの思い出を水彩で描き、約40秒の物語に。
             <br className="desktop-only" />
-            完成後も写真を増やせる、その子専用のホームページと一緒にお届けします。
+            動画を保存するプランと、写真を増やせる専用ホームページ付きプランから選べます。
             </span>
-            <span className="hero-mobile-lead-copy">写真と思い出から、動く絵本と専用サイトを。</span>
+            <span className="hero-mobile-lead-copy">写真と思い出から、うちの子の動く絵本を。</span>
           </p>
           <HeroMobileScene />
           <div className="storybook-hero-offer" aria-label="制作プランの価格と内容">
             <ul>
               <li>約40秒の動く絵本</li>
-              <li>水彩絵本5枚</li>
-              <li>専用ホームページ</li>
+              <li>自分だけの物語とBGM</li>
+              <li>ホームページ付きも選べます</li>
             </ul>
             <div className="storybook-hero-offer-price">
-              <span>制作料金</span>
+              <span>動画プラン</span>
               <strong>
-                ¥{formatYen(MEMORY_FILM_PRICING.price)}<small>税込</small>
+                ¥{formatYen(MEMORY_VIDEO_PRICING.price)}<small>税込</small>
               </strong>
             </div>
             <p><strong>物語案の確認までは無料。</strong>注文・決済は内容を見てからです。</p>
@@ -266,7 +267,7 @@ export default async function Home() {
             {APPLICATIONS_OPEN ? (
               <div className="consultation-action">
                 <p className="consultation-steps">お名前 → 無料登録 → 写真と思い出を入力</p>
-                <StartStoryLink className="button button-outline" ctaLocation="home_hero">
+                <StartStoryLink className="button button-outline" ctaLocation="home_hero" planId="video-only">
                   うちの子の制作相談を始める <span aria-hidden="true">→</span>
                 </StartStoryLink>
               </div>
@@ -304,18 +305,18 @@ export default async function Home() {
             <p className="storybook-complete-desktop-copy">
               5つの思い出を、水彩で描く一冊の動く絵本に。
               <br />
-              約40秒の物語として、絵本ページとともにお届けします。
+              約40秒の物語に。ホームページ付きプランでは、絵本ページも一緒にお届けします。
             </p>
             <p className="storybook-complete-mobile-copy">
               覚えている出来事をひとつずつ伺い、5つの場面を一冊の動く絵本に。約40秒の物語としてお届けします。
             </p>
           </div>
-          <ul className="storybook-complete-includes" aria-label="制作プランに含まれるもの">
+          <ul className="storybook-complete-includes" aria-label="ホームページ付きプランに含まれるもの">
             <li><span>01</span><strong>約40秒の動く絵本</strong><small>5つの思い出を一つの物語に</small></li>
-            <li><span>02</span><strong>水彩絵本ページ5枚</strong><small>動画になる前の完成イラスト</small></li>
-            <li><span>03</span><strong>専用ホームページ</strong><small>公開期限・月額料金なし</small></li>
-            <li><span>04</span><strong>ミニキャラクター</strong><small>ホームページを歩いてご案内</small></li>
-            <li><span>05</span><strong>LINEスタンプ8種類</strong><small>プラン料金に含まれます</small></li>
+            <li><span>02</span><strong>水彩絵本ページ5枚</strong><small>ホームページ付きプランで納品</small></li>
+            <li><span>03</span><strong>専用ホームページ</strong><small>ホームページ付きプラン・月額なし</small></li>
+            <li><span>04</span><strong>ミニキャラクター</strong><small>ホームページ付きプランでご案内</small></li>
+            <li><span>05</span><strong>LINEスタンプ8種類</strong><small>ホームページ付きプランに含みます</small></li>
           </ul>
           <div className="storybook-phone-features">
             <div className="storybook-phone-features-heading">
@@ -441,13 +442,13 @@ export default async function Home() {
         <div className="shell">
           <div className="storybook-line-sticker-heading">
             <div>
-              <p className="eyebrow">LINE STICKERS INCLUDED</p>
+              <p className="eyebrow">ホームページ付きプランの特典</p>
               <h2>
                 物語のキャラクターを、<br />LINEスタンプにも。
               </h2>
             </div>
             <div className="storybook-line-sticker-offer">
-              <span>PLAN INCLUDED</span>
+              <span>ホームページ付きプラン</span>
               <strong>8種類を制作</strong>
               <small>追加の制作料金なし</small>
             </div>
@@ -464,7 +465,7 @@ export default async function Home() {
             </div>
             <div className="storybook-line-sticker-copy">
               <p>
-                専用ホームページのキャラクターから、毎日使いやすい8種類を制作。追加料金なしでプランに含まれます。
+                ホームページ付きプランでは、専用キャラクターから毎日使いやすい8種類を制作します。
               </p>
               <small>
                 LINEで実際に使用する際は、LINE STOREでのスタンプ購入代金が別途必要です。文言指定・個別修正は含まれません。
@@ -485,7 +486,7 @@ export default async function Home() {
             {[
               ["01", "写真と思い出を送る", "お名前を入力し、無料登録。写真とお話は一つずつ、途中保存しながら準備できます。"],
               ["02", "物語案を選んで、お支払い", "二つの物語案からお好きな1案を。料金・納期・条件を確認してから、カードで決済します。"],
-              ["03", "作品を確認して、受け取る", "絵本ページと映像を順番に確認。完成した作品は、愛犬専用のホームページでお届けします。"],
+              ["03", "作品を確認して、受け取る", "絵と映像を順番に確認。動画プランはMP4を保存、ホームページ付きプランは専用サイトでも楽しめます。"],
             ].map(([number, title, copy]) => (
               <li key={number}>
                 <span className="process-number">{number}</span>
@@ -516,13 +517,14 @@ export default async function Home() {
         <div className="shell">
           <div className="pricing-heading">
             <div>
-              <p className="eyebrow">ONE STORYBOOK + WEBSITE PLAN</p>
-              <h2>動く絵本も、その後の居場所も。</h2>
+              <p className="eyebrow">制作プラン</p>
+              <h2>2つの制作プラン</h2>
             </div>
-            <p>約40秒の動く絵本、水彩絵本ページ5枚、専用ホームページ、ミニキャラクター、LINEスタンプ8種類まで一つのプランに含みます。</p>
+            <p>完成映像を保存する動画プランと、写真を増やせるホームページ付きプラン。どちらも5つの思い出を約40秒の物語にします。</p>
           </div>
-          <div className="pricing-grid">
-            <LivePriceCard />
+          <div className="pricing-grid pricing-grid-plans">
+            <LivePriceCard planId="video-only" />
+            <LivePriceCard planId="memory-film" />
           </div>
         </div>
       </section>
@@ -560,7 +562,7 @@ export default async function Home() {
           </h2>
           <p>
             {APPLICATIONS_OPEN
-              ? `制作料金は ¥${formatYen(MEMORY_FILM_PRICING.price)}（税込）。相談時点では料金は発生しません。`
+              ? `動画プラン ¥${formatYen(MEMORY_VIDEO_PRICING.price)} ／ ホームページ付き ¥${formatYen(MEMORY_FILM_PRICING.price)}（いずれも税込）。相談時点では料金は発生しません。`
               : PRELAUNCH_COPY}
           </p>
           <div className="storybook-final-actions">

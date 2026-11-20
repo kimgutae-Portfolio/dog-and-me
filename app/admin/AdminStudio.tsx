@@ -18,6 +18,7 @@ import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { uploadMessageAttachment } from "../lib/supabase/uploads";
 import { hasCurrentConsent } from "../lib/consent";
 import { APPLICATIONS_OPEN, DEFAULT_SITE_ORIGIN } from "../lib/site";
+import { getMemoryPlan, formatYen } from "../lib/pricing";
 import { AdminPushCenter } from "./AdminPushCenter";
 import type {
   FilmConcept,
@@ -1241,6 +1242,7 @@ export function AdminStudio() {
     () => orders.find((item) => item.id === selectedOrderId) ?? null,
     [orders, selectedOrderId],
   );
+  const plan = getMemoryPlan(order?.plan_id);
 
   useEffect(() => {
     if (!order?.id || profile?.role !== "admin") return;
@@ -1803,6 +1805,14 @@ export function AdminStudio() {
     );
 
   const notifyFinalDelivery = async (currentOrder: MemoryOrder) => {
+    if (!getMemoryPlan(currentOrder.plan_id).includesWebsite) {
+      return notifyCustomerByMessage(currentOrder.id, [
+        `${currentOrder.pet_name}ちゃんの動く絵本が完成しました。`,
+        "制作室の「完成映像」から再生・ダウンロードできます。MP4データをお手元に保存してお楽しみください。",
+        "",
+        "このたびは、WAN MEMORYに大切な物語をお任せいただき、本当にありがとうございました。",
+      ].join("\n"));
+    }
     const { data: personalSite } = await getSupabaseBrowserClient()
       .from("share_links")
       .select("custom_slug,initial_slug")
@@ -2079,6 +2089,10 @@ export function AdminStudio() {
       },
       transitions,
       output_plan: {
+        plan_id: plan.planId,
+        customer_deliverables: plan.includesWebsite
+          ? ["final_video", "storybook_pages", "personal_website", "line_stickers"]
+          : ["final_video"],
         story_count: stories.length,
         video_clip_count: stories.length,
         story_model: "video_generation_ai",
@@ -2342,6 +2356,7 @@ export function AdminStudio() {
   };
 
   const downloadCharacterBundle = async () => {
+    if (!plan.includesWebsite) return;
     const exportData = buildProductionExport();
     if (!order || !exportData || sourceAssets.length === 0) {
       setError("キャラクター制作には、注文情報と元写真が1枚以上必要です。");
@@ -2456,7 +2471,7 @@ export function AdminStudio() {
   };
 
   const uploadCharacterSprite = async () => {
-    if (!order || !characterSpriteFile) return;
+    if (!plan.includesWebsite || !order || !characterSpriteFile) return;
     if (!["image/png", "image/webp"].includes(characterSpriteFile.type)) {
       setError("キャラクター画像は透明PNGまたはWebPを選択してください。");
       return;
@@ -2497,7 +2512,7 @@ export function AdminStudio() {
   };
 
   const deleteCharacterSprite = async () => {
-    if (!characterSprite || !order || !window.confirm("登録中のホームページキャラクターを削除しますか？")) return;
+    if (!plan.includesWebsite || !characterSprite || !order || !window.confirm("登録中のホームページキャラクターを削除しますか？")) return;
     setSaving(true);
     const supabase = getSupabaseBrowserClient();
     const { data: storagePath, error: deleteError } = await supabase.rpc("admin_delete_character_sprite", { p_asset_id: characterSprite.id });
@@ -2511,6 +2526,7 @@ export function AdminStudio() {
   };
 
   const downloadLineStickerBundle = async () => {
+    if (!plan.includesLineStickers) return;
     if (!order || !characterSprite) {
       setError("先に完成したホームページキャラクターを登録してください。");
       return;
@@ -2612,7 +2628,7 @@ export function AdminStudio() {
   };
 
   const uploadLineStickerDelivery = async () => {
-    if (!order || !lineStickerPreviewFile) return;
+    if (!plan.includesLineStickers || !order || !lineStickerPreviewFile) return;
     if (!lineStickerDelivery?.consented_at) {
       setError("お客様のLINEスタンプ制作・販売への同意が必要です。");
       return;
@@ -2702,7 +2718,7 @@ export function AdminStudio() {
   };
 
   const updateLineStickerStatus = async () => {
-    if (!order || !lineStickerPreview || saving) return;
+    if (!plan.includesLineStickers || !order || !lineStickerPreview || saving) return;
     const storeUrl = lineStickerStatus === "on_sale" ? lineStickerStoreUrl.trim() : null;
     if (lineStickerStatus === "on_sale" && (!storeUrl || !/^https:\/\/(store\.line\.me|line\.me)\//.test(storeUrl))) {
       setError("販売中にする場合は、有効なLINE STORE URLを入力してください。");
@@ -2961,7 +2977,14 @@ export function AdminStudio() {
   };
 
   const selectVideo = (event: ChangeEvent<HTMLInputElement>) => {
-    setVideoFile(event.target.files?.[0] ?? null);
+    const file = event.target.files?.[0] ?? null;
+    if (file && videoMode === "final" && !plan.includesWebsite && file.type !== "video/mp4") {
+      event.target.value = "";
+      setVideoFile(null);
+      setError("動画プランの完成映像はMP4ファイルを選択してください。");
+      return;
+    }
+    setVideoFile(file);
     setVideoChecked(false);
     setError("");
   };
@@ -2974,6 +2997,10 @@ export function AdminStudio() {
 
   const uploadVideo = async () => {
     if (!videoFile || !order || !videoChecked) return;
+    if (videoMode === "final" && !plan.includesWebsite && videoFile.type !== "video/mp4") {
+      setError("動画プランの完成映像はMP4ファイルを選択してください。");
+      return;
+    }
     if (
       (videoMode === "review" && !canUploadReview) ||
       (videoMode === "final" && !canUploadFinal)
@@ -3041,12 +3068,13 @@ export function AdminStudio() {
         return;
       }
       const notification = await notifyFinalDelivery(order);
+      const deliveredItems = plan.includesWebsite ? "完成映像と専用サイト" : "完成映像";
       setNotice(
         notification.saved
           ? notification.notificationSent
-            ? "完成映像と専用サイトを納品し、お客様へ案内メッセージと通知メールを送りました。"
-            : "完成映像と専用サイトを納品し、案内メッセージを送りました。通知メールは送れませんでした。"
-          : "完成映像と専用サイトを納品しましたが、案内メッセージを送れませんでした。チャットから手動でお知らせしてください。",
+            ? `${deliveredItems}を納品し、お客様へ案内メッセージと通知メールを送りました。`
+            : `${deliveredItems}を納品し、案内メッセージを送りました。通知メールは送れませんでした。`
+          : `${deliveredItems}を納品しましたが、案内メッセージを送れませんでした。チャットから手動でお知らせしてください。`,
       );
     } else {
       const notification = await notifyReviewVideoPublished(order.id);
@@ -3065,6 +3093,10 @@ export function AdminStudio() {
 
   const retryDelivery = async (asset: OrderAsset) => {
     if (!order || !canUploadFinal) return;
+    if (!plan.includesWebsite && asset.mime_type !== "video/mp4") {
+      setError("動画プランの最終納品にはMP4映像を登録してください。");
+      return;
+    }
     if (
       !window.confirm(
         `${order.pet_name}ちゃんへ「${asset.original_filename}」を最終納品しますか？`,
@@ -3922,7 +3954,7 @@ export function AdminStudio() {
                 return (
                   <option value={item.id} key={item.id}>
                     {count ? `● ${count}件 · ` : ""}
-                    {item.pet_name} · {ORDER_STATUS_LABELS[item.status]}
+                    {item.pet_name} · {getMemoryPlan(item.plan_id).name} · {ORDER_STATUS_LABELS[item.status]}
                   </option>
                 );
               })}
@@ -3948,6 +3980,7 @@ export function AdminStudio() {
                   </span>
                   <strong>{item.pet_name}</strong>
                   <small>
+                    {getMemoryPlan(item.plan_id).name}<br />
                     {item.order_number} · ¥
                     {new Intl.NumberFormat("ja-JP").format(item.quoted_price)}
                     （税込）
@@ -4133,9 +4166,10 @@ export function AdminStudio() {
                   <span>
                     {customer?.full_name || customer?.email || order.user_id}
                   </span>
+                  <p>{plan.name} · ¥{formatYen(order.quoted_price)}（税込）</p>
                 </div>
                 <div className="admin-title-actions">
-                  {order.status === "delivered" && (
+                  {plan.includesWebsite && order.status === "delivered" && (
                     <Link
                       className="button button-primary"
                       href={`/studio?order=${order.id}&preview=1&manage=website`}
@@ -4638,7 +4672,8 @@ export function AdminStudio() {
                       </div>
                     </div>
                     <p className="admin-export-intro">
-                      STEP 1〜3は注文の進行に合わせて有効になります。ホームページキャラクターだけは、元写真があればどの工程でも制作・登録できます。
+                      STEP 1〜3は注文の進行に合わせて有効になります。
+                      {plan.includesWebsite && "ホームページキャラクターは、元写真があればどの工程でも制作・登録できます。"}
                     </p>
                     <div className="admin-stage-downloads">
                       <article className={conceptExportReady ? "ready" : "locked"}>
@@ -4687,7 +4722,7 @@ export function AdminStudio() {
                           </em>
                         )}
                       </article>
-                      <article className={sourceAssets.length > 0 ? "ready anytime" : "locked anytime"}>
+                      {plan.includesWebsite && <article className={sourceAssets.length > 0 ? "ready anytime" : "locked anytime"}>
                         <header><span>OPTIONAL / ANYTIME</span><strong>ホームページキャラクター</strong></header>
                         <p>顧客確認に出さない、専用サイト用の歩くキャラクターを作ります。</p>
                         <small>内容：注文JSON、元写真、4×3透明スプライト専用プロンプト</small>
@@ -4700,9 +4735,9 @@ export function AdminStudio() {
                           {exportingBundle && sourceAssets.length > 0 ? "準備中…" : "キャラクター制作データをダウンロード"}
                         </button>
                         {sourceAssets.length === 0 && <em>元写真の登録後に利用できます</em>}
-                      </article>
+                      </article>}
                     </div>
-                    <div className="admin-character-register">
+                    {plan.includesWebsite && <div className="admin-character-register">
                       <div>
                         <strong>完成したキャラクターを登録</strong>
                         <p>4列×3行・12フレームの透明PNG / WebP。顧客画面の承認対象には追加されません。</p>
@@ -4729,8 +4764,8 @@ export function AdminStudio() {
                         </button>
                         {characterSprite && <button className="button button-outline" type="button" disabled={saving} onClick={() => void deleteCharacterSprite()}>登録を解除</button>}
                       </div>
-                    </div>
-                    <div className="admin-line-sticker-register">
+                    </div>}
+                    {plan.includesLineStickers && <div className="admin-line-sticker-register">
                       <div className="admin-line-sticker-head">
                         <div>
                           <span className="admin-free-benefit">FREE BENEFIT · 通常¥1,480相当</span>
@@ -4877,7 +4912,7 @@ export function AdminStudio() {
                           </div>
                         </div>
                       )}
-                    </div>
+                    </div>}
                     {exportProgress && (
                       <p className="admin-export-progress" role="status">
                         <span aria-hidden="true" />
@@ -6067,7 +6102,7 @@ export function AdminStudio() {
                             : "完成映像の最終納品"}
                         </h3>
                       </div>
-                      <span>MP4 / MOV / WebM</span>
+                      <span>{videoMode === "final" && !plan.includesWebsite ? "MP4" : "MP4 / MOV / WebM"}</span>
                     </div>
                     <div className="admin-video-tabs">
                       <button
@@ -6127,7 +6162,7 @@ export function AdminStudio() {
                             />
                           </label>
                           <label className="wide">
-                            <span>専用ホームページに表示するメッセージ</span>
+                            <span>{plan.includesWebsite ? "専用ホームページに表示するメッセージ" : "完成映像に添える納品メッセージ"}</span>
                             <textarea
                               rows={3}
                               value={deliveryMessage}
@@ -6142,7 +6177,9 @@ export function AdminStudio() {
                             <strong>まだ最終納品できません。</strong>
                             <span>
                               {order.status === "delivered"
-                                ? "この注文はすでに最終納品済みです。現在の完成映像はお客様の制作室と専用ホームページで確認できます。"
+                                ? plan.includesWebsite
+                                  ? "この注文はすでに最終納品済みです。現在の完成映像はお客様の制作室と専用ホームページで確認できます。"
+                                  : "この注文はすでに最終納品済みです。現在の完成映像はお客様の制作室で確認できます。"
                                 : order.payment_status !== "paid"
                                 ? "入金確認が必要です。"
                                 : !consentCurrent
@@ -6170,7 +6207,7 @@ export function AdminStudio() {
                       <input
                         key={videoInputKey}
                         type="file"
-                        accept="video/mp4,video/quicktime,video/webm"
+                        accept={videoMode === "final" && !plan.includesWebsite ? "video/mp4" : "video/mp4,video/quicktime,video/webm"}
                         disabled={
                           saving ||
                           (videoMode === "review"
@@ -6266,7 +6303,7 @@ export function AdminStudio() {
                               ? "アップロード中…"
                               : videoMode === "review"
                                 ? "確認映像として公開する →"
-                                : "確認した内容で納品する →"}
+                                : plan.includesWebsite ? "確認した内容で納品する →" : "動画を納品する →"}
                           </button>
                         </div>
                       </div>

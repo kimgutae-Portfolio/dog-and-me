@@ -11,23 +11,26 @@ import {
 } from "../lib/site";
 import { useAuth } from "./AuthProvider";
 import { trackEvent } from "../lib/analytics";
+import type { MemoryPlanId } from "../lib/pricing";
 
 type StartStoryLinkProps = {
   children: ReactNode;
   className?: string;
   ctaLocation?: string;
+  planId?: MemoryPlanId;
 };
 
-export function StartStoryLink({ children, className, ctaLocation = "unspecified" }: StartStoryLinkProps) {
+export function StartStoryLink({ children, className, ctaLocation = "unspecified", planId }: StartStoryLinkProps) {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [queued, setQueued] = useState(false);
-  const href = user ? "/story" : START_STORY_HREF;
+  const baseHref = user ? "/story" : START_STORY_HREF;
+  const href = planId ? `${baseHref}?plan=${planId}` : baseHref;
 
   useEffect(() => {
     if (!queued || loading) return;
-    router.push(user ? "/story" : START_STORY_HREF);
-  }, [loading, queued, router, user]);
+    router.push(href);
+  }, [href, loading, queued, router]);
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     trackEvent("start_story_click", {
@@ -35,6 +38,7 @@ export function StartStoryLink({ children, className, ctaLocation = "unspecified
       destination: href,
       signed_in: Boolean(user),
       page_path: window.location.pathname,
+      ...(planId ? { plan_id: planId } : {}),
     });
     if (!loading) return;
     event.preventDefault();

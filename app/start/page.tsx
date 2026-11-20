@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { StoryStart } from "./StoryStart";
+import { isMemoryPlanId } from "../lib/pricing";
 
 export const metadata: Metadata = {
   title: "物語づくりを始める",
@@ -7,6 +8,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function StartPage() {
-  return <StoryStart />;
+export default async function StartPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ plan?: string | string[] }>;
+}) {
+  const { plan } = await searchParams;
+  return <StoryStart initialPlanId={isMemoryPlanId(plan) ? plan : undefined} />;
 }

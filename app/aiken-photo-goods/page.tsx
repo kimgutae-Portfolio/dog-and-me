@@ -4,7 +4,7 @@ import { GuideWorkExample } from "../components/GuideWorkExample";
 import { InfoPage } from "../components/InfoPage";
 import { SeoGuideLinks } from "../components/SeoGuideLinks";
 import { StartStoryLink } from "../components/StartStoryLink";
-import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
+import { formatYen, MEMORY_FILM_PRICING, MEMORY_VIDEO_PRICING } from "../lib/pricing";
 import { createGuideStructuredData } from "../lib/seo";
 import { DEFAULT_SITE_ORIGIN } from "../lib/site";
 import styles from "./photo-goods.module.css";
@@ -182,7 +182,7 @@ export default function AikenPhotoGoodsPage() {
           <div><h3>こんな残し方をしたい方に</h3><ul><li>写真を撮った日の出来事や気持ちも残したい</li><li>愛犬を主人公にした新しい絵本の表現を楽しみたい</li><li>離れて暮らす家族と、同じ作品を見返したい</li></ul></div>
           <div><h3>別の記念品が合う場合</h3><ul><li>写真の表情を加工せず、そのまま印刷したい</li><li>紙の本や、手に持てる小物を受け取りたい</li><li>今日や明日のプレゼントとして必要</li></ul></div>
         </div>
-        <p>約40秒の動く絵本、水彩タッチの絵本ページ5枚、専用ホームページなどを、¥{formatYen(MEMORY_FILM_PRICING.price)}（税込）でオンライン納品します。通常の制作期間は10〜14営業日が目安です。希望日がある場合は、申し込み前に納品可能日をご確認ください。</p>
+        <p>動画プランは約40秒の完成映像MP4を¥{formatYen(MEMORY_VIDEO_PRICING.price)}（税込）で納品します。絵本ページ5枚や専用ホームページなどを含むプランは¥{formatYen(MEMORY_FILM_PRICING.price)}（税込）です。通常の制作期間は10〜14営業日が目安です。希望日がある場合は、申し込み前に納品可能日をご確認ください。</p>
         <p><Link href="/#plans">プランの内容と料金</Link>・<Link href="/legal">納期や販売条件</Link>をご確認のうえ、写真プリントなどの記念品とも比べて選んでいただけます。</p>
       </section>
 

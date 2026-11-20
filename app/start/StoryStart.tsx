@@ -7,42 +7,79 @@ import { useAuth } from "../components/AuthProvider";
 import { trackEvent } from "../lib/analytics";
 import { STORY_START_STORAGE_KEY } from "../lib/site";
 import { GoogleSignIn } from "../auth/GoogleSignIn";
+import { MemoryPlanChoice } from "../components/MemoryPlanChoice";
+import { formatYen, getMemoryPlan, isMemoryPlanId, type MemoryPlanId } from "../lib/pricing";
 
 type Purpose = "今の毎日を残したい" | "大切な思い出を残したい" | "記念日の贈り物にしたい";
 
-function initialStart() {
-  if (typeof window === "undefined") return { petName: "", purpose: "今の毎日を残したい" as Purpose };
+function initialStart(initialPlanId?: MemoryPlanId) {
+  const empty = {
+    petName: "",
+    purpose: "今の毎日を残したい" as Purpose,
+    planId: initialPlanId ?? "memory-film" as MemoryPlanId,
+  };
+  if (typeof window === "undefined") return empty;
+  const requestedPlan = new URLSearchParams(window.location.search).get("plan");
+  const planId = initialPlanId ?? (isMemoryPlanId(requestedPlan) ? requestedPlan : undefined);
   try {
     const stored = sessionStorage.getItem(STORY_START_STORAGE_KEY);
-    if (!stored) return { petName: "", purpose: "今の毎日を残したい" as Purpose };
-    const value = JSON.parse(stored) as { petName?: string; purpose?: Purpose };
-    return { petName: value.petName || "", purpose: value.purpose || "今の毎日を残したい" };
-  } catch { return { petName: "", purpose: "今の毎日を残したい" as Purpose }; }
+    if (!stored) return { ...empty, planId: planId ?? empty.planId };
+    const value = JSON.parse(stored) as { petName?: string; purpose?: Purpose; planId?: string };
+    return {
+      petName: value.petName || "",
+      purpose: value.purpose || "今の毎日を残したい",
+      planId: planId ?? getMemoryPlan(value.planId).planId,
+    };
+  } catch { return { ...empty, planId: planId ?? empty.planId }; }
 }
 
-export function StoryStart() {
+export function StoryStart({ initialPlanId }: { initialPlanId?: MemoryPlanId }) {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const [initial] = useState(initialStart);
-  const [petName, setPetName] = useState(initial.petName);
-  const [purpose, setPurpose] = useState<Purpose>(initial.purpose);
+  const [petName, setPetName] = useState("");
+  const [purpose, setPurpose] = useState<Purpose>("今の毎日を残したい");
+  const [planId, setPlanId] = useState<MemoryPlanId>(initialPlanId ?? "memory-film");
   const [step, setStep] = useState<"details" | "signup">("details");
+  const plan = getMemoryPlan(planId);
+  const storyPath = `/story?plan=${planId}`;
+
+  useEffect(() => {
+    const initial = initialStart(initialPlanId);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore browser-only draft values after hydration.
+    setPetName(initial.petName);
+    setPurpose(initial.purpose);
+    setPlanId(initial.planId);
+  }, [initialPlanId]);
 
   useEffect(() => {
     trackEvent("story_start_view", { page_path: "/start" });
   }, []);
 
+  const rememberStart = (selectedPlanId: MemoryPlanId) => {
+    try {
+      sessionStorage.setItem(
+        STORY_START_STORAGE_KEY,
+        JSON.stringify({ petName: petName.trim(), purpose, planId: selectedPlanId }),
+      );
+    } catch { /* The authentication destination also carries the selected plan. */ }
+  };
+
+  const changePlan = (selectedPlanId: MemoryPlanId) => {
+    setPlanId(selectedPlanId);
+    rememberStart(selectedPlanId);
+    const url = new URL(window.location.href);
+    url.searchParams.set("plan", selectedPlanId);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const cleanPetName = petName.trim();
     if (!cleanPetName) return;
-    sessionStorage.setItem(
-      STORY_START_STORAGE_KEY,
-      JSON.stringify({ petName: cleanPetName, purpose }),
-    );
-    trackEvent("story_start_complete", { purpose, signed_in: Boolean(user) });
+    rememberStart(planId);
+    trackEvent("story_start_complete", { purpose, signed_in: Boolean(user), plan_id: planId });
     if (user) {
-      router.push("/story");
+      router.push(storyPath);
       return;
     }
     setStep("signup");
@@ -60,21 +97,22 @@ export function StoryStart() {
           <p className="eyebrow">SAVE &amp; CONTINUE</p>
           <p className="start-step">2 / 2　無料登録</p>
           <h1>{cleanPetName}ちゃんの<br />制作相談を始めます。</h1>
+          <p className="start-lead">選択したプラン：{plan.name}　¥{formatYen(plan.price)}（税込）</p>
           <p className="start-lead">
             入力した内容を保存して、あとから続きを作れるように、無料登録をお願いします。
             登録だけで注文や決済が行われることはありません。
           </p>
           <div className="start-signup-actions">
-            <GoogleSignIn nextPath="/story" disabled={false} showDivider={false} />
+            <GoogleSignIn nextPath={storyPath} disabled={false} showDivider={false} />
             <Link
               className="button start-email-signup"
-              href="/auth?mode=signup&next=/story&source=start"
+              href={`/auth?${new URLSearchParams({ mode: "signup", next: storyPath, source: "start" })}`}
               onClick={() => trackEvent("email_signup_choice", { source: "start" })}
             >
               メールアドレスで登録する
             </Link>
           </div>
-          <Link className="auth-text-button" href="/auth?mode=login&next=/story">
+          <Link className="auth-text-button" href={`/auth?${new URLSearchParams({ mode: "login", next: storyPath })}`}>
             すでに登録済みの方はこちらからログイン
           </Link>
           <ul className="start-assurances" aria-label="無料登録についてのご案内">
@@ -98,9 +136,10 @@ export function StoryStart() {
         <p className="start-lead">ここではまだ注文・決済されません。最初から5つの出来事を決める必要はなく、短い一言から始めて途中保存できます。</p>
         <p className="consultation-steps start-consultation-steps">お名前 → 無料登録 → 写真と思い出を入力</p>
         <form className="start-form" onSubmit={submit}>
+          <MemoryPlanChoice planId={planId} onChange={changePlan} />
           <label>
             <span>愛犬のお名前 <em>必須</em></span>
-            <input required autoFocus value={petName} onChange={(event) => setPetName(event.target.value)} placeholder="例：ひなた" />
+            <input required value={petName} onChange={(event) => setPetName(event.target.value)} placeholder="例：ひなた" />
           </label>
           <fieldset>
             <legend>どんな気持ちで残したいですか？</legend>

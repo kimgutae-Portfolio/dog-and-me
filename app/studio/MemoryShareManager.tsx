@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MemoryAddressForm } from "./MemoryAddressForm";
 import { memoryAddressPath } from "../lib/memory-address";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
+import { getMemoryPlan } from "../lib/pricing";
 import { uploadLifetimeAlbumImages } from "../lib/supabase/uploads";
 import type {
   Delivery,
@@ -83,7 +84,8 @@ export function MemoryShareManager({
     share && (share.custom_slug || share.initial_slug) && origin
       ? `${origin}${memoryAddressPath(share.custom_slug || share.initial_slug)}`
       : "";
-  const siteReady = order.status === "delivered" && Boolean(delivery);
+  const included = getMemoryPlan(order.plan_id).includesWebsite;
+  const siteReady = included && order.status === "delivered" && Boolean(delivery);
   const today = useMemo(() => {
     const now = new Date();
     const offset = now.getTimezoneOffset() * 60_000;
@@ -97,6 +99,7 @@ export function MemoryShareManager({
   }, [copyPopup]);
 
   useEffect(() => {
+    if (!included) return;
     const pendingPhotos = visiblePhotos.filter(
       (asset) => !previewUrls[asset.id],
     );
@@ -121,7 +124,7 @@ export function MemoryShareManager({
     return () => {
       cancelled = true;
     };
-  }, [previewUrls, visiblePhotos]);
+  }, [included, previewUrls, visiblePhotos]);
 
   useEffect(() => {
     const target = loadMorePhotosRef.current;
@@ -141,6 +144,7 @@ export function MemoryShareManager({
 
   const manageShare = useCallback(
     async (action: "get") => {
+      if (!included) throw new Error("Website is not included in this plan");
       const { data, error: shareError } = await getSupabaseBrowserClient().rpc(
         "manage_memory_address",
         {
@@ -154,7 +158,7 @@ export function MemoryShareManager({
       setShare(next);
       return next;
     },
-    [order.id],
+    [included, order.id],
   );
 
   useEffect(() => {
@@ -173,6 +177,7 @@ export function MemoryShareManager({
       Pick<OrderAsset, "album_visible" | "album_caption" | "album_sort_order">
     >,
   ) => {
+    if (!siteReady) return;
     setWorking(true);
     setError("");
     const { error: updateError } = await getSupabaseBrowserClient()
@@ -219,6 +224,7 @@ export function MemoryShareManager({
   };
 
   const movePhoto = async (asset: OrderAsset, direction: -1 | 1) => {
+    if (!siteReady) return;
     const index = managedPhotos.findIndex((item) => item.id === asset.id);
     const target = managedPhotos[index + direction];
     if (!target) return;
@@ -242,6 +248,7 @@ export function MemoryShareManager({
   };
 
   const deletePhoto = async (asset: OrderAsset) => {
+    if (!siteReady) return;
     if (!window.confirm("この写真を制作室とアルバムから削除しますか？")) return;
     setWorking(true);
     setError("");
@@ -297,6 +304,7 @@ export function MemoryShareManager({
   };
 
   const deleteAddedPhoto = async (asset: OrderAsset) => {
+    if (!siteReady) return;
     if (!window.confirm("この写真をアルバムから削除しますか？")) return;
     setWorking(true);
     setError("");
@@ -319,7 +327,7 @@ export function MemoryShareManager({
   };
 
   const copyShareUrl = async () => {
-    if (!shareUrl) return;
+    if (!siteReady || !shareUrl) return;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopyPopup(true);
@@ -329,7 +337,7 @@ export function MemoryShareManager({
   };
 
   const openShareSheet = async () => {
-    if (!shareUrl) return;
+    if (!siteReady || !shareUrl) return;
     if (navigator.share) {
       await navigator.share({
         title: `${order.pet_name}との思い出｜WAN MEMORY`,
@@ -340,6 +348,8 @@ export function MemoryShareManager({
       await copyShareUrl();
     }
   };
+
+  if (!included) return null;
 
   return (
     <section className="studio-card memory-share-manager">

@@ -252,6 +252,24 @@ a.film-card-main { display: block; color: inherit; text-decoration: none; }
 .price-card-featured .button-primary { background: #e7d8c4; color: var(--ink); }
 .price-payment-note { margin: 18px 0 0; color: rgba(255,255,255,.65); font-size: 9px; line-height: 1.8; }
 .price-payment-note a { margin-left: .5em; color: #ead4c2; text-decoration: underline; text-underline-offset: 3px; }
+.pricing-grid-plans { max-width: 1060px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.pricing-grid-plans .price-card { display: flex; flex-direction: column; border: 1px solid var(--line); padding: 32px 28px; }
+.pricing-grid-plans .price-card h3 { font-size: 25px; line-height: 1.55; }
+.pricing-grid-plans .price-caption, .pricing-grid-plans .price-card li { font-size: 15px; line-height: 1.8; }
+.pricing-grid-plans .price-card .price-style-note, .pricing-grid-plans .price-payment-note { font-size: 13px; line-height: 1.8; }
+.pricing-grid-plans .price-card .consultation-action { margin-top: auto; }
+.pricing-grid-plans .price-card .button { font-size: 15px; line-height: 1.5; }
+.pricing-grid-plans .price-card-featured .price-caption, .pricing-grid-plans .price-card-featured .price-payment-note { color: #e7e4da; }
+.price-card-video { background: #f9f5ec; }
+.price-card-video .monitor-offer-head > span { color: var(--forest); border-color: var(--line); }
+.price-card-video .price-style-note { color: #55554c; background: #ede8dd; box-shadow: none; }
+.price-card-video .price-payment-note { color: #55554c; }
+.price-card-video .price-payment-note a { color: #824729; }
+@media (max-width: 720px) {
+  .pricing-grid-plans { grid-template-columns: 1fr; gap: 18px; }
+  .pricing-grid-plans .price-card { padding: 28px 22px; }
+  .pricing-grid-plans .price-card h3 { font-size: 24px; }
+}
 .review-monitor-price strong, .review-monitor-price small { display: block; }
 .review-monitor-price strong { color: var(--rust); font-family: var(--font-serif); font-size: 16px; font-weight: 400; }
 .review-monitor-price small { margin-top: 3px; color: var(--muted); font-size: 8px; }
@@ -3196,7 +3214,7 @@ button.memory-photo-add { width: 100%; color: inherit; font: inherit; }
   .auth-privacy { font-size: 12px; }
   .start-page { padding: 64px 16px 32px; align-items: start; }
   .start-card { padding: 36px 24px; }
-  .start-card h1 { font-size: 28px; }
+  .start-card h1 { font-size: clamp(24px, 7.15vw, 28px); letter-spacing: .02em; }
   .wizard-page .save-status { font-size: 12px; }
   .wizard-page .wizard-side { padding: 14px 8px; }
   .wizard-page .wizard-side ol { align-items: flex-start; }

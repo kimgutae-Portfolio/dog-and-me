@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
+import { MemoryPlanChoice } from "../components/MemoryPlanChoice";
 import {
   hasSeenPhotoUploadGuide,
   PhotoUploadGuideDialog,
   rememberPhotoUploadGuide,
 } from "../components/PhotoUploadGuideDialog";
 import { CONSENT_VERSIONS } from "../lib/consent";
-import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
+import { formatYen, getMemoryPlan, isMemoryPlanId, type MemoryPlanId } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import { notifyAdminFromCustomer } from "../lib/adminPushClient";
 import { STORY_START_STORAGE_KEY } from "../lib/site";
@@ -47,6 +48,7 @@ type MemoryDraft = {
 };
 
 type Draft = {
+  planId: MemoryPlanId;
   purpose: FilmPurpose;
   petName: string;
   nameKana: string;
@@ -91,6 +93,7 @@ const isMemoryReady = (memory: MemoryDraft) =>
   memory.photoKeys.length >= 1;
 
 const emptyDraft: Draft = {
+  planId: "memory-film",
   purpose: FIXED_FILM_PURPOSE,
   petName: "",
   nameKana: "",
@@ -115,6 +118,7 @@ function normalizeDraft(
   value: unknown,
   preferredPetName: string,
   validPhotoKeys?: Set<string>,
+  requestedPlanId?: MemoryPlanId,
 ): Draft {
   const parsed =
     value && typeof value === "object"
@@ -194,10 +198,14 @@ function normalizeDraft(
   return {
     ...emptyDraft,
     ...parsed,
+    planId: requestedPlanId ?? getMemoryPlan(parsed.planId).planId,
     petName: parsed.petName?.trim() || preferredPetName,
     memories,
     purpose: FIXED_FILM_PURPOSE,
-    termsConsent: parsed.termsConsent ?? parsed.consent ?? false,
+    termsConsent:
+      requestedPlanId && requestedPlanId !== getMemoryPlan(parsed.planId).planId
+        ? false
+        : parsed.termsConsent ?? parsed.consent ?? false,
     photoRightsConsent: parsed.photoRightsConsent ?? false,
     externalAiConsent: parsed.externalAiConsent ?? false,
     aiReconstructionAcknowledged: parsed.aiReconstructionAcknowledged ?? false,
@@ -239,13 +247,20 @@ export function StoryWizard() {
   const [stepValidationAttempted, setStepValidationAttempted] = useState(false);
   const [pendingPhotoInputId, setPendingPhotoInputId] = useState("");
   const [photoGuideReviewOpen, setPhotoGuideReviewOpen] = useState(false);
-  const [preAuthPetName] = useState(() => {
-    if (typeof window === "undefined") return "";
+  const [preAuthStart] = useState(() => {
+    if (typeof window === "undefined") return { petName: "", planId: undefined as MemoryPlanId | undefined };
     try {
       const stored = sessionStorage.getItem(STORY_START_STORAGE_KEY);
-      return stored ? (JSON.parse(stored) as { petName?: string }).petName?.trim() || "" : "";
-    } catch { return ""; }
+      const value = stored ? JSON.parse(stored) as { petName?: string; planId?: string } : {};
+      return { petName: value.petName?.trim() || "", planId: isMemoryPlanId(value.planId) ? value.planId : undefined };
+    } catch { return { petName: "", planId: undefined }; }
   });
+  const [requestedPlanId] = useState(() => {
+    if (typeof window === "undefined") return undefined;
+    const value = new URLSearchParams(window.location.search).get("plan");
+    return isMemoryPlanId(value) ? value : undefined;
+  });
+  const selectedPlan = getMemoryPlan(draft.planId);
   const photoFilesRef = useRef<PhotoDraft[]>([]);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const photoPreviewDialogRef = useRef<HTMLElement>(null);
@@ -273,8 +288,12 @@ export function StoryWizard() {
   };
 
   useEffect(() => {
-    if (!authLoading && !user) router.replace("/auth?mode=signup&next=/story");
-  }, [authLoading, router, user]);
+    if (!authLoading && !user) {
+      const nextPlanId = hydrated ? draft.planId : requestedPlanId;
+      const nextPath = nextPlanId ? `/story?plan=${nextPlanId}` : "/story";
+      router.replace(`/auth?${new URLSearchParams({ mode: "signup", next: nextPath })}`);
+    }
+  }, [authLoading, draft.planId, hydrated, requestedPlanId, router, user]);
 
   useEffect(() => {
     currentStepRef.current = step;
@@ -305,7 +324,7 @@ export function StoryWizard() {
   const preferredPetName = (
     profile?.primary_pet_name ||
     user?.user_metadata?.pet_name ||
-    preAuthPetName ||
+    preAuthStart.petName ||
     ""
   ).trim();
 
@@ -340,7 +359,7 @@ export function StoryWizard() {
       if (cancelled) return;
 
       if (draftError) {
-        setDraft(normalizeDraft(localDraft, preferredPetName));
+        setDraft(normalizeDraft(localDraft, preferredPetName, undefined, requestedPlanId ?? (!localDraft ? preAuthStart.planId : undefined)));
         setStep(Math.max(0, Math.min(localStep, steps.length - 1)));
         setSaveStatus("error");
         setHydrated(true);
@@ -349,7 +368,7 @@ export function StoryWizard() {
 
       const record = serverDraft as StoryDraftRecord | null;
       if (!record) {
-        const initial = normalizeDraft(localDraft, preferredPetName);
+        const initial = normalizeDraft(localDraft, preferredPetName, undefined, requestedPlanId ?? (!localDraft ? preAuthStart.planId : undefined));
         const { data: createdId, error: createError } = await supabase.rpc(
           "save_story_draft",
           {
@@ -416,6 +435,7 @@ export function StoryWizard() {
         record.data,
         preferredPetName,
         validPhotoKeys,
+        requestedPlanId,
       );
       setDraftId(record.id);
       setPendingOrderId(record.pending_order_id ?? "");
@@ -434,7 +454,7 @@ export function StoryWizard() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, hydrated, preferredPetName, user]);
+  }, [authLoading, hydrated, preAuthStart.planId, preferredPetName, requestedPlanId, user]);
 
   useEffect(() => {
     if (!hydrated || !user) return;
@@ -514,6 +534,13 @@ export function StoryWizard() {
   const progress = useMemo(() => ((step + 1) / steps.length) * 100, [step]);
   const update = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
+  const updatePlan = (planId: MemoryPlanId) => {
+    setDraft((current) => ({ ...current, planId, termsConsent: false }));
+    // Keep a refresh during autosave on the plan the customer just selected.
+    const url = new URL(window.location.href);
+    url.searchParams.set("plan", planId);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  };
   const updateMemory = <K extends keyof MemoryDraft>(
     clientKey: string,
     key: K,
@@ -852,7 +879,8 @@ export function StoryWizard() {
       return;
     }
     if (!user) {
-      router.push("/auth?mode=signup&next=/story");
+      const nextPath = `/story?plan=${draft.planId}`;
+      router.push(`/auth?${new URLSearchParams({ mode: "signup", next: nextPath })}`);
       return;
     }
     if (!draftId) {
@@ -875,6 +903,7 @@ export function StoryWizard() {
         )
         .join("\n\n");
       const orderPayload = {
+        plan_id: draft.planId,
         pet_name: draft.petName,
         name_kana: draft.nameKana,
         breed: draft.breed,
@@ -905,11 +934,18 @@ export function StoryWizard() {
       if (orderId) {
         const { data: pendingOrder } = await supabase
           .from("orders")
-          .select("id,status")
+          .select("id,status,payment_status,plan_id")
           .eq("id", orderId)
           .eq("user_id", user.id)
           .maybeSingle();
-        if (pendingOrder?.status === "awaiting_materials") {
+        if (pendingOrder?.status === "awaiting_materials" && pendingOrder.payment_status === "pending") {
+          if (getMemoryPlan(pendingOrder.plan_id).planId !== draft.planId) {
+            const { error: planError } = await supabase.rpc("set_memory_order_plan", {
+              p_order_id: orderId,
+              p_plan_id: draft.planId,
+            });
+            if (planError) throw planError;
+          }
           const { error: draftError } = await supabase.rpc(
             "save_memory_order_draft",
             { p_order_id: orderId, p_data: orderPayload },
@@ -1034,6 +1070,7 @@ export function StoryWizard() {
       if (completeDraftError) console.error(completeDraftError);
       submittedRef.current = true;
       trackEvent("story_submit", {
+        plan_id: draft.planId,
         story_count: draft.memories.length,
         photo_count: photoFiles.length,
       });
@@ -1041,6 +1078,7 @@ export function StoryWizard() {
       window.localStorage.removeItem("kimi-film-draft");
       window.localStorage.removeItem(`wan-memory-story-draft-${user.id}`);
       window.localStorage.removeItem("wan-memory-pending-order-id");
+      window.sessionStorage.removeItem(STORY_START_STORAGE_KEY);
       router.push(`/studio?received=1&order=${orderId}`);
     } catch (caught) {
       console.error(caught);
@@ -1141,6 +1179,11 @@ export function StoryWizard() {
               <p className="step-lead">
                 「必須」と表示された項目をすべて入力すると、次のステップへ進めます。
               </p>
+              <MemoryPlanChoice
+                planId={draft.planId}
+                onChange={updatePlan}
+                disabled={submitting}
+              />
               <div className="form-grid">
                 <label>
                   <span>
@@ -1689,6 +1732,9 @@ export function StoryWizard() {
                 <section className="review-section">
                   <header>
                     <h2>仕上がり</h2>
+                    <button type="button" onClick={() => goToStep(0)}>
+                      プランを変更する
+                    </button>
                   </header>
                   <dl>
                     <div>
@@ -1701,13 +1747,13 @@ export function StoryWizard() {
                     </div>
                     <div>
                       <dt>プラン</dt>
-                      <dd>うちの子の動く絵本</dd>
+                      <dd>{selectedPlan.name}</dd>
                     </div>
                     <div>
                       <dt>料金</dt>
                       <dd className="review-monitor-price">
                         <strong>
-                          ¥{formatYen(MEMORY_FILM_PRICING.price)}（税込）
+                          ¥{formatYen(selectedPlan.price)}（税込）
                         </strong>
                         <small>
                           内容・納期・キャンセル条件をご確認後、お支払いへ進みます
@@ -1719,12 +1765,14 @@ export function StoryWizard() {
                       <dd>2案から1案を選択</dd>
                     </div>
                     <div>
-                      <dt>専用サイト</dt>
-                      <dd>プランに含まれます</dd>
+                      <dt>お届け内容</dt>
+                      <dd>{selectedPlan.includesWebsite
+                        ? "完成動画・絵本ページ5枚・専用ホームページ・ミニキャラクター・LINEスタンプ8種類"
+                        : "完成動画1本（MP4データ）。スマートフォンやパソコンに保存できます。"}</dd>
                     </div>
                     <div>
-                      <dt>プランに含まれるもの</dt>
-                      <dd>うちの子LINEスタンプ8種類</dd>
+                      <dt>確認・修正</dt>
+                      <dd>動画化前の絵と文章を確認・合計2場面まで修正。完成映像は合計1場面まで修正できます。</dd>
                     </div>
                   </dl>
                 </section>

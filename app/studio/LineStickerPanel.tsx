@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
+import { getMemoryPlan } from "../lib/pricing";
 import type {
   LineStickerDelivery,
   MemoryOrder,
@@ -41,9 +42,10 @@ export function LineStickerPanel({
   const [error, setError] = useState("");
   const consented = Boolean(delivery?.consented_at);
   const completed = Boolean(delivery?.preview_asset_id && previewUrl);
+  const included = getMemoryPlan(order.plan_id).includesLineStickers;
 
   const acceptConsent = async () => {
-    if (!accepted || saving) return;
+    if (!included || !canConsent || !accepted || saving) return;
     setSaving(true);
     setError("");
     const { error: consentError } = await getSupabaseBrowserClient().rpc(
@@ -63,6 +65,8 @@ export function LineStickerPanel({
     }
     setSaving(false);
   };
+
+  if (!included) return null;
 
   return (
     <section className="studio-card line-sticker-card" id="line-stickers">

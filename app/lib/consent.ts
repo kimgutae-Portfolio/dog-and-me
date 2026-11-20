@@ -1,5 +1,5 @@
 export const CONSENT_VERSIONS = {
-  terms: "2026-08-23-revision-2-1-v1",
+  terms: "2026-11-19-video-plan-v1",
   privacy: "2026-07-27",
   aiNotice: "2026-08-23-revision-2-1-v1",
   photoRights: "2026-07-25-photo-people-v2",
@@ -7,6 +7,7 @@ export const CONSENT_VERSIONS = {
 } as const;
 
 export function hasCurrentConsent(order: {
+  plan_id?: string | null;
   consented_at: string | null;
   terms_version: string | null;
   privacy_version: string | null;
@@ -20,7 +21,9 @@ export function hasCurrentConsent(order: {
     order.consented_at &&
       order.external_ai_consent_at &&
       order.photo_rights_consented_at &&
-      order.terms_version === CONSENT_VERSIONS.terms &&
+      (order.terms_version === CONSENT_VERSIONS.terms ||
+        ((order.plan_id ?? "memory-film") === "memory-film" &&
+          order.terms_version === "2026-08-23-revision-2-1-v1")) &&
       order.privacy_version === CONSENT_VERSIONS.privacy &&
       order.ai_notice_version === CONSENT_VERSIONS.aiNotice &&
       order.photo_rights_consent_version === CONSENT_VERSIONS.photoRights &&

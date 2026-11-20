@@ -1,0 +1,92 @@
+.root {
+  min-width: 0;
+  margin: 0 0 30px;
+  padding: 0;
+  border: 0;
+}
+
+.root legend {
+  padding: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.root > p {
+  margin: 9px 0 16px;
+  color: #55554c;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.root .options label {
+  min-width: 0;
+  margin: 0;
+  padding: 20px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+}
+
+.root .options label.selected {
+  border-color: var(--rust);
+  box-shadow: inset 0 0 0 1px var(--rust);
+  background: #f8eee7;
+}
+
+.root input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  margin: 4px 0 0;
+  accent-color: var(--rust);
+}
+
+.content {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.content strong {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.price {
+  color: var(--ink);
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.price small {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.description {
+  color: #55554c;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 640px) {
+  .options {
+    grid-template-columns: 1fr;
+  }
+
+  .root .options label {
+    padding: 16px;
+  }
+}

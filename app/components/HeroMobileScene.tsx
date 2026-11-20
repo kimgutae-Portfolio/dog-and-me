@@ -8,7 +8,7 @@ import { HeroDogDash } from "./HeroDogDash";
 const scenes = [
   { label: "写真が絵本に", title: "いつもの写真が、絵本の一ページに。", copy: "毛色やしぐさを、水彩でやさしく描きます。" },
   { label: "思い出が動画に", title: "5つの思い出が、ひとつの物語に。", copy: "文章とBGMを添えた、約40秒の動く絵本。" },
-  { label: "専用ホームページ", title: "完成後も、思い出が増えていく。", copy: "写真を追加して、ご家族といつでも見返せます。" },
+  { label: "ホームページ付きプラン", title: "完成後も、思い出が増えていく。", copy: "写真を追加して、ご家族といつでも見返せます。" },
 ];
 export function HeroMobileScene() {
   const [current, setCurrent] = useState(0);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatYen, MEMORY_FILM_PRICING } from "../lib/pricing";
+import { formatYen, MEMORY_VIDEO_PRICING } from "../lib/pricing";
 import { APPLICATIONS_OPEN, PRELAUNCH_CTA } from "../lib/site";
 import { StartStoryLink } from "./StartStoryLink";
 
@@ -40,8 +40,8 @@ export function MobileStickyCta() {
         <strong>
           {APPLICATIONS_OPEN ? (
             <>
-              ¥{formatYen(MEMORY_FILM_PRICING.price)}
-              <span>（税込）</span>
+              ¥{formatYen(MEMORY_VIDEO_PRICING.price)}
+              <span>（税込・動画プラン）</span>
             </>
           ) : (
             PRELAUNCH_CTA
@@ -50,7 +50,7 @@ export function MobileStickyCta() {
       </div>
       {/* The price stays explicit; the action starts a consultation, not a paid
           order or an instantly generated sample. The next steps are shown above. */}
-      <StartStoryLink className="button button-cream" ctaLocation="mobile_sticky">
+      <StartStoryLink className="button button-cream" ctaLocation="mobile_sticky" planId="video-only">
         制作相談を始める <span aria-hidden="true">→</span>
       </StartStoryLink>
     </aside>

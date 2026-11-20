@@ -20,6 +20,7 @@ import { APPLICATIONS_OPEN } from "../lib/site";
 import { notifyAdminFromCustomer } from "../lib/adminPushClient";
 import { trackCommerceEvent, trackEvent, trackOnce } from "../lib/analytics";
 import { storybookCommerce } from "../lib/analytics-config";
+import { getMemoryPlan } from "../lib/pricing";
 import { getSupabaseBrowserClient } from "../lib/supabase/client";
 import type {
   Delivery,
@@ -305,6 +306,7 @@ export function StudioClient() {
     () => orders.find((item) => item.id === selectedOrderId) ?? null,
     [orders, selectedOrderId],
   );
+  const plan = getMemoryPlan(order?.plan_id);
 
   useEffect(() => {
     if (paymentResult !== "success" || !user) return;
@@ -430,6 +432,7 @@ export function StudioClient() {
   }, [canOperateOrder, order, paymentResult, profile?.role]);
   const canManageDeliveredWebsite = Boolean(
     order &&
+      plan.includesWebsite &&
       profile?.role === "admin" &&
       order.status === "delivered" &&
       searchParams.get("manage") === "website",
@@ -1446,7 +1449,7 @@ export function StudioClient() {
               >
                 {orders.map((item) => (
                   <option value={item.id} key={item.id}>
-                    {item.pet_name} · {item.order_number}
+                    {item.pet_name} · {getMemoryPlan(item.plan_id).name} · {item.order_number}
                   </option>
                 ))}
               </select>
@@ -1511,10 +1514,11 @@ export function StudioClient() {
                 <h1>{order.pet_name}ちゃんの制作室</h1>
                 <p>写真の追加から完成まで、ひとつずつ進めます。</p>
                 <small className="studio-plan-summary">
+                  {plan.name}{" · "}
                   5つの物語を各5秒で制作 · 完成約40秒 · 絵本
                   {order.stills_revision_limit}場面・映像
                   {order.revision_limit}場面まで修正
-                  {" · "}LINEスタンプ8種類つき
+                  {plan.includesLineStickers && " · LINEスタンプ8種類つき"}
                 </small>
               </div>
               <div className="order-meta">
@@ -1591,9 +1595,10 @@ export function StudioClient() {
                   aria-selected={deliveredTab === "delivery"}
                   onClick={() => setDeliveredTab("delivery")}
                 >
-                  <small>DELIVERY &amp; WEBSITE</small>
-                  <strong>お届け・ホームページ</strong>
+                  <small>{plan.includesWebsite ? "DELIVERY & WEBSITE" : "COMPLETE FILM"}</small>
+                  <strong>{plan.includesWebsite ? "お届け・ホームページ" : "完成映像"}</strong>
                 </button>
+                {plan.includesWebsite && (
                 <button
                   type="button"
                   role="tab"
@@ -1603,6 +1608,8 @@ export function StudioClient() {
                   <small>COMPLETE FILM</small>
                   <strong>完成映像</strong>
                 </button>
+                )}
+                {plan.includesIllustrations && (
                 <button
                   type="button"
                   role="tab"
@@ -1612,6 +1619,7 @@ export function StudioClient() {
                   <small>STORYBOOK PAGES</small>
                   <strong>絵本ページ</strong>
                 </button>
+                )}
                 <button
                   type="button"
                   role="tab"
@@ -1624,7 +1632,7 @@ export function StudioClient() {
               </nav>
             )}
 
-            {(canOperateOrder || canManageDeliveredWebsite) &&
+            {plan.includesWebsite && (canOperateOrder || canManageDeliveredWebsite) &&
               order.status === "delivered" &&
               deliveredTab === "delivery" && (
               <MemoryShareManager
@@ -1755,8 +1763,9 @@ export function StudioClient() {
                   <div>
                     <dt>制作内容</dt>
                     <dd>
-                      {order.pet_name}ちゃんの動く絵本
+                      {plan.name}
                       <small>5つの物語 · 各5秒 · 完成約40秒</small>
+                      <small>{plan.includesWebsite ? "絵本ページ・専用ホームページ・LINEスタンプ付き" : "完成映像をMP4データでお届け"}</small>
                     </dd>
                   </div>
                   <div>
@@ -1869,7 +1878,7 @@ export function StudioClient() {
                     </span>
                     <div>
                       <strong>{title}</strong>
-                      <small>{copy}</small>
+                      <small>{index === journeySteps.length - 1 && !plan.includesWebsite ? "完成した動く絵本をMP4で納品" : copy}</small>
                     </div>
                   </li>
                 ))}
@@ -1896,7 +1905,7 @@ export function StudioClient() {
                     </span>
                     <div>
                       <strong>{title}</strong>
-                      <small>{copy}</small>
+                      <small>{index === journeySteps.length - 1 && !plan.includesWebsite ? "完成した動く絵本をMP4で納品" : copy}</small>
                     </div>
                   </li>
                 ))}
@@ -2015,7 +2024,7 @@ export function StudioClient() {
             {sceneStills.length > 0 &&
               (order.status === "stills_review" ||
                 order.stills_approved_at) &&
-              (order.status !== "delivered" || deliveredTab === "stills") && (
+              (order.status !== "delivered" || (plan.includesIllustrations && deliveredTab === "stills")) && (
                 <section className="studio-card stills-review-card" id="stills">
                   <div className="card-head">
                     <div>
@@ -2342,7 +2351,7 @@ export function StudioClient() {
               </section>
             )}
 
-            {(["customer_review", "revision_requested", "quality_check"].includes(order.status) ||
+            {plan.includesLineStickers && (["customer_review", "revision_requested", "quality_check"].includes(order.status) ||
               (order.status === "delivered" && deliveredTab === "delivery")) && (
               <LineStickerPanel
                 order={order}
@@ -2507,7 +2516,7 @@ export function StudioClient() {
             )}
 
             {delivery &&
-              (order.status !== "delivered" || deliveredTab === "film") && (
+              (order.status !== "delivered" || deliveredTab === "film" || (!plan.includesWebsite && deliveredTab === "delivery")) && (
               <section className="delivery-card" id="delivery">
                 <div>
                   <p className="eyebrow light">
@@ -2829,7 +2838,7 @@ export function StudioClient() {
             />
             )}
 
-            {!canOperateOrder &&
+            {plan.includesWebsite && !canOperateOrder &&
               (order.status !== "delivered" || deliveredTab === "delivery") ? (
               delivery && (
                 <aside className="studio-card readonly-preview-note">
